@@ -1,18 +1,23 @@
 {
-  "name": "runedev",
+  "name": "rune-kit",
   "owner": {
     "name": "Rune Contributors"
   },
   "metadata": {
-    "description": "Rune - Less skills. Deeper connections.",
-    "version": "0.1.0"
+    "description": "Less skills. Deeper connections. A lean, interconnected skill ecosystem for Claude Code."
   },
   "plugins": [
     {
       "name": "rune",
       "source": "./",
-      "description": "Core Rune skills ecosystem (L1-L3, 35 skills)",
-      "version": "0.1.0",
+      "description": "40 skills wired into a mesh — 139+ bidirectional connections across the full dev lifecycle",
+      "author": {
+        "name": "Rune Contributors"
+      },
+      "homepage": "https://github.com/rune-kit/rune",
+      "repository": "https://github.com/rune-kit/rune",
+      "license": "MIT",
+      "version": "1.0.0",
       "category": "workflow",
       "tags": ["skills", "orchestration", "mesh", "workflow", "tdd", "security", "debugging"]
     },
