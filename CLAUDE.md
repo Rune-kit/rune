@@ -67,7 +67,7 @@ dependency-doctor
 @rune/trading, @rune/saas, @rune/ecommerce, @rune/ai-ml, @rune/gamedev,
 @rune/content, @rune/analytics
 
-All layers complete. Repository: https://github.com/nhadaututtheky/rune
+All layers complete. Repository: https://github.com/rune-kit/rune
 
 ## Full Spec
 
