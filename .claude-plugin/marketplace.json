@@ -1,0 +1,20 @@
+{
+  "name": "runedev",
+  "owner": {
+    "name": "Rune Contributors"
+  },
+  "metadata": {
+    "description": "Rune - Less skills. Deeper connections.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "rune",
+      "source": "./",
+      "description": "Core Rune skills ecosystem (L1-L3)",
+      "version": "0.1.0",
+      "category": "workflow",
+      "tags": ["skills", "orchestration", "mesh", "workflow"]
+    }
+  ]
+}

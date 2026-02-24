@@ -1,0 +1,22 @@
+{
+  "name": "rune",
+  "description": "Less skills. Deeper connections. A lean, interconnected skill ecosystem for Claude Code.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Rune Contributors"
+  },
+  "homepage": "https://github.com/runedev/rune",
+  "repository": "https://github.com/runedev/rune",
+  "license": "MIT",
+  "keywords": [
+    "skills",
+    "workflow",
+    "orchestration",
+    "mesh",
+    "tdd",
+    "debugging",
+    "refactoring",
+    "security",
+    "deployment"
+  ]
+}
