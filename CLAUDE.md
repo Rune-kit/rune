@@ -44,10 +44,23 @@ rune/
 
 ## Current Wave
 
-Wave 0 (Setup) complete. Wave 1 (Quality Gate) complete. Wave 2 (Development Hub) complete.
-Skills built: scout, session-bridge, sentinel, onboard, preflight, hallucination-guard,
-  plan, debug, fix, test, review, brainstorm.
-Next: Wave 3 (Core Orchestrator — cook L1 + mesh wiring)
+All 35 core skills built (Waves 0-5 complete).
+
+### L1 Orchestrators (4)
+cook, team, launch, rescue
+
+### L2 Workflow Hubs (15)
+plan, scout, brainstorm, debug, fix, test, review,
+sentinel, preflight, onboard, deploy, marketing,
+autopsy, safeguard, surgeon
+
+### L3 Utilities (16)
+research, docs-seeker, trend-scout, problem-solver, sequential-thinking,
+verification, hallucination-guard, context-engine, journal, session-bridge,
+watchdog, scope-guard, browser-pilot, asset-creator, video-creator,
+dependency-doctor
+
+Next: L4 Extension Packs + community launch
 
 ## Full Spec
 
