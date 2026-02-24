@@ -24,6 +24,7 @@ Auto-generate project context for AI sessions. Scans the codebase and creates a 
 ## Calls (outbound)
 
 - `scout` (L2): deep codebase scan — structure, frameworks, patterns, dependencies
+- `autopsy` (L2): when project appears messy or undocumented — health assessment
 
 ## Called By (inbound)
 
@@ -134,6 +135,37 @@ Use `Write` to create `.rune/DEVELOPER-GUIDE.md` with this template:
 
 If `.rune/DEVELOPER-GUIDE.md` already exists, skip and log **INFO**: "Skipped existing .rune/DEVELOPER-GUIDE.md — manual content preserved."
 
+### Step 6c — Suggest L4 Extension Packs
+
+Based on the detected tech stack from Step 2, recommend relevant L4 extension packs. Use the mapping table below to find applicable packs. Only suggest packs that match the detected stack — do not suggest all packs.
+
+| Detected Stack | Suggest Pack | Why |
+|----------------|-------------|-----|
+| React, Next.js, Vue, Svelte, SvelteKit | `@rune/ui` | Frontend component patterns, design system, accessibility audit |
+| Express, Fastify, FastAPI, Django, NestJS, Go HTTP | `@rune/backend` | API patterns, auth flows, middleware, rate limiting |
+| Docker, GitHub Actions, Kubernetes, Terraform, CI/CD config | `@rune/devops` | Container patterns, deployment pipelines, infrastructure as code |
+| React Native, Expo, Flutter, SwiftUI | `@rune/mobile` | Mobile architecture, navigation patterns, offline sync |
+| Security-focused codebase (auth, payments, HIPAA/PCI markers) | `@rune/security` | Threat modeling, OWASP flows, compliance patterns |
+| Trading, finance, pricing, portfolio, market data | `@rune/trading` | Market data validation, risk calculation, backtesting patterns |
+| Subscription billing, tenant isolation, feature flags | `@rune/saas` | Multi-tenancy, billing integration, feature flag patterns |
+| Cart, checkout, product catalog, inventory, payments | `@rune/ecommerce` | Cart patterns, payment flows, inventory management |
+| ML models, training pipelines, embeddings, LLM integration | `@rune/ai-ml` | Model evaluation, prompt patterns, inference optimization |
+| Game loop, physics, entity systems, multiplayer | `@rune/gamedev` | Game architecture, ECS patterns, netcode |
+| CMS, blog, newsletter, SEO, content workflows | `@rune/content` | Content modeling, SEO patterns, editorial workflows |
+| Analytics, dashboards, metrics, data pipelines, BI | `@rune/analytics` | Data modeling, visualization patterns, pipeline architecture |
+
+If 0 packs match: omit this section from the report (no suggestions is correct for a generic project).
+
+If ≥1 packs match: include in the Onboard Report under a `### Suggested L4 Packs` section:
+
+```
+### Suggested L4 Packs
+Based on your detected stack ([detected frameworks]), these extension packs may be useful:
+
+- **@rune/[pack]** — [one-line reason based on detected stack]
+  Install: [link or command when available]
+```
+
 ### Step 7 — Commit
 Use `Bash` to stage and commit the generated files:
 ```bash
@@ -205,6 +237,9 @@ If any of the `.rune/` files already exist, do not overwrite them (they may cont
 - [notable patterns or anomalies found]
 - [potential issues detected]
 - [recommendations for the developer]
+
+### Suggested L4 Packs
+- **@rune/[pack]** — [reason] (only shown if applicable packs detected)
 ```
 
 ## Constraints

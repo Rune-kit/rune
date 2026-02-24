@@ -28,10 +28,15 @@ Deploy applications to target platforms. Handles the full deployment flow — en
 
 ## Calls (outbound)
 
-- `verification` (L2): pre-deploy tests + build check
+- `test` (L2): pre-deploy full test suite
+- `db` (L2): pre-deploy migration safety check
+- `perf` (L2): pre-deploy performance regression check
+- `verification` (L2): pre-deploy build + lint + type check
 - `sentinel` (L2): pre-deploy security scan
 - `browser-pilot` (L3): verify live deployment visually
 - `watchdog` (L3): setup post-deploy monitoring
+- `journal` (L3): record deploy decision, rollback plan, and post-deploy status
+- `incident` (L2): if post-deploy health check fails → triage and contain
 
 ## Cross-Hub Connections
 

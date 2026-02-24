@@ -26,6 +26,8 @@ Comprehensive project health audit across 7 dimensions. Delegates security scann
 - `dependency-doctor` (L3): Phase 1 — vulnerability scan and outdated dependency check
 - `sentinel` (L2): Phase 2 — security audit (OWASP Top 10, secrets, config)
 - `autopsy` (L2): Phase 3 — code quality and complexity assessment
+- `perf` (L2): Phase 4 — performance regression check
+- `db` (L2): Phase 5 — database health dimension (schema, migrations, indexes)
 - `journal` (L3): record audit date, overall score, and verdict
 
 ## Called By (inbound)

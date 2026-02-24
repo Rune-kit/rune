@@ -111,6 +111,8 @@ None — pure runner using Bash for all checks. Does not invoke other skills.
 - `deploy` (L2): post-deploy health checks
 - `sentinel` (L2): run security audit tools (npm audit, etc.)
 - `safeguard` (L2): verify safety net is solid before refactoring
+- `db` (L2): run migration in test environment
+- `perf` (L2): run benchmark scripts if configured
 
 ## Output Format
 

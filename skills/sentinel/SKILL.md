@@ -38,6 +38,8 @@ If status is BLOCK, output the report and STOP. Do not hand off to commit. The c
 - `review` (L2): when security-critical code detected
 - `deploy` (L2): pre-deployment security check
 - `preflight` (L2): security sub-check in quality gate
+- `audit` (L2): Phase 2 full security audit
+- `incident` (L2): security dimension check during incident response
 
 ## Severity Levels
 

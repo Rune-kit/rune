@@ -27,6 +27,7 @@ Characterization tests MUST pass on the current (unmodified) code before any ref
 ## Calls (outbound)
 
 - `scout` (L2): find all entry points and public interfaces of the target module
+- `test` (L2): write and run characterization tests for the target module
 - `verification` (L3): verify characterization tests pass on current code
 
 ## Cross-Hub Connections

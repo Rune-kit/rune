@@ -19,6 +19,7 @@ Post-deploy monitoring. Receives a deployed URL and list of expected endpoints, 
 
 - `deploy` (L2): post-deploy monitoring setup
 - `launch` (L1): monitoring as part of launch pipeline
+- `incident` (L2): current system state check during incident triage
 
 ## Calls (outbound)
 

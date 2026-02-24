@@ -34,6 +34,7 @@ Post-generation validation that verifies AI-generated code references actually e
 - `fix` (L2): after applying fixes
 - `preflight` (L2): import verification sub-check
 - `review` (L2): during code review
+- `db` (L2): verify SQL syntax and ORM method calls are real
 
 ## Execution
 

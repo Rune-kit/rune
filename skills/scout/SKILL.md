@@ -109,6 +109,10 @@ None — pure scanner using Glob, Grep, Read, and Bash tools directly. Does not 
 - `surgeon` (L2): scan module before refactoring
 - `marketing` (L2): scan codebase for feature descriptions
 - `safeguard` (L2): scan module boundaries before adding safety net
+- `audit` (L2): Phase 0 project structure and stack discovery
+- `db` (L2): find schema and migration files
+- `design` (L2): scan UI component library and design tokens
+- `perf` (L2): find hotpath files and performance-critical code
 
 ## Output Format
 

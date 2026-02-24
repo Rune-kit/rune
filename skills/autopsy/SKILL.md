@@ -19,6 +19,8 @@ Full codebase health assessment for legacy projects. Autopsy analyzes complexity
 
 - `rescue` (L1): Phase 0 RECON — assess damage before refactoring
 - `onboard` (L2): when project appears messy during onboarding
+- `audit` (L2): Phase 3 code quality and complexity assessment
+- `incident` (L2): root cause analysis after containment
 
 ## Calls (outbound)
 

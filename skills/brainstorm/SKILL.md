@@ -142,6 +142,27 @@ Choose Option B if [specific hedge condition].
 Proceeding to rune:plan with Option A. Constraints to honor: [list].
 ```
 
+## Sharp Edges
+
+Known failure modes for this skill. Check these before declaring done.
+
+| Failure Mode | Severity | Mitigation |
+|---|---|---|
+| Generating only one option instead of 2-3 | HIGH | Always present multiple approaches — the value is in the comparison, not the recommendation |
+| Proceeding to plan without user approval on the approach | CRITICAL | Brainstorm MUST get explicit sign-off before calling plan — no silent "going with Option A" |
+| Options are variations of the same approach (fake diversity) | HIGH | Options must differ in architecture, not just naming — different trade-offs, not just different words |
+| Calling plan directly instead of presenting options first | CRITICAL | Steps 2-3 are mandatory — present options, get approval, THEN call plan |
+| "Creative" options that ignore stated constraints | MEDIUM | Every option must satisfy the constraints declared in Step 1 |
+
+## Done When
+
+- Context scan complete (project files read, existing patterns identified)
+- 2-3 genuinely different approaches presented with trade-offs
+- User has explicitly approved an approach (not implied or assumed)
+- Selected option documented with rationale
+- Constraints for plan phase listed explicitly
+- `plan` (L2) called with the approved approach and constraints
+
 ## Cost Profile
 
 ~2000-5000 tokens input, ~1000-2500 tokens output. Opus for creative reasoning depth. Runs infrequently — only when creative exploration is needed.

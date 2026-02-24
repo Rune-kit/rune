@@ -139,6 +139,7 @@ After GREEN phase, call `verification` to check coverage threshold (80% minimum)
 ## Calls (outbound)
 
 - `verification` (L3): Phase 6 — coverage check (80% minimum threshold)
+- `browser-pilot` (L3): Phase 4 — e2e and visual testing for UI flows
 - `debug` (L2): Phase 5 — when existing test regresses unexpectedly
 
 ## Constraints

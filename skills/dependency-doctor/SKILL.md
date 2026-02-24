@@ -18,6 +18,7 @@ Dependency health management covering outdated packages, known vulnerabilities, 
 ## Called By (inbound)
 
 - `rescue` (L1): Phase 0 dependency health assessment
+- `audit` (L2): Phase 1 vulnerability scan and outdated dependency check
 
 ## Calls (outbound)
 

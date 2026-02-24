@@ -18,6 +18,7 @@ Creates code-based visual assets (SVG, CSS, HTML) for projects and marketing. Ha
 ## Called By (inbound)
 
 - `marketing` (L2): banners, OG images, social graphics
+- `design` (L2): UI asset generation during design phase
 - L4 `@rune/ui`: design system assets
 
 ## Calls (outbound)

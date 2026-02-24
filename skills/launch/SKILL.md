@@ -27,7 +27,9 @@ Orchestrate the full deployment and marketing pipeline. Launch coordinates testi
 ## Calls (outbound)
 
 - `test` (L2): pre-deployment full test suite
+- `audit` (L2): pre-launch health check — full 7-phase quality gate
 - `deploy` (L2): push to target platform
+- `incident` (L2): if post-launch health check fails → triage and contain
 - `browser-pilot` (L3): verify live site screenshots and performance
 - `marketing` (L2): create launch assets (landing copy, social, SEO)
 - `watchdog` (L3): setup post-deploy monitoring
@@ -67,8 +69,8 @@ REQUIRED SUB-SKILL: rune:verification
 → Capture: passed count, failed count, coverage %, build output.
 ```
 
-```
-HARD-GATE CHECK — block deploy if ANY of:
+<HARD-GATE>
+Block deploy if ANY of:
   [ ] Tests failing (failed count > 0)
   [ ] TypeScript errors present
   [ ] Build fails
@@ -79,7 +81,7 @@ If any check fails:
   → Report: "PRE-FLIGHT FAILED — deploy blocked"
   → List all failures with file + line references
   → Do NOT proceed to Phase 2
-```
+</HARD-GATE>
 
 Mark todo[0] `completed` only when ALL checks pass.
 

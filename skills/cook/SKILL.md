@@ -198,19 +198,30 @@ Run these three checks. Any CRITICAL finding blocks the commit.
 | 5c REVIEW | Code quality issues | Fix CRITICAL/HIGH → re-review (max 2 loops) |
 | 6 VERIFY | Build/lint/type fails | Fix → re-run verification |
 
+## Called By (inbound)
+
+- User: `/rune cook` direct invocation — primary entry point
+- `team` (L1): parallel workstream execution (meta-orchestration)
+
 ## Calls (outbound)
 
 - `scout` (L2): Phase 1 — scan codebase before planning
+- `onboard` (L2): Phase 1 — if no CLAUDE.md exists, initialize project context first
 - `plan` (L2): Phase 2 — create implementation plan
 - `brainstorm` (L2): Phase 2 — trade-off analysis when multiple approaches exist
+- `design` (L2): Phase 2 — UI/design phase when building frontend features
 - `test` (L2): Phase 3 — write failing tests (RED phase)
 - `fix` (L2): Phase 4 — implement code changes (GREEN phase)
 - `debug` (L2): Phase 4 — when implementation hits unexpected errors (max 3 loops)
+- `db` (L2): Phase 4 — when schema changes are detected in the diff
 - `preflight` (L2): Phase 5a — logic and completeness review
 - `sentinel` (L2): Phase 5b — security scan
 - `review` (L2): Phase 5c — code quality review
+- `perf` (L2): Phase 5d — performance regression check before PR
+- `audit` (L2): Phase 5e — optional health gate on large features
 - `verification` (L3): Phase 6 — automated checks (lint, types, tests, build)
 - `hallucination-guard` (L3): Phase 6 — verify imports and API calls are real
+- `journal` (L3): Phase 7 — record architectural decisions made during feature
 - `session-bridge` (L3): Phase 8 — save context for future sessions
 
 ## Constraints
