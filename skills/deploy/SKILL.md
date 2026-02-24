@@ -136,6 +136,27 @@ If any step failed, include the error output and recommended next action.
 4. MUST NOT deploy with known CRITICAL security findings
 5. MUST log deploy metadata (version, timestamp, commit hash)
 
+## Sharp Edges
+
+Known failure modes for this skill. Check these before declaring done.
+
+| Failure Mode | Severity | Mitigation |
+|---|---|---|
+| Deploying without verification passing | CRITICAL | HARD-GATE blocks this — both verification AND sentinel must pass first |
+| Platform auto-detected wrongly and wrong command runs | HIGH | Verify config files explicitly; ask user if multiple platforms detected |
+| HTTP 5xx on live URL treated as non-critical | HIGH | 5xx = deployment likely failed — report FAILED, do not proceed to monitoring/marketing |
+| Not setting up watchdog monitoring after deploy | MEDIUM | Step 5 is mandatory — post-deploy monitoring is part of deploy, not optional |
+| Deploy metadata not logged (version, commit hash) | LOW | Constraint 5: log version + timestamp + commit hash in report |
+
+## Done When
+
+- verification PASS (tests, types, lint, build all green)
+- sentinel PASS (no CRITICAL security findings)
+- Deploy command succeeded with live URL captured
+- Live URL returns HTTP 200
+- watchdog monitoring active on deployed URL
+- Deploy Report emitted with platform, URL, checks, and monitoring status
+
 ## Cost Profile
 
 ~1000-3000 tokens input, ~500-1000 tokens output. Sonnet. Most time in build/deploy commands.

@@ -170,6 +170,27 @@ This skill creates PLANS for video production. Actual recording and editing must
 2. MUST NOT exceed reasonable file sizes without user confirmation
 3. MUST save to project assets directory
 
+## Sharp Edges
+
+Known failure modes for this skill. Check these before declaring done.
+
+| Failure Mode | Severity | Mitigation |
+|---|---|---|
+| Platform constraints not applied (e.g., Twitter max 140s exceeded) | HIGH | Step 1: derive constraints from platform immediately — they constrain everything downstream |
+| Missing CTA section in script | MEDIUM | CTA (last 10s) is required in every script — no exceptions regardless of duration |
+| Not saving to file (only verbal output) | HIGH | Constraint 3 + Step 6: Write to output_path is mandatory — verbal only = no persistence |
+| Promising an actual deliverable video file | MEDIUM | Note explicitly: this skill creates a PLAN — actual recording is done by a human |
+
+## Done When
+
+- Platform constraints identified and applied to duration/format
+- Script written with timing marks (hook, setup, demo/body, CTA)
+- Storyboard created scene-by-scene with transitions
+- Shot list categorized by type (screen recording, terminal, code, diagram)
+- Assets needed checklist generated
+- video-plan.md written to output_path via Write tool
+- Video Plan Created report emitted with scene count, shot count, and asset count
+
 ## Cost Profile
 
 ~500-1500 tokens input, ~500-1000 tokens output. Sonnet for script quality.

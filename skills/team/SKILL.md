@@ -282,6 +282,27 @@ Dependent streams    → SEQUENTIAL (respecting dependency order)
 All streams done     → MERGE sequentially (avoid conflicts)
 ```
 
+## Sharp Edges
+
+Known failure modes for this skill. Check these before declaring done.
+
+| Failure Mode | Severity | Mitigation |
+|---|---|---|
+| Launching more than 3 parallel agents | CRITICAL | HARD-GATE blocks this — batch into ≤3 streams regardless of task count |
+| Agents with overlapping file ownership | HIGH | Scope Gate: define disjoint file sets before dispatch — never leave overlap unresolved |
+| Merging without running integration tests | HIGH | Verification Gate: integration tests on merged result are mandatory |
+| Ignoring sentinel CRITICAL flag in agent cook report | HIGH | Stream blocked from merge — present to user before any merge action |
+| Launching dependent streams before their dependencies complete | MEDIUM | Respect depends_on ordering — sequential after parallel, not parallel throughout |
+
+## Done When
+
+- Task decomposed into ≤3 workstreams each with disjoint file ownership
+- All cook agents completed and returned reports
+- All merge conflicts resolved (zero unresolved before merge commit)
+- Integration tests pass on merged main branch
+- All worktrees cleaned up
+- Team Report emitted with stream statuses and integration results
+
 ## Cost Profile
 
 ~$0.20-0.50 per session. Opus for coordination. Most expensive orchestrator but handles largest tasks.

@@ -99,6 +99,10 @@ Compile all results into the structured report. Update all TodoWrite items to co
 - If a command is not found (e.g., `ruff` not installed): note "tool not installed", mark check as SKIP
 - If a command hangs for more than 60 seconds: kill it, mark check as TIMEOUT, continue
 
+## Calls (outbound)
+
+None — pure runner using Bash for all checks. Does not invoke other skills.
+
 ## Called By (inbound)
 
 - `cook` (L1): Phase 6 VERIFY — final check before commit
@@ -133,6 +137,25 @@ Overall:   [PASS/FAIL]
 2. MUST show actual command output — never claim "all passed" without evidence
 3. MUST report specific failures with file:line references
 4. MUST NOT skip checks because "changes are small"
+
+## Sharp Edges
+
+Known failure modes for this skill. Check these before declaring done.
+
+| Failure Mode | Severity | Mitigation |
+|---|---|---|
+| Claiming "all passed" without showing actual command output | CRITICAL | Constraint 2 blocks this — show the actual stdout/stderr from every command |
+| Skipping build because "changes are small" | HIGH | Constraint 4: all four checks mandatory — size of changes doesn't matter |
+| Marking check as PASS when the tool isn't installed | MEDIUM | Mark as SKIP (not PASS) — PASS means the tool ran and reported clean |
+| Stopping after first failure instead of running remaining checks | MEDIUM | Run all checks; aggregate all failures so developer can fix everything at once |
+
+## Done When
+
+- Project type detected from config files
+- lint, type-check, tests, and build all executed (or SKIP with reason if tool missing)
+- Each check shows actual command output
+- Failures include specific file:line references (not just counts)
+- Verification Report emitted with Overall PASS/FAIL verdict
 
 ## Cost Profile
 

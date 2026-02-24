@@ -194,6 +194,34 @@ Identify the next concrete task from `progress.md` → "Next Session Should" sec
 2. MUST verify saved context can be loaded in a fresh session — test the round-trip
 3. MUST NOT overwrite existing bridge data without merging
 
+## Sharp Edges
+
+Known failure modes for this skill. Check these before declaring done.
+
+| Failure Mode | Severity | Mitigation |
+|---|---|---|
+| Overwriting existing .rune/ files instead of appending | HIGH | Constraint 3: use Edit to append entries — never Write to overwrite existing state |
+| Saving only a status line, missing decisions/conventions | HIGH | Constraint 1: all three files (decisions, conventions, progress) must be updated |
+| Load mode presenting stale context without age marker | MEDIUM | Mark each loaded entry with its session date — caller knows how fresh it is |
+| Silent failure when git unavailable | MEDIUM | Note "no git available" in report — do not fail silently or skip without logging |
+
+## Done When (Save Mode)
+
+- decisions.md updated with all architectural decisions made this session
+- conventions.md updated with all new patterns established
+- progress.md updated with completed/in-progress/blocked task status
+- session-log.md appended with one-line session summary
+- Git commit made (or "no git" noted in report)
+- Session Bridge Saved report emitted
+
+## Done When (Load Mode)
+
+- .rune/*.md files found and read
+- Last session summary presented
+- Current in-progress and blocked tasks identified
+- Next task recommendation from progress.md
+- Session Bridge Loaded report emitted
+
 ## Cost Profile
 
 ~100-300 tokens per save. ~500-1000 tokens per load. Always haiku. Negligible cost.

@@ -119,6 +119,26 @@ Synthesize all gathered data into the output format below. Note where data is sp
 - [actionable insight for the calling skill]
 ```
 
+## Sharp Edges
+
+Known failure modes for this skill. Check these before declaring done.
+
+| Failure Mode | Severity | Mitigation |
+|---|---|---|
+| Inferring trend from a single data point | HIGH | Constraint: note confidence level — single source = low confidence, not a trend |
+| Topic too broad → generic results with no actionable signal | MEDIUM | Report what was analyzed and suggest narrowing; don't fabricate specificity |
+| Skipping competitor analysis (Steps 3 mandatory) | MEDIUM | Competitor analysis is required — callers need positioning context |
+| Calling WebFetch on every search result (excessive cost) | MEDIUM | Constraint: WebSearch only unless a specific page has critical data not in snippets |
+
+## Done When
+
+- Topic scope defined (product/technology/community angle)
+- Trend searches executed with 2026 timeframe
+- Competitor analysis completed (top 3-5 players with differentiators)
+- Community sentiment captured (Reddit/HN/GitHub signals)
+- Confidence level assigned based on evidence quality
+- Trend Report emitted with source citations for every data point
+
 ## Cost Profile
 
 ~300-600 tokens input, ~200-400 tokens output. Haiku.

@@ -405,6 +405,27 @@ Rollback point: git tag rune-rescue-baseline (set in Phase 0)
 - **Rollback Tag**: [git tag name]
 ```
 
+## Sharp Edges
+
+Known failure modes for this skill. Check these before declaring done.
+
+| Failure Mode | Severity | Mitigation |
+|---|---|---|
+| Starting surgery before safety net committed and tagged | CRITICAL | HARD-GATE: `rune-rescue-safety-net` git tag must exist before Phase 2 |
+| Refactoring two coupled modules in the same session | HIGH | HARD-GATE: one module per session — split coupled modules into sequential sessions |
+| Blast radius > 5 files before surgery halted | HIGH | Count importers before each surgery — stop if > 5 and split scope |
+| Not saving state between sessions (rescue spans many sessions) | MEDIUM | journal + session-bridge mandatory after each session — RESCUE-STATE.md must be current |
+| Continuing surgery after characterization tests fail on current code | MEDIUM | Tests must PASS on unmodified code first — fix the test if current behavior is captured wrongly |
+
+## Done When
+
+- autopsy complete with quantified health score and surgery queue
+- safeguard characterization tests passing on current code (HARD-GATE)
+- All modules in surgery queue processed (one per session)
+- @legacy and @bridge markers removed from codebase (CLEANUP phase)
+- Final autopsy run — health_score_final > health_score_baseline
+- Rescue Report emitted with before/after health comparison and session count
+
 ## Cost Profile
 
 ~$0.10-0.30 per session. Sonnet for surgery, opus for autopsy. Multi-session workflow.

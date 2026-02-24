@@ -97,6 +97,25 @@ Return structured findings in the output format below.
 - [actionable suggestion based on findings]
 ```
 
+## Sharp Edges
+
+Known failure modes for this skill. Check these before declaring done.
+
+| Failure Mode | Severity | Mitigation |
+|---|---|---|
+| Fabricating findings when no useful results found | CRITICAL | Constraint: report "no useful results found" explicitly — never invent citations |
+| Reporting conflicting sources without flagging the conflict | HIGH | Constraint: flag conflicting information explicitly, never silently pick one side |
+| Assigning "high" confidence from a single source | MEDIUM | High = 3+ sources agree; 1-2 sources = medium confidence |
+| Exceeding 5 WebFetch calls per invocation | MEDIUM | Hard limit: prioritize top 3-5 URLs from search, fetch only the most relevant |
+
+## Done When
+
+- 2-3 search queries formulated and executed
+- Top 3-5 URLs identified and fetched (max 5 WebFetch calls)
+- Conflicting information between sources explicitly flagged
+- Confidence level assigned (high/medium/low) with rationale
+- Research Results emitted with source URLs for every key finding
+
 ## Cost Profile
 
 ~300-800 tokens input, ~200-500 tokens output. Haiku. Fast and cheap.

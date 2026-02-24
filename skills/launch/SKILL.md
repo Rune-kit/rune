@@ -264,6 +264,28 @@ Mark todo[4] `completed`.
 - Launch video: [ready | skipped]
 ```
 
+## Sharp Edges
+
+Known failure modes for this skill. Check these before declaring done.
+
+| Failure Mode | Severity | Mitigation |
+|---|---|---|
+| Attempting deploy with failing tests or TypeScript errors | CRITICAL | HARD-GATE blocks this — pre-flight must be 100% green |
+| Running marketing before deploy verified live | HIGH | Constraint 4: deploy → verify HTTP 200 → THEN market. Never simultaneous |
+| No rollback plan before production deploy | MEDIUM | Constraint 3: document rollback strategy before running deploy command |
+| Platform auto-detected incorrectly (wrong deploy command) | MEDIUM | Verify platform config files before running — ask if ambiguous |
+| Marketing assets generated from assumptions rather than scout output | MEDIUM | Step 1 requires scout to run — copy based on actual features, not assumptions |
+
+## Done When
+
+- Pre-flight PASS: all tests, types, lint, build, and sentinel green
+- Deploy command succeeded with live URL captured
+- Live site returns HTTP 200 (curl or browser-pilot confirmed)
+- watchdog monitoring active on deployed URL
+- All requested marketing assets generated (or skipped with reason)
+- User presented with all assets before any publishing
+- Launch Report emitted with URL, monitoring status, and asset list
+
 ## Cost Profile
 
 ~$0.08-0.15 per launch. Sonnet for coordination, delegates to haiku for scanning.

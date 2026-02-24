@@ -136,6 +136,27 @@ This step is mandatory even if earlier steps fail. Use a try-finally pattern in 
 3. MUST NOT store credentials or sensitive data in interaction logs
 4. MUST take screenshot evidence before reporting visual findings
 
+## Sharp Edges
+
+Known failure modes for this skill. Check these before declaring done.
+
+| Failure Mode | Severity | Mitigation |
+|---|---|---|
+| Not closing browser when done (including on error) | CRITICAL | Constraint 1: Step 7 browser_close() is mandatory — treat as try-finally |
+| Storing credentials or tokens in interaction logs | HIGH | Constraint 3: redact all sensitive values before logging |
+| Exceeding 20 interactions without stopping and reporting partial | MEDIUM | Constraint 2: stop at 20, report what was tested and what remains |
+| Reporting visual findings without screenshot evidence | MEDIUM | Constraint 4: screenshot before reporting — "looks broken" without screenshot is invalid |
+
+## Done When
+
+- URL navigated successfully (or UNREACHABLE reported)
+- Page snapshot captured for accessibility context
+- All requested interactions completed (or partial with reason if >20)
+- Screenshot taken as visual evidence
+- Console errors captured if task requested them
+- Browser closed (Step 7 executed)
+- Browser Report emitted with status, findings, and screenshot reference
+
 ## Cost Profile
 
 ~500-1500 tokens input, ~300-800 tokens output. Sonnet for interaction logic.

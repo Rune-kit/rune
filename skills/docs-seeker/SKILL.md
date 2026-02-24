@@ -104,6 +104,27 @@ Return structured documentation in the output format below.
 - [relevant warning, deprecation notice, or common mistake]
 ```
 
+## Sharp Edges
+
+Known failure modes for this skill. Check these before declaring done.
+
+| Failure Mode | Severity | Mitigation |
+|---|---|---|
+| Returning deprecated API without flagging it | HIGH | Must explicitly state "deprecated in X.Y, use Z instead" with replacement link |
+| Wrong version docs returned when version specified | HIGH | Verify version match — if version-specific docs unavailable, state that explicitly |
+| Skipping Context7 and going directly to web search | MEDIUM | Constraint: Context7 first always — web is fallback, not default |
+| Returning docs without source URL | MEDIUM | Constraint: always include source URL so callers can verify |
+
+## Done When
+
+- Context7 attempted first (resolve-library-id + query-docs)
+- If Context7 insufficient: top 1-3 official doc URLs fetched via WebFetch
+- API signature extracted with parameter types and return type
+- Minimal working code example included
+- Deprecation/version notes included if applicable
+- Source URL provided
+- Documentation emitted in output format
+
 ## Cost Profile
 
 ~300-600 tokens input, ~200-400 tokens output. Haiku. Fast lookup.

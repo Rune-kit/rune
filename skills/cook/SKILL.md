@@ -252,6 +252,29 @@ Run these three checks. Any CRITICAL finding blocks the commit.
 - Saved to .rune/progress.md
 ```
 
+## Sharp Edges
+
+Known failure modes for this skill. Check these before declaring done.
+
+| Failure Mode | Severity | Mitigation |
+|---|---|---|
+| Skipping scout to "save time" on a simple task | CRITICAL | Scout Gate blocks this — Phase 1 is mandatory regardless of perceived simplicity |
+| Writing code without user-approved plan | HIGH | Plan Gate: do NOT proceed to Phase 3 without explicit approval ("go", "proceed", "yes") |
+| Claiming "all tests pass" without showing output | HIGH | Constraint 7 blocks this — show actual test runner output |
+| Entering debug↔fix loop more than 3 times without escalating | MEDIUM | After 3 loops, stop and present to user — do not keep spinning |
+| Not escalating to sentinel:opus on security-sensitive tasks | MEDIUM | Auth, crypto, payment code → sentinel must run at opus, not sonnet |
+
+## Done When
+
+- All applicable phases complete per Phase Skip Rules (determined before starting)
+- User has approved the plan (Phase 2 gate — explicit "go" received)
+- All tests PASS — actual test runner output shown
+- preflight + sentinel + review all PASS or findings addressed
+- verification (lint + types + build) green
+- Commit created with semantic message
+- Cook Report emitted with commit hash and phase list
+- Session state saved to .rune/ via session-bridge
+
 ## Cost Profile
 
 ~$0.05-0.15 per feature. Haiku for scanning (Phase 1), sonnet for coding (Phase 3-4), opus for complex planning (Phase 2 when needed).

@@ -148,6 +148,29 @@ After user approves, use `Write` to save:
 - marketing/video-script.md
 ```
 
+## Sharp Edges
+
+Known failure modes for this skill. Check these before declaring done.
+
+| Failure Mode | Severity | Mitigation |
+|---|---|---|
+| Fabricating statistics, benchmarks, or testimonials | CRITICAL | Constraint 3: no fabrication — if no real stats exist, use honest placeholder copy |
+| Generating copy before deploy verified live | HIGH | Constraint 2: deploy must be confirmed live before marketing runs |
+| Copy not based on actual codebase features (invented value props) | HIGH | scout must run in Step 1 — features extracted from actual code, not assumptions |
+| Missing SEO keyword analysis (no research call) | MEDIUM | Step 2: research call for keyword data is mandatory for SEO section |
+| Files saved without user approval | MEDIUM | Step 7: present ALL assets to user, wait for approval before writing files |
+
+## Done When
+
+- scout completed and actual feature list extracted
+- Competitor/trend analysis done via trend-scout + research
+- Hero copy, value props, social posts, and SEO metadata generated
+- Visual assets requested from asset-creator
+- Video script requested from video-creator (if requested)
+- User has approved all content
+- Files saved to marketing/ directory
+- Marketing Assets report emitted with file list
+
 ## Cost Profile
 
 ~2000-5000 tokens input, ~1000-3000 tokens output. Sonnet for copywriting quality.

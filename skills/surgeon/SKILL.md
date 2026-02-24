@@ -174,6 +174,29 @@ EXTRACT & SIMPLIFY      — For complex functions (cyclomatic > 10)
 4. MUST NOT change function signatures without updating all callers
 5. MUST preserve external behavior — refactoring changes structure, not behavior
 
+## Sharp Edges
+
+Known failure modes for this skill. Check these before declaring done.
+
+| Failure Mode | Severity | Mitigation |
+|---|---|---|
+| Editing without confirming safeguard ran first | CRITICAL | HARD-GATE: check for `tests/char/<module>.test.*` AND `rune-safeguard-<module>` tag before first edit |
+| Exceeding 5-file blast radius without splitting | HIGH | HARD-GATE: count files in scope before starting — stop and split if > 5 |
+| Batching multiple edits before running tests | HIGH | HARD-GATE: run tests after every single Edit call — never accumulate untested changes |
+| Wrong pattern chosen for module size/type | MEDIUM | Match pattern explicitly: Strangler Fig = large/many-consumers, Extract = high cyclomatic complexity |
+| Not committing at safe stopping points when context runs low | MEDIUM | Every commit = working state — stop before context limit, not after losing partial work |
+
+## Done When
+
+- Safeguard confirmed (char tests + rollback tag exist)
+- Blast radius checked and within 5 files
+- Refactoring pattern selected and stated explicitly
+- All edits applied with tests passing after each individual edit
+- Characterization tests still pass after all changes
+- review passed on changed files
+- Surgery committed with message format `refactor(<module>): <pattern> — <description>`
+- journal updated with module health delta and remaining work
+
 ## Cost Profile
 
 ~3000-6000 tokens input, ~1000-2000 tokens output. Sonnet. One module per session.

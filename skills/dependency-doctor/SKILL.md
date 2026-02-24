@@ -203,6 +203,27 @@ Output the following structure:
 3. MUST verify project still builds after any dependency change
 4. MUST show what changed (added, removed, upgraded) in a clear diff format
 
+## Sharp Edges
+
+Known failure modes for this skill. Check these before declaring done.
+
+| Failure Mode | Severity | Mitigation |
+|---|---|---|
+| Recommending major version update without flagging migration risk | CRITICAL | Constraint 2: breaking changes need explicit migration notes and user confirmation |
+| Silently skipping vulnerability check when tool not installed | HIGH | Report TOOL_MISSING explicitly — never skip without logging it |
+| Missing dependency health score (0-100) | MEDIUM | Score is mandatory in every report — it gives callers a quick health signal |
+| Reporting unused dependencies without verifying (false positive) | MEDIUM | Check actual import patterns in src/ before flagging as unused |
+
+## Done When
+
+- Package manager detected (npm/yarn/pnpm/pip/cargo/go)
+- Outdated packages listed with current → latest versions and update type
+- Vulnerability audit run (or TOOL_MISSING noted explicitly)
+- Breaking changes flagged for all major version bumps
+- Prioritized update plan generated (CRITICAL → SECURITY → PATCH → MINOR → MAJOR order)
+- Dependency health score (0-100) calculated
+- Dependency Report emitted in output format
+
 ## Cost Profile
 
 ~300-600 tokens input, ~200-500 tokens output. Haiku. Most time spent in package manager commands.

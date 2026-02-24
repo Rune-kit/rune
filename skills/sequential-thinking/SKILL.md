@@ -149,6 +149,26 @@ Return the full decision tree and recommendation in the output format below.
 - **Key assumption**: [the most critical assumption this recommendation depends on]
 ```
 
+## Sharp Edges
+
+Known failure modes for this skill. Check these before declaring done.
+
+| Failure Mode | Severity | Mitigation |
+|---|---|---|
+| Evaluating variable B before all variables constraining B are resolved | CRITICAL | Constraint: dependency order is mandatory — sort by constraint depth first |
+| Dependency cycle detected but not flagged | HIGH | Break cycle by treating one variable as a fixed assumption — flag it explicitly |
+| More than 8 variables without grouping them into composites | MEDIUM | Constraint: group related variables — keep analysis tractable, not exhaustive |
+| Final recommendation missing confidence level | MEDIUM | Confidence (high/medium/low) is required — ambiguities drive confidence down |
+
+## Done When
+
+- All variables identified and typed (controllable vs. fixed)
+- Dependency map documented (A constrains B, C influences D)
+- Variables evaluated in dependency order with running state block at each step
+- Ambiguities listed with what information would resolve them
+- Final recommendation emitted with confidence level
+- Sequential Analysis report in output format
+
 ## Cost Profile
 
 ~500-1500 tokens input, ~500-1000 tokens output. Sonnet for reasoning depth.

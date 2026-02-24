@@ -146,6 +146,27 @@ Produce a structured summary of all changes made.
 - [any caveats or follow-up needed]
 ```
 
+## Sharp Edges
+
+Known failure modes for this skill. Check these before declaring done.
+
+| Failure Mode | Severity | Mitigation |
+|---|---|---|
+| Modifying test files to make tests pass | CRITICAL | HARD-GATE blocks this — fix the code, never the tests (unless test setup is provably wrong) |
+| Applying fix without a diagnosis | HIGH | Evidence Gate: need debug report or clear error description before touching code |
+| Exceeding 3 fix attempts without re-diagnosing | HIGH | Constraint 4: after 3 failures, call debug again — the hypothesis was wrong |
+| Introducing unrelated refactoring while fixing | MEDIUM | YAGNI: fix only what was diagnosed — unrelated changes belong in a separate task |
+| Not running tests after each individual change | MEDIUM | Constraint 3: never batch untested changes — run tests after each edit |
+
+## Done When
+
+- Root cause identified (debug report or clear error received)
+- Minimal changes applied targeting only the diagnosed problem
+- Tests pass for the fixed functionality (actual output shown)
+- Lint and type check pass
+- hallucination-guard verified any new imports
+- Fix Report emitted with changed files and verification results
+
 ## Cost Profile
 
 ~2000-5000 tokens input, ~1000-3000 tokens output. Sonnet for code writing quality. Most active skill during implementation.

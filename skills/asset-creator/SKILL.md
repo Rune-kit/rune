@@ -127,6 +127,25 @@ This skill creates CODE-based assets (SVG/CSS/HTML). It does not generate raster
 2. MUST NOT generate copyrighted or trademarked content
 3. MUST save to project assets directory — not random locations
 
+## Sharp Edges
+
+Known failure modes for this skill. Check these before declaring done.
+
+| Failure Mode | Severity | Mitigation |
+|---|---|---|
+| Generating copyrighted or trademarked content (logos, characters) | CRITICAL | Constraint 2: only generate original assets — no brand marks, characters, or protected symbols |
+| Saving to random location instead of assets/ | MEDIUM | Constraint 3: output_dir defaults to assets/ — always save there |
+| Missing light/dark variants for OG/banner assets | MEDIUM | Step 4: dark mode variant required for any OG/banner asset |
+| Generating raster images (PNG/JPG) directly | MEDIUM | This skill creates SVG/HTML CODE only — raster requires browser-pilot screenshot of generated HTML |
+
+## Done When
+
+- Asset type, dimensions, and style confirmed from input
+- Design tokens from .rune/conventions.md loaded (or defaults applied)
+- Asset files written to assets/ directory in correct format (SVG/HTML)
+- Light/dark variants created if applicable (OG/banner)
+- Assets Created report emitted with file paths and usage instructions
+
 ## Cost Profile
 
 ~500-1500 tokens input, ~500-1000 tokens output. Sonnet for creative quality.

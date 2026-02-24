@@ -138,6 +138,26 @@ Return the full analysis in the output format below.
 [single most important immediate step]
 ```
 
+## Sharp Edges
+
+Known failure modes for this skill. Check these before declaring done.
+
+| Failure Mode | Severity | Mitigation |
+|---|---|---|
+| Skipping the framework and jumping straight to solutions | CRITICAL | Constraint: the framework IS the value — solutions without structured analysis are guesses |
+| Proceeding with underspecified problem without stating assumptions | HIGH | Step 1: restate problem in one sentence first — if ambiguous, state interpretation explicitly |
+| Producing more than 3 recommended solutions | MEDIUM | Constraint: max 3 ranked solutions — prioritize quality and actionability over quantity |
+| Framework mismatch (5 Whys for a creative problem) | MEDIUM | Use the selection table in Step 2 — match framework to "what is unknown" about the problem |
+
+## Done When
+
+- Problem restated in one sentence (understanding confirmed)
+- Framework selected with explicit reason stated
+- Framework applied step-by-step with evidence at each step
+- 2-3 solutions ranked by impact/effort ratio
+- Next Action identified (single most important immediate step)
+- Analysis Report emitted in output format
+
 ## Cost Profile
 
 ~500-1500 tokens input, ~500-1000 tokens output. Sonnet for reasoning quality.

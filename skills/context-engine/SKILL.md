@@ -121,6 +121,25 @@ RED     (85%+)    — Save state NOW via session-bridge, compact immediately
 2. MUST flag context conflicts between skills — never silently pick one
 3. MUST NOT inject stale context from previous sessions without marking it as historical
 
+## Sharp Edges
+
+Known failure modes for this skill. Check these before declaring done.
+
+| Failure Mode | Severity | Mitigation |
+|---|---|---|
+| Triggering compaction without saving state first | CRITICAL | Step 5 (RED): session-bridge MUST run before any compaction — state loss is irreversible |
+| Blocking tool calls when context is ORANGE (not RED) | MEDIUM | ORANGE = recommend only; blocking is only for RED (>85%) |
+| Injecting stale context from previous session without marking it historical | HIGH | Constraint 3: all loaded context must include session date marker |
+| Premature compaction from over-estimated utilization | MEDIUM | Token estimates are rough — err conservative; only block at confirmed RED |
+
+## Done When
+
+- Context utilization estimated (tool call count + approximate token math)
+- Health level classified (GREEN / YELLOW / ORANGE / RED)
+- Appropriate advisory emitted matching health level (no advisory for GREEN)
+- If RED: session-bridge called and confirmed saved before compaction signal
+- Context Health Report emitted with utilization %, status, and recommendation
+
 ## Cost Profile
 
 ~200-500 tokens input, ~100-200 tokens output. Haiku for minimal overhead. Runs frequently as a background monitor.

@@ -124,6 +124,25 @@ Output the following structure:
 2. MUST flag files modified outside scope with specific paths
 3. MUST allow user override — advisory, not authoritarian
 
+## Sharp Edges
+
+Known failure modes for this skill. Check these before declaring done.
+
+| Failure Mode | Severity | Mitigation |
+|---|---|---|
+| Classifying test files for planned code as out-of-scope | MEDIUM | Test files for planned source files are always IN_SCOPE — natural dependency |
+| Classifying lock file changes as out-of-scope | LOW | package-lock.json, yarn.lock, Cargo.lock are always IN_SCOPE |
+| SIGNIFICANT CREEP threshold applied to 1-2 unplanned files | LOW | MINOR = 1-2 files, SIGNIFICANT = 3+ files — don't escalate prematurely |
+| Plan not loadable (no TodoWrite, no progress.md) | MEDIUM | Ask calling skill for plan as text description before proceeding |
+
+## Done When
+
+- Plan loaded from TodoWrite active tasks or .rune/progress.md
+- git diff --stat and --cached output parsed for all changed files
+- Each changed file classified IN_SCOPE or OUT_OF_SCOPE with reasoning
+- Creep severity classified (IN_SCOPE / MINOR CREEP / SIGNIFICANT CREEP)
+- Scope Report emitted with recommendations
+
 ## Cost Profile
 
 ~200-500 tokens input, ~100-300 tokens output. Haiku. Lightweight monitor.

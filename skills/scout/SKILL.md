@@ -90,6 +90,10 @@ Produce structured output for the calling skill. Update TodoWrite to completed.
 - If a file fails to `Read`: skip it, note in report, continue with remaining files
 - If project type is ambiguous: check multiple config files, report all candidates
 
+## Calls (outbound)
+
+None — pure scanner using Glob, Grep, Read, and Bash tools directly. Does not invoke other skills.
+
 ## Called By (inbound)
 
 - `plan` (L2): scan codebase before planning
@@ -129,6 +133,26 @@ Produce structured output for the calling skill. Update TodoWrite to completed.
 ### Observations
 - [pattern or potential issue noticed]
 ```
+
+## Sharp Edges
+
+Known failure modes for this skill. Check these before declaring done.
+
+| Failure Mode | Severity | Mitigation |
+|---|---|---|
+| Reading all files instead of targeted search (50+ files scanned) | MEDIUM | Max 10 file reads enforced — prioritize by relevance to the caller's domain |
+| Reporting "nothing found" without trying a broader pattern | MEDIUM | Try broader glob first (e.g. `**/*auth*` → `**/auth*` → `**/*login*`), then report not found |
+| Wrong framework detection affects all downstream planning | HIGH | Check multiple config files; report all candidates if ambiguous, don't guess |
+| Missing dependency blast radius in Phase 3 | MEDIUM | Phase 3 is mandatory — callers need to know what else imports the target |
+
+## Done When
+
+- Project structure mapped (directory layout, entry points)
+- Framework detected from config files (or "ambiguous" with candidates listed)
+- Targeted file search completed for the caller's domain
+- Dependency blast radius identified for target files
+- Conventions detected (naming, test framework, linting config)
+- Scout Report emitted in structured format with Relevant Files table
 
 ## Cost Profile
 

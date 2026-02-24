@@ -171,6 +171,27 @@ Run rune:safeguard on [top-priority module] before any refactoring.
 4. MUST NOT recommend refactoring everything — prioritize by impact
 5. MUST check: test coverage, cyclomatic complexity, dependency freshness, dead code
 
+## Sharp Edges
+
+Known failure modes for this skill. Check these before declaring done.
+
+| Failure Mode | Severity | Mitigation |
+|---|---|---|
+| Health scores estimated without reading actual code metrics | CRITICAL | Constraint 1: scan actual code — open files, count LOC, assess nesting depth |
+| Recommending refactoring everything without prioritization | HIGH | Constraint 4: rank by severity — worst health score modules first, max top-5 |
+| Missing git archaeology (no hotspot/stale file analysis) | MEDIUM | Step 4 bash commands are mandatory — git log data is part of the health picture |
+| Skipping RESCUE-REPORT.md write (only verbal summary) | HIGH | Step 5 write is mandatory — persistence is the point of autopsy |
+| Health score not backed by all 6 dimensions scored | MEDIUM | All 6 dimensions (complexity, test coverage, docs, deps, smells, maintenance) required |
+
+## Done When
+
+- scout completed with full project map (all files, entry points, import graph)
+- All major modules scored across all 6 dimensions
+- Git archaeology run (hotspots, stale files, dead code candidates identified)
+- RESCUE-REPORT.md written to project root with Mermaid dependency diagram
+- journal called with health score and surgery queue
+- Autopsy Report emitted with overall health tier and top-3 issues
+
 ## Cost Profile
 
 ~5000-10000 tokens input, ~2000-4000 tokens output. Opus for deep analysis. Most expensive L2 skill but runs once per rescue.

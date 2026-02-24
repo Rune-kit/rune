@@ -181,6 +181,27 @@ After GREEN phase, call `verification` to check coverage threshold (80% minimum)
 - [existing test that broke, with error details]
 ```
 
+## Sharp Edges
+
+Known failure modes for this skill. Check these before declaring done.
+
+| Failure Mode | Severity | Mitigation |
+|---|---|---|
+| Tests passing before implementation exists | CRITICAL | RED Gate: rewrite stricter tests — passing without code = not testing real behavior |
+| Skipping the RED phase (not confirming FAIL) | HIGH | Run tests, confirm FAIL output before calling cook/fix to implement |
+| Testing mock behavior instead of real code | HIGH | Constraint 4: test what the real code does, not what the mock returns |
+| Coverage below 80% without filling gaps | MEDIUM | Coverage Gate: identify uncovered lines and write additional tests |
+| Introducing a new test framework instead of using existing one | MEDIUM | Constraint 6: detect framework first, use project's existing one always |
+
+## Done When
+
+- Test framework detected from project config files
+- Tests cover happy path + at least 2 edge cases + error case
+- All new tests FAIL (RED phase — actual failure output shown)
+- After implementation: all tests PASS (GREEN phase — actual pass output shown)
+- Coverage ≥80% verified via verification
+- Test Report emitted with framework, test count, RED/GREEN status, and coverage
+
 ## Cost Profile
 
 ~$0.03-0.08 per invocation. Sonnet for writing tests, Bash for running them. Frequent invocation in TDD workflow.

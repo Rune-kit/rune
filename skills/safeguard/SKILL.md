@@ -159,6 +159,28 @@ Safe to proceed with: `rune:surgeon` targeting [module]
 3. MUST cover critical paths identified by autopsy — not just easy-to-test functions
 4. MUST verify tests are meaningful — tests that always pass regardless of code are useless
 
+## Sharp Edges
+
+Known failure modes for this skill. Check these before declaring done.
+
+| Failure Mode | Severity | Mitigation |
+|---|---|---|
+| Characterization tests that always pass regardless of code (trivial asserts) | CRITICAL | Constraint 4: tests must fail if the module is deleted or its logic is changed |
+| Not covering critical paths identified by autopsy | HIGH | Constraint 3: cover high-risk functions first — autopsy flags which ones |
+| Characterization tests written to "correct" behavior instead of current behavior | HIGH | Tests capture ACTUAL output, including bugs — do not fix behavior in the tests |
+| Skipping config freeze step | MEDIUM | Step 4 is required — baseline config needed for comparison after surgery |
+| No git tag created before declaring safeguard complete | MEDIUM | Tag `rune-safeguard-<module>` must exist before surgery begins |
+
+## Done When
+
+- Module boundaries identified via scout (public functions, consumers, dependencies)
+- Characterization tests written for all public functions
+- Tests PASS on current (unmodified) code — HARD-GATE verified
+- Boundary markers added (@legacy, @bridge, @do-not-touch)
+- Config files frozen to .rune/
+- Git tag `rune-safeguard-<module>` created
+- Safeguard Report emitted with test count, coverage, and rollback tag
+
 ## Cost Profile
 
 ~2000-5000 tokens input, ~1000-2000 tokens output. Sonnet for test writing quality.

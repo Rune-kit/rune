@@ -128,6 +128,28 @@ If the user requests changes, revise the plan and re-present. Do not skip re-pre
 Reply "go" to execute, or describe changes needed.
 ```
 
+## Sharp Edges
+
+Known failure modes for this skill. Check these before declaring done.
+
+| Failure Mode | Severity | Mitigation |
+|---|---|---|
+| Generating plan without scout context — file paths invented | CRITICAL | Constraint 1: exact paths require scout output — call scout first, always |
+| Plan with zero test entries for code-producing phases | CRITICAL | HARD-GATE rejects it — every code phase needs a test entry |
+| Not waiting for user approval before handing to cook | HIGH | Constraint 6: present plan, wait for explicit "go" / "proceed" / "yes" |
+| Phases with vague descriptions ("set up the database") | MEDIUM | Constraint 1: each phase must list exact files and what changes in each |
+| Over-scoping: 10+ phase plan when task could be 3 phases | MEDIUM | If plan exceeds 6 phases, consider splitting into two tasks |
+
+## Done When
+
+- Scout output read and conventions/patterns identified
+- Task decomposed into ordered, atomic phases with exact file paths
+- Risks identified for each phase (breaking changes, dependencies, coverage gaps)
+- Every code-producing phase has a corresponding test entry
+- Plan presented to user with "Awaiting Approval" prompt
+- User has explicitly approved (received "go", "proceed", or equivalent)
+- Implementation Plan emitted in output format
+
 ## Cost Profile
 
 ~3000-8000 tokens input, ~1000-3000 tokens output. Opus for architectural reasoning quality. Most expensive L2 skill but runs infrequently.

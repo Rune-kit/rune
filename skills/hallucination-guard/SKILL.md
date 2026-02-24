@@ -133,6 +133,26 @@ SUSPICIOUS  — package name similar to popular package (slopsquatting)
 3. MUST report BLOCK verdict with specific evidence — never "looks suspicious"
 4. MUST NOT say "no hallucinations found" without listing what was checked
 
+## Sharp Edges
+
+Known failure modes for this skill. Check these before declaring done.
+
+| Failure Mode | Severity | Mitigation |
+|---|---|---|
+| Declaring "no hallucinations found" without listing what was checked | CRITICAL | Constraint 4 blocks this — always list verified count vs total |
+| Marking phantom package (not in manifest) as WARN instead of BLOCK | HIGH | Unlisted package in manifest = BLOCK — not installed = won't run |
+| Missing typosquatting check on external packages | MEDIUM | Edit distance ≤2 check is mandatory — check every external package name |
+| Only checking package name, not the specific exported symbol | MEDIUM | Step 2: verify the specific function/class is exported, not just the file exists |
+
+## Done When
+
+- All imports extracted from changed files (internal + external separated)
+- Internal imports: file existence AND symbol export verified
+- External packages: manifest presence checked for every package
+- Suspicious package names flagged (edit distance ≤2 from popular packages)
+- API signatures checked via docs-seeker for new SDK/library calls
+- Hallucination Guard Report emitted with PASS/WARN/BLOCK and verified count
+
 ## Cost Profile
 
 ~500-1500 tokens input, ~200-500 tokens output. Haiku for speed — this runs frequently as a sub-check.
