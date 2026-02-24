@@ -57,6 +57,29 @@ Use `Read` to load each changed file. For every modified function or method:
 - Check boundary conditions: off-by-one in loops, array index out of bounds, division by zero.
 - Check type coercions: implicit `==` comparisons that could produce wrong results, string-to-number conversions without validation.
 
+**Common patterns to flag:**
+
+```typescript
+// BAD — missing await (race condition)
+async function processOrder(orderId: string) {
+  const order = db.orders.findById(orderId); // order is a Promise, not a value
+  return calculateTotal(order.items); // crashes: order.items is undefined
+}
+// GOOD
+async function processOrder(orderId: string) {
+  const order = await db.orders.findById(orderId);
+  return calculateTotal(order.items);
+}
+```
+
+```typescript
+// BAD — sequential independent I/O
+const user = await fetchUser(id);
+const permissions = await fetchPermissions(id); // waits unnecessarily
+// GOOD — parallel
+const [user, permissions] = await Promise.all([fetchUser(id), fetchPermissions(id)]);
+```
+
 Flag each issue with: file path, line number, category (null-deref | missing-await | off-by-one | type-coerce), and a one-line description.
 
 ### Step 2 — Error Handling
@@ -66,6 +89,25 @@ For every changed file, verify:
 - Every `fetch` / HTTP client call checks the response status before consuming the body.
 - Error messages are user-friendly: no raw stack traces, no internal variable names exposed to the client.
 - API route handlers return appropriate HTTP status codes (4xx for client errors, 5xx for server errors).
+
+**Common patterns to flag:**
+
+```typescript
+// BAD — swallowed exception
+try {
+  await saveUser(data);
+} catch (e) {} // silent failure, caller never knows
+
+// BAD — leaks internals to client
+app.use((err, req, res, next) => {
+  res.status(500).json({ error: err.stack }); // exposes stack trace
+});
+// GOOD — log internally, generic message to client
+app.use((err, req, res, next) => {
+  logger.error(err);
+  res.status(500).json({ error: 'Internal server error' });
+});
+```
 
 Flag each violation with: file path, line number, category (bare-catch | missing-status-check | raw-error-exposure), and description.
 
@@ -85,6 +127,13 @@ Verify that new code ships complete:
 - New feature → has at least one test file
 - New configuration option → has documentation (inline comment or docs file)
 - New database query → has corresponding migration file if schema changed
+
+**Framework-specific completeness (apply only if detected):**
+- React component with async data → must have `loading` state AND `error` state
+- Next.js Server Action → must have `try/catch` and return typed result
+- FastAPI endpoint → must have Pydantic request/response models
+- Django ViewSet → must have explicit `permission_classes`
+- Express route → must have input validation middleware before handler
 
 If any completeness item is missing, flag as **WARN** with: what is missing, which file needs it.
 

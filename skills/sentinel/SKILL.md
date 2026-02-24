@@ -90,6 +90,36 @@ Use `Read` to scan changed files for:
 - **CSRF**: HTML `<form>` elements without CSRF token fields; `Set-Cookie` headers without `SameSite`. Flag = **WARN**
 - **Missing input validation**: new route handlers or API endpoints that directly pass `req.body` / `request.json()` to a database call without a validation schema. Flag = **WARN**
 
+**SQL Injection examples:**
+```python
+# BAD — string interpolation in SQL → BLOCK
+cursor.execute(f"SELECT * FROM users WHERE id = {user_id}")
+query = "SELECT * FROM users WHERE name = '" + name + "'"
+# GOOD — parameterized query
+cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
+```
+
+**XSS examples:**
+```typescript
+// BAD — renders raw user content → BLOCK
+element.innerHTML = userComment;
+<div dangerouslySetInnerHTML={{ __html: userInput }} />
+// GOOD — safe alternatives
+element.textContent = userComment;
+<div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(userInput) }} />
+```
+
+**Input validation examples:**
+```typescript
+// BAD — raw body to DB → WARN
+app.post('/users', async (req, res) => { await db.users.create(req.body); });
+// GOOD — validate at boundary
+app.post('/users', async (req, res) => {
+  const validated = CreateUserSchema.parse(req.body);
+  await db.users.create(validated);
+});
+```
+
 ### Step 4 — Permission Check
 Use `Grep` to scan for:
 - Destructive shell commands in scripts: `rm -rf /`, `DROP TABLE`, `DELETE FROM` without `WHERE`, `TRUNCATE`
@@ -97,6 +127,27 @@ Use `Grep` to scan for:
 - Direct production database connection strings (e.g., `prod`, `production` in DB host names)
 
 Destructive command on production path = **BLOCK**. Suspicious path = **WARN**.
+
+### Step 4.5 — Framework-Specific Security Patterns
+
+Apply only if the framework is detected in changed files:
+
+**Django** (detect: `django` in requirements or imports)
+- `DEBUG = True` in non-development settings → **BLOCK**
+- Missing `permission_classes` on ModelViewSet → **WARN**
+- CSRF middleware removed from `MIDDLEWARE` list → **BLOCK**
+
+**React / Next.js** (detect: `.tsx` / `.jsx` files)
+- JWT stored in `localStorage` instead of `httpOnly` cookie → **WARN**
+- `dangerouslySetInnerHTML` without `DOMPurify.sanitize()` → **BLOCK**
+
+**Node.js / Express / Fastify** (detect: `express`, `fastify` imports)
+- CORS set to `origin: '*'` on authenticated endpoints → **WARN**
+- Missing `helmet` middleware for HTTP security headers → **WARN**
+
+**Python** (detect: `.py` files)
+- `pickle.loads(user_input)` or `eval(user_expression)` → **BLOCK**
+- `yaml.load()` without `Loader` arg (uses unsafe loader) → **WARN**
 
 ### Step 5 — Report
 Aggregate all findings. Apply the verdict rule:

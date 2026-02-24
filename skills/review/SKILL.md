@@ -73,6 +73,32 @@ Read each changed file and check for correctness.
 - Check for: edge cases — empty input, null/undefined, zero, negative numbers, empty arrays
 - Flag each finding with file path, line number, and severity
 
+**Common patterns to flag:**
+
+```typescript
+// BAD — missing await causes race condition
+async function saveUser(data) {
+  db.users.create(data); // caller proceeds before save completes
+  return { success: true };
+}
+// GOOD
+async function saveUser(data) {
+  await db.users.create(data);
+  return { success: true };
+}
+```
+
+```typescript
+// BAD — null deref crash
+function getUsername(user) {
+  return user.profile.name.toUpperCase(); // crashes if profile or name is null
+}
+// GOOD — safe access
+function getUsername(user) {
+  return user?.profile?.name?.toUpperCase() ?? 'Anonymous';
+}
+```
+
 ### Step 3: Pattern Check
 
 Check consistency with project conventions.
@@ -83,6 +109,31 @@ Check consistency with project conventions.
 - Check for hardcoded values that should be constants or config
 - Check TypeScript: no `any`, full type coverage, no non-null assertions without justification
 - Flag inconsistencies as MEDIUM or LOW depending on impact
+
+**Common patterns to flag:**
+
+```typescript
+// BAD — mutation
+function addItem(cart, item) {
+  cart.items.push(item); // mutates in place
+  return cart;
+}
+// GOOD — immutable
+function addItem(cart, item) {
+  return { ...cart, items: [...cart.items, item] };
+}
+```
+
+```typescript
+// BAD — any defeats TypeScript's purpose
+function process(data: any): any {
+  return data.items.map((i: any) => i.value);
+}
+// GOOD — typed
+function process(data: { items: Array<{ value: string }> }): string[] {
+  return data.items.map(i => i.value);
+}
+```
 
 ### Step 4: Security Check
 
@@ -109,6 +160,12 @@ Identify gaps in test coverage.
 
 Produce a structured severity-ranked report.
 
+**Before reporting, apply confidence filter:**
+- Only report findings with >80% confidence it is a real issue
+- Consolidate similar issues: "8 functions missing error handling in src/services/" — not 8 separate findings
+- Skip stylistic preferences unless they violate conventions found in `.eslintrc`, `CLAUDE.md`, or `CONTRIBUTING.md`
+- Adapt to project type: a `console.log` in a CLI tool is fine; in a production API handler it is not
+
 - Group findings by severity: CRITICAL → HIGH → MEDIUM → LOW
 - Include file path and line number for every finding
 - Include a Positive Notes section (good patterns observed)
@@ -118,6 +175,26 @@ After reporting:
 - If any CRITICAL findings: call `rune:fix` immediately with the finding details
 - If any HIGH findings: call `rune:fix` with the finding details
 - If untested code: call `rune:test` with specific coverage gaps identified
+
+## Framework-Specific Checks
+
+Apply **only** if the framework is detected in the changed files. Skip if not relevant.
+
+**React / Next.js** (detect: `import React` or `.tsx` files)
+- `useEffect` with missing dependencies (stale closure) → flag HIGH
+- List items using index as key on reorderable lists: `key={i}` → flag MEDIUM
+- Props drilled through 3+ levels without Context or composition → flag MEDIUM
+- Client-side hooks (`useState`, `useEffect`) in Server Components (Next.js App Router) → flag HIGH
+
+**Node.js / Express** (detect: `import express` or `require('express')`)
+- Missing rate limiting on public endpoints → flag MEDIUM
+- `req.body` passed directly to DB without validation schema → flag HIGH
+- Synchronous operations blocking the event loop inside async handlers → flag HIGH
+
+**Python** (detect: `.py` files with `django`, `flask`, or `fastapi` imports)
+- `except:` bare catch without specific exception type → flag MEDIUM
+- Mutable default arguments: `def func(items=[])` → flag HIGH
+- Missing type hints on public functions (if project uses mypy/pyright) → flag LOW
 
 ## Severity Levels
 
