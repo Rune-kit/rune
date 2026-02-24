@@ -20,9 +20,11 @@ Route to the appropriate Rune skill based on the action:
 - `/rune plan <task>` — Invoke the rune:plan skill to create implementation plan
 - `/rune debug <issue>` — Invoke the rune:debug skill for root cause analysis
 - `/rune review` — Invoke the rune:review skill for code quality review
+- `/rune sentinel` — Invoke the rune:sentinel skill for security scanning
+- `/rune preflight` — Invoke the rune:preflight skill for pre-commit quality gate
 - `/rune onboard` — Invoke the rune:onboard skill to generate project context
 
-### Utilities
+### Utilities (L3)
 - `/rune status` — Show current project state from .rune/ files
 
 ## Usage
