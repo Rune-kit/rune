@@ -5,7 +5,7 @@
 | Layer | Name | Count | Can Call | Called By | State |
 |-------|------|-------|----------|----------|-------|
 | L1 | Orchestrators | 4 | L2, L3 | User only | Stateful (workflow) |
-| L2 | Workflow Hubs | 16 | L2 (cross-hub), L3 | L1, L2 | Stateful (task) |
+| L2 | Workflow Hubs | 19 | L2 (cross-hub), L3 | L1, L2 | Stateful (task) |
 | L3 | Utilities | 16 | Nothing (pure)* | L1, L2 | Stateless |
 | L4 | Extension Packs | 12 | L3 | L2 (domain match) | Config-based |
 
@@ -72,9 +72,9 @@ Override: user preference   → manual in config
 | Group | Skills |
 |-------|--------|
 | CREATION | plan, scout, brainstorm |
-| DEVELOPMENT | debug, fix, test, review |
-| QUALITY | sentinel, preflight, onboard, audit |
-| DELIVERY | deploy, marketing |
+| DEVELOPMENT | debug, fix, test, review, db |
+| QUALITY | sentinel, preflight, onboard, audit, perf |
+| DELIVERY | deploy, marketing, incident |
 | RESCUE | autopsy, safeguard, surgeon |
 
 ### L3 Utilities
@@ -111,6 +111,31 @@ audit → autopsy       (complexity/health phase)
 audit → dependency-doctor (deps phase delegation)
 audit → scout         (discovery phase)
 audit → journal       (save audit report)
+
+# perf
+perf ← cook           (Phase 5 quality gate)
+perf ← audit          (performance dimension delegation)
+perf ← review         (performance patterns detected in diff)
+perf ← deploy         (pre-deploy perf regression check)
+perf → scout          (find hotpath files)
+perf → browser-pilot  (Lighthouse / Core Web Vitals)
+perf → verification   (run benchmark scripts if configured)
+
+# db
+db ← cook             (schema change detected in diff)
+db ← deploy           (pre-deploy migration safety check)
+db ← audit            (database health dimension)
+db → scout            (find schema/migration files)
+db → verification     (run migration in test env)
+db → hallucination-guard (verify SQL syntax and ORM methods)
+
+# incident
+incident ← launch     (watchdog alerts during Phase 3 VERIFY)
+incident ← deploy     (health check fails post-deploy)
+incident → watchdog   (current system state — what's down)
+incident → autopsy    (root cause after containment)
+incident → journal    (record incident timeline)
+incident → sentinel   (check for security dimension)
 ```
 
 ## Context Bus

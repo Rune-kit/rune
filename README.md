@@ -8,7 +8,7 @@ A lean, interconnected skill ecosystem for Claude Code that covers the full proj
 
 Most skill ecosystems are either **too many isolated skills** (540+ that don't talk to each other) or **rigid pipelines** (A → B → C, if B fails everything stops).
 
-Rune is a **mesh** — 36 skills with 115 connections. Skills call each other bidirectionally, forming resilient workflows that adapt when things go wrong.
+Rune is a **mesh** — 39 skills with 134 connections. Skills call each other bidirectionally, forming resilient workflows that adapt when things go wrong.
 
 ```
 Pipeline:  A → B → C → D         (B fails = stuck)
@@ -41,6 +41,9 @@ claude plugin add rune
 
 # Full project health audit
 /rune audit
+
+# Respond to a production incident
+/rune incident "login service returning 503 for 30% of users"
 ```
 
 ## Architecture
@@ -53,13 +56,14 @@ claude plugin add rune
 ║  Full lifecycle workflows                          ║
 ║  cook │ team │ launch │ rescue                     ║
 ╠═══════════════════════════════════════════════════╣
-║  L2: WORKFLOW HUBS (16)                            ║
+║  L2: WORKFLOW HUBS (19)                            ║
 ║  Cross-hub mesh — the key differentiator           ║
 ║                                                     ║
 ║  Creation:    plan │ scout │ brainstorm             ║
-║  Development: debug │ fix │ test │ review           ║
-║  Quality:     sentinel │ preflight │ onboard │ audit║
-║  Delivery:    deploy │ marketing                    ║
+║  Development: debug │ fix │ test │ review │ db      ║
+║  Quality:     sentinel │ preflight │ onboard │      ║
+║               audit │ perf                          ║
+║  Delivery:    deploy │ marketing │ incident         ║
 ║  Rescue:      autopsy │ safeguard │ surgeon         ║
 ╠═══════════════════════════════════════════════════╣
 ║  L3: UTILITIES (16)                                ║
@@ -190,11 +194,11 @@ Domain-specific skills that plug into the core mesh:
 ## Numbers
 
 ```
-Core Skills:       36
+Core Skills:       39
 Extension Packs:   12
-Mesh Connections:  115+
-Pain Points Solved: 85% (17/20)
-Connections/Skill: 3.2 (vs 1.5 industry average)
+Mesh Connections:  134+
+Pain Points Solved: 90% (18/20)
+Connections/Skill: 3.4 (vs 1.5 industry average)
 ```
 
 ## License

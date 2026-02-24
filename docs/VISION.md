@@ -20,7 +20,7 @@ Three specific failures motivated Rune:
 
 **Failure 3: Amnesia.** Each session starts from zero. The AI re-discovers conventions, re-reads the codebase, re-asks questions that were answered two sessions ago. Context dies at the end of every conversation.
 
-**Rune's insight:** the value is in the connections, not the nodes. A mesh of 36 well-connected skills outperforms 500 isolated ones. Resilience comes from redundant paths. Memory comes from structured persistence. The goal is not to give developers more AI tools — it's to give them an AI that behaves like a senior engineer who was actually there last week.
+**Rune's insight:** the value is in the connections, not the nodes. A mesh of 39 well-connected skills outperforms 500 isolated ones. Resilience comes from redundant paths. Memory comes from structured persistence. The goal is not to give developers more AI tools — it's to give them an AI that behaves like a senior engineer who was actually there last week.
 
 ---
 
@@ -30,7 +30,7 @@ Rune is a **skill mesh** — not a skill collection, not a pipeline, not an AI a
 
 **Technical definition:**
 
-> **Rune = 36 skills × 115+ bidirectional connections × cross-session memory**
+> **Rune = 39 skills × 134+ bidirectional connections × cross-session memory**
 
 All three components are equally essential:
 - Remove connections → becomes a collection (The Bloat wins)
@@ -180,7 +180,7 @@ Rune operates on three time horizons. The roadmap is intentionally non-prescript
 
 ### H1 — Consolidation (Now)
 
-**Goal:** Make the 36 existing skills excellent before adding more.
+**Goal:** Make the 39 existing skills excellent before adding more.
 
 - Deepen mesh connections: audit every skill's `## Calls` and `## Called By` for accuracy
 - Harden behavioral constraints: identify constraints that can be rationalized away and rewrite them
@@ -218,7 +218,7 @@ Rune operates on three time horizons. The roadmap is intentionally non-prescript
 *Rune is successful when these are true. Not when the feature list is long.*
 
 ### Mesh Health
-- **Connection density** ≥ 3.0 connections/skill (currently: 3.2) — do not let this drop below 2.5
+- **Connection density** ≥ 3.0 connections/skill (currently: 3.4) — do not let this drop below 2.5
 - **Dead nodes** = 0 — every skill has ≥1 inbound and ≥1 outbound connection
 - **Max chain depth used** < 6 in practice (ceiling is 8) — if chains regularly hit 8, the mesh needs restructuring
 
