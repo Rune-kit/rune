@@ -44,9 +44,10 @@ rune/
 
 ## Current Wave
 
-Wave 0 (Setup) complete. Wave 1 (Quality Gate) complete.
-Skills built: scout, session-bridge, sentinel, onboard, preflight, hallucination-guard.
-Next: Wave 2 (Development Hub — plan, debug, fix, test, review, brainstorm)
+Wave 0 (Setup) complete. Wave 1 (Quality Gate) complete. Wave 2 (Development Hub) complete.
+Skills built: scout, session-bridge, sentinel, onboard, preflight, hallucination-guard,
+  plan, debug, fix, test, review, brainstorm.
+Next: Wave 3 (Core Orchestrator — cook L1 + mesh wiring)
 
 ## Full Spec
 

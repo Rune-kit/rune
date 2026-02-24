@@ -15,11 +15,18 @@ Route to the appropriate Rune skill based on the action:
 - `/rune launch` — Invoke the rune:launch skill for deploy + marketing
 - `/rune rescue` — Invoke the rune:rescue skill for legacy refactoring
 
-### Workflow (L2)
-- `/rune scout` — Invoke the rune:scout skill to scan codebase
+### Workflow (L2) — Creation
 - `/rune plan <task>` — Invoke the rune:plan skill to create implementation plan
+- `/rune scout` — Invoke the rune:scout skill to scan codebase
+- `/rune brainstorm <topic>` — Invoke the rune:brainstorm skill for creative ideation
+
+### Workflow (L2) — Development
 - `/rune debug <issue>` — Invoke the rune:debug skill for root cause analysis
+- `/rune fix <issue>` — Invoke the rune:fix skill to apply code changes
+- `/rune test` — Invoke the rune:test skill to write and run tests
 - `/rune review` — Invoke the rune:review skill for code quality review
+
+### Workflow (L2) — Quality
 - `/rune sentinel` — Invoke the rune:sentinel skill for security scanning
 - `/rune preflight` — Invoke the rune:preflight skill for pre-commit quality gate
 - `/rune onboard` — Invoke the rune:onboard skill to generate project context
