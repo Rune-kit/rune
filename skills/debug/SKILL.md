@@ -30,12 +30,14 @@ Root cause analysis for bugs and unexpected behavior. Debug is the diagnostic en
 - `docs-seeker` (L3): lookup API docs for unclear errors or deprecated APIs
 - `problem-solver` (L3): structured reasoning (5 Whys, Fishbone) for complex bugs
 - `browser-pilot` (L3): capture browser console errors, network failures, visual bugs
+- `sequential-thinking` (L3): multi-variable root cause analysis
 
 ## Called By (inbound)
 
 - `cook` (L1): implementation hits bug during Phase 4
 - `fix` (L2): root cause unclear, can't fix blindly — needs diagnosis first
 - `test` (L2): test fails unexpectedly, unclear why
+- `surgeon` (L2): diagnose issues in legacy modules
 
 ## Cross-Hub Connections
 

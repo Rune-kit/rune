@@ -30,6 +30,7 @@ None — pure L3 utility using WebSearch and WebFetch tools.
 - `brainstorm` (L2): data for informed ideation
 - `marketing` (L2): competitor analysis, SEO data
 - `hallucination-guard` (L3): verify package existence on npm/pypi
+- `autopsy` (L2): research best practices for legacy patterns
 
 ## Workflow
 

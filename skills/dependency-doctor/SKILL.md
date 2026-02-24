@@ -39,6 +39,14 @@ CONFLICT FIX    — identify version conflicts, suggest resolutions
 CLEANUP         — find unused deps, duplicates, lighter alternatives
 ```
 
+## Workflow
+
+1. Scan package.json / requirements.txt / Cargo.toml to enumerate all dependencies
+2. Check each dep for outdated versions, known CVEs, and deprecated status
+3. Analyze breaking changes between current and latest versions
+4. Generate an update plan ordered by risk (patch → minor → major)
+5. Return dependency health report with critical issues, outdated list, and action items
+
 ## Output Format
 
 ```

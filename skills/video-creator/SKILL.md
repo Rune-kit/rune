@@ -39,6 +39,14 @@ THUMBNAILS      — thumbnail design specs
 FLOW PLANNING   — optimal demo flow showing features
 ```
 
+## Workflow
+
+1. Receive video brief — topic, target audience, and target duration from calling skill
+2. Generate narration script and storyboard with timestamped sections
+3. Plan visual assets needed — thumbnails, overlays, transition slides
+4. Create shot list with per-scene timing and screen actions for the recorder
+5. Return production-ready video plan including script, shot list, and ffmpeg editing notes
+
 ## Output Format
 
 ```

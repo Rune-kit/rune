@@ -25,7 +25,8 @@ Post-generation validation that verifies AI-generated code references actually e
 
 ## Calls (outbound)
 
-None — hallucination-guard is a pure validator using Glob/Grep/Read and package registry lookups.
+# Exception: L3→L3 coordination
+- `research` (L3): verify package existence on npm/pypi
 
 ## Called By (inbound)
 

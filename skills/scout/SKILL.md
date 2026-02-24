@@ -37,6 +37,9 @@ None — scout is a pure scanner using Glob/Grep/Read tools.
 - `preflight` (L2): find affected code paths
 - `onboard` (L2): full project scan for CLAUDE.md generation
 - `autopsy` (L2): comprehensive health assessment
+- `surgeon` (L2): scan module before refactoring
+- `marketing` (L2): scan codebase for feature descriptions
+- `safeguard` (L2): scan module boundaries before adding safety net
 
 ## Workflow
 

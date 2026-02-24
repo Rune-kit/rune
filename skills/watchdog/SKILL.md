@@ -38,6 +38,14 @@ ALERT RULES     — error rate, response time, uptime thresholds
 SMOKE TEST      — verify critical endpoints after deploy
 ```
 
+## Workflow
+
+1. Receive deployment URL and list of health endpoints from calling skill
+2. Run availability checks — HTTP status, load time, /health and /ready responses
+3. Monitor error rates and response times against configured thresholds
+4. Compare results against baseline metrics to detect regressions
+5. Return monitoring report with smoke test results, alert rules configured, and any triggered alerts
+
 ## Output Format
 
 ```

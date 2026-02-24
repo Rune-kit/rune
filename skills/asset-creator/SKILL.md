@@ -39,6 +39,14 @@ ICONS          — SVG icon generation
 HTML ASSETS    — HTML/CSS assets exportable to PNG/JPG
 ```
 
+## Workflow
+
+1. Receive asset requirements — type (banner / OG image / icon), dimensions, and style context
+2. Generate SVG / HTML / CSS assets or engineered AI image prompts matching the spec
+3. Optimize output for the target platform (Twitter 1200x628, OG 1200x630, etc.)
+4. Create multiple variants if needed (dark/light, different aspect ratios)
+5. Return asset files or prompts with file paths and usage instructions
+
 ## Output Format
 
 ```

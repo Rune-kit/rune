@@ -29,12 +29,14 @@ Apply code changes and fixes. Fix is the action hub of the Development Hub — i
 - `test` (L2): verify fix with tests after applying changes
 - `review` (L2): self-review for complex or risky fixes
 - `verification` (L3): validate fix doesn't break existing functionality
+- `docs-seeker` (L3): check correct API usage before applying changes
 
 ## Called By (inbound)
 
 - `cook` (L1): Phase 4 IMPLEMENT — apply code changes
 - `debug` (L2): root cause found, ready to apply fix
 - `review` (L2): bug found during review, needs fixing
+- `surgeon` (L2): apply refactoring changes
 
 ## Cross-Hub Connections
 

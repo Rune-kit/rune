@@ -27,12 +27,14 @@ Create structured implementation plans from requirements. Plan is the strategic 
 - `scout` (L2): scan codebase for existing patterns, conventions, and structure
 - `brainstorm` (L2): when multiple valid approaches exist and creative exploration needed
 - `research` (L3): external knowledge lookup for unfamiliar technologies
+- `sequential-thinking` (L3): complex architecture with many trade-offs
 
 ## Called By (inbound)
 
 - `cook` (L1): Phase 2 PLAN — create implementation plan
 - `team` (L1): high-level task decomposition into parallel workstreams
 - `brainstorm` (L2): when idea is selected and needs structuring into actionable plan
+- `rescue` (L1): plan refactoring strategy for legacy modules
 - User: `/rune plan <task>` direct invocation
 
 ## Cross-Hub Connections

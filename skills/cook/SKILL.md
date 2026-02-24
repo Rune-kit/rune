@@ -51,6 +51,7 @@ The primary orchestrator for feature implementation. Cook runs the full build cy
 
 ### Phase 8: BRIDGE
 - `session-bridge` (L3): save decisions, conventions, progress to .rune/
+- `onboard` (L2): generate project context if no CLAUDE.md found
 
 ## Called By (inbound)
 

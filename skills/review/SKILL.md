@@ -28,12 +28,15 @@ Code quality review covering patterns, security, performance, and correctness. R
 - `test` (L2): when untested edge cases found — write tests for them
 - `fix` (L2): when bugs found during review — trigger fix
 - `sentinel` (L2): when security-critical code detected (auth, input, crypto)
+- `docs-seeker` (L3): verify API usage is current and correct
 
 ## Called By (inbound)
 
 - `cook` (L1): Phase 5 REVIEW — post-implementation quality check
 - `fix` (L2): complex fix requests self-review
 - User: `/rune review` direct invocation
+- `surgeon` (L2): review refactored code quality
+- `rescue` (L1): review refactored code quality
 
 ## Cross-Hub Connections
 

@@ -23,7 +23,8 @@ Context window management for long sessions. Detects when context is approaching
 
 ## Calls (outbound)
 
-None — context-engine is a pure L3 utility. It manages context state and coordinates saves.
+# Exception: L3→L3 coordination
+- `session-bridge` (L3): coordinate state save when context critical
 
 ## Called By (inbound)
 

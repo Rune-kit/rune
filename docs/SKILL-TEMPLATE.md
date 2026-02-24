@@ -6,7 +6,7 @@ metadata:
   version: "0.1.0"
   layer: L1|L2|L3
   model: haiku|sonnet|opus
-  group: creation|development|quality|delivery|rescue|knowledge|reasoning|validation|state|monitoring|media|deps
+  group: orchestrator|creation|development|quality|delivery|rescue|knowledge|reasoning|validation|state|monitoring|media|deps
 ---
 
 # skill-name

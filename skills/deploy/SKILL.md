@@ -23,6 +23,7 @@ Deploy applications to target platforms. Handles the full deployment flow — en
 ## Calls (outbound)
 
 - `test` (L2): pre-deploy verification (full test suite)
+- `sentinel` (L2): pre-deploy security check
 - `browser-pilot` (L3): verify live deployment visually
 - `verification` (L3): post-deploy health checks
 - `watchdog` (L3): setup monitoring after deploy

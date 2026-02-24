@@ -24,6 +24,7 @@ Meta-orchestrator for complex tasks requiring parallel workstreams. Team decompo
 
 - `plan` (L2): high-level task decomposition into independent workstreams
 - `scout` (L2): understand full project scope and module boundaries
+# Exception: L1→L1 meta-orchestration (team is the only L1 that calls other L1s)
 - `cook` (L1): delegate feature tasks to parallel instances (worktree isolation)
 - `launch` (L1): delegate deployment/marketing when build is complete
 

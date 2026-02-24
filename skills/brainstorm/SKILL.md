@@ -28,6 +28,7 @@ Creative ideation and solution exploration. Brainstorm is the creative engine of
 - `research` (L3): gather data for informed brainstorming (existing solutions, benchmarks)
 - `trend-scout` (L3): market context and trends for product-oriented brainstorming
 - `problem-solver` (L3): structured reasoning frameworks (SCAMPER, First Principles, 6 Hats)
+- `sequential-thinking` (L3): evaluating approaches with many variables
 
 ## Called By (inbound)
 

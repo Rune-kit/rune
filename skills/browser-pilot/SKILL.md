@@ -29,6 +29,7 @@ None — pure L3 utility using Playwright MCP tools.
 - `deploy` (L2): verify live deployment
 - `debug` (L2): capture browser console errors
 - `marketing` (L2): screenshot for assets
+- `launch` (L1): verify live site after deployment
 
 ## Capabilities
 
@@ -41,6 +42,14 @@ LIGHTHOUSE   — performance, accessibility, SEO scores
 INTERACT     — click buttons, fill forms, select options
 COMPARE      — visual snapshot comparison (before/after)
 ```
+
+## Workflow
+
+1. Receive target URL and task description from calling skill (test / deploy / debug)
+2. Launch Playwright browser session and navigate to the target URL
+3. Execute navigation and interaction steps — click, fill, select as required by the task
+4. Capture screenshots, console errors, network failures, and Lighthouse scores
+5. Return browser report with evidence (screenshots, error logs, performance metrics)
 
 ## Output Format
 

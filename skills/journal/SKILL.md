@@ -49,6 +49,14 @@ None — pure L3 state management utility.
 → Result: Zero context loss across rescue sessions
 ```
 
+## Workflow
+
+1. Load RESCUE-STATE.md and module-status.json to reconstruct current rescue context
+2. Identify the active rescue phase and which modules are in-progress or pending
+3. Update module health scores and status for any modules completed in this session
+4. Record key decisions and trade-offs in ADR format under .rune/adr/
+5. Save updated state files so the next session starts with zero context loss
+
 ## Output Format
 
 ```

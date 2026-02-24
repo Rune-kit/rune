@@ -39,6 +39,14 @@ SCAMPER         — Substitute, Combine, Adapt, Modify, Put to use, Eliminate, R
 IMPACT MATRIX   — Effort vs Impact prioritization
 ```
 
+## Workflow
+
+1. Receive problem statement from calling skill (debug / brainstorm / plan)
+2. Select reasoning framework best suited to the problem type
+3. Apply structured analysis — iterate through framework steps with evidence
+4. Generate root causes and candidate solutions from the reasoning chain
+5. Return ranked recommendations with confidence level and next action
+
 ## Output Format
 
 ```

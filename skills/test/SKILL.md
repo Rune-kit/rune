@@ -37,6 +37,9 @@ Write and run tests — unit, integration, and e2e. Test enforces TDD discipline
 - `review` (L2): untested edge case found → write test for it
 - `deploy` (L2): pre-deployment full test suite
 - `preflight` (L2): run targeted regression tests on affected code
+- `surgeon` (L2): verify refactored code
+- `launch` (L1): pre-deployment test suite
+- `safeguard` (L2): writing characterization tests for legacy code
 
 ## Cross-Hub Connections
 

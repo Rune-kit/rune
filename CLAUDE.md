@@ -35,7 +35,8 @@ rune/
 - Every skill MUST have a SKILL.md following docs/SKILL-TEMPLATE.md
 - Every extension MUST have a PACK.md following docs/EXTENSION-TEMPLATE.md
 - Skill names: lowercase kebab-case, max 64 chars
-- Layer rules: L1 calls L2/L3. L2 calls L2/L3. L3 calls nothing.
+- Layer rules: L1 calls L2/L3. L2 calls L2/L3. L3 calls nothing (except documented L3→L3 coordination).
+- Exception: `team` (L1) can call other L1 orchestrators (meta-orchestration pattern).
 - Model selection: haiku (scan), sonnet (code), opus (architecture)
 - Commit messages: conventional commits (feat, fix, docs, chore)
 

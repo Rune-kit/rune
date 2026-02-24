@@ -27,6 +27,7 @@ Orchestrate the full deployment and marketing pipeline. Launch coordinates testi
 - `browser-pilot` (L3): verify live site screenshots and performance
 - `marketing` (L2): create launch assets (landing copy, social, SEO)
 - `watchdog` (L3): setup post-deploy monitoring
+- `video-creator` (L3): create launch/demo video content
 
 ## Called By (inbound)
 
