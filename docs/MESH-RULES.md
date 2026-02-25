@@ -21,8 +21,14 @@ Cross-cutting behavioral rules for all Rune skills. These are non-negotiable.
 9. Max chain depth: 8. If reached → escalate to L1 orchestrator
 10. No self-calls. Max 2 visits to same skill per chain
 
+## Agentic Security
+
+11. Skills that load persisted state (.rune/ files) MUST verify integrity before use
+12. Multi-agent outputs MUST be validated by integrity-check before merge
+13. .rune/ files modified by external contributors MUST be flagged for review
+
 ## Rationalization Blockers
 
-11. "This is too simple to need X" — every task follows its skill's gates. No exceptions.
-12. "I already know the codebase" — knowledge claims require evidence (file reads, grep results)
-13. "I'll do it after" — if the gate says BEFORE, it means BEFORE. Not after. Not later.
+14. "This is too simple to need X" — every task follows its skill's gates. No exceptions.
+15. "I already know the codebase" — knowledge claims require evidence (file reads, grep results)
+16. "I'll do it after" — if the gate says BEFORE, it means BEFORE. Not after. Not later.

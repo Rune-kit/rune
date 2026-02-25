@@ -12,7 +12,7 @@
 ### Exceptions
 
 - `team` (L1) can call other L1 orchestrators — meta-orchestration pattern.
-- *L3→L3 coordination: `context-engine` → `session-bridge`, `hallucination-guard` → `research` (documented in SKILL.md).
+- *L3→L3 coordination: `context-engine` → `session-bridge`, `hallucination-guard` → `research`, `session-bridge` → `integrity-check` (documented in SKILL.md).
 
 ## Mesh Protocol
 
@@ -83,7 +83,7 @@ Override: user preference   → manual in config
 |-------|--------|
 | KNOWLEDGE | research, docs-seeker, trend-scout |
 | REASONING | problem-solver, sequential-thinking |
-| VALIDATION | verification, hallucination-guard |
+| VALIDATION | verification, hallucination-guard, integrity-check |
 | STATE | context-engine, journal, session-bridge |
 | MONITORING | watchdog, scope-guard |
 | MEDIA | browser-pilot, asset-creator, video-creator |
