@@ -25,7 +25,8 @@ Solve the #1 developer complaint: context loss across sessions. Session-bridge a
 
 ## Calls (outbound)
 
-None — pure state management (read/write .rune/ files).
+# Exception: L3→L3 coordination (same pattern as hallucination-guard → research)
+- `integrity-check` (L3): verify .rune/ file integrity before loading state
 
 ## Called By (inbound)
 
@@ -141,6 +142,21 @@ Glob pattern: .rune/*.md
 
 If no files found: suggest running `/rune onboard` to initialize the project. Exit load mode.
 
+#### Step 1.5 — Integrity verification
+
+Before loading state files, invoke `integrity-check` (L3) to verify `.rune/` files haven't been tampered:
+
+```
+REQUIRED SUB-SKILL: rune:integrity-check
+→ Invoke integrity-check on all .rune/*.md files found in Step 1.
+→ Capture: status (CLEAN | SUSPICIOUS | TAINTED), findings list.
+```
+
+Handle results:
+- `CLEAN` → proceed to Step 2 (load files)
+- `SUSPICIOUS` → present warning to user with specific findings. Ask: "Suspicious patterns detected in .rune/ files. Load anyway?" If user approves → proceed. If not → exit load mode.
+- `TAINTED` → **BLOCK load**. Report: ".rune/ integrity check FAILED — possible poisoning detected. Run `/rune integrity` for details."
+
 #### Step 2 — Load files
 
 Use `Read` on all four state files in parallel:
@@ -204,6 +220,7 @@ Known failure modes for this skill. Check these before declaring done.
 | Saving only a status line, missing decisions/conventions | HIGH | Constraint 1: all three files (decisions, conventions, progress) must be updated |
 | Load mode presenting stale context without age marker | MEDIUM | Mark each loaded entry with its session date — caller knows how fresh it is |
 | Silent failure when git unavailable | MEDIUM | Note "no git available" in report — do not fail silently or skip without logging |
+| Loading poisoned .rune/ files without verification | CRITICAL | Step 1.5 integrity-check MUST run before loading — TAINTED = block load |
 
 ## Done When (Save Mode)
 
