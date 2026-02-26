@@ -83,6 +83,45 @@ If package is **not listed** in the manifest → mark as **BLOCK** (phantom depe
 
 Also check for typosquatting: if package name has edit distance ≤ 2 from a known popular package (axios/axois, lodash/lodahs, react/recat), mark as **SUSPICIOUS**.
 
+### Step 3.5 — Slopsquatting Registry Verification
+
+<HARD-GATE>
+Any NEW package added to the manifest (not previously in the lockfile) MUST be verified against the actual registry.
+AI agents hallucinate package names at high rates. A package that doesn't exist on npm/PyPI/crates.io = supply chain risk.
+</HARD-GATE>
+
+For each NEW external package (present in manifest but absent from lockfile):
+
+**3.5a. Registry existence check:**
+```
+JavaScript: Bash: npm view <package-name> version 2>/dev/null
+Python:     Bash: pip index versions <package-name> 2>/dev/null
+Rust:       Bash: cargo search <package-name> --limit 1 2>/dev/null
+```
+
+If command returns empty/error → **BLOCK** (package does not exist on registry — likely hallucinated name).
+
+**3.5b. Popularity check (slopsquatting defense):**
+```
+JavaScript: Bash: npm view <package-name> 'dist-tags.latest' 'time.modified' 2>/dev/null
+→ If last modified > 2 years ago AND weekly downloads < 100: SUSPICIOUS
+Python:     Use rune:research to check PyPI page for download stats
+```
+
+Low-popularity packages with names similar to popular ones = **SUSPICIOUS** (potential slopsquatting attack).
+
+**3.5c. Known slopsquatting patterns:**
+```
+Popular Package → Common AI Hallucination
+axios           → axois, axio, axioss
+lodash          → lodahs, loadash, lo-dash
+express         → expresss, express-js
+react-router    → react-routes, react-routing
+python-dotenv   → dotenv (wrong package in Python context)
+```
+
+Flag any match with edit distance ≤ 2 from these known pairs.
+
 ### Step 4 — Verify API calls
 
 For any API endpoint or SDK method call found in the diff, use `rune:docs-seeker` (Context7) to confirm:
@@ -144,6 +183,9 @@ Known failure modes for this skill. Check these before declaring done.
 | Marking phantom package (not in manifest) as WARN instead of BLOCK | HIGH | Unlisted package in manifest = BLOCK — not installed = won't run |
 | Missing typosquatting check on external packages | MEDIUM | Edit distance ≤2 check is mandatory — check every external package name |
 | Only checking package name, not the specific exported symbol | MEDIUM | Step 2: verify the specific function/class is exported, not just the file exists |
+| Skipping registry verification for new packages | CRITICAL | Step 3.5 HARD-GATE: new packages MUST be verified against actual registry |
+| AI-hallucinated package name passes because it "sounds right" | HIGH | Slopsquatting defense: check registry existence, not name plausibility |
+| Low-popularity package with similar name to popular one not flagged | HIGH | Popularity check catches slopsquatting attacks on newly registered packages |
 
 ## Done When
 

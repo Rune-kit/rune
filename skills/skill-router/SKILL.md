@@ -42,34 +42,61 @@ Before generating ANY response (including clarifying questions), the agent MUST:
 3. **Invoke the skill** via the Skill tool
 4. **Follow the skill's instructions** — the skill dictates the workflow, not the agent
 
-### Step 1 — Intent Classification
+### Step 1 — Intent Classification (Progressive Disclosure)
 
-Parse the user message and map to one or more categories:
+Skills are organized into 3 tiers for discoverability. **Tier 1 skills handle 90% of user requests.**
+
+#### Tier 1 — Primary Entry Points (User-Facing)
+
+These 5 skills are the main interface. Most user intents route here first:
+
+| User Intent | Route To | When |
+|---|---|---|
+| Build / implement / add feature / fix bug | `rune:cook` | Any code change request |
+| Large multi-part task / parallel work | `rune:team` | 5+ files or 3+ modules |
+| Deploy + launch + marketing | `rune:launch` | Ship to production |
+| Legacy code / rescue / modernize | `rune:rescue` | Old/messy codebase |
+| Check project health / full audit | `rune:audit` | Quality assessment |
+
+**Default route**: If unclear, route to `rune:cook`. Cook handles 70% of all requests.
+
+#### Tier 2 — Power User Skills (Direct Invocation)
+
+For users who know exactly what they want:
 
 | User Intent | Route To | Priority |
 |---|---|---|
-| Build / implement / add feature | `rune:cook` | L1 — full orchestration |
-| Fix bug / debug / "why is X broken" | `rune:debug` → `rune:fix` | L2 chain |
 | Plan / design / architect | `rune:plan` | L2 — requires opus |
 | Brainstorm / explore ideas | `rune:brainstorm` | L2 — before plan |
 | Review code / check quality | `rune:review` | L2 |
 | Write tests | `rune:test` | L2 — TDD |
 | Refactor | `rune:surgeon` | L2 — incremental |
-| Large multi-part task | `rune:team` | L1 — parallel streams |
-| Deploy / ship | `rune:deploy` | L2 |
+| Deploy (without marketing) | `rune:deploy` | L2 |
 | Security concern | `rune:sentinel` | L2 — opus for critical |
 | Performance issue | `rune:perf` | L2 |
 | Database change | `rune:db` | L2 |
 | Received code review / PR feedback | `rune:review-intake` | L2 |
 | Create / edit a Rune skill | `rune:skill-forge` | L2 — requires opus |
-| Research / look up docs | `rune:research` or `rune:docs-seeker` | L3 |
-| Understand codebase / find files | `rune:scout` | L3 |
-| Check project health | `rune:audit` | L2 |
-| Legacy code / rescue | `rune:rescue` | L1 |
 | Incident / outage | `rune:incident` | L2 |
 | UI/UX design | `rune:design` | L2 |
-| Marketing / launch | `rune:launch` | L1 |
-| "Done" / "ship it" / "xong" | `rune:verification` → commit | L3 → git |
+| Fix bug / debug only (no fix) | `rune:debug` → `rune:fix` | L2 chain |
+| Marketing assets only | `rune:marketing` | L2 |
+
+#### Tier 3 — Internal Skills (Called by Other Skills)
+
+These are rarely invoked directly — they're called by Tier 1/2 skills:
+
+| Skill | Called By | Purpose |
+|---|---|---|
+| `rune:scout` | cook, plan, team | Codebase scanning |
+| `rune:fix` | debug, cook | Apply code changes |
+| `rune:preflight` | cook | Quality gate |
+| `rune:verification` | cook, fix | Run lint/test/build |
+| `rune:hallucination-guard` | cook, fix | Verify imports |
+| `rune:completion-gate` | cook | Validate claims |
+| `rune:research` / `rune:docs-seeker` | any | Look up docs |
+| `rune:session-bridge` | cook, team | Save context |
+| "Done" / "ship it" / "xong" | — | `rune:verification` → commit |
 
 ### Step 2 — Compound Intent Resolution
 

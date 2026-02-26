@@ -50,6 +50,26 @@ IMPORTS     — delegated to hallucination-guard
 
 ## Executable Steps
 
+### Stage A — Spec Compliance (Plan vs Diff)
+
+Before checking code quality, verify the code matches what was planned.
+
+Use `Bash` to get the diff: `git diff --cached` (staged) or `git diff HEAD` (all changes).
+Use `Read` to load the approved plan from the calling skill (cook passes plan context).
+
+**Check each plan phase against the diff:**
+
+| Plan says... | Diff shows... | Verdict |
+|---|---|---|
+| "Add function X to file Y" | Function X exists in file Y | PASS |
+| "Add function X to file Y" | Function X missing | BLOCK — incomplete implementation |
+| "Modify function Z" | Function Z untouched | BLOCK — planned change not applied |
+| Nothing about file W | File W modified | WARN — out-of-scope change (scope creep) |
+
+**Output**: List of plan-vs-diff mismatches. Any missing planned change = BLOCK. Any unplanned change = WARN.
+
+If no plan is available (manual preflight invocation), skip Stage A and proceed to Step 1.
+
 ### Step 1 — Logic Review
 Use `Read` to load each changed file. For every modified function or method:
 - Trace the data flow from input to output. Identify where a `null`, `undefined`, empty array, or 0 value would cause a runtime error or wrong result.
@@ -193,6 +213,8 @@ WARN — 3 issues found (0 blocking, 3 must-acknowledge). Resolve before commit 
 | "Happy path works" accepted as sufficient | HIGH | CONSTRAINT blocks this — edge case analysis is mandatory on every function |
 | Calling verification directly instead of the test skill | MEDIUM | Preflight calls rune:test for test suite execution; rune:verification for lint/type/build checks |
 | Skipping sentinel sub-check because "this file doesn't look security-relevant" | HIGH | MUST invoke sentinel — security relevance is sentinel's job to determine, not preflight's |
+| Skipping Stage A (spec compliance) when plan is available | HIGH | If cook provides an approved plan, Stage A is mandatory — catches incomplete implementations |
+| Agent modified files not in plan without flagging | MEDIUM | Stage A flags unplanned file changes as WARN — scope creep detection |
 
 ## Done When
 

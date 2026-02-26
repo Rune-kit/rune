@@ -47,7 +47,7 @@ rune/
 
 ## Current Wave
 
-All 43 core skills built (Waves 0-5 complete + audit + perf/db/incident + design + skill-router + review-intake + skill-forge).
+All 45 core skills built (Waves 0-5 + audit + perf/db/incident + design + skill-router + review-intake + skill-forge + completion-gate + worktree).
 
 ### L0 Router (1)
 skill-router — meta-enforcement layer, routes every action through the correct skill
@@ -60,9 +60,10 @@ plan, scout, brainstorm, design, skill-forge, debug, fix, test, review, db,
 sentinel, preflight, onboard, deploy, marketing, perf,
 autopsy, safeguard, surgeon, audit, incident, review-intake
 
-### L3 Utilities (16)
+### L3 Utilities (18)
 research, docs-seeker, trend-scout, problem-solver, sequential-thinking,
-verification, hallucination-guard, context-engine, journal, session-bridge,
+verification, hallucination-guard, completion-gate, integrity-check,
+context-engine, journal, session-bridge, worktree,
 watchdog, scope-guard, browser-pilot, asset-creator, video-creator,
 dependency-doctor
 
@@ -76,4 +77,4 @@ All layers complete. Repository: https://github.com/rune-kit/rune
 ## Full Spec
 
 See `~/.claude/rune/RUNE-COMPLETE.md` for the complete product specification.
-See `docs/ARCHITECTURE.md` for the 4-layer architecture reference.
+See `docs/ARCHITECTURE.md` for the 5-layer architecture reference.

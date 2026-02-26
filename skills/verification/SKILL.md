@@ -133,12 +133,41 @@ Overall:   [PASS/FAIL]
 - Build: [first 5 build errors]
 ```
 
+## Evidence-Before-Claims Gate
+
+<HARD-GATE>
+An agent MUST NOT claim "done", "fixed", "passing", or "verified" without showing the actual command output that proves it.
+"I ran the tests and they pass" WITHOUT stdout/stderr = UNVERIFIED CLAIM = REJECTED.
+The verification report IS the evidence. No report = no verification happened.
+</HARD-GATE>
+
+### Claim Validation Protocol
+
+When any skill calls verification and then reports results upstream:
+
+1. **Output capture is mandatory** — every Bash command's stdout/stderr must appear in the report
+2. **Pass requires proof** — PASS means "tool ran AND output shows zero errors" (not "tool ran without crashing")
+3. **Silence is not success** — if a command produces no output, note it explicitly ("0 errors, 0 warnings")
+4. **Partial runs are labeled** — if only 2 of 4 checks ran, Overall = INCOMPLETE (not PASS)
+
+### Red Flags — Agent is Lying
+
+| Claim | Without | Verdict |
+|---|---|---|
+| "All tests pass" | Test runner stdout showing pass count | REJECTED — re-run and show output |
+| "No lint errors" | Linter stdout | REJECTED — re-run and show output |
+| "Build succeeds" | Build command stdout | REJECTED — re-run and show output |
+| "I verified it" | Verification Report | REJECTED — run verification skill properly |
+| "Fixed and working" | Before/after test output | REJECTED — show the diff in results |
+
 ## Constraints
 
 1. MUST run ALL four checks: lint, type-check, tests, build — not just tests
 2. MUST show actual command output — never claim "all passed" without evidence
 3. MUST report specific failures with file:line references
 4. MUST NOT skip checks because "changes are small"
+5. MUST include stdout/stderr capture in every check result — empty output noted explicitly
+6. MUST mark Overall as INCOMPLETE if any check was skipped without valid reason (tool not installed = valid, "changes are small" = invalid)
 
 ## Sharp Edges
 
@@ -146,10 +175,12 @@ Known failure modes for this skill. Check these before declaring done.
 
 | Failure Mode | Severity | Mitigation |
 |---|---|---|
-| Claiming "all passed" without showing actual command output | CRITICAL | Constraint 2 blocks this — show the actual stdout/stderr from every command |
+| Claiming "all passed" without showing actual command output | CRITICAL | Evidence-Before-Claims HARD-GATE blocks this — stdout/stderr is mandatory |
+| Agent says "verified" without producing Verification Report | CRITICAL | No report = no verification. Re-run the skill properly. |
 | Skipping build because "changes are small" | HIGH | Constraint 4: all four checks mandatory — size of changes doesn't matter |
 | Marking check as PASS when the tool isn't installed | MEDIUM | Mark as SKIP (not PASS) — PASS means the tool ran and reported clean |
 | Stopping after first failure instead of running remaining checks | MEDIUM | Run all checks; aggregate all failures so developer can fix everything at once |
+| Reporting PASS when output has warnings but zero errors | LOW | PASS is correct but note warning count — caller decides if warnings matter |
 
 ## Done When
 

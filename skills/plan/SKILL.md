@@ -46,12 +46,42 @@ Create structured implementation plans from requirements. Plan is the strategic 
 ### Step 1 — Gather Context
 Use findings from `rune:scout` if already available. If not, invoke `rune:scout` with the project root to scan directory structure, detect framework, identify key files, and extract existing patterns. Do NOT skip this step — plans without context produce wrong file paths.
 
-### Step 2 — Decompose the Task
-Break the task into ordered, atomic steps. Each step must specify:
+### Step 2 — Decompose the Task (Bite-Sized)
+
+Break the task into ordered, atomic steps. Each step must be **completable in 2-5 minutes** by a single agent.
+
+<HARD-GATE>
+Steps that say "implement the feature" or "set up the database" are TOO VAGUE.
+Each step must specify EXACTLY what code to write — including function signatures, data structures, and key logic.
+A step the agent can't execute without asking clarifying questions = BAD STEP. Rewrite it.
+</HARD-GATE>
+
+Each step must specify:
 - Exact file path(s) to touch (absolute paths, not relative)
-- What to add, change, or delete in each file
+- What to add, change, or delete in each file — **include function signatures and key logic pseudocode**
 - Which function/class/component is affected
 - Order of operations (respect dependency graph — create dependencies before consumers)
+- **Estimated scope**: small (1-10 LOC) | medium (10-30 LOC) | large (30+ LOC → split further)
+
+### Granularity Rules
+
+| If step is... | Then... |
+|---|---|
+| > 30 LOC change | Split into 2+ smaller steps |
+| "Set up X" without specifics | Add function signatures + data types |
+| Missing test entry | Add test cases inline (HARD-GATE) |
+| "Refactor Y" without before/after | Describe exact transformation |
+| Agent needs to ask "how?" | Step is too vague — rewrite with details |
+
+### Complete Code in Plans
+
+Plans SHOULD include enough detail that an agent can implement without guessing:
+- Function signatures with parameter types and return types
+- Data structure shapes (interfaces, schemas)
+- Key branching logic in pseudocode
+- Import paths for dependencies
+
+This is NOT writing the implementation — it's specifying the contract clearly enough that implementation is mechanical.
 
 ### Step 3 — Identify Risks
 For each step, assess:
@@ -137,8 +167,10 @@ Known failure modes for this skill. Check these before declaring done.
 | Generating plan without scout context — file paths invented | CRITICAL | Constraint 1: exact paths require scout output — call scout first, always |
 | Plan with zero test entries for code-producing phases | CRITICAL | HARD-GATE rejects it — every code phase needs a test entry |
 | Not waiting for user approval before handing to cook | HIGH | Constraint 6: present plan, wait for explicit "go" / "proceed" / "yes" |
-| Phases with vague descriptions ("set up the database") | MEDIUM | Constraint 1: each phase must list exact files and what changes in each |
+| Phases with vague descriptions ("set up the database") | CRITICAL | Bite-Sized HARD-GATE: each step must include function signatures and key logic |
+| Steps > 30 LOC without splitting | HIGH | Granularity Rules: split into 2+ smaller steps with clear boundaries |
 | Over-scoping: 10+ phase plan when task could be 3 phases | MEDIUM | If plan exceeds 6 phases, consider splitting into two tasks |
+| Agent needs to ask "how?" during execution | HIGH | Step is too vague — plan should be detailed enough for mechanical execution |
 
 ## Done When
 

@@ -67,11 +67,35 @@ CSRF:           form without CSRF token, missing SameSite cookie
 
 ## Executable Steps
 
-### Step 1 — Secret Scan
-Use `Grep` to search all changed files (or full codebase if no diff available) for secret patterns:
+### Step 1 — Secret Scan (Gitleaks-Enhanced)
+
+Use `Grep` to search all changed files (or full codebase if no diff available) for secret patterns.
+
+**1a. Current file scan:**
 - Patterns: `sk-`, `AKIA`, `ghp_`, `ghs_`, `-----BEGIN`, `password\s*=\s*["']`, `secret\s*=\s*["']`, `api_key\s*=\s*["']`, `token\s*=\s*["']`
 - Also scan for `.env` file contents committed directly (grep for lines matching `KEY=value` outside `.env` files)
 - Flag any string with entropy > 4.5 and length > 40 characters as HIGH_ENTROPY candidate
+
+**1b. Extended gitleaks patterns:**
+```
+SLACK_TOKEN:      xox[bpors]-[0-9a-zA-Z]{10,}
+STRIPE_KEY:       [sr]k_(live|test)_[0-9a-zA-Z]{24,}
+SENDGRID:         SG\.[a-zA-Z0-9_-]{22}\.[a-zA-Z0-9_-]{43}
+TWILIO:           SK[0-9a-fA-F]{32}
+FIREBASE:         AIza[0-9A-Za-z_-]{35}
+PRIVATE_KEY:      -----BEGIN (RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----
+JWT:              eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}
+GENERIC_API_KEY:  (?i)(apikey|api_key|api-key)\s*[:=]\s*["'][A-Za-z0-9_-]{16,}
+```
+
+**1c. Git history scan (first run only):**
+If this is the first sentinel scan on this repo (no `.rune/sentinel-baseline.md` exists):
+```
+Bash: git log --all --diff-filter=A -- '*.env*' '*.key' '*.pem' '*.p12' '*credentials*' '*secret*'
+→ If any results: WARN — historical secret files detected. Recommend BFG/git-filter-repo cleanup.
+```
+
+For subsequent runs, scan only the current diff (incremental).
 
 Any match = **BLOCK**. Do not proceed to later steps if BLOCK findings exist — report immediately.
 
@@ -176,6 +200,20 @@ Aggregate all findings. Apply the verdict rule:
 - Only **INFO** → overall status = **PASS**.
 
 If status is BLOCK, output the report and STOP. Do not hand off to commit. The calling skill (`cook`, `preflight`, `deploy`) must halt until the developer fixes all BLOCK findings and re-runs sentinel.
+
+### WARN Acknowledgment Protocol
+
+WARN findings do not block the commit but MUST be explicitly acknowledged:
+
+```
+For each WARN item, developer must respond with one of:
+  - "ack" — acknowledged, will fix later (logged to .rune/decisions.md)
+  - "fix" — fixing now (sentinel re-runs after fix)
+  - "wontfix [reason]" — intentional, with documented reason
+
+Silent continuation past WARN = VIOLATION.
+The calling skill (cook) must present WARNs and wait for acknowledgment.
+```
 
 ## Output Format
 

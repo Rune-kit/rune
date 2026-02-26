@@ -7,7 +7,7 @@
 | **L0** | **Router** | **1** | **L1-L3 (routing)** | **Every message** | **Stateless (rule-based)** |
 | L1 | Orchestrators | 4 | L2, L3 | L0, User | Stateful (workflow) |
 | L2 | Workflow Hubs | 22 | L2 (cross-hub), L3 | L1, L2 | Stateful (task) |
-| L3 | Utilities | 16 | Nothing (pure)* | L1, L2 | Stateless |
+| L3 | Utilities | 18 | Nothing (pure)* | L1, L2 | Stateless |
 | L4 | Extension Packs | 12 | L3 | L2 (domain match) | Config-based |
 
 ### L0 — The Enforcement Layer
@@ -93,11 +93,12 @@ Override: user preference   → manual in config
 |-------|--------|
 | KNOWLEDGE | research, docs-seeker, trend-scout |
 | REASONING | problem-solver, sequential-thinking |
-| VALIDATION | verification, hallucination-guard, integrity-check |
+| VALIDATION | verification, hallucination-guard, integrity-check, completion-gate |
 | STATE | context-engine, journal, session-bridge |
 | MONITORING | watchdog, scope-guard |
 | MEDIA | browser-pilot, asset-creator, video-creator |
 | DEPS | dependency-doctor |
+| WORKSPACE | worktree |
 
 ## Cross-Hub Mesh (L2 ↔ L2)
 
@@ -175,6 +176,14 @@ review-intake → fix    (apply verified changes)
 review-intake → test   (add tests for reviewer-found edge cases)
 review-intake → hallucination-guard (verify suggested APIs exist)
 review-intake → sentinel (re-check security if reviewer flagged)
+
+# completion-gate
+completion-gate ← cook    (Phase 5d: validate agent claims)
+completion-gate ← team    (validate cook reports from streams)
+
+# worktree
+worktree ← team           (Phase 2: create worktrees for streams)
+worktree ← cook           (optional isolation for complex features)
 ```
 
 ## Context Bus

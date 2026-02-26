@@ -26,6 +26,43 @@ Meta-orchestrator for complex tasks requiring parallel workstreams. Team decompo
 - `/rune team <task>` — manual invocation for large features
 - Auto-trigger: when task affects 5+ files or spans 3+ modules
 
+## Mode Selection (Auto-Detect)
+
+```
+IF streams ≤ 2 AND total files ≤ 5:
+  → LITE MODE (lightweight parallel, no worktrees)
+ELSE:
+  → FULL MODE (worktree isolation, opus coordination)
+```
+
+### Lite Mode
+
+For small parallel tasks that don't warrant full worktree isolation:
+
+```
+Lite Mode Rules:
+  - Max 2 parallel agents (haiku coordination, sonnet workers)
+  - NO worktree creation — agents work on same branch
+  - File ownership still enforced (disjoint file sets)
+  - Simplified merge: sequential git add (no merge conflicts possible with disjoint files)
+  - Skip Phase 3 (COORDINATE) — no conflicts with disjoint files
+  - Skip integrity-check — small scope, direct output review
+  - Coordinator model: haiku (not opus) — saves cost
+
+Lite Mode Phases:
+  Phase 1: DECOMPOSE (haiku) — identify 2 streams with disjoint files
+  Phase 2: ASSIGN — launch 2 parallel Task agents (sonnet, no worktree)
+  Phase 4: MERGE — sequential git add (no merge needed)
+  Phase 5: VERIFY — integration tests on result
+```
+
+**Announce mode**: "Team lite mode: 2 streams, ≤5 files, no worktrees needed."
+**Override**: User can say "full mode" to force worktree isolation.
+
+### Full Mode
+
+Standard team workflow with worktree isolation (Phases 1-5 as documented below).
+
 ## Calls (outbound)
 
 - `plan` (L2): high-level task decomposition into independent workstreams
@@ -328,7 +365,8 @@ Known failure modes for this skill. Check these before declaring done.
 
 | Failure Mode | Severity | Mitigation |
 |---|---|---|
-| Launching more than 3 parallel agents | CRITICAL | HARD-GATE blocks this — batch into ≤3 streams regardless of task count |
+| Launching more than 3 parallel agents (full mode) / 2 (lite mode) | CRITICAL | HARD-GATE blocks this — batch into ≤3 streams (full) or ≤2 (lite) |
+| Using full mode with worktrees for ≤2 streams, ≤5 files | MEDIUM | Auto-detect triggers lite mode — saves opus cost and worktree overhead |
 | Agents with overlapping file ownership | HIGH | Scope Gate: define disjoint file sets before dispatch — never leave overlap unresolved |
 | Merging without running integration tests | HIGH | Verification Gate: integration tests on merged result are mandatory |
 | Ignoring sentinel CRITICAL flag in agent cook report | HIGH | Stream blocked from merge — present to user before any merge action |

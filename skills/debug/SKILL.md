@@ -103,7 +103,22 @@ Narrow to the single actual cause.
 - Identify the specific file, line number, and code construct responsible
 - Note any contributing factors (environment, data, timing, config)
 
-### Step 6: Report
+### Step 6: 3-Fix Escalation Rule
+
+<HARD-GATE>
+If the SAME bug has been "fixed" 3 times and keeps returning:
+1. STOP fixing. The bug is not the problem — the ARCHITECTURE is.
+2. Escalate to `rune:plan` for redesign of the affected module.
+3. Report all 3 fix attempts and why each failed in the escalation.
+"Try a 4th fix" is NOT acceptable. After 3 failures, question the design.
+</HARD-GATE>
+
+Track fix attempts in the Debug Report. If this is attempt N>1 for the same symptom:
+- Reference previous fix attempts and their outcomes
+- Explain why the previous fix didn't hold
+- If N=3: trigger the escalation gate above
+
+### Step 7: Report
 
 Produce structured output and hand off to rune:fix.
 
@@ -128,6 +143,7 @@ Produce structured output and hand off to rune:fix.
 - **Error**: [error message]
 - **Severity**: critical | high | medium | low
 - **Confidence**: high | medium | low
+- **Fix Attempt**: [1/2/3 — track recurring bugs]
 
 ### Root Cause
 [Detailed explanation of what's causing the error]
@@ -139,8 +155,13 @@ Produce structured output and hand off to rune:fix.
 1. [observation supporting diagnosis]
 2. [observation supporting diagnosis]
 
+### Previous Fix Attempts (if any)
+- Attempt 1: [what was tried] → [why it didn't hold]
+- Attempt 2: [what was tried] → [why it didn't hold]
+
 ### Suggested Fix
 [Description of what needs to change — no code, just direction]
+[If attempt 3: "ESCALATION: 3-fix rule triggered. Recommending redesign via rune:plan."]
 
 ### Related Code
 - `path/to/related.ts` — [why it's relevant]
@@ -154,6 +175,8 @@ Produce structured output and hand off to rune:fix.
 | Modifying code while "investigating" | CRITICAL | HARD-GATE: any code change during debug = out of scope — hand off to fix |
 | Marking hypothesis CONFIRMED without file:line proof | HIGH | CONFIRMED requires specific evidence cited — "it makes sense" is not evidence |
 | Exceeding 3 hypothesis cycles without escalation | MEDIUM | After 3 cycles: escalate to rune:problem-solver or rune:sequential-thinking |
+| Same bug "fixed" 3+ times without questioning architecture | CRITICAL | 3-Fix Escalation Rule: after 3 failed fixes, escalate to rune:plan for redesign |
+| Not tracking fix attempt number for recurring bugs | HIGH | Debug Report MUST include Fix Attempt counter — enables escalation gate |
 
 ## Done When
 

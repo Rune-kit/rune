@@ -15,6 +15,13 @@ metadata:
 Tests define the EXPECTED BEHAVIOR. They MUST be written BEFORE implementation code.
 If tests pass without implementation → the tests are wrong. Rewrite them.
 The only exception: when retrofitting tests for existing untested code.
+
+THE IRON LAW: Write code before test? DELETE IT. Start over.
+- Do NOT keep it as "reference"
+- Do NOT "adapt" it while writing tests
+- Do NOT look at it to "inform" test design
+- Delete means delete. `git checkout -- <file>` or remove the changes entirely.
+This is not negotiable. This is not optional. "But I already wrote it" is a sunk cost fallacy.
 </HARD-GATE>
 
 ## Instructions
@@ -142,6 +149,31 @@ After GREEN phase, call `verification` to check coverage threshold (80% minimum)
 - `browser-pilot` (L3): Phase 4 — e2e and visual testing for UI flows
 - `debug` (L2): Phase 5 — when existing test regresses unexpectedly
 
+## Anti-Rationalization Table
+
+| Excuse | Reality |
+|---|---|
+| "Too simple to need tests first" | Simple code breaks. Test takes 30 seconds. Write it first. |
+| "I'll write tests after — same result" | Tests-after = "what does this do?" Tests-first = "what SHOULD this do?" Completely different. |
+| "I already wrote the code, let me just add tests" | Iron Law: delete the code. Start over with tests. Sunk cost is not an argument. |
+| "Tests after achieve the same goals" | They don't. Tests-after are biased by the implementation you just wrote. |
+| "It's about spirit not ritual" | Violating the letter IS violating the spirit. Write the test first. |
+| "I mentally tested it" | Mental testing is not testing. Run the command, show the output. |
+| "This is different because..." | It's not. Write the test first. |
+
+## Red Flags — STOP and Start Over
+
+If you catch yourself with ANY of these, delete implementation code and restart with tests:
+
+- Code exists before test file
+- "I already manually tested it"
+- "Tests after achieve the same purpose"
+- "It's about spirit not ritual"
+- "This is different because..."
+- "Let me just finish this, then add tests"
+
+**All of these mean: Delete code. Start over with TDD.**
+
 ## Constraints
 
 1. MUST write tests BEFORE implementation code — if tests pass without implementation, they are wrong
@@ -151,6 +183,8 @@ After GREEN phase, call `verification` to check coverage threshold (80% minimum)
 5. MUST achieve 80% coverage minimum — identify and fill gaps
 6. MUST use the project's existing test framework and conventions — don't introduce a new one
 7. MUST NOT say "tests pass" without showing actual test runner output
+8. MUST delete implementation code written before tests — Iron Law, no exceptions
+9. MUST show RED phase output (actual failure) — "I confirmed they fail" without output is REJECTED
 
 ## Mesh Gates
 

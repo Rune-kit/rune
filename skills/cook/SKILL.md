@@ -31,9 +31,32 @@ Small refactor:      Phase 1 → 4 → 5 → 6 → 7
 New feature:         All 8 phases
 Complex feature:     All 8 phases + brainstorm in Phase 2
 Security-sensitive:  All 8 phases + sentinel escalated to opus
+Fast mode:           Phase 1 → 4 → 6 → 7 (auto-detected, see below)
 ```
 
 Determine complexity BEFORE starting. Create TodoWrite with applicable phases.
+
+## Fast Mode (Auto-Detect)
+
+Cook auto-detects small changes and streamlines the pipeline:
+
+```
+IF all of these are true:
+  - Total estimated change < 30 LOC
+  - Single file affected
+  - No security-relevant code (auth, crypto, payments, .env)
+  - No public API changes
+  - No database schema changes
+THEN: Fast Mode activated
+  - Skip Phase 2 (PLAN) — change is too small for a formal plan
+  - Skip Phase 3 (TEST) — unless existing tests cover the area
+  - Skip Phase 5b (SENTINEL) — non-security code
+  - Skip Phase 8 (BRIDGE) — not worth persisting
+  - KEEP Phase 5a (PREFLIGHT) and Phase 6 (VERIFY) — always run quality checks
+```
+
+**Announce fast mode**: "Fast mode: small change detected (<30 LOC, single file, non-security). Streamlined pipeline."
+**Override**: User can say "full pipeline" to force all phases even on small changes.
 
 ## Phase 1: UNDERSTAND
 
@@ -111,14 +134,22 @@ Determine complexity BEFORE starting. Create TodoWrite with applicable phases.
 
 **Gate**: ALL tests from Phase 3 MUST pass. Do NOT proceed with failing tests.
 
-## Phase 5: QUALITY
+## Phase 5: QUALITY (Parallel)
 
 **Goal**: Catch issues before they reach production.
 
-Run these three checks. Any CRITICAL finding blocks the commit.
+Run quality checks **in parallel** for speed. Any CRITICAL finding blocks the commit.
 
-### 5a. Preflight
+```
+PARALLEL EXECUTION:
+  Launch 5a + 5b + 5c simultaneously as independent Task agents.
+  Wait for ALL to complete before proceeding.
+  If any returns BLOCK → fix findings, re-run the blocking check only.
+```
+
+### 5a. Preflight (Spec Compliance + Logic)
 **REQUIRED SUB-SKILL**: Use `rune:preflight`
+- **Spec compliance**: Compare approved plan (Phase 2) vs actual diff — did we build what we planned?
 - Logic review: Are there obvious bugs?
 - Error handling: Are errors caught properly?
 - Completeness: Does it cover edge cases?
@@ -135,7 +166,30 @@ Run these three checks. Any CRITICAL finding blocks the commit.
 - Code quality: Clean, readable, maintainable
 - Performance: No obvious bottlenecks
 
+### 5d. Completion Gate
+**REQUIRED SUB-SKILL**: Use `rune:completion-gate`
+- Validate that agent claims match evidence trail
+- Check: tests actually ran (stdout captured), files actually changed (git diff), build actually passed
+- Any UNCONFIRMED claim → BLOCK with specific gap identified
+
 **Gate**: If sentinel finds CRITICAL security issue → STOP, fix it, re-run. Non-negotiable.
+**Gate**: If completion-gate finds UNCONFIRMED claim → STOP, re-verify. Non-negotiable.
+
+## Checkpoint Protocol (Opt-In)
+
+For long-running cook sessions, save intermediate state at phase boundaries:
+
+```
+After Phase 2 (PLAN approved):    session-bridge saves plan + decisions
+After Phase 4 (IMPLEMENT done):   session-bridge saves progress + modified files
+After Phase 5 (QUALITY passed):   session-bridge saves quality results
+
+Trigger: Invoke rune:session-bridge at each boundary.
+This is OPT-IN — only activate if:
+  - Task spans 3+ phases
+  - Context-watch has triggered a warning
+  - User explicitly requests checkpoints
+```
 
 ## Phase 6: VERIFY
 
@@ -217,8 +271,8 @@ Run these three checks. Any CRITICAL finding blocks the commit.
 - `preflight` (L2): Phase 5a — logic and completeness review
 - `sentinel` (L2): Phase 5b — security scan
 - `review` (L2): Phase 5c — code quality review
-- `perf` (L2): Phase 5d — performance regression check before PR
-- `audit` (L2): Phase 5e — optional health gate on large features
+- `perf` (L2): Phase 5 — performance regression check before PR (optional)
+- `completion-gate` (L3): Phase 5d — validate agent claims against evidence trail
 - `verification` (L3): Phase 6 — automated checks (lint, types, tests, build)
 - `hallucination-guard` (L3): Phase 6 — verify imports and API calls are real
 - `journal` (L3): Phase 7 — record architectural decisions made during feature
@@ -271,9 +325,12 @@ Known failure modes for this skill. Check these before declaring done.
 |---|---|---|
 | Skipping scout to "save time" on a simple task | CRITICAL | Scout Gate blocks this — Phase 1 is mandatory regardless of perceived simplicity |
 | Writing code without user-approved plan | HIGH | Plan Gate: do NOT proceed to Phase 3 without explicit approval ("go", "proceed", "yes") |
-| Claiming "all tests pass" without showing output | HIGH | Constraint 7 blocks this — show actual test runner output |
+| Claiming "all tests pass" without showing output | HIGH | Constraint 7 blocks this — show actual test runner output via completion-gate |
 | Entering debug↔fix loop more than 3 times without escalating | MEDIUM | After 3 loops, stop and present to user — do not keep spinning |
 | Not escalating to sentinel:opus on security-sensitive tasks | MEDIUM | Auth, crypto, payment code → sentinel must run at opus, not sonnet |
+| Running Phase 5 checks sequentially instead of parallel | MEDIUM | Launch preflight+sentinel+review as parallel Task agents for speed |
+| Saying "done" without evidence trail | CRITICAL | completion-gate validates claims — UNCONFIRMED = BLOCK |
+| Fast mode on security-relevant code | HIGH | Fast mode auto-excludes auth/crypto/payments — never fast-track security code |
 
 ## Done When
 
