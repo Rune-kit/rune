@@ -47,7 +47,7 @@ rune/
 
 ## Current Wave
 
-All 41 core skills built (Waves 0-5 complete + audit + perf/db/incident + design + skill-router).
+All 43 core skills built (Waves 0-5 complete + audit + perf/db/incident + design + skill-router + review-intake + skill-forge).
 
 ### L0 Router (1)
 skill-router — meta-enforcement layer, routes every action through the correct skill
@@ -55,10 +55,10 @@ skill-router — meta-enforcement layer, routes every action through the correct
 ### L1 Orchestrators (4)
 cook, team, launch, rescue
 
-### L2 Workflow Hubs (20)
-plan, scout, brainstorm, design, debug, fix, test, review, db,
+### L2 Workflow Hubs (22)
+plan, scout, brainstorm, design, skill-forge, debug, fix, test, review, db,
 sentinel, preflight, onboard, deploy, marketing, perf,
-autopsy, safeguard, surgeon, audit, incident
+autopsy, safeguard, surgeon, audit, incident, review-intake
 
 ### L3 Utilities (16)
 research, docs-seeker, trend-scout, problem-solver, sequential-thinking,

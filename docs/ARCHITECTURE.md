@@ -6,7 +6,7 @@
 |-------|------|-------|----------|----------|-------|
 | **L0** | **Router** | **1** | **L1-L3 (routing)** | **Every message** | **Stateless (rule-based)** |
 | L1 | Orchestrators | 4 | L2, L3 | L0, User | Stateful (workflow) |
-| L2 | Workflow Hubs | 20 | L2 (cross-hub), L3 | L1, L2 | Stateful (task) |
+| L2 | Workflow Hubs | 22 | L2 (cross-hub), L3 | L1, L2 | Stateful (task) |
 | L3 | Utilities | 16 | Nothing (pure)* | L1, L2 | Stateless |
 | L4 | Extension Packs | 12 | L3 | L2 (domain match) | Config-based |
 
@@ -81,9 +81,9 @@ Override: user preference   → manual in config
 
 | Group | Skills |
 |-------|--------|
-| CREATION | plan, scout, brainstorm, design |
+| CREATION | plan, scout, brainstorm, design, skill-forge |
 | DEVELOPMENT | debug, fix, test, review, db |
-| QUALITY | sentinel, preflight, onboard, audit, perf |
+| QUALITY | sentinel, preflight, onboard, audit, perf, review-intake |
 | DELIVERY | deploy, marketing, incident |
 | RESCUE | autopsy, safeguard, surgeon |
 
@@ -107,6 +107,10 @@ fix ↔ debug           (fix ↔ root cause)
 test → debug          (unexpected failure)
 review → test         (untested edge case found)
 review → fix          (bug found during review)
+review → review-intake (external feedback received on reviewed code)
+review-intake → fix   (verified feedback → apply changes)
+review-intake → test  (reviewer found untested edge case)
+review-intake → sentinel (reviewer flagged security concern)
 fix → test            (verify after fix)
 deploy → test         (pre-deploy verification)
 debug → scout         (find related code)
@@ -153,6 +157,24 @@ design ← review       (AI anti-pattern detected in diff)
 design ← perf         (Lighthouse Accessibility BLOCK)
 design → scout        (detect platform, tokens, component library)
 design → asset-creator (generate base visual assets from design system)
+
+# skill-forge
+skill-forge ← cook    (feature being built IS a new skill)
+skill-forge ← plan    (plan identifies need for reusable skill)
+skill-forge → scout   (scan existing skills for overlap)
+skill-forge → plan    (structure complex multi-phase skills)
+skill-forge → hallucination-guard (verify referenced skills exist)
+skill-forge → verification (validate SKILL.md format)
+skill-forge → journal (record skill creation ADR)
+
+# review-intake
+review-intake ← cook  (Phase 5: external review arrives)
+review-intake ← review (self-review surfaces issues to address)
+review-intake → scout  (verify reviewer claims against codebase)
+review-intake → fix    (apply verified changes)
+review-intake → test   (add tests for reviewer-found edge cases)
+review-intake → hallucination-guard (verify suggested APIs exist)
+review-intake → sentinel (re-check security if reviewer flagged)
 ```
 
 ## Context Bus

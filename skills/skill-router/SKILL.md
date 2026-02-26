@@ -60,6 +60,8 @@ Parse the user message and map to one or more categories:
 | Security concern | `rune:sentinel` | L2 — opus for critical |
 | Performance issue | `rune:perf` | L2 |
 | Database change | `rune:db` | L2 |
+| Received code review / PR feedback | `rune:review-intake` | L2 |
+| Create / edit a Rune skill | `rune:skill-forge` | L2 — requires opus |
 | Research / look up docs | `rune:research` or `rune:docs-seeker` | L3 |
 | Understand codebase / find files | `rune:scout` | L3 |
 | Check project health | `rune:audit` | L2 |
