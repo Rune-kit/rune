@@ -1,13 +1,23 @@
 # Rune Architecture
 
-## 4-Layer Model
+## 5-Layer Model
 
 | Layer | Name | Count | Can Call | Called By | State |
 |-------|------|-------|----------|----------|-------|
-| L1 | Orchestrators | 4 | L2, L3 | User only | Stateful (workflow) |
+| **L0** | **Router** | **1** | **L1-L3 (routing)** | **Every message** | **Stateless (rule-based)** |
+| L1 | Orchestrators | 4 | L2, L3 | L0, User | Stateful (workflow) |
 | L2 | Workflow Hubs | 20 | L2 (cross-hub), L3 | L1, L2 | Stateful (task) |
 | L3 | Utilities | 16 | Nothing (pure)* | L1, L2 | Stateless |
 | L4 | Extension Packs | 12 | L3 | L2 (domain match) | Config-based |
+
+### L0 — The Enforcement Layer
+
+`skill-router` is the only L0 skill. It enforces a single discipline: **check the routing table before every response**. It doesn't do work — it ensures the right skill does the work.
+
+- Loaded via plugin description, always active
+- Routes user intent to the correct L1-L3 skill
+- Prevents agents from bypassing skills ("I'll just do it manually")
+- See `skills/skill-router/SKILL.md` for the full routing table and anti-rationalization gate
 
 ### Exceptions
 
