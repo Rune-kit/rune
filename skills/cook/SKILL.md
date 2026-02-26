@@ -273,6 +273,7 @@ This is OPT-IN — only activate if:
 - `review` (L2): Phase 5c — code quality review
 - `perf` (L2): Phase 5 — performance regression check before PR (optional)
 - `completion-gate` (L3): Phase 5d — validate agent claims against evidence trail
+- `constraint-check` (L3): Phase 5 — audit HARD-GATE compliance across workflow
 - `verification` (L3): Phase 6 — automated checks (lint, types, tests, build)
 - `hallucination-guard` (L3): Phase 6 — verify imports and API calls are real
 - `journal` (L3): Phase 7 — record architectural decisions made during feature

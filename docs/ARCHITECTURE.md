@@ -7,7 +7,7 @@
 | **L0** | **Router** | **1** | **L1-L3 (routing)** | **Every message** | **Stateless (rule-based)** |
 | L1 | Orchestrators | 4 | L2, L3 | L0, User | Stateful (workflow) |
 | L2 | Workflow Hubs | 22 | L2 (cross-hub), L3 | L1, L2 | Stateful (task) |
-| L3 | Utilities | 18 | Nothing (pure)* | L1, L2 | Stateless |
+| L3 | Utilities | 21 | Nothing (pure)* | L1, L2 | Stateless |
 | L4 | Extension Packs | 12 | L3 | L2 (domain match) | Config-based |
 
 ### L0 — The Enforcement Layer
@@ -93,7 +93,7 @@ Override: user preference   → manual in config
 |-------|--------|
 | KNOWLEDGE | research, docs-seeker, trend-scout |
 | REASONING | problem-solver, sequential-thinking |
-| VALIDATION | verification, hallucination-guard, integrity-check, completion-gate |
+| VALIDATION | verification, hallucination-guard, integrity-check, completion-gate, constraint-check, sast |
 | STATE | context-engine, journal, session-bridge |
 | MONITORING | watchdog, scope-guard |
 | MEDIA | browser-pilot, asset-creator, video-creator |
@@ -184,6 +184,17 @@ completion-gate ← team    (validate cook reports from streams)
 # worktree
 worktree ← team           (Phase 2: create worktrees for streams)
 worktree ← cook           (optional isolation for complex features)
+
+# sast
+sast ← sentinel           (deep analysis beyond regex patterns)
+sast ← audit              (security dimension in full audit)
+sast ← cook               (security-sensitive code paths)
+sast ← review             (security patterns detected in diff)
+
+# constraint-check
+constraint-check ← cook   (end-of-workflow discipline audit)
+constraint-check ← team   (verify stream agent compliance)
+constraint-check ← audit  (quality dimension assessment)
 ```
 
 ## Context Bus

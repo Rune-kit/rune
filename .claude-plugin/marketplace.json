@@ -10,16 +10,16 @@
     {
       "name": "rune",
       "source": "./",
-      "description": "40 skills wired into a mesh — 139+ bidirectional connections across the full dev lifecycle",
+      "description": "48 skills wired into a 5-layer mesh — 160+ connections across the full dev lifecycle. From idea to shipped MVP in one cook invocation.",
       "author": {
         "name": "Rune Contributors"
       },
       "homepage": "https://github.com/rune-kit/rune",
       "repository": "https://github.com/rune-kit/rune",
       "license": "MIT",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "category": "workflow",
-      "tags": ["skills", "orchestration", "mesh", "workflow", "tdd", "security", "debugging"]
+      "tags": ["skills", "orchestration", "mesh", "workflow", "tdd", "security", "debugging", "sast", "pre-commit"]
     },
     {
       "name": "@rune/ui",

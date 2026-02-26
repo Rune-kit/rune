@@ -32,6 +32,7 @@ If status is BLOCK, output the report and STOP. Do not hand off to commit. The c
 - `scout` (L2): scan changed files to identify security-relevant code
 - `verification` (L3): run security tools (npm audit, pip audit, cargo audit)
 - `integrity-check` (L3): agentic security validation of .rune/ state files
+- `sast` (L3): deep static analysis with Semgrep, Bandit, ESLint security rules
 
 ## Called By (inbound)
 
