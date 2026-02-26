@@ -8,7 +8,7 @@ A lean, interconnected skill ecosystem for Claude Code that covers the full proj
 
 Most skill ecosystems are either **too many isolated skills** (540+ that don't talk to each other) or **rigid pipelines** (A → B → C, if B fails everything stops).
 
-Rune is a **mesh** — 40 skills with 139 connections. Skills call each other bidirectionally, forming resilient workflows that adapt when things go wrong.
+Rune is a **mesh** — 48 skills with 160+ connections across a 5-layer architecture. Skills call each other bidirectionally, forming resilient workflows that adapt when things go wrong.
 
 ```
 Pipeline:  A → B → C → D         (B fails = stuck)
@@ -65,55 +65,66 @@ claude plugin add rune
 
 ## Architecture
 
-### 4-Layer Model
+### 5-Layer Model
 
 ```
-╔═══════════════════════════════════════════════════╗
-║  L1: ORCHESTRATORS (4)                             ║
-║  Full lifecycle workflows                          ║
-║  cook │ team │ launch │ rescue                     ║
-╠═══════════════════════════════════════════════════╣
-║  L2: WORKFLOW HUBS (20)                            ║
-║  Cross-hub mesh — the key differentiator           ║
-║                                                     ║
-║  Creation:    plan │ scout │ brainstorm │ design    ║
-║  Development: debug │ fix │ test │ review │ db      ║
-║  Quality:     sentinel │ preflight │ onboard │      ║
-║               audit │ perf                          ║
-║  Delivery:    deploy │ marketing │ incident         ║
-║  Rescue:      autopsy │ safeguard │ surgeon         ║
-╠═══════════════════════════════════════════════════╣
-║  L3: UTILITIES (16)                                ║
-║  Stateless, pure capabilities                      ║
-║                                                     ║
-║  Knowledge:   research │ docs-seeker │ trend-scout  ║
-║  Reasoning:   problem-solver │ sequential-thinking  ║
-║  Validation:  verification │ hallucination-guard    ║
-║  State:       context-engine │ journal │             ║
-║               session-bridge                        ║
-║  Monitoring:  watchdog │ scope-guard                ║
-║  Media:       browser-pilot │ asset-creator │       ║
-║               video-creator                         ║
-║  Deps:        dependency-doctor                     ║
-╠═══════════════════════════════════════════════════╣
-║  L4: EXTENSION PACKS (12)                          ║
-║  Domain-specific, install what you need             ║
-║                                                     ║
-║  @rune/ui │ @rune/backend │ @rune/devops │         ║
-║  @rune/mobile │ @rune/security │ @rune/trading │   ║
-║  @rune/saas │ @rune/ecommerce │ @rune/ai-ml │     ║
-║  @rune/gamedev │ @rune/content │ @rune/analytics   ║
-╚═══════════════════════════════════════════════════╝
+╔══════════════════════════════════════════════════════╗
+║  L0: ROUTER (1)                                      ║
+║  Meta-enforcement — routes every action               ║
+║  skill-router                                         ║
+╠══════════════════════════════════════════════════════╣
+║  L1: ORCHESTRATORS (4)                                ║
+║  Full lifecycle workflows                             ║
+║  cook │ team │ launch │ rescue                        ║
+╠══════════════════════════════════════════════════════╣
+║  L2: WORKFLOW HUBS (22)                               ║
+║  Cross-hub mesh — the key differentiator              ║
+║                                                        ║
+║  Creation:    plan │ scout │ brainstorm │ design │     ║
+║               skill-forge                              ║
+║  Development: debug │ fix │ test │ review │ db         ║
+║  Quality:     sentinel │ preflight │ onboard │         ║
+║               audit │ perf │ review-intake             ║
+║  Delivery:    deploy │ marketing │ incident            ║
+║  Rescue:      autopsy │ safeguard │ surgeon            ║
+╠══════════════════════════════════════════════════════╣
+║  L3: UTILITIES (21)                                   ║
+║  Stateless, pure capabilities                         ║
+║                                                        ║
+║  Knowledge:   research │ docs-seeker │ trend-scout     ║
+║  Reasoning:   problem-solver │ sequential-thinking     ║
+║  Validation:  verification │ hallucination-guard │     ║
+║               completion-gate │ constraint-check │     ║
+║               sast │ integrity-check                   ║
+║  State:       context-engine │ journal │               ║
+║               session-bridge                           ║
+║  Monitoring:  watchdog │ scope-guard                   ║
+║  Media:       browser-pilot │ asset-creator │          ║
+║               video-creator                            ║
+║  Deps:        dependency-doctor                        ║
+║  Workspace:   worktree                                 ║
+╠══════════════════════════════════════════════════════╣
+║  L4: EXTENSION PACKS (12)                             ║
+║  Domain-specific, install what you need                ║
+║                                                        ║
+║  @rune/ui │ @rune/backend │ @rune/devops │            ║
+║  @rune/mobile │ @rune/security │ @rune/trading │      ║
+║  @rune/saas │ @rune/ecommerce │ @rune/ai-ml │        ║
+║  @rune/gamedev │ @rune/content │ @rune/analytics      ║
+╚══════════════════════════════════════════════════════╝
 ```
 
 ### Layer Rules
 
 | Layer | Can Call | Called By | State |
 |-------|---------|----------|-------|
-| L1 Orchestrators | L2, L3 | User only | Stateful (workflow) |
+| L0 Router | L1-L3 (routing) | Every message | Stateless |
+| L1 Orchestrators | L2, L3 | L0, User | Stateful (workflow) |
 | L2 Workflow Hubs | L2 (cross-hub), L3 | L1, L2 | Stateful (task) |
-| L3 Utilities | Nothing (pure) | L1, L2 | Stateless |
+| L3 Utilities | Nothing (pure)* | L1, L2 | Stateless |
 | L4 Extensions | L3 | L2 (domain match) | Config-based |
+
+\*L3→L3 exceptions: `context-engine`→`session-bridge`, `hallucination-guard`→`research`, `session-bridge`→`integrity-check`
 
 ### Cost Intelligence
 
@@ -211,13 +222,13 @@ Domain-specific skills that plug into the core mesh:
 ## Numbers
 
 ```
-Core Skills:       40
+Core Skills:       48 (L0: 1 │ L1: 4 │ L2: 22 │ L3: 21)
 Extension Packs:   12
-Mesh Connections:  139+
-Pain Points Solved: 92% (18/20)
-Connections/Skill: 3.5 (vs 1.5 industry average)
+Mesh Connections:  160+
+Connections/Skill: 3.3 avg
+Pain Points Solved: 92% (18/20 real dev problems)
 ```
 
 ## License
 
-MIT (Core L1-L3). Extension packs (L4) are sold separately.
+MIT

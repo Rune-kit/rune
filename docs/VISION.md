@@ -4,7 +4,7 @@
 >
 > This document is the primary decision-making compass for Rune.
 > When in doubt about a design direction, a new feature, or a skill addition — consult this file first.
-> Last updated: 2026-02-25
+> Last updated: 2026-02-27
 
 ---
 
@@ -30,7 +30,7 @@ Rune is a **skill mesh** — not a skill collection, not a pipeline, not an AI a
 
 **Technical definition:**
 
-> **Rune = 40 skills × 139+ bidirectional connections × cross-session memory**
+> **Rune = 48 skills × 160+ bidirectional connections × cross-session memory**
 
 All three components are equally essential:
 - Remove connections → becomes a collection (The Bloat wins)
@@ -180,7 +180,7 @@ Rune operates on three time horizons. The roadmap is intentionally non-prescript
 
 ### H1 — Consolidation ✅ COMPLETE
 
-**Goal:** Make the 40 existing skills excellent before adding more.
+**Goal:** Make the existing skills excellent before adding more.
 
 - Deepen mesh connections: audit every skill's `## Calls` and `## Called By` for accuracy
 - Harden behavioral constraints: identify constraints that can be rationalized away and rewrite them
@@ -198,7 +198,7 @@ Rune operates on three time horizons. The roadmap is intentionally non-prescript
 - Skill testing framework: automated validation of mesh connections and output format contracts
 - `rune:onboard` generates project-specific L4 suggestions based on detected stack
 
-**Constraint:** Core mesh (L1-L3) is frozen at ≤40 skills. Growth happens in L4.
+**Constraint:** Core mesh (L1-L3) is frozen at ≤48 skills. Growth happens in L4.
 
 ### H3 — Intelligence (Next)
 
@@ -218,9 +218,10 @@ Rune operates on three time horizons. The roadmap is intentionally non-prescript
 *Rune is successful when these are true. Not when the feature list is long.*
 
 ### Mesh Health
-- **Connection density** ≥ 3.0 connections/skill (currently: 3.5) — do not let this drop below 2.5
+- **Connection density** ≥ 3.0 connections/skill (currently: 3.3 at 160+ connections / 48 skills) — do not let this drop below 2.5
 - **Dead nodes** = 0 — every skill has ≥1 inbound and ≥1 outbound connection
 - **Max chain depth used** < 6 in practice (ceiling is 8) — if chains regularly hit 8, the mesh needs restructuring
+- **Bloat Index** = 0.00 — dead nodes / total skills
 
 ### Behavioral Quality
 - **Constraint coverage** = 100% — every skill has a `## Constraints` section
