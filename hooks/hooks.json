@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "'${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd' session-start",
+            "command": "node '${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.js' session-start",
             "async": false
           }
         ]
@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "'${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd' pre-tool-guard",
+            "command": "node '${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.js' pre-tool-guard",
             "async": false
           }
         ]
@@ -30,7 +30,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "'${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd' post-session-reflect",
+            "command": "node '${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.js' post-session-reflect",
             "async": false
           }
         ]
