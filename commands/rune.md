@@ -77,10 +77,90 @@ Route to the appropriate Rune skill based on the action:
 - `/rune pack remove <name>` — Remove a community L4 pack
 - `/rune pack create <name>` — Scaffold a new L4 pack using skill-forge
 
+### Extension Packs (L4)
+
+L4 packs provide domain-specific patterns. When invoked, read the pack's PACK.md and follow the matching skill's workflow steps.
+
+#### Frontend & UI (`extensions/ui/PACK.md`)
+- `/rune design-system` — Design token generation and enforcement
+- `/rune component-patterns` — Component architecture refactoring
+- `/rune a11y-audit` — Accessibility audit (WCAG compliance)
+- `/rune animation-patterns` — Motion design and animation patterns
+
+#### Backend (`extensions/backend/PACK.md`)
+- `/rune api-patterns` — REST/GraphQL API design and validation
+- `/rune auth-patterns` — Authentication and authorization flows
+- `/rune database-patterns` — Schema design, migrations, query optimization
+- `/rune middleware-patterns` — Middleware pipeline and error handling
+
+#### DevOps (`extensions/devops/PACK.md`)
+- `/rune docker` — Dockerfile optimization, multi-stage builds, compose
+- `/rune ci-cd` — CI/CD pipeline setup (GitHub Actions, GitLab CI)
+- `/rune monitoring` — Observability, logging, alerting setup
+- `/rune server-setup` — VPS/cloud server provisioning
+- `/rune ssl-domain` — SSL certificates and domain configuration
+
+#### Mobile (`extensions/mobile/PACK.md`)
+- `/rune react-native` — React Native / Expo architecture and performance
+- `/rune flutter` — Flutter state management and widget patterns
+- `/rune app-store-prep` — App Store / Play Store submission preparation
+- `/rune native-bridge` — Native module bridges (Turbo Modules, MethodChannel)
+
+#### Security (`extensions/security/PACK.md`)
+- `/rune owasp-audit` — OWASP Top 10 vulnerability audit
+- `/rune pentest-patterns` — Penetration testing methodology
+- `/rune secret-mgmt` — Secret management and rotation
+- `/rune compliance` — Compliance framework guidance (SOC2, HIPAA, PCI)
+
+#### Trading & Finance (`extensions/trading/PACK.md`)
+- `/rune fintech-patterns` — Financial data validation, decimal arithmetic
+- `/rune realtime-data` — WebSocket market data, order book management
+- `/rune chart-components` — Trading chart integration (TradingView, Lightweight Charts)
+- `/rune indicator-library` — Technical indicators (SMA, EMA, RSI, MACD)
+
+#### SaaS (`extensions/saas/PACK.md`)
+- `/rune multi-tenant` — Multi-tenancy architecture patterns
+- `/rune billing-integration` — Stripe/Paddle billing integration
+- `/rune subscription-flow` — Subscription lifecycle management
+- `/rune onboarding-flow` — User onboarding flow design
+
+#### E-commerce (`extensions/ecommerce/PACK.md`)
+- `/rune shopify-dev` — Shopify theme/app development (Hydrogen, Liquid)
+- `/rune payment-integration` — Payment flow (Stripe Payment Intents, 3DS)
+- `/rune cart-system` — Shopping cart architecture
+- `/rune inventory-mgmt` — Stock tracking with optimistic locking
+
+#### AI/ML (`extensions/ai-ml/PACK.md`)
+- `/rune llm-integration` — LLM API clients with retry and structured output
+- `/rune rag-patterns` — RAG pipeline (chunking, embedding, retrieval, reranking)
+- `/rune embedding-search` — Hybrid search (BM25 + vector)
+- `/rune fine-tuning-guide` — Fine-tuning dataset prep, training, evaluation
+
+#### Game Development (`extensions/gamedev/PACK.md`)
+- `/rune threejs-patterns` — Three.js / React Three Fiber scene optimization
+- `/rune webgl` — WebGL shader programming and buffer management
+- `/rune game-loops` — Fixed timestep game loop with interpolation
+- `/rune physics-engine` — Rapier.js physics integration
+- `/rune asset-pipeline` — Game asset loading, compression, preloading
+
+#### Content (`extensions/content/PACK.md`)
+- `/rune blog-patterns` — Blog system (pagination, RSS, reading time)
+- `/rune cms-integration` — Headless CMS setup (Sanity, Contentful, Strapi)
+- `/rune mdx-authoring` — MDX pipeline with custom components
+- `/rune i18n` — Internationalization (locale routing, translations)
+- `/rune seo-patterns` — SEO audit (JSON-LD, sitemap, meta tags, OG)
+
+#### Analytics (`extensions/analytics/PACK.md`)
+- `/rune tracking-setup` — Analytics tracking with consent management
+- `/rune ab-testing` — A/B experiment design and statistical significance
+- `/rune funnel-analysis` — Conversion funnel tracking and drop-off analysis
+- `/rune dashboard-patterns` — KPI dashboards with server-side aggregation
+
 ### Quick Actions
 - `/rune status` — Show current project state from .rune/ files
 
 ## Usage
 
 When the user runs `/rune <action>`, invoke the corresponding `rune:<action>` skill.
+For L4 pack commands, read the specified PACK.md file and follow the matching skill's workflow.
 If no action is provided, show this help menu.

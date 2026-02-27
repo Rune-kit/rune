@@ -75,6 +75,7 @@ Standard team workflow with worktree isolation (Phases 1-5 as documented below).
 - `completion-gate` (L3): validate workstream completion claims against evidence
 - `constraint-check` (L3): audit HARD-GATE compliance across parallel streams
 - `worktree` (L3): create isolated worktrees for parallel cook instances
+- L4 extension packs: domain-specific patterns when context matches (e.g., @rune/mobile when porting web to mobile)
 
 ## Called By (inbound)
 

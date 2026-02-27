@@ -28,6 +28,7 @@ Create structured implementation plans from requirements. Plan is the strategic 
 - `brainstorm` (L2): when multiple valid approaches exist and creative exploration needed
 - `research` (L3): external knowledge lookup for unfamiliar technologies
 - `sequential-thinking` (L3): complex architecture with many trade-offs
+- L4 extension packs: domain-specific architecture patterns when context matches (e.g., @rune/ai-ml for AI architecture decisions)
 
 ## Called By (inbound)
 

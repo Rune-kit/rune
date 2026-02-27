@@ -34,6 +34,7 @@ Orchestrate the full deployment and marketing pipeline. Launch coordinates testi
 - `marketing` (L2): create launch assets (landing copy, social, SEO)
 - `watchdog` (L3): setup post-deploy monitoring
 - `video-creator` (L3): create launch/demo video content
+- L4 extension packs: domain-specific launch patterns when context matches (e.g., @rune/devops for infrastructure, @rune/ecommerce for storefront)
 
 ## Called By (inbound)
 

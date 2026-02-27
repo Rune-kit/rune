@@ -37,6 +37,7 @@ Deploy applications to target platforms. Handles the full deployment flow — en
 - `watchdog` (L3): setup post-deploy monitoring
 - `journal` (L3): record deploy decision, rollback plan, and post-deploy status
 - `incident` (L2): if post-deploy health check fails → triage and contain
+- L4 extension packs: domain-specific deploy patterns when context matches (e.g., @rune/devops for infrastructure)
 
 ## Cross-Hub Connections
 

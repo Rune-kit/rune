@@ -19,6 +19,27 @@
 - Prevents agents from bypassing skills ("I'll just do it manually")
 - See `skills/skill-router/SKILL.md` for the full routing table and anti-rationalization gate
 
+### L4 — Extension Packs (Activation Protocol)
+
+L4 packs are domain-specific instruction sets stored as `extensions/*/PACK.md` files. They are activated (read) in two ways:
+
+**1. Explicit invocation** — User runs `/rune <pack-skill>` (e.g., `/rune rag-patterns`)
+   - `skill-router` detects the L4 trigger in Tier 4 routing table
+   - Agent reads `extensions/<pack>/PACK.md`
+   - Agent follows the matching skill's Workflow steps
+
+**2. Implicit detection** — `cook` detects domain context in Phase 1.5
+   - Scout output reveals domain signals (e.g., `three.js` in dependencies)
+   - Cook matches against L4 pack mapping table
+   - Agent reads matching PACK.md and applies its constraints/patterns
+   - Domain patterns supplement cook's standard phases
+
+**L4 calling rules:**
+- L4 CAN call L3 utilities (scout, verification, hallucination-guard)
+- L4 CANNOT call L1 or L2 skills
+- L4 CANNOT call other L4 packs (no cross-pack dependencies)
+- If L4 pack file not found on disk, skip silently (graceful degradation)
+
 ### Exceptions
 
 - `team` (L1) can call other L1 orchestrators — meta-orchestration pattern.

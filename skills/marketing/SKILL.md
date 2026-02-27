@@ -28,6 +28,7 @@ Create marketing assets and execute launch strategy. Marketing generates landing
 - `asset-creator` (L3): generate OG images, social cards, banners
 - `video-creator` (L3): create demo/explainer video plan
 - `browser-pilot` (L3): capture screenshots for marketing assets
+- L4 extension packs: domain-specific content when context matches (e.g., @rune/content for blog posts, @rune/analytics for campaign measurement)
 
 ## Execution Steps
 

@@ -39,6 +39,7 @@ Every review MUST cite at least one specific concern, suggestion, or explicit ap
 - `perf` (L2): when performance patterns detected in frontend diff
 - `review-intake` (L2): structured intake for complex multi-file reviews
 - `sast` (L3): static analysis security scan on reviewed code
+- L4 extension packs: domain-specific review patterns when context matches (e.g., @rune/ui for frontend, @rune/security for auth code)
 
 ## Called By (inbound)
 

@@ -115,6 +115,32 @@ These are rarely invoked directly — they're called by Tier 1/2 skills:
 | `rune:session-bridge` | cook, team | Save context |
 | "Done" / "ship it" / "xong" | — | `rune:verification` → commit |
 
+#### Tier 4 — Domain Extension Packs (L4)
+
+When user intent matches a domain-specific pattern or user explicitly invokes an L4 trigger command, route to the L4 pack. The agent reads the pack's PACK.md and follows the matching skill's workflow.
+
+| User Intent / Domain Signal | Route To | Pack File |
+|---|---|---|
+| Frontend UI, design system, a11y, animation | `@rune/ui` | `extensions/ui/PACK.md` |
+| API design, auth, middleware, rate limiting | `@rune/backend` | `extensions/backend/PACK.md` |
+| Docker, CI/CD, monitoring, server setup | `@rune/devops` | `extensions/devops/PACK.md` |
+| React Native, Flutter, mobile app, app store | `@rune/mobile` | `extensions/mobile/PACK.md` |
+| OWASP, pentest, secrets, compliance | `@rune/security` | `extensions/security/PACK.md` |
+| Trading, fintech, charts, market data | `@rune/trading` | `extensions/trading/PACK.md` |
+| Multi-tenant, billing, SaaS subscription | `@rune/saas` | `extensions/saas/PACK.md` |
+| Shopify, payments, cart, inventory | `@rune/ecommerce` | `extensions/ecommerce/PACK.md` |
+| LLM, RAG, embeddings, fine-tuning | `@rune/ai-ml` | `extensions/ai-ml/PACK.md` |
+| Three.js, WebGL, game loop, physics | `@rune/gamedev` | `extensions/gamedev/PACK.md` |
+| Blog, CMS, MDX, i18n, SEO | `@rune/content` | `extensions/content/PACK.md` |
+| Analytics, A/B testing, funnels, dashboards | `@rune/analytics` | `extensions/analytics/PACK.md` |
+
+**L4 routing rules:**
+1. If user explicitly invokes an L4 trigger (e.g., `/rune rag-patterns`), read the PACK.md and follow the skill workflow directly
+2. If the intent also involves implementation, route to `cook` (L1) first — cook will detect L4 context in Phase 1.5
+3. L4 packs supplement L1/L2 workflows — they are domain knowledge, not standalone orchestrators
+4. L4 packs can call L3 utilities (scout, verification) but CANNOT call L1 or L2 skills
+5. If the L4 pack file is not found on disk, skip silently and proceed with standard routing
+
 ### Step 2 — Compound Intent Resolution
 
 Many requests combine intents. Route to the HIGHEST-PRIORITY skill first:
@@ -131,6 +157,10 @@ Example: "Fix the login bug and add tests"
   → rune:debug (diagnose) FIRST
   → rune:fix (apply fix) SECOND
   → rune:test (add tests) THIRD
+
+L4 integration: If cook is the primary route AND a domain pack matches,
+cook handles orchestration while the L4 pack provides domain patterns.
+Both are active — cook for workflow, L4 for domain knowledge.
 ```
 
 ### Step 3 — Anti-Rationalization Gate

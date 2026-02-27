@@ -28,9 +28,9 @@ Not every task needs every phase:
 ```
 Simple bug fix:      Phase 1 → 4 → 6 → 7
 Small refactor:      Phase 1 → 4 → 5 → 6 → 7
-New feature:         All 8 phases
-Complex feature:     All 8 phases + brainstorm in Phase 2
-Security-sensitive:  All 8 phases + sentinel escalated to opus
+New feature:         Phase 1 → 1.5 → 2 → 3 → 4 → 5 → 6 → 7 → 8
+Complex feature:     All phases + brainstorm in Phase 2
+Security-sensitive:  All phases + sentinel escalated to opus
 Fast mode:           Phase 1 → 4 → 6 → 7 (auto-detected, see below)
 ```
 
@@ -77,6 +77,39 @@ THEN: Fast Mode activated
 5. Mark Phase 1 as `completed`
 
 **Gate**: If scout finds the feature already exists → STOP and inform user.
+
+## Phase 1.5: DOMAIN CONTEXT (L4 Pack Detection)
+
+**Goal**: Detect if domain-specific L4 extension packs apply to this task.
+
+After scout completes (Phase 1), check if the detected tech stack or task description matches any L4 extension pack. If a match is found, read the pack's PACK.md to load domain-specific patterns, constraints, and sharp edges into the current workflow.
+
+1. Check the project's detected stack against the L4 pack mapping:
+
+| Signal in Codebase or Task | Pack | File |
+|---|---|---|
+| `*.tsx`, `*.svelte`, `*.vue`, Tailwind, CSS modules | `@rune/ui` | `extensions/ui/PACK.md` |
+| Express/Fastify/NestJS routes, API endpoints | `@rune/backend` | `extensions/backend/PACK.md` |
+| Dockerfile, `.github/workflows/`, Terraform | `@rune/devops` | `extensions/devops/PACK.md` |
+| `react-native`, `expo`, `flutter`, `ios/`, `android/` | `@rune/mobile` | `extensions/mobile/PACK.md` |
+| Auth, OWASP, secrets, PCI/HIPAA markers | `@rune/security` | `extensions/security/PACK.md` |
+| Trading, charts, market data, `decimal.js` | `@rune/trading` | `extensions/trading/PACK.md` |
+| Multi-tenant, billing, `stripe`, subscription | `@rune/saas` | `extensions/saas/PACK.md` |
+| Cart, checkout, inventory, Shopify | `@rune/ecommerce` | `extensions/ecommerce/PACK.md` |
+| `openai`, `anthropic`, embeddings, RAG, LLM | `@rune/ai-ml` | `extensions/ai-ml/PACK.md` |
+| `three`, `pixi`, `phaser`, `*.glsl`, game loop | `@rune/gamedev` | `extensions/gamedev/PACK.md` |
+| CMS, blog, MDX, `i18next`, SEO | `@rune/content` | `extensions/content/PACK.md` |
+| Analytics, tracking, A/B test, funnel | `@rune/analytics` | `extensions/analytics/PACK.md` |
+
+2. If ≥1 pack matches:
+   - Use `Read` to load the matching PACK.md
+   - Extract the relevant skill's **Workflow** steps and **Constraints**
+   - Apply pack constraints alongside cook's own constraints for the rest of the workflow
+   - Announce: "Loaded @rune/[pack] — applying [skill-name] domain patterns"
+
+3. If 0 packs match: skip silently, proceed to Phase 2
+
+This phase is lightweight — a Read + pattern match, not a full scan. It does NOT replace Phase 1 (scout) or Phase 2 (plan). It augments them with domain expertise.
 
 ## Phase 2: PLAN
 
@@ -294,6 +327,7 @@ This is OPT-IN — only activate if:
 - `sast` (L3): Phase 5 — static analysis security testing
 - `skill-forge` (L2): when new skill creation detected during cook flow
 - `worktree` (L3): Phase 4 — worktree isolation for parallel implementation
+- L4 extension packs: Phase 1.5 — domain-specific patterns when stack matches (see Phase 1.5 mapping table)
 
 ## Constraints
 
