@@ -45,7 +45,39 @@ Orchestrate the full deployment and marketing pipeline. Launch coordinates testi
 
 ## Execution
 
-### Step 0 — Initialize TodoWrite
+### Step 0 — Artifact Readiness Check
+
+Before starting the pipeline, verify that prerequisite artifacts exist. Scan using `Glob` — do NOT hardcode paths, use discovery patterns.
+
+```
+REQUIRED ARTIFACTS:
+  Source code:        Glob **/*.{ts,tsx,js,jsx,py,rs,go} — at least 1 match
+  Build config:       Glob {package.json,Cargo.toml,pyproject.toml,go.mod} — at least 1 match
+  Tests:              Glob **/*.{test,spec}.* OR **/test_*.* — at least 1 match
+
+RECOMMENDED ARTIFACTS (warn if missing, don't block):
+  Design system:      Glob .rune/design-system.md — if frontend project
+  Deploy config:      Glob {vercel.json,netlify.toml,Dockerfile,fly.toml,.github/workflows/*} — any 1
+  README:             Glob README.md
+  Environment:        Glob .env.example OR .env.production — warn about secrets if .env found
+
+BLOCKING CONDITIONS:
+  ❌ No source code found → STOP: "Nothing to deploy"
+  ❌ No build config found → STOP: "No project config detected — cannot determine build/deploy"
+  ❌ No tests found → WARN: "No tests detected — pre-flight will run build-only verification"
+```
+
+Report artifact status before proceeding:
+```
+## Artifact Check
+- Source: ✅ [N] files ([language])
+- Build config: ✅ [file]
+- Tests: ✅ [N] test files | ⚠️ No tests found
+- Deploy config: ✅ [platform] | ⚠️ Not found (will detect in Phase 2)
+- Design system: ✅ .rune/design-system.md | ⚠️ Not found (run /rune design first for UI projects)
+```
+
+### Step 1 — Initialize TodoWrite
 
 ```
 TodoWrite([
