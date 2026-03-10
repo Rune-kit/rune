@@ -3,7 +3,7 @@ name: fix
 description: Apply code changes and fixes. Writes implementation code, applies bug fixes, and verifies changes with tests. Core action hub in the development mesh.
 metadata:
   author: runedev
-  version: "0.2.0"
+  version: "0.3.0"
   layer: L2
   model: sonnet
   group: development
@@ -131,9 +131,10 @@ Produce a structured summary of all changes made.
 1. MUST NOT change test files to make tests pass — fix the CODE, not the TESTS
 2. MUST have a diagnosis (from debug or clear error) before applying fixes
 3. MUST run tests after each fix attempt — never batch multiple untested changes
-4. MUST NOT exceed 3 fix attempts — if 3 fixes fail, re-diagnose via rune:debug
+4. MUST NOT exceed 3 fix attempts — if 3 fixes fail, re-diagnose via rune:debug (which will classify: wrong approach → brainstorm rescue, wrong design → plan redesign)
 5. MUST follow project conventions found by scout — don't invent new patterns
 6. MUST NOT add unplanned features while fixing — fix only what was diagnosed
+7. MUST track fix attempt number — this feeds debug's 3-Fix Escalation classification
 
 ## Mesh Gates
 

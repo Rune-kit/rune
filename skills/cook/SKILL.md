@@ -5,7 +5,7 @@ context: fork
 agent: general-purpose
 metadata:
   author: runedev
-  version: "0.3.0"
+  version: "0.4.0"
   layer: L1
   model: sonnet
   group: orchestrator
@@ -83,11 +83,16 @@ THEN: Fast Mode activated
 
 **Goal**: Know what exists before changing anything.
 
-**REQUIRED SUB-SKILL**: Use `rune:scout`
+**REQUIRED SUB-SKILLS**: Use `rune:scout`. For non-trivial tasks, use `rune:ba`.
 
 1. Create TodoWrite with all applicable phases for this task
 2. Mark Phase 1 as `in_progress`
-3. **Decision enforcement** — load prior decisions:
+3. **BA gate** — determine if Business Analyst elicitation is needed:
+   - If task is a Feature Request, Integration, or Greenfield → invoke `rune:ba` for requirement elicitation
+   - If task description is > 50 words or contains business terms (users, revenue, workflow, integration) → invoke `rune:ba`
+   - If Bug Fix or simple Refactor → skip BA, proceed with scout
+   - BA produces a Requirements Document at `.rune/features/<name>/requirements.md` that feeds into Phase 2 (PLAN)
+4. **Decision enforcement** — load prior decisions:
    - Use `Glob` to check for `.rune/decisions.md`
    - If exists, use `Read` to load it
    - Extract decisions relevant to the current task domain (match by keywords: module names, tech choices, patterns)
@@ -230,8 +235,32 @@ This phase is lightweight — a Read + pattern match, not a full scan. It does N
               discovered: "new facts found during implementation" }
      ```
      Plan outputs revised phases. Get user approval before resuming.
-6. All tests MUST pass before proceeding
-7. Mark Phase 4 as `completed`
+6. **Approach Pivot Gate** — if re-plan ALSO fails (implementation still blocked after revised plan):
+
+   <HARD-GATE>
+   Do NOT surrender. Do NOT tell user "no solution exists."
+   Do NOT try a 4th variant of the same approach.
+   MUST invoke brainstorm(mode="rescue") before giving up.
+   </HARD-GATE>
+
+   **Trigger conditions** (ANY of these):
+   - Re-plan produced a revised plan, but implementation hits the SAME category of blocker
+   - 3 debug-fix loops exhausted AND re-plan exhausted (total 6+ failed attempts in same approach)
+   - Agent catches itself about to say "this approach doesn't seem feasible" or "no solution found"
+
+   **Action**:
+   ```
+   Invoke rune:brainstorm with:
+     mode: "rescue"
+     failed_approach: "[name of approach from Phase 2]"
+     failure_evidence: ["blocker 1", "blocker 2", "blocker 3"]
+     original_goal: "[what we're still trying to achieve]"
+   ```
+
+   brainstorm(rescue) returns 3-5 category-diverse alternatives → present to user → user picks → **restart from Phase 2** with the new approach. Previous work is sunk cost — do not try to salvage.
+
+7. All tests MUST pass before proceeding
+8. Mark Phase 4 as `completed`
 
 **Gate**: ALL tests from Phase 3 MUST pass. Do NOT proceed with failing tests.
 
@@ -316,14 +345,18 @@ This is OPT-IN — only activate if:
 
 **Goal**: Create a clean, semantic commit.
 
+**RECOMMENDED SUB-SKILL**: Use `rune:git` for semantic commit generation.
+
 1. Mark Phase 7 as `in_progress`
 2. Stage changed files:
    - Use `Bash` to run `git add <specific files>` (NOT `git add .`)
    - Verify staged files with `git status`
-3. Create commit with semantic message:
-   - Format: `<type>: <description>`
-   - Types: feat, fix, refactor, test, docs, chore
-   - Use `Bash` to run `git commit -m "<message>"`
+3. Invoke `rune:git commit` to generate semantic commit message from staged diff:
+   - Analyzes diff to classify change type (feat/fix/refactor/test/docs/chore)
+   - Extracts scope from file paths
+   - Detects breaking changes
+   - Formats as conventional commit: `<type>(<scope>): <description>`
+   - Fallback: if git skill unavailable, use format `<type>: <description>` manually
 4. Mark Phase 7 as `completed`
 
 ## Phase 8: BRIDGE
@@ -381,8 +414,11 @@ Every cook invocation inside `team` or autonomous workflows MUST have exit condi
 MAX_DEBUG_LOOPS:   3 per error area (already enforced)
 MAX_QUALITY_LOOPS: 2 re-runs of Phase 5 (fix→recheck cycle)
 MAX_REPLAN:        1 re-plan per cook session (Phase 4 re-plan check)
+MAX_PIVOT:         1 approach pivot per cook session (Approach Pivot Gate)
 TIMEOUT_SIGNAL:    If context-watch reports ORANGE, wrap up current phase and checkpoint
 ```
+
+**Escalation chain**: debug-fix (3x) → re-plan (1x) → **approach pivot via brainstorm rescue (1x)** → THEN escalate to user. Never surrender before exhausting the pivot.
 
 If any exit condition triggers without resolution → cook emits `BLOCKED` status with details and stops. Never spin indefinitely.
 
@@ -393,7 +429,7 @@ If any exit condition triggers without resolution → cook emits `BLOCKED` statu
 | 1 UNDERSTAND | scout finds nothing relevant | Proceed with plan, note limited context |
 | 2 PLAN | Task too complex | Break into smaller tasks, consider `rune:team` |
 | 3 TEST | Can't write tests (no test framework) | Skip TDD, write tests after implementation |
-| 4 IMPLEMENT | Fix hits repeated bugs | `rune:debug` (max 3 loops), then escalate to user |
+| 4 IMPLEMENT | Fix hits repeated bugs | `rune:debug` (max 3 loops) → re-plan → if still blocked → **Approach Pivot Gate** → `rune:brainstorm(rescue)` |
 | 5a PREFLIGHT | Logic issues found | Fix → re-run preflight |
 | 5b SENTINEL | Security CRITICAL found | Fix immediately → re-run (mandatory) |
 | 5c REVIEW | Code quality issues | Fix CRITICAL/HIGH → re-review (max 2 loops) |
@@ -481,7 +517,9 @@ Known failure modes for this skill. Check these before declaring done.
 | Skipping scout to "save time" on a simple task | CRITICAL | Scout Gate blocks this — Phase 1 is mandatory regardless of perceived simplicity |
 | Writing code without user-approved plan | HIGH | Plan Gate: do NOT proceed to Phase 3 without explicit approval ("go", "proceed", "yes") |
 | Claiming "all tests pass" without showing output | HIGH | Constraint 7 blocks this — show actual test runner output via completion-gate |
-| Entering debug↔fix loop more than 3 times without escalating | MEDIUM | After 3 loops, stop and present to user — do not keep spinning |
+| Entering debug↔fix loop more than 3 times without escalating | MEDIUM | After 3 loops → re-plan → if still blocked → Approach Pivot Gate → brainstorm(rescue) |
+| Surrendering "no solution" without triggering Approach Pivot Gate | CRITICAL | MUST invoke brainstorm(rescue) before telling user "can't be done" — pivot to different category first |
+| Re-planning with the same approach category after it fundamentally failed | HIGH | Re-plan = revise steps within same approach. If CATEGORY is wrong → Approach Pivot Gate, not re-plan |
 | Not escalating to sentinel:opus on security-sensitive tasks | MEDIUM | Auth, crypto, payment code → sentinel must run at opus, not sonnet |
 | Running Phase 5 checks sequentially instead of parallel | MEDIUM | Launch preflight+sentinel+review as parallel Task agents for speed |
 | Saying "done" without evidence trail | CRITICAL | completion-gate validates claims — UNCONFIRMED = BLOCK |

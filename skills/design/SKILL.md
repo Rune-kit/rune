@@ -3,7 +3,7 @@ name: design
 description: Design system reasoning. Maps product domain to style, palette, typography, and platform-specific patterns. Generates .rune/design-system.md as the shared design contract for all UI-generating skills.
 metadata:
   author: runedev
-  version: "0.2.0"
+  version: "0.3.0"
   layer: L2
   model: sonnet
   group: creation
@@ -26,6 +26,7 @@ Design system reasoning layer. Converts a product description into a concrete de
 
 - `scout` (L2): detect existing design tokens, component library, platform targets
 - `asset-creator` (L3): generate base visual assets (logo, OG image) from design system
+- `review` (L2): accessibility violations found → flag for fix in next code review
 
 ## Called By (inbound)
 
@@ -320,7 +321,46 @@ sm: 6px | md: 8px | lg: 12px | xl: 16px | full: 9999px
 - [ ] Responsive tested at 375px / 768px / 1024px / 1440px
 ```
 
-### Step 6 — Report
+### Step 6 — Accessibility Review
+
+Run a focused accessibility audit on the design system and any existing UI code. This step ensures the design contract doesn't produce inaccessible outputs.
+
+**Automated checks** (use Grep on codebase):
+1. **Color contrast**: Verify all text/bg combinations in the design system meet WCAG 2.2 AA (4.5:1 normal text, 3:1 large text). Flag any semantic color pair that fails.
+2. **Focus indicators**: Search for `outline-none`, `outline: none`, `focus:outline-none` without a replacement `focus-visible` ring. Every instance is a violation.
+3. **Touch targets**: Search for buttons/links with explicit small sizing (`w-6 h-6`, `p-1` on interactive elements). Flag anything < 24x24px.
+4. **Missing labels**: Search for `<input` without adjacent `<label` or `aria-label`. Search for icon-only buttons without `aria-label`.
+5. **Semantic HTML**: Flag `<div onClick`, `<span onClick` (should be `<button>`). Flag missing `<nav>`, `<main>`, `<header>` landmarks.
+6. **Motion safety**: Check for animations/transitions without `prefers-reduced-motion` media query or Tailwind `motion-reduce:` variant.
+
+**Output**: Accessibility audit section in Design Report with pass/fail per check and specific file:line violations.
+
+If violations found → add them to `.rune/design-system.md` Anti-Patterns section as concrete rules.
+
+### Step 7 — UX Writing Patterns
+
+Generate microcopy guidelines specific to this product domain. UX writing is part of design — not an afterthought.
+
+**Domain-specific microcopy rules:**
+
+| Domain | Tone | Error Pattern | CTA Pattern | Empty State |
+|--------|------|---------------|-------------|-------------|
+| Trading/Fintech | Precise, neutral, no humor | "Order failed: insufficient margin ($X required)" | "Place Order", "Close Position" | "No open positions. Market opens in 2h 15m." |
+| SaaS Dashboard | Professional, helpful | "Couldn't save changes. Try again or contact support." | "Get Started", "Upgrade Plan" | "No data yet. Connect your first integration." |
+| E-commerce | Friendly, urgent-capable | "This item is no longer available. Here are similar items." | "Add to Cart", "Buy Now" | "Your cart is empty. Continue shopping?" |
+| Healthcare | Calm, clinical, clear | "We couldn't verify your insurance. Please check your member ID." | "Schedule Visit", "View Results" | "No upcoming appointments." |
+| Developer Tools | Direct, technical | "Build failed: missing dependency `@types/node`" | "Deploy", "Run Tests" | "No builds yet. Push to trigger CI." |
+
+**Generate for this project:**
+- Error message template: `[What happened] + [Why] + [What to do next]`
+- Empty state template: `[What's missing] + [How to fill it]`
+- Confirmation template: `[What will happen] + [Reversibility]`
+- Loading text: context-appropriate (not just "Loading...")
+- Button label rules: verb-first, specific action (not "Submit", "Click Here")
+
+Add UX writing guidelines to `.rune/design-system.md` under a new `## UX Writing` section.
+
+### Step 8 — Report
 
 Emit design summary to calling skill:
 
@@ -410,7 +450,9 @@ Known failure modes for this skill. Check these before declaring done.
 - Domain classified (one of the 10 categories or explicit custom reasoning)
 - Design system generated with: colors (primitive + semantic), typography, spacing, effects, anti-patterns
 - Platform-specific overrides applied (if iOS/Android target)
-- `.rune/design-system.md` written
+- Accessibility review completed (6 checks: contrast, focus, touch targets, labels, semantic HTML, motion)
+- UX writing guidelines generated (error, empty state, confirmation, loading, button templates)
+- `.rune/design-system.md` written (includes UX Writing section)
 - Design Report emitted with accent/typography reasoning and anti-pattern count
 - Pre-Delivery Checklist included in design-system.md
 

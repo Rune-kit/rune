@@ -3,7 +3,7 @@ name: plan
 description: Create structured implementation plans from requirements. Breaks tasks into phases, identifies dependencies, and makes architecture decisions. Uses opus for deep reasoning.
 metadata:
   author: runedev
-  version: "0.2.0"
+  version: "0.3.0"
   layer: L2
   model: opus
   group: creation
@@ -15,11 +15,33 @@ metadata:
 
 Create structured implementation plans from requirements. Plan is the strategic brain of the Rune ecosystem — it breaks complex tasks into phased implementation steps, identifies dependencies and risks, and makes architecture decisions. Uses opus for deep reasoning quality. Bidirectionally connected with brainstorm for creative exploration.
 
+## Modes
+
+### Implementation Mode (default)
+Standard implementation planning — decompose task into phased steps with code details.
+
+### Feature Spec Mode
+Product-oriented planning — write a feature specification before implementation. Use when the task is a product feature (not just a code change) and needs user stories, acceptance criteria, and scope definition.
+
+**Feature Spec Mode triggers:**
+- User says "spec", "feature spec", "write spec", "PRD"
+- `/rune plan spec <feature>`
+- `cook` Phase 2 when task description is product-oriented (user stories, not code changes)
+
+### Roadmap Mode
+High-level multi-feature planning — organize features into milestones with dependencies and priorities.
+
+**Roadmap Mode triggers:**
+- User says "roadmap", "milestone", "release plan", "what to build next"
+- `/rune plan roadmap`
+
 ## Triggers
 
-- Called by `cook` when task scope > 1 file
-- Called by `team` for high-level task decomposition
-- `/rune plan <task>` — manual planning
+- Called by `cook` when task scope > 1 file (Implementation Mode)
+- Called by `team` for high-level task decomposition (Implementation Mode)
+- `/rune plan <task>` — manual planning (Implementation Mode)
+- `/rune plan spec <feature>` — feature specification (Feature Spec Mode)
+- `/rune plan roadmap` — roadmap planning (Roadmap Mode)
 - Auto-trigger: when user says "implement", "build", "create" with complex scope
 
 ## Calls (outbound)
@@ -46,6 +68,9 @@ Create structured implementation plans from requirements. Plan is the strategic 
 ## Executable Steps
 
 ### Step 1 — Gather Context
+
+**Check for Requirements Document first**: Use `Glob` to check for `.rune/features/*/requirements.md`. If a Requirements Document exists (produced by `rune:ba`), read it and use it as the primary input — it contains user stories, acceptance criteria, scope, and constraints. Do NOT re-gather requirements that BA already elicited.
+
 Use findings from `rune:scout` if already available. If not, invoke `rune:scout` with the project root to scan directory structure, detect framework, identify key files, and extract existing patterns. Do NOT skip this step — plans without context produce wrong file paths.
 
 ### Step 2 — Decompose the Task (Bite-Sized)
@@ -162,6 +187,115 @@ When cook calls back with delta context:
 
 ### Awaiting Approval
 Reply "go" to resume with revised plan.
+```
+
+## Feature Spec Mode
+
+When invoked in Feature Spec Mode, produce a structured specification instead of an implementation plan.
+
+### Feature Spec Steps
+
+**Step 1 — Problem Statement**
+- What problem does this feature solve? (1-2 sentences)
+- Who has this problem? (target user persona)
+- How are they solving it today? (current workaround)
+
+**Step 2 — User Stories**
+Format: `As a [persona], I want to [action] so that [benefit]`
+- Primary story (the core use case)
+- 2-3 secondary stories (important variations)
+- Edge cases as stories (unusual but valid scenarios)
+
+**Step 3 — Acceptance Criteria**
+For each user story, write testable criteria:
+- `GIVEN [context] WHEN [action] THEN [expected result]`
+- Include both happy path and error cases
+- Include performance criteria if relevant ("page loads in < 2s")
+
+**Step 4 — Scope Definition**
+- **In scope**: explicit list of what this feature includes
+- **Out of scope**: explicit list of what this feature does NOT include (prevents scope creep)
+- **Dependencies**: what must exist before this feature can work
+- **Open questions**: unresolved decisions that need stakeholder input
+
+**Step 5 — Write Spec File**
+Save to `.rune/features/<feature-name>/spec.md` using the template:
+
+```markdown
+# Feature Spec: [Feature Name]
+Created: [date] | Status: Draft | Author: AI + [user]
+
+## Problem
+[problem statement]
+
+## User Stories
+1. [primary story]
+2. [secondary stories]
+
+## Acceptance Criteria
+- [ ] [GIVEN/WHEN/THEN criteria]
+
+## Scope
+### In Scope
+- [items]
+### Out of Scope
+- [items]
+### Dependencies
+- [items]
+### Open Questions
+- [questions]
+
+## Technical Notes
+[any implementation hints for the engineer — not a full plan, just key considerations]
+```
+
+After spec is approved → transition to Implementation Mode to produce the actual implementation plan from the spec.
+
+## Roadmap Mode
+
+When invoked in Roadmap Mode, produce a prioritized feature roadmap.
+
+### Roadmap Steps
+
+**Step 1 — Inventory**
+Scan the project for: open issues, TODO comments, planned features in docs, user-requested features. Use `scout` + `Grep` for `TODO`, `FIXME`, `HACK`, `PLANNED`.
+
+**Step 2 — Prioritize**
+Apply ICE scoring (Impact × Confidence × Ease, each 1-10):
+
+| Feature | Impact | Confidence | Ease | ICE Score |
+|---------|--------|------------|------|-----------|
+| [name]  | [1-10] | [1-10]     | [1-10] | [product] |
+
+Sort by ICE score descending. Top items go to Milestone 1.
+
+**Step 3 — Group into Milestones**
+- **Milestone 1** (next release): top 3-5 features by ICE score
+- **Milestone 2** (following release): next 3-5 features
+- **Backlog**: remaining features, loosely ordered
+
+For each milestone:
+- Estimated scope (small/medium/large per feature)
+- Dependencies between features (which must ship first)
+- Risk flags (any feature that blocks others)
+
+**Step 4 — Write Roadmap**
+Save to `.rune/roadmap.md`:
+
+```markdown
+# Product Roadmap
+Updated: [date]
+
+## Milestone 1: [name] (Target: [timeframe])
+| # | Feature | ICE | Scope | Status |
+|---|---------|-----|-------|--------|
+| 1 | [name]  | [score] | [S/M/L] | planned |
+
+## Milestone 2: [name]
+...
+
+## Backlog
+...
 ```
 
 ## Constraints

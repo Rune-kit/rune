@@ -3,7 +3,7 @@ name: debug
 description: Root cause analysis for bugs and unexpected behavior. Traces errors through code, uses structured reasoning, and hands off to fix when cause is found. Core of the debug↔fix mesh.
 metadata:
   author: runedev
-  version: "0.2.0"
+  version: "0.3.0"
   layer: L2
   model: sonnet
   group: development
@@ -35,6 +35,8 @@ If root cause cannot be identified after 3 hypothesis cycles:
 
 - `scout` (L2): find related code, trace imports, identify affected modules
 - `fix` (L2): when root cause found, hand off with diagnosis for fix application
+- `brainstorm` (L2): 3-Fix Escalation when root cause is "wrong approach" — invoke with mode="rescue" for category-diverse alternatives
+- `plan` (L2): 3-Fix Escalation when root cause is "wrong module design" — invoke for redesign
 - `docs-seeker` (L3): lookup API docs for unclear errors or deprecated APIs
 - `problem-solver` (L3): structured reasoning (5 Whys, Fishbone) for complex bugs
 - `browser-pilot` (L3): capture browser console errors, network failures, visual bugs
@@ -132,15 +134,20 @@ Narrow to the single actual cause.
 <HARD-GATE>
 If the SAME bug has been "fixed" 3 times and keeps returning:
 1. STOP fixing. The bug is not the problem — the ARCHITECTURE is.
-2. Escalate to `rune:plan` for redesign of the affected module.
-3. Report all 3 fix attempts and why each failed in the escalation.
-"Try a 4th fix" is NOT acceptable. After 3 failures, question the design.
+2. **Classify the failure**:
+   - **Same category of blocker each time** (e.g., API doesn't support X, platform limitation) → the APPROACH is wrong, not just the code
+   - **Different bugs each time** (e.g., race condition, then null pointer, then type error) → the MODULE needs redesign
+3. **Route based on classification**:
+   - Approach is wrong → Escalate to `rune:brainstorm(mode="rescue")` for category-diverse alternatives
+   - Module needs redesign → Escalate to `rune:plan` for redesign of the affected module
+4. Report all 3 fix attempts and why each failed in the escalation.
+"Try a 4th fix" is NOT acceptable. After 3 failures, question the design OR the approach.
 </HARD-GATE>
 
 Track fix attempts in the Debug Report. If this is attempt N>1 for the same symptom:
 - Reference previous fix attempts and their outcomes
 - Explain why the previous fix didn't hold
-- If N=3: trigger the escalation gate above
+- If N=3: trigger the escalation gate above — classify and route accordingly
 
 ### Step 7: Report
 
@@ -215,7 +222,8 @@ ALL of these mean: STOP. Return to Step 2 (Gather Evidence).
 | Modifying code while "investigating" | CRITICAL | HARD-GATE: any code change during debug = out of scope — hand off to fix |
 | Marking hypothesis CONFIRMED without file:line proof | HIGH | CONFIRMED requires specific evidence cited — "it makes sense" is not evidence |
 | Exceeding 3 hypothesis cycles without escalation | MEDIUM | After 3 cycles: escalate to rune:problem-solver or rune:sequential-thinking |
-| Same bug "fixed" 3+ times without questioning architecture | CRITICAL | 3-Fix Escalation Rule: after 3 failed fixes, escalate to rune:plan for redesign |
+| Same bug "fixed" 3+ times without questioning architecture | CRITICAL | 3-Fix Escalation Rule: classify failure → same blocker category = brainstorm(rescue), different bugs = plan redesign |
+| Escalating to plan when the APPROACH is wrong (not the module) | HIGH | If all 3 fixes hit the same category of blocker (API limit, platform gap), the approach needs pivoting via brainstorm(rescue), not re-planning |
 | Not tracking fix attempt number for recurring bugs | HIGH | Debug Report MUST include Fix Attempt counter — enables escalation gate |
 
 ## Done When

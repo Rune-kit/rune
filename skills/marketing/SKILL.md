@@ -3,7 +3,7 @@ name: marketing
 description: Create marketing assets and execute launch strategy. Generates landing copy, social banners, SEO meta, blog posts, and video scripts.
 metadata:
   author: runedev
-  version: "0.2.0"
+  version: "0.3.0"
   layer: L2
   model: sonnet
   group: delivery
@@ -53,9 +53,37 @@ Call `rune:research` for:
 - SEO keyword opportunities (volume vs. competition)
 - Competitor messaging patterns to avoid or counter
 
+### Step 2.5 — Establish Brand Voice
+
+Before generating any copy, define the brand voice contract. This prevents inconsistent tone across marketing assets.
+
+**Brand Voice Matrix** — answer these for the product:
+
+| Dimension | Spectrum | This product |
+|-----------|----------|--------------|
+| Formality | Casual ←→ Formal | [position] |
+| Humor | Serious ←→ Playful | [position] |
+| Authority | Peer ←→ Expert | [position] |
+| Warmth | Clinical ←→ Friendly | [position] |
+| Urgency | Patient ←→ Urgent | [position] |
+
+**Voice rules** (generate 3-5):
+- "We say [X], never [Y]" — e.g., "We say 'start free', never 'sign up now'"
+- "Our tone is [X] because our users are [Y]"
+- "Avoid [specific words/phrases] because [reason]"
+
+**Vocabulary list** (5-10 terms):
+- Preferred terms: [words this brand uses]
+- Forbidden terms: [words to avoid and why]
+- Jargon policy: [use/avoid/explain technical terms]
+
+Save voice contract to `marketing/brand-voice.md`. All subsequent copy MUST follow this voice.
+
+If `marketing/brand-voice.md` already exists → Read it and apply. Do NOT regenerate without user request.
+
 ### Step 3 — Generate copy
 
-Using product understanding and market research, produce:
+Using product understanding, market research, and **brand voice contract**, produce:
 
 **Hero section**
 - Headline (under 10 words, outcome-focused)
@@ -102,6 +130,25 @@ Produce for the landing page:
 
 Target keywords list (5-10 terms with rationale).
 
+### Step 5.5 — SEO Audit (if existing site)
+
+If the project already has a deployed site or existing pages, run a technical SEO audit before generating new metadata.
+
+**Automated checks** (use Grep + Read on codebase):
+
+1. **Meta tags completeness**: Every page has `<title>`, `<meta description>`, `og:title`, `og:description`, `og:image`. Flag pages missing any.
+2. **Heading hierarchy**: Every page has exactly one `<h1>`. No skipped levels (h1→h3 without h2). Use Grep for `<h1`, `<h2`, `<h3` patterns.
+3. **Image alt text**: Search for `<img` without `alt=` attribute. Every image needs descriptive alt text (not "image", not empty).
+4. **Canonical URLs**: Check for `<link rel="canonical"`. Missing canonical = duplicate content risk.
+5. **Structured data**: Check for `application/ld+json` or microdata. Recommend adding if missing (Product, Organization, Article schemas).
+6. **Performance signals**: Check for `next/image` or lazy loading on images. Flag `<img>` without `loading="lazy"` below fold.
+7. **Sitemap**: Check for `sitemap.xml` or sitemap generation in build config. Flag if missing.
+8. **Robots**: Check for `robots.txt`. Verify it doesn't accidentally block important pages.
+
+**Output**: SEO Audit Report with pass/fail per check. Save to `marketing/seo-audit.md`.
+
+Fix critical SEO issues (missing titles, broken heading hierarchy) in the implementation plan. Non-critical issues go to `marketing/seo-backlog.md`.
+
 ### Step 6 — Visual assets
 
 Call `rune:asset-creator` to generate:
@@ -120,9 +167,11 @@ If `rune:browser-pilot` is available, capture screenshots of the running app to 
 Output all assets as structured markdown sections. Present to user for review before saving files.
 
 After user approves, use `Write` to save:
+- `marketing/brand-voice.md` — voice contract from Step 2.5
 - `marketing/landing-copy.md` — all copy from Step 3
 - `marketing/social-posts.md` — all posts from Step 4
 - `marketing/seo-meta.json` — SEO data from Step 5
+- `marketing/seo-audit.md` — SEO audit results from Step 5.5 (if existing site)
 - `marketing/video-script.md` — video plan from Step 6
 
 ## Constraints
@@ -164,8 +213,10 @@ Known failure modes for this skill. Check these before declaring done.
 ## Done When
 
 - scout completed and actual feature list extracted
+- Brand voice contract established (or existing one loaded)
 - Competitor/trend analysis done via trend-scout + research
-- Hero copy, value props, social posts, and SEO metadata generated
+- Hero copy, value props, social posts, and SEO metadata generated (following brand voice)
+- SEO audit completed (if existing site) with pass/fail results
 - Visual assets requested from asset-creator
 - Video script requested from video-creator (if requested)
 - User has approved all content

@@ -1,7 +1,7 @@
 {
   "name": "rune",
-  "description": "Rune is a 49-skill mesh for Claude Code. IMPORTANT: You MUST route ALL code tasks through Rune skills using the Skill tool. Default route: rune:cook for any code change. Route table: build/implement/fix → rune:cook | large parallel task → rune:team | deploy+launch → rune:launch | legacy rescue → rune:rescue | plan/architect → rune:plan | debug → rune:debug | test → rune:test | review → rune:review | security → rune:sentinel | audit → rune:audit | protect business logic → rune:logic-guardian. NEVER write code without routing through a skill first. Read skills/skill-router/SKILL.md for the full routing table.",
-  "version": "2.0.0",
+  "description": "Rune is a 55-skill mesh for Claude Code. IMPORTANT: You MUST route ALL code tasks through Rune skills using the Skill tool. Default route: rune:cook for any code change. Route table: build/implement/fix → rune:cook | new project/bootstrap → rune:scaffold | large parallel task → rune:team | deploy+launch → rune:launch | legacy rescue → rune:rescue | requirements/BA → rune:ba | plan/architect → rune:plan | debug → rune:debug | test → rune:test | review → rune:review | security → rune:sentinel | audit → rune:audit | docs → rune:docs | MCP server → rune:mcp-builder | git commit/PR → rune:git | protect business logic → rune:logic-guardian. NEVER write code without routing through a skill first. Read skills/skill-router/SKILL.md for the full routing table.",
+  "version": "2.1.0",
   "author": {
     "name": "Rune Contributors"
   },

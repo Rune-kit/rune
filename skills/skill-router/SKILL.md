@@ -81,6 +81,7 @@ These 5 skills are the main interface. Most user intents route here first:
 | Deploy + launch + marketing | `rune:launch` | Ship to production |
 | Legacy code / rescue / modernize | `rune:rescue` | Old/messy codebase |
 | Check project health / full audit | `rune:audit` | Quality assessment |
+| New project / bootstrap / scaffold | `rune:scaffold` | Greenfield project creation |
 
 **Default route**: If unclear, route to `rune:cook`. Cook handles 70% of all requests.
 
@@ -106,6 +107,9 @@ For users who know exactly what they want:
 | UI/UX design | `rune:design` | L2 |
 | Fix bug / debug only (no fix) | `rune:debug` → `rune:fix` | L2 chain |
 | Marketing assets only | `rune:marketing` | L2 |
+| Gather requirements / BA / elicit needs | `rune:ba` | L2 — requires opus |
+| Generate / update docs | `rune:docs` | L2 |
+| Build MCP server | `rune:mcp-builder` | L2 |
 
 #### Tier 3 — Internal Skills (Called by Other Skills)
 
@@ -121,6 +125,8 @@ These are rarely invoked directly — they're called by Tier 1/2 skills:
 | `rune:completion-gate` | cook | Validate claims |
 | `rune:research` / `rune:docs-seeker` | any | Look up docs |
 | `rune:session-bridge` | cook, team | Save context |
+| `rune:git` | cook, scaffold, team, launch | Semantic commits, PRs, branches |
+| `rune:doc-processor` | docs, marketing | PDF/DOCX/XLSX/PPTX generation |
 | "Done" / "ship it" / "xong" | — | `rune:verification` → commit |
 
 #### Tier 4 — Domain Extension Packs (L4)

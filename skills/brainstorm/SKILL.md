@@ -3,7 +3,7 @@ name: brainstorm
 description: Creative ideation and solution exploration. Generates multiple approaches with trade-offs, uses structured frameworks (SCAMPER, First Principles), and hands off to plan for structuring.
 metadata:
   author: runedev
-  version: "0.2.0"
+  version: "0.3.0"
   layer: L2
   model: opus
   group: creation
@@ -21,12 +21,51 @@ This applies to EVERY task regardless of perceived simplicity.
 "This is too simple to need a design" is a rationalization. Simple tasks get simple designs (a few sentences), but they still get designs.
 </HARD-GATE>
 
+## Modes
+
+### Discovery Mode (default)
+Normal brainstorming at the start of a task — generate approaches before any code is written.
+
+### Rescue Mode
+Activated when an approach has been tried and **fundamentally failed** — not a bug, but a wrong approach. Rescue mode forces **category-diverse** alternatives instead of variants of the failed approach.
+
+**Rescue Mode triggers:**
+- `cook` Phase 4: Approach Pivot Gate fires (3 debug-fix loops exhausted + re-plan still fails)
+- `debug`: 3-Fix Escalation Rule fires AND root cause is "approach doesn't work" (not a bug in implementation)
+- `fix`: 3 fix attempts fail AND each attempt reveals a different blocker (systemic, not localized)
+- Manual: `/rune brainstorm rescue <what failed and why>`
+
+**Rescue Mode input:**
+```
+mode: "rescue"
+failed_approach: string     — what was tried
+failure_evidence: string[]  — concrete reasons it failed (error messages, blockers, dead ends)
+original_goal: string       — what we're still trying to achieve
+```
+
+**Rescue Mode constraints:**
+1. MUST generate 3-5 approaches (more than Discovery's 2-3 — wider net)
+2. Each approach MUST be a **different category**, not a variant of the failed one
+3. At least 1 approach must be "unconventional" (hacky, wrapper, reverse-engineer, proxy, etc.)
+4. MUST use Collision-Zone Thinking or Inversion Exercise — conventional thinking already failed
+5. MUST explicitly state why each approach is a **different category** from the failed one
+6. Failed approach MUST be listed as "Option X (FAILED)" — visible reminder not to loop back
+
+**Category examples** (approaches in different categories):
+```
+Direct API call ≠ Wrapper/middleware layer ≠ Reverse engineering ≠ Browser automation
+  ≠ Extension/plugin ≠ Proxy/bridge service ≠ Alternative tool entirely
+```
+
 ## Triggers
 
-- Called by `cook` when multiple valid approaches exist for a feature
-- Called by `plan` when architecture decision needs creative exploration
-- `/rune brainstorm <topic>` — manual brainstorming
-- Auto-trigger: when task description is vague or open-ended
+- Called by `cook` when multiple valid approaches exist for a feature (Discovery Mode)
+- Called by `cook` Approach Pivot Gate when current approach fundamentally fails (Rescue Mode)
+- Called by `debug` 3-Fix Escalation when root cause is architectural, not a bug (Rescue Mode)
+- Called by `plan` when architecture decision needs creative exploration (Discovery Mode)
+- `/rune brainstorm <topic>` — manual brainstorming (Discovery Mode)
+- `/rune brainstorm rescue <context>` — manual rescue (Rescue Mode)
+- Auto-trigger: when task description is vague or open-ended (Discovery Mode)
 
 ## Calls (outbound)
 
@@ -38,9 +77,12 @@ This applies to EVERY task regardless of perceived simplicity.
 
 ## Called By (inbound)
 
-- `cook` (L1): when multiple valid approaches exist for a feature
-- `plan` (L2): when architecture decision needs creative exploration
-- User: `/rune brainstorm <topic>` direct invocation
+- `cook` (L1): when multiple valid approaches exist for a feature (Discovery Mode)
+- `cook` (L1): Approach Pivot Gate — current approach failed, need category-diverse alternatives (Rescue Mode)
+- `debug` (L2): 3-Fix Escalation when root cause is "wrong approach" not "wrong code" (Rescue Mode)
+- `plan` (L2): when architecture decision needs creative exploration (Discovery Mode)
+- User: `/rune brainstorm <topic>` direct invocation (Discovery Mode)
+- User: `/rune brainstorm rescue <context>` manual rescue (Rescue Mode)
 
 ## Cross-Hub Connections
 
@@ -79,16 +121,29 @@ CRAZY 8s         — 8 ideas in 8 minutes (rapid ideation)
 
 ## Executable Steps
 
+### Step 0 — Detect Mode
+
+Check the invocation context:
+- If `mode="rescue"` is set, or caller is Approach Pivot Gate / 3-Fix Escalation → **Rescue Mode**
+- Otherwise → **Discovery Mode**
+
+If Rescue Mode: read `failed_approach` and `failure_evidence` before proceeding. These become anti-constraints — approaches that MUST NOT repeat the failed category.
+
 ### Step 1 — Frame the Problem
 State the decision to be made in one clear sentence: "We need to decide HOW TO [achieve X] given [constraints Y]." Identify:
 - Hard constraints (cannot change): budget, existing tech stack, deadlines
 - Soft constraints (prefer to avoid): complexity, breaking changes, unfamiliar tech
 - Success criteria: what does a good solution look like?
+- **[Rescue Mode only]** Anti-constraints: "Approach X was tried and failed because Y — do NOT generate variants of X"
 
 If the problem is unclear, ask the user ONE clarifying question before proceeding.
 
-### Step 2 — Generate 2–3 Approaches
-Produce exactly 2–3 distinct approaches. Each approach must be meaningfully different — not just variations of the same idea. For each approach provide:
+### Step 2 — Generate Approaches
+
+**Discovery Mode**: Produce exactly 2–3 distinct approaches.
+**Rescue Mode**: Produce exactly 3–5 approaches, each a **different category** from the failed approach.
+
+Each approach must be meaningfully different — not just variations of the same idea. For each approach provide:
 - **Name**: short memorable label
 - **Description**: 2–4 sentences on how it works
 - **Pros**: concrete advantages (not generic "simple" — be specific)
@@ -99,7 +154,8 @@ Produce exactly 2–3 distinct approaches. Each approach must be meaningfully di
 If the domain is unfamiliar or data is needed, invoke `rune:research` before generating options. For product/market context, invoke `rune:trend-scout`.
 
 ### Step 3 — Evaluate
-Apply the most relevant framework to structure the evaluation:
+
+**Discovery Mode** — Apply the most relevant framework:
 - Use **SCAMPER** when exploring variations of an existing solution
 - Use **First Principles** when the problem looks unsolvable with conventional approaches
 - Use **6 Thinking Hats** when stakeholder perspectives matter (product vs. engineering vs. user)
@@ -107,6 +163,16 @@ Apply the most relevant framework to structure the evaluation:
 - Use **Collision-Zone** when innovation is needed, not just optimization — force cross-domain metaphors
 - Use **Inversion** when all options feel forced or there's an unquestioned "must be this way"
 - Use **Scale Game** when validating which approach survives production reality
+
+**Rescue Mode** — MUST use at least one of these (conventional thinking already failed):
+- **Collision-Zone Thinking** (mandatory first pick) — force cross-domain metaphors to break out of the failed category
+- **Inversion Exercise** — flip assumptions that led to the failed approach
+- **First Principles** — strip to fundamentals, rebuild without the assumption that caused failure
+
+Additionally in Rescue Mode:
+- Invoke `rune:research` to search for how others solved similar problems (repos, articles, workarounds)
+- At least 1 approach must be "hacky/unconventional" — wrappers, reverse engineering, browser automation, proxy layers, debug mode abuse, etc.
+- Label each approach with its **category tag** to prove diversity: `[Direct API]`, `[Wrapper]`, `[Reverse-Engineer]`, `[Proxy]`, `[Extension]`, `[Alternative Tool]`, etc.
 
 For approaches with many interacting variables, invoke `rune:sequential-thinking` to reason through trade-offs systematically.
 
@@ -128,11 +194,14 @@ If the user rejects the recommendation, return to Step 2 with adjusted constrain
 
 ## Constraints
 
-1. MUST propose 2-3 approaches with trade-offs — never present only one option
+1. MUST propose 2-3 approaches (Discovery) or 3-5 approaches (Rescue) — never present only one option
 2. MUST include your recommendation and reasoning for why
 3. MUST ask one question at a time — don't overwhelm with multiple questions
 4. MUST save approved design to docs/plans/ before transitioning to plan
 5. MUST NOT jump to implementation — brainstorm → plan → implement is the order
+6. [Rescue Mode] MUST NOT generate variants of the failed approach — each approach must be a different CATEGORY
+7. [Rescue Mode] MUST use Collision-Zone or Inversion framework — conventional thinking already failed
+8. [Rescue Mode] MUST include at least 1 unconventional/hacky approach — sometimes the "dirty" solution is the only one that works
 
 ## Output Format
 
@@ -176,6 +245,9 @@ Known failure modes for this skill. Check these before declaring done.
 | Generating only one option instead of 2-3 | HIGH | Always present multiple approaches — the value is in the comparison, not the recommendation |
 | Proceeding to plan without user approval on the approach | CRITICAL | Brainstorm MUST get explicit sign-off before calling plan — no silent "going with Option A" |
 | Options are variations of the same approach (fake diversity) | HIGH | Options must differ in architecture, not just naming — different trade-offs, not just different words |
+| [Rescue] Generating variants of the failed approach | CRITICAL | Each approach MUST have a different category tag — if two share a tag, one must be replaced |
+| [Rescue] Skipping Collision-Zone/Inversion frameworks | HIGH | Conventional thinking already failed — MUST use at least one breakthrough framework |
+| [Rescue] All approaches are "clean/proper" — no hacky option | MEDIUM | At least 1 must be unconventional — wrappers, reverse-engineering, debug mode abuse, proxy layers |
 | Calling plan directly instead of presenting options first | CRITICAL | Steps 2-3 are mandatory — present options, get approval, THEN call plan |
 | "Creative" options that ignore stated constraints | MEDIUM | Every option must satisfy the constraints declared in Step 1 |
 

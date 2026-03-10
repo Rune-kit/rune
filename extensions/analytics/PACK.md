@@ -3,7 +3,7 @@ name: "@rune/analytics"
 description: Analytics patterns — tracking setup, A/B testing, funnel analysis, and dashboard design.
 metadata:
   author: runedev
-  version: "0.1.0"
+  version: "0.2.0"
   layer: L4
   price: "$12"
   target: Growth engineers
@@ -25,7 +25,7 @@ Analytics implementations fail silently: tracking events that fire but never rea
 - Called by `cook` (L1) when analytics feature requested
 - Called by `marketing` (L2) when measuring campaign performance
 
-## Skills Included
+## Skills Included (7)
 
 ### tracking-setup
 
@@ -314,6 +314,195 @@ function exportCsv(data: Record<string, unknown>[], filename: string) {
 
 ---
 
+### sql-patterns
+
+SQL query patterns for analytics — common aggregations, window functions, CTEs, performance optimization, and safe parameterized queries for analytics workloads.
+
+#### Workflow
+
+**Step 1 — Detect database setup**
+Use Grep to find database usage: `prisma`, `drizzle`, `knex`, `pg`, `mysql2`, `better-sqlite3`, `sql`, `SELECT`, `INSERT`. Identify: ORM vs raw SQL, database engine (PostgreSQL, MySQL, SQLite), migration tool, and query builder.
+
+**Step 2 — Audit query quality**
+Check for: string interpolation in SQL (injection risk), missing indexes on columns used in WHERE/JOIN/ORDER BY, N+1 queries in loops, SELECT * instead of specific columns, no pagination on large result sets, aggregations done client-side instead of database, and missing EXPLAIN ANALYZE on slow queries.
+
+**Step 3 — Emit SQL patterns**
+Emit patterns appropriate to the detected database engine.
+
+#### Example
+
+```sql
+-- Time-bucketed metrics (PostgreSQL)
+-- Use DATE_TRUNC for consistent time buckets
+SELECT
+  DATE_TRUNC('hour', created_at) AS bucket,
+  COUNT(*) AS total_events,
+  COUNT(DISTINCT user_id) AS unique_users,
+  PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY response_ms) AS p95_latency
+FROM events
+WHERE created_at > NOW() - INTERVAL '24 hours'
+GROUP BY bucket
+ORDER BY bucket;
+
+-- Running totals with window functions
+SELECT date, daily_revenue,
+  SUM(daily_revenue) OVER (ORDER BY date ROWS UNBOUNDED PRECEDING) AS cumulative_revenue,
+  AVG(daily_revenue) OVER (ORDER BY date ROWS 6 PRECEDING) AS rolling_7d_avg
+FROM daily_metrics;
+
+-- Efficient pagination (keyset, not OFFSET)
+-- BAD:  SELECT * FROM events ORDER BY id LIMIT 20 OFFSET 10000;
+-- GOOD: cursor-based
+SELECT * FROM events
+WHERE id > $1  -- last seen ID
+ORDER BY id
+LIMIT 20;
+
+-- Safe parameterized queries (NEVER string interpolation)
+-- BAD:  `SELECT * FROM users WHERE id = ${userId}`
+-- GOOD: prepared statement
+const result = await db.query('SELECT * FROM users WHERE id = $1', [userId]);
+```
+
+---
+
+### data-validation
+
+Data quality patterns — input validation, schema enforcement, data pipeline checks, anomaly detection, and data freshness monitoring.
+
+#### Workflow
+
+**Step 1 — Detect data flows**
+Use Grep to find data ingestion points: API endpoints that accept data, CSV/JSON import handlers, webhook receivers, database seed scripts, ETL pipelines. Map: source → transform → destination for each flow.
+
+**Step 2 — Audit data quality**
+Check for: missing input validation on data ingestion endpoints, no schema validation on imported files, no null/empty checks on required fields, no data type coercion (string "123" stored as string not number), no anomaly detection (sudden 10x spike in values), no data freshness check ("when was this data last updated?"), and no deduplication on event streams.
+
+**Step 3 — Emit validation patterns**
+Emit: schema validation with Zod for API inputs, data pipeline validation middleware, anomaly detection query, data freshness monitor, and deduplication patterns.
+
+#### Example
+
+```typescript
+import { z } from 'zod';
+
+// Data pipeline validation schema
+const MetricRowSchema = z.object({
+  timestamp: z.coerce.date(),
+  metric_name: z.string().min(1).max(100),
+  value: z.number().finite(),
+  source: z.enum(['api', 'webhook', 'import', 'manual']),
+  tags: z.record(z.string()).optional(),
+});
+
+// Batch validation with error collection (not fail-fast)
+function validateBatch(rows: unknown[]): { valid: z.infer<typeof MetricRowSchema>[]; errors: { row: number; error: string }[] } {
+  const valid: z.infer<typeof MetricRowSchema>[] = [];
+  const errors: { row: number; error: string }[] = [];
+  rows.forEach((row, i) => {
+    const result = MetricRowSchema.safeParse(row);
+    if (result.success) valid.push(result.data);
+    else errors.push({ row: i, error: result.error.issues.map(e => e.message).join('; ') });
+  });
+  return { valid, errors };
+}
+
+// Anomaly detection — flag values >3 standard deviations from rolling mean
+// SELECT metric_name, value, timestamp,
+//   AVG(value) OVER (PARTITION BY metric_name ORDER BY timestamp ROWS 30 PRECEDING) AS rolling_mean,
+//   STDDEV(value) OVER (PARTITION BY metric_name ORDER BY timestamp ROWS 30 PRECEDING) AS rolling_std
+// FROM metrics
+// HAVING ABS(value - rolling_mean) > 3 * rolling_std;
+
+// Data freshness monitor
+async function checkFreshness(tables: string[], maxStaleMinutes: number) {
+  const stale: string[] = [];
+  for (const table of tables) {
+    const result = await db.query(
+      `SELECT EXTRACT(EPOCH FROM NOW() - MAX(updated_at)) / 60 AS minutes_stale FROM ${table}`
+    );
+    if (result.rows[0]?.minutes_stale > maxStaleMinutes) stale.push(table);
+  }
+  return stale;
+}
+```
+
+---
+
+### statistical-analysis
+
+Statistical analysis patterns — significance testing, regression basics, distribution analysis, and correlation detection for product metrics.
+
+#### Workflow
+
+**Step 1 — Identify analysis need**
+Determine what type of analysis is needed: comparing two groups (A/B test significance), finding relationships (correlation), predicting values (regression), understanding distribution (histogram, percentiles), or detecting trends (time series decomposition).
+
+**Step 2 — Select method**
+
+| Question | Method | When to use |
+|----------|--------|-------------|
+| "Is A different from B?" | Two-sample t-test or Chi-square | Comparing conversion rates, revenue per user |
+| "Are these correlated?" | Pearson/Spearman correlation | Feature usage vs retention, price vs conversion |
+| "What predicts Y?" | Linear/logistic regression | Churn prediction, revenue forecasting |
+| "What's the distribution?" | Histogram + percentiles | Response times, order values, session lengths |
+| "Is this trend real?" | Mann-Kendall or linear regression on time | Month-over-month growth, seasonal patterns |
+
+**Step 3 — Emit analysis patterns**
+
+#### Example
+
+```typescript
+// Chi-square significance test for A/B conversion rates
+function chiSquareTest(
+  controlConversions: number, controlTotal: number,
+  treatmentConversions: number, treatmentTotal: number
+): { chiSquare: number; pValue: number; significant: boolean } {
+  const controlRate = controlConversions / controlTotal;
+  const treatmentRate = treatmentConversions / treatmentTotal;
+  const pooledRate = (controlConversions + treatmentConversions) / (controlTotal + treatmentTotal);
+
+  const expected = [
+    [controlTotal * pooledRate, controlTotal * (1 - pooledRate)],
+    [treatmentTotal * pooledRate, treatmentTotal * (1 - pooledRate)],
+  ];
+  const observed = [
+    [controlConversions, controlTotal - controlConversions],
+    [treatmentConversions, treatmentTotal - treatmentConversions],
+  ];
+
+  let chiSq = 0;
+  for (let i = 0; i < 2; i++) {
+    for (let j = 0; j < 2; j++) {
+      chiSq += Math.pow(observed[i][j] - expected[i][j], 2) / expected[i][j];
+    }
+  }
+
+  // p-value approximation for 1 degree of freedom
+  const pValue = 1 - normalCDF(Math.sqrt(chiSq));
+  return { chiSquare: chiSq, pValue, significant: pValue < 0.05 };
+}
+
+// Percentile calculation (for response time analysis, order values, etc.)
+function percentiles(values: number[], points: number[] = [50, 75, 90, 95, 99]): Record<string, number> {
+  const sorted = [...values].sort((a, b) => a - b);
+  return Object.fromEntries(
+    points.map(p => [`p${p}`, sorted[Math.ceil((p / 100) * sorted.length) - 1]])
+  );
+}
+
+// SQL — Correlation between two metrics (PostgreSQL)
+// SELECT CORR(feature_usage_count, retention_days) AS correlation,
+//   CASE
+//     WHEN ABS(CORR(feature_usage_count, retention_days)) > 0.7 THEN 'strong'
+//     WHEN ABS(CORR(feature_usage_count, retention_days)) > 0.4 THEN 'moderate'
+//     ELSE 'weak'
+//   END AS strength
+// FROM user_metrics;
+```
+
+---
+
 ## Connections
 
 ```
@@ -358,6 +547,9 @@ Called By ← cook (L1): when analytics feature requested
 - Funnel analysis tracks correlated steps with drop-off rates
 - Dashboard renders KPI cards with comparison, time series, and export
 - Server-side tracking proxy handles ad-blocked clients
+- SQL queries use parameterized statements, proper indexing, and cursor-based pagination
+- Data pipeline validates inputs with schema enforcement and anomaly detection
+- Statistical tests applied correctly (right method for right question)
 - Structured report emitted for each skill invoked
 
 ## Cost Profile

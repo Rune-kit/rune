@@ -3,7 +3,7 @@
 ## Overview
 
 Rune is an interconnected skill ecosystem for AI coding assistants.
-49 core skills | 5-layer mesh architecture | 170+ connections | Multi-platform.
+55 core skills | 5-layer mesh architecture | 200+ connections | Multi-platform.
 Philosophy: "Less skills. Deeper connections."
 
 Works on: Claude Code (native plugin) · Cursor · Windsurf · Google Antigravity · any AI IDE.
@@ -61,25 +61,26 @@ rune/
 
 ## Current Wave
 
-All 49 core skills built (Waves 0-5 + audit + perf/db/incident + design + skill-router + review-intake + skill-forge + completion-gate + worktree + sast + constraint-check + logic-guardian).
+55 core skills built (v2.1.0 — "The Missing Pieces").
 
 ### L0 Router (1)
 skill-router — meta-enforcement layer, routes every action through the correct skill
 
-### L1 Orchestrators (4)
-cook, team, launch, rescue
+### L1 Orchestrators (5)
+cook, team, launch, rescue, scaffold
 
-### L2 Workflow Hubs (23)
+### L2 Workflow Hubs (26)
 plan, scout, brainstorm, design, skill-forge, debug, fix, test, review, db,
 sentinel, preflight, onboard, deploy, marketing, perf,
-autopsy, safeguard, surgeon, audit, incident, review-intake, logic-guardian
+autopsy, safeguard, surgeon, audit, incident, review-intake, logic-guardian,
+ba, docs, mcp-builder
 
-### L3 Utilities (21)
+### L3 Utilities (23)
 research, docs-seeker, trend-scout, problem-solver, sequential-thinking,
 verification, hallucination-guard, completion-gate, constraint-check, sast, integrity-check,
 context-engine, journal, session-bridge, worktree,
 watchdog, scope-guard, browser-pilot, asset-creator, video-creator,
-dependency-doctor
+dependency-doctor, git, doc-processor
 
 ### L4 Extension Packs (12)
 @rune/ui, @rune/backend, @rune/devops, @rune/mobile, @rune/security,
