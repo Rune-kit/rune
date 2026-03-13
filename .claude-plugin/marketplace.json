@@ -10,240 +10,93 @@
     {
       "name": "rune",
       "source": "./",
-      "description": "58 skills wired into a self-aware 5-layer mesh — 200+ connections, adaptive routing, mesh analytics, logic preservation. Use rune:cook for any code task, rune:team for parallel work, rune:launch for deploy, rune:rescue for legacy code. From idea to shipped MVP in one cook invocation.",
-      "strict": true,
+      "description": "58 skills wired into a self-aware 5-layer mesh — 200+ connections, adaptive routing, mesh analytics, logic preservation. Use rune:cook for any code task, rune:team for parallel work, rune:launch for deploy, rune:rescue for legacy code.",
+      "version": "2.1.1",
       "author": {
         "name": "Rune Contributors"
       },
       "homepage": "https://github.com/rune-kit/rune",
       "repository": "https://github.com/rune-kit/rune",
       "license": "MIT",
-      "version": "2.1.1",
-      "category": "workflow",
-      "tags": ["skills", "orchestration", "mesh", "workflow", "tdd", "security", "debugging", "sast", "pre-commit", "analytics", "adaptive-routing", "logic-preservation"],
-      "skills": [
-        "./skills/skill-router",
-        "./skills/cook",
-        "./skills/team",
-        "./skills/launch",
-        "./skills/rescue",
-        "./skills/scaffold",
-        "./skills/plan",
-        "./skills/scout",
-        "./skills/brainstorm",
-        "./skills/design",
-        "./skills/skill-forge",
-        "./skills/debug",
-        "./skills/fix",
-        "./skills/test",
-        "./skills/review",
-        "./skills/review-intake",
-        "./skills/db",
-        "./skills/sentinel",
-        "./skills/sentinel-env",
-        "./skills/preflight",
-        "./skills/onboard",
-        "./skills/audit",
-        "./skills/perf",
-        "./skills/logic-guardian",
-        "./skills/deploy",
-        "./skills/marketing",
-        "./skills/incident",
-        "./skills/autopsy",
-        "./skills/safeguard",
-        "./skills/surgeon",
-        "./skills/adversary",
-        "./skills/ba",
-        "./skills/docs",
-        "./skills/mcp-builder",
-        "./skills/research",
-        "./skills/docs-seeker",
-        "./skills/trend-scout",
-        "./skills/problem-solver",
-        "./skills/sequential-thinking",
-        "./skills/verification",
-        "./skills/hallucination-guard",
-        "./skills/completion-gate",
-        "./skills/constraint-check",
-        "./skills/sast",
-        "./skills/integrity-check",
-        "./skills/context-engine",
-        "./skills/journal",
-        "./skills/session-bridge",
-        "./skills/neural-memory",
-        "./skills/worktree",
-        "./skills/watchdog",
-        "./skills/scope-guard",
-        "./skills/browser-pilot",
-        "./skills/asset-creator",
-        "./skills/video-creator",
-        "./skills/dependency-doctor",
-        "./skills/git",
-        "./skills/doc-processor"
-      ],
-      "commands": [
-        "./commands/rune"
-      ],
-      "agents": [
-        "./agents/architect",
-        "./agents/asset-creator",
-        "./agents/audit",
-        "./agents/autopsy",
-        "./agents/brainstorm",
-        "./agents/browser-pilot",
-        "./agents/coder",
-        "./agents/completion-gate",
-        "./agents/constraint-check",
-        "./agents/context-engine",
-        "./agents/cook",
-        "./agents/db",
-        "./agents/debug",
-        "./agents/dependency-doctor",
-        "./agents/deploy",
-        "./agents/design",
-        "./agents/docs-seeker",
-        "./agents/fix",
-        "./agents/hallucination-guard",
-        "./agents/incident",
-        "./agents/integrity-check",
-        "./agents/journal",
-        "./agents/launch",
-        "./agents/logic-guardian",
-        "./agents/marketing",
-        "./agents/onboard",
-        "./agents/perf",
-        "./agents/plan",
-        "./agents/preflight",
-        "./agents/problem-solver",
-        "./agents/rescue",
-        "./agents/research",
-        "./agents/researcher",
-        "./agents/review",
-        "./agents/review-intake",
-        "./agents/reviewer",
-        "./agents/safeguard",
-        "./agents/sast",
-        "./agents/scanner",
-        "./agents/scope-guard",
-        "./agents/scout",
-        "./agents/sentinel",
-        "./agents/sequential-thinking",
-        "./agents/session-bridge",
-        "./agents/skill-forge",
-        "./agents/skill-router",
-        "./agents/surgeon",
-        "./agents/team",
-        "./agents/test",
-        "./agents/trend-scout",
-        "./agents/verification",
-        "./agents/video-creator",
-        "./agents/watchdog",
-        "./agents/worktree"
-      ]
+      "category": "workflow"
     },
     {
       "name": "@rune/ui",
       "source": "./extensions/ui",
       "description": "Frontend UI patterns — design systems, accessibility, animation",
-      "version": "0.1.0",
-      "category": "frontend",
-      "tags": ["ui", "design-system", "a11y", "components", "animation"]
+      "category": "frontend"
     },
     {
       "name": "@rune/backend",
       "source": "./extensions/backend",
       "description": "Backend patterns — API, auth, database, middleware",
-      "version": "0.1.0",
-      "category": "backend",
-      "tags": ["api", "auth", "database", "middleware"]
+      "category": "backend"
     },
     {
       "name": "@rune/devops",
       "source": "./extensions/devops",
       "description": "DevOps — Docker, CI/CD, monitoring, server setup",
-      "version": "0.1.0",
-      "category": "devops",
-      "tags": ["docker", "cicd", "monitoring", "server"]
+      "category": "devops"
     },
     {
       "name": "@rune/mobile",
       "source": "./extensions/mobile",
       "description": "Mobile — React Native, Flutter, app store, native bridge",
-      "version": "0.1.0",
-      "category": "mobile",
-      "tags": ["react-native", "flutter", "mobile", "app-store"]
+      "category": "mobile"
     },
     {
       "name": "@rune/security",
       "source": "./extensions/security",
       "description": "Deep security — OWASP audit, pentest, compliance",
-      "version": "0.1.0",
-      "category": "security",
-      "tags": ["security", "owasp", "pentest", "compliance"]
+      "category": "security"
     },
     {
       "name": "@rune/trading",
       "source": "./extensions/trading",
       "description": "Fintech — real-time data, charts, indicators, trade logic preservation",
-      "version": "0.1.0",
-      "category": "domain",
-      "tags": ["fintech", "trading", "realtime", "charts"]
+      "category": "domain"
     },
     {
       "name": "@rune/saas",
       "source": "./extensions/saas",
       "description": "SaaS — multi-tenant, billing, subscription, onboarding",
-      "version": "0.1.0",
-      "category": "domain",
-      "tags": ["saas", "billing", "multi-tenant", "subscription"]
+      "category": "domain"
     },
     {
       "name": "@rune/ecommerce",
       "source": "./extensions/ecommerce",
       "description": "E-commerce — Shopify, payments, cart, inventory",
-      "version": "0.1.0",
-      "category": "domain",
-      "tags": ["ecommerce", "shopify", "payments", "cart"]
+      "category": "domain"
     },
     {
       "name": "@rune/ai-ml",
       "source": "./extensions/ai-ml",
       "description": "AI/ML — LLM integration, RAG, embeddings, fine-tuning",
-      "version": "0.1.0",
-      "category": "domain",
-      "tags": ["ai", "ml", "llm", "rag", "embeddings"]
+      "category": "domain"
     },
     {
       "name": "@rune/gamedev",
       "source": "./extensions/gamedev",
       "description": "Game dev — Three.js, WebGL, game loops, physics",
-      "version": "0.1.0",
-      "category": "domain",
-      "tags": ["gamedev", "threejs", "webgl", "physics"]
+      "category": "domain"
     },
     {
       "name": "@rune/content",
       "source": "./extensions/content",
       "description": "Content — blog, CMS, MDX, i18n, SEO",
-      "version": "0.1.0",
-      "category": "domain",
-      "tags": ["content", "blog", "cms", "seo", "i18n"]
+      "category": "domain"
     },
     {
       "name": "@rune/analytics",
       "source": "./extensions/analytics",
       "description": "Analytics — tracking, A/B testing, funnels, dashboards",
-      "version": "0.1.0",
-      "category": "domain",
-      "tags": ["analytics", "tracking", "ab-testing", "funnels"]
+      "category": "domain"
     },
     {
       "name": "@rune/chrome-ext",
       "source": "./extensions/chrome-ext",
       "description": "Chrome Extension — manifest v3, service workers, content scripts, popup UI",
-      "version": "0.1.0",
-      "category": "domain",
-      "tags": ["chrome", "extension", "browser", "manifest-v3"]
+      "category": "domain"
     }
   ]
 }
