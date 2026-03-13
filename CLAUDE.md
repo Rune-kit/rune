@@ -6,12 +6,12 @@ Rune is an interconnected skill ecosystem for AI coding assistants.
 58 core skills | 5-layer mesh architecture | 200+ connections | Multi-platform.
 Philosophy: "Less skills. Deeper connections."
 
-Works on: Claude Code (native plugin) · Cursor · Windsurf · Google Antigravity · OpenAI Codex · any AI IDE.
+Works on: Claude Code (native plugin) · Cursor · Windsurf · Google Antigravity · OpenAI Codex · OpenCode · any AI IDE.
 
 ## Tech Stack
 
 - Claude Code Plugin System (native)
-- Multi-platform compiler (Node.js) — compiles to Cursor, Windsurf, Antigravity, Codex, generic
+- Multi-platform compiler (Node.js) — compiles to Cursor, Windsurf, Antigravity, Codex, OpenCode, generic
 - Agent Skills SKILL.md format
 - Git for version control
 - Markdown + JSON for configuration
@@ -31,7 +31,7 @@ rune/
 │   ├── parser.js       # SKILL.md → IR
 │   ├── transformer.js  # Transform pipeline
 │   ├── emitter.js      # IR → platform files
-│   ├── adapters/       # Platform adapters (claude, cursor, windsurf, antigravity, codex, generic)
+│   ├── adapters/       # Platform adapters (claude, cursor, windsurf, antigravity, codex, openclaw, opencode, generic)
 │   └── transforms/     # Cross-refs, tool-names, frontmatter, subagents, hooks, branding
 ├── commands/           # Slash command definitions
 ├── agents/             # Subagent definitions
@@ -58,6 +58,7 @@ rune/
 - Build for Cursor: `node compiler/bin/rune.js build --platform cursor --output <project-dir>`
 - Build for Windsurf: `node compiler/bin/rune.js build --platform windsurf --output <project-dir>`
 - Build for Codex: `node compiler/bin/rune.js build --platform codex --output <project-dir>`
+- Build for OpenCode: `node compiler/bin/rune.js build --platform opencode --output <project-dir>`
 - Validate build: `node compiler/bin/rune.js doctor`
 
 ## Current Wave

@@ -47,6 +47,7 @@ function detectPlatform(projectRoot) {
   if (existsSync(path.join(projectRoot, '.agent'))) return 'antigravity';
   if (existsSync(path.join(projectRoot, '.openclaw'))) return 'openclaw';
   if (existsSync(path.join(projectRoot, '.codex'))) return 'codex';
+  if (existsSync(path.join(projectRoot, '.opencode'))) return 'opencode';
   return null;
 }
 
@@ -272,7 +273,7 @@ async function main() {
       log('    doctor   Validate compiled output');
       log('');
       log('  Options:');
-      log('    --platform <name>   Override platform (cursor, windsurf, antigravity, codex, openclaw, generic)');
+      log('    --platform <name>   Override platform (cursor, windsurf, antigravity, codex, openclaw, opencode, generic)');
       log('    --output <dir>      Override output directory');
       log('    --disable <skills>  Comma-separated skills to disable');
       log('');

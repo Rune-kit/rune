@@ -11,6 +11,7 @@ import antigravity from './antigravity.js';
 import generic from './generic.js';
 import openclaw from './openclaw.js';
 import codex from './codex.js';
+import opencode from './opencode.js';
 
 const adapters = {
   claude,
@@ -20,6 +21,7 @@ const adapters = {
   generic,
   openclaw,
   codex,
+  opencode,
 };
 
 /**
