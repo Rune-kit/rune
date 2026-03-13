@@ -243,8 +243,8 @@ Current Pro packs (product 455 lines, sales ~400 lines) are **thinner than best 
 | Phase | What | Status | Plan File |
 |-------|------|--------|-----------|
 | Phase 1 | Enrich product (1253 lines) + sales (889 lines) | ✅ Done | plan-pack-upgrade-phase1.md |
-| Phase 2 | New: data-science, support (Pro) + chrome-ext (FREE) | ⬚ Pending | plan-pack-upgrade-phase2.md |
-| Phase 3 | Business: finance, legal → validate → hr, operations, enterprise-search | ⬚ Pending | plan-pack-upgrade-phase3.md |
+| Phase 2 | New: data-science, support (Pro) + chrome-ext (FREE) | ✅ Done | plan-pack-upgrade-phase2.md |
+| Phase 3 | Business: finance (741), legal (733) → validate → hr, operations, enterprise-search | ✅ Done (finance+legal) | plan-pack-upgrade-phase3.md |
 | Phase 4 | LemonSqueezy, @rune/ui enrichment, cross-pack protocol | ⬚ Pending | plan-pack-upgrade-phase4.md |
 
 ## Timeline
@@ -256,5 +256,5 @@ Current Pro packs (product 455 lines, sales ~400 lines) are **thinner than best 
 | Phase 1b | @rune-pro/sales pack (initial) | ✅ Done (PACK.md created) |
 | **Upgrade Phase 1** | **Deep enrich product (1253 lines) + sales (889 lines)** | ✅ Done |
 | **Upgrade Phase 2** | **New: data-science (1356), support (802), chrome-ext (995 FREE)** | ✅ Done |
-| **Upgrade Phase 3** | **Business tier: finance + legal first, then validate** | ⬚ After Phase 2 |
+| **Upgrade Phase 3** | **Business tier: finance (741) + legal (733)** | ✅ Done |
 | **Upgrade Phase 4** | **Distribution (LemonSqueezy), UI enrichment, docs** | ⬚ After Phase 3 |
