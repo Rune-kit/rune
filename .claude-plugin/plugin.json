@@ -1,28 +1,3 @@
 {
-  "name": "rune",
-  "description": "Rune is a 58-skill mesh for Claude Code. IMPORTANT: You MUST route ALL code tasks through Rune skills using the Skill tool. Default route: rune:cook for any code change. Route table: build/implement/fix → rune:cook | new project/bootstrap → rune:scaffold | large parallel task → rune:team | deploy+launch → rune:launch | legacy rescue → rune:rescue | requirements/BA → rune:ba | plan/architect → rune:plan | debug → rune:debug | test → rune:test | review → rune:review | security → rune:sentinel | red-team/challenge plan → rune:adversary | audit → rune:audit | docs → rune:docs | MCP server → rune:mcp-builder | git commit/PR → rune:git | protect business logic → rune:logic-guardian. NEVER write code without routing through a skill first. Read skills/skill-router/SKILL.md for the full routing table.",
-  "version": "2.1.1",
-  "author": {
-    "name": "Rune Contributors"
-  },
-  "homepage": "https://github.com/rune-kit/rune",
-  "repository": "https://github.com/rune-kit/rune",
-  "license": "MIT",
-  "keywords": [
-    "skills",
-    "workflow",
-    "orchestration",
-    "mesh",
-    "multi-platform",
-    "cursor",
-    "windsurf",
-    "codex",
-    "tdd",
-    "debugging",
-    "refactoring",
-    "security",
-    "deployment",
-    "analytics",
-    "adaptive-routing"
-  ]
+  "name": "rune"
 }
