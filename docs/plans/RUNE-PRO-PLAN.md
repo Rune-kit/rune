@@ -1,6 +1,6 @@
 # Rune Pro — Premium Extension Packs Plan
 
-Status: IN PROGRESS | Created: 2025-03-10 | Updated: 2025-03-12
+Status: IN PROGRESS | Created: 2025-03-10 | Updated: 2025-03-13
 
 ## Business Model
 
@@ -67,22 +67,25 @@ Loaded at session start alongside technical context.
 
 ### Distribution
 
-Option A: GitHub Sponsors + private repo access (simplest)
-- User sponsors → gets GitHub collaborator access → can clone/install
-- Pros: zero infrastructure, GitHub handles payment
-- Cons: no license key, harder to revoke
+Option A: LemonSqueezy + license key (PRIMARY)
+- User pays on LemonSqueezy checkout → receives license key automatically
+- `npx @rune-kit/rune pro activate <key>` validates via LemonSqueezy API and installs
+- Pros: proper licensing, built-in license keys, Merchant of Record (handles tax globally), **supports Vietnam sellers**
+- Cons: 5% + $0.50 per transaction
+- Why LemonSqueezy over Stripe: **Stripe is not available in Vietnam** (seller country restriction)
 
-Option B: Stripe + license key + private npm
-- User pays on landing page → receives license key
-- `npx @rune-kit/rune pro activate <key>` validates and installs
-- Pros: proper licensing, revocable, analytics
-- Cons: needs backend (small — Stripe webhook + key store)
+Option B: GitHub Sponsors + private repo access (SECONDARY)
+- User sponsors → gets GitHub collaborator access → can clone/install
+- Pros: zero infrastructure, GitHub handles payment, familiar for developers
+- Cons: no license key, harder to revoke, less professional checkout UX
 
 Option C: GitHub Marketplace (future)
 - When Claude Code marketplace adds payment → native distribution
 - Currently NOT available (no payment mechanism as of March 2025)
 
-**Recommendation**: Start with Option A (GitHub Sponsors, $49/$149 one-time tiers), migrate to B when scale justifies it.
+**Backup**: Gumroad (10% fee, works in VN, very simple setup)
+
+**Recommendation**: LemonSqueezy as primary (license keys + tax handling + VN support), GitHub Sponsors as secondary for dev-first users. See `plan-pack-upgrade-phase4.md` for implementation details.
 
 ## Priority Packs (Phase 1)
 
@@ -231,13 +234,27 @@ Pro packs that interact with external tools need MCP server connectors:
 - No repeat usage after initial install
 - Users can achieve the same with free tools + prompts
 
+## Deep Upgrade Plan
+
+Current Pro packs (product 455 lines, sales ~400 lines) are **thinner than best free packs** (trading 597, devops 520). Full upgrade plan: `plan-pack-upgrade.md` (master) + 4 phase files.
+
+**Depth Standard**: Pro ≥650 lines, Business ≥700 lines, every skill produces output artifacts + templates.
+
+| Phase | What | Status | Plan File |
+|-------|------|--------|-----------|
+| Phase 1 | Enrich product (1253 lines) + sales (889 lines) | ✅ Done | plan-pack-upgrade-phase1.md |
+| Phase 2 | New: data-science, support (Pro) + chrome-ext (FREE) | ⬚ Pending | plan-pack-upgrade-phase2.md |
+| Phase 3 | Business: finance, legal → validate → hr, operations, enterprise-search | ⬚ Pending | plan-pack-upgrade-phase3.md |
+| Phase 4 | LemonSqueezy, @rune/ui enrichment, cross-pack protocol | ⬚ Pending | plan-pack-upgrade-phase4.md |
+
 ## Timeline
 
 | Phase | What | When |
 |-------|------|------|
-| Phase 0 | Free Rune enhancements (design, marketing, plan, analytics) | Done |
-| Phase 1a | @rune-pro/product pack | ✅ Done (PACK.md created) |
-| Phase 1b | @rune-pro/sales pack | ✅ Done (PACK.md created) |
-| Phase 1c | @rune-pro/data-science pack | After sales validated |
-| Phase 2 | support, finance, legal, hr, operations | After Phase 1 revenue |
-| Phase 3 | enterprise-search + full MCP connector suite | When demand justifies |
+| Phase 0 | Free Rune enhancements (design, marketing, plan, analytics) | ✅ Done |
+| Phase 1a | @rune-pro/product pack (initial) | ✅ Done (PACK.md created) |
+| Phase 1b | @rune-pro/sales pack (initial) | ✅ Done (PACK.md created) |
+| **Upgrade Phase 1** | **Deep enrich product (1253 lines) + sales (889 lines)** | ✅ Done |
+| **Upgrade Phase 2** | **New: data-science (1356), support (802), chrome-ext (995 FREE)** | ✅ Done |
+| **Upgrade Phase 3** | **Business tier: finance + legal first, then validate** | ⬚ After Phase 2 |
+| **Upgrade Phase 4** | **Distribution (LemonSqueezy), UI enrichment, docs** | ⬚ After Phase 3 |
