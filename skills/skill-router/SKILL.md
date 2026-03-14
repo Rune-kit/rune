@@ -159,6 +159,13 @@ When user intent matches a domain-specific pattern or user explicitly invokes an
 | Three.js, WebGL, game loop, physics | `@rune/gamedev` | `extensions/gamedev/PACK.md` |
 | Blog, CMS, MDX, i18n, SEO | `@rune/content` | `extensions/content/PACK.md` |
 | Analytics, A/B testing, funnels, dashboards | `@rune/analytics` | `extensions/analytics/PACK.md` |
+| Chrome extension, manifest, service worker | `@rune/chrome-ext` | `extensions/chrome-ext/PACK.md` |
+| PRD, roadmap, KPI, release notes, product spec | `@rune-pro/product` | `extensions/pro-product/PACK.md` |
+| Sales outreach, pipeline, call prep, prospecting | `@rune-pro/sales` | `extensions/pro-sales/PACK.md` |
+| Data science, SQL, dashboards, statistical analysis | `@rune-pro/data-science` | `extensions/pro-data-science/PACK.md` |
+| Support tickets, KB, escalation, SLA tracking | `@rune-pro/support` | `extensions/pro-support/PACK.md` |
+| Budget, expense, revenue forecast, P&L, cash flow | `@rune-pro/finance` | `extensions/pro-finance/PACK.md` |
+| Contract review, NDA, compliance, GDPR, IP audit | `@rune-pro/legal` | `extensions/pro-legal/PACK.md` |
 
 **L4 routing rules:**
 1. If user explicitly invokes an L4 trigger (e.g., `/rune rag-patterns`), read the PACK.md and follow the skill workflow directly

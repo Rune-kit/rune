@@ -154,7 +154,13 @@ After scout completes (Phase 1), check if the detected tech stack or task descri
 | `three`, `pixi`, `phaser`, `*.glsl`, game loop | `@rune/gamedev` | `extensions/gamedev/PACK.md` |
 | CMS, blog, MDX, `i18next`, SEO | `@rune/content` | `extensions/content/PACK.md` |
 | Analytics, tracking, A/B test, funnel | `@rune/analytics` | `extensions/analytics/PACK.md` |
+| Chrome extension, `manifest.json`, service worker, content script | `@rune/chrome-ext` | `extensions/chrome-ext/PACK.md` |
 | PRD, roadmap, KPI, release notes, `.rune/business/` | `@rune-pro/product` | `extensions/pro-product/PACK.md` |
+| Sales outreach, pipeline, call prep, competitive intel | `@rune-pro/sales` | `extensions/pro-sales/PACK.md` |
+| Data science, SQL, dashboard, statistical testing, ETL | `@rune-pro/data-science` | `extensions/pro-data-science/PACK.md` |
+| Support ticket, KB article, escalation, SLA, FAQ | `@rune-pro/support` | `extensions/pro-support/PACK.md` |
+| Budget, expense, revenue forecast, P&L, cash flow, runway | `@rune-pro/finance` | `extensions/pro-finance/PACK.md` |
+| Contract, NDA, compliance, GDPR, IP, legal incident | `@rune-pro/legal` | `extensions/pro-legal/PACK.md` |
 
 2. If ≥1 pack matches:
    - Use `Read` to load the matching PACK.md
