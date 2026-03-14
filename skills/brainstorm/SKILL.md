@@ -3,7 +3,7 @@ name: brainstorm
 description: Creative ideation and solution exploration. Generates multiple approaches with trade-offs, uses structured frameworks (SCAMPER, First Principles), and hands off to plan for structuring.
 metadata:
   author: runedev
-  version: "0.3.0"
+  version: "0.4.0"
   layer: L2
   model: opus
   group: creation
@@ -153,6 +153,53 @@ State the decision to be made in one clear sentence: "We need to decide HOW TO [
 - **[Rescue Mode only]** Anti-constraints: "Approach X was tried and failed because Y — do NOT generate variants of X"
 
 If the problem is unclear, ask the user ONE clarifying question before proceeding.
+
+### Step 1.5 — Problem Restatement (MANDATORY)
+
+After framing the problem, restate it back to the user for confirmation:
+
+```
+"Let me confirm: you want to [X] because [Y],
+and the main constraint is [Z]. Correct?"
+```
+
+DO NOT generate approaches until user confirms the restatement. This prevents wasted ideation on a misunderstood problem — the most expensive brainstorm failure mode.
+
+**Skip conditions** (Rescue Mode only):
+- Rescue Mode: problem is already well-defined by `failure_evidence` — restatement is implicit in the failed approach summary.
+
+### Step 1.75 — Dynamic Questioning (When Clarification Needed)
+
+When Step 1 or Step 1.5 reveals gaps, ask structured clarifying questions using this format:
+
+```
+### [P0|P1|P2] **[DECISION POINT]**
+
+**Question:** [Clear, specific question]
+
+**Why This Matters:**
+- [Architectural consequence — what changes based on the answer]
+- [Affects: cost | complexity | timeline | scale | security]
+
+**Options:**
+| Option | Pros | Cons | Best For |
+|--------|------|------|----------|
+| A      | [+]  | [-]  | [scenario] |
+| B      | [+]  | [-]  | [scenario] |
+
+**If Not Specified:** [Default choice + rationale]
+```
+
+**Priority levels:**
+- **P0**: Blocking — cannot generate approaches without this answer
+- **P1**: High-leverage — significantly changes the recommended approach
+- **P2**: Nice-to-have — refines the recommendation but doesn't change direction
+
+**Rules:**
+1. Ask maximum 3 questions per round (avoid overwhelming the user)
+2. Each question MUST connect to a specific decision point (no generic "what do you want?")
+3. MUST provide a default answer — if user says "you decide", the default is used
+4. Questions generate data, not assumptions — each eliminates implementation paths
 
 ### Step 2 — Generate Approaches
 

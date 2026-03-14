@@ -4,7 +4,7 @@ description: "Meta-enforcement layer that routes EVERY agent action through the 
 user-invocable: false
 metadata:
   author: runedev
-  version: "1.1.0"
+  version: "1.2.0"
   layer: L0
   model: haiku
   group: orchestrator
@@ -64,14 +64,33 @@ Before standard routing, check if adaptive routing rules exist:
 - Model hints are written by cook Phase 8 when debug-fix loops hit max retries on the same error pattern
 - Model hints do NOT override explicit user model preferences
 
+### Step 0.25 — Request Classifier (Fast-Path Filter)
+
+Before intent classification, categorize the request into one of 5 types. This determines the **enforcement level** — how strictly routing must be followed.
+
+| Request Type | Keywords / Signals | Enforcement | Action |
+|---|---|---|---|
+| `CODE_CHANGE` | "build", "implement", "add", "create", "fix", "refactor", "update code" | **FULL** | cook mandatory, no exceptions |
+| `QUESTION` | "what is", "how does", "explain", "why" | **LITE** | Check if a skill has domain knowledge first; answer directly if no skill matches |
+| `DEBUG_REQUEST` | "error", "bug", "not working", "broken", "crash", "fails" | **FULL** | debug skill mandatory |
+| `REVIEW_REQUEST` | "review", "check", "audit", "look at this code" | **FULL** | review skill mandatory |
+| `EXPLORE` | "find", "search", "where is", "show me", "list" | **LITE** | scout if codebase-related; answer directly if general |
+
+**Enforcement levels:**
+- **FULL** → MUST route through a skill. Writing code without skill invocation = protocol violation.
+- **LITE** → SHOULD check if a skill applies. Can answer directly if no skill matches and the response involves no code changes.
+
+**Escape hatch**: If request is clearly trivial (< 5 LOC change, single-line fix, user says "just do it"), classify as CODE_CHANGE but cook activates Fast Mode automatically.
+
 ### Step 0.5 — STOP before responding
 
 Before generating ANY response (including clarifying questions), the agent MUST:
 
-1. **Classify the user's intent** using the routing table below
-2. **Identify which skill(s) match** — if even 1% chance a skill applies, invoke it
-3. **Invoke the skill** via the Skill tool
-4. **Follow the skill's instructions** — the skill dictates the workflow, not the agent
+1. **Check the request type** from Step 0.25 — if FULL enforcement, routing is mandatory
+2. **Classify the user's intent** using the routing table below
+3. **Identify which skill(s) match** — if even 1% chance a skill applies, invoke it
+4. **Invoke the skill** via the Skill tool
+5. **Follow the skill's instructions** — the skill dictates the workflow, not the agent
 
 ### Step 1 — Intent Classification (Progressive Disclosure)
 
@@ -174,6 +193,26 @@ When user intent matches a domain-specific pattern or user explicitly invokes an
 4. L4 packs can call L3 utilities (scout, verification) but CANNOT call L1 or L2 skills
 5. If the L4 pack file is not found on disk, skip silently and proceed with standard routing
 
+### Step 1.5 — File Ownership Matrix (Constraint Inheritance)
+
+When the routed skill produces file changes, the **owner skill's constraints** apply to those files — even if a different skill (e.g., cook) is the orchestrator.
+
+| File Pattern | Owner Skill | Constraints Applied |
+|---|---|---|
+| `*.test.*`, `*.spec.*`, `__tests__/` | `rune:test` | Test patterns, assertions, no `test.skip`, coverage rules |
+| `migrations/`, `schema.*`, `*.prisma` | `rune:db` | Migration safety, rollback script, parameterized queries |
+| `Dockerfile`, `*.yml` (CI/CD), `terraform/` | `rune:deploy` | Deployment checklist, no hardcoded secrets |
+| `docs/*.md`, `README.md`, `CHANGELOG.md` | `rune:docs` | Documentation patterns, no stale references |
+| `SKILL.md`, `PACK.md` | `rune:skill-forge` | Skill template compliance, frontmatter validation |
+| `.env*`, `*secret*`, `*credential*` | `rune:sentinel` | Security scan mandatory, never commit secrets |
+| `*.css`, `*.scss`, `tailwind.config.*` | `@rune/ui` | Design system patterns (if L4 pack installed) |
+
+**Ownership rules:**
+1. Ownership = **constraints apply**, NOT exclusive access. cook can modify test files during Phase 4 as long as test constraints are honored.
+2. If a file matches multiple patterns, ALL matching constraints apply (union, not exclusive).
+3. If no pattern matches, the routed skill's own constraints apply (default behavior).
+4. File ownership is checked DURING implementation, not at routing time — it augments, not replaces, skill routing.
+
 ### Step 2 — Compound Intent Resolution
 
 Many requests combine intents. Route to the HIGHEST-PRIORITY skill first:
@@ -242,9 +281,22 @@ These DO NOT need skill routing:
 
 ## Output Format
 
+### Routing Proof (Required in Every Code Response)
+
+Every response that involves code changes MUST begin with a routing proof line:
+
+```
+> Routed: rune:<skill> | Type: CODE_CHANGE | Confidence: HIGH
+```
+
+This is NOT optional formatting. It is evidence that routing occurred. If this line is missing from a code response, the response violated skill-router compliance. For LITE enforcement (QUESTION, EXPLORE), the proof line is optional.
+
+### Full Routing Decision (when announcing route)
+
 ```
 ## Routing Decision
 - **Intent**: [classified user intent]
+- **Type**: CODE_CHANGE | QUESTION | DEBUG_REQUEST | REVIEW_REQUEST | EXPLORE
 - **Skill**: rune:[skill-name]
 - **Confidence**: HIGH | MEDIUM | LOW
 - **Override**: [routing override applied, if any]
@@ -284,6 +336,24 @@ For multi-skill chains:
 - This skill is never "done" — it's a persistent routing layer
 - Success = every agent response passes through routing check
 - Failure = any code written without skill invocation
+
+## Self-Verification Trigger (MANDATORY)
+
+<HARD-GATE>
+Before EVERY response, complete this 3-point self-check:
+
+1. **Did I classify this request?** (Step 0.25 — what type is it?)
+2. **Did I route through a skill?** (Step 1-2 — which skill handles this?)
+3. **Am I about to write code without a skill invocation?** → **STOP. Route first.**
+
+If the request type is `CODE_CHANGE` or `DEBUG_REQUEST` (FULL enforcement) and ANY answer is "no":
+→ DO NOT RESPOND. Complete routing first.
+
+If the request type is `QUESTION` or `EXPLORE` (LITE enforcement):
+→ Check if a skill has relevant domain knowledge. If yes, route. If no, respond directly.
+
+**User override**: If user explicitly says "skip routing", "just write it", "no process" → respect the override. Log: "User override: routing skipped per explicit request."
+</HARD-GATE>
 
 ## Cost Profile
 

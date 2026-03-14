@@ -5,7 +5,7 @@ context: fork
 agent: general-purpose
 metadata:
   author: runedev
-  version: "0.5.0"
+  version: "0.6.0"
   layer: L1
   model: sonnet
   group: orchestrator
@@ -115,6 +115,23 @@ Skip silently on subsequent runs. User can force with `/rune env-check`.
    - Extract decisions relevant to the current task domain (match by keywords: module names, tech choices, patterns)
    - These become **constraints for Phase 2 (PLAN)** — the plan MUST NOT contradict active decisions without explicit user override
    - If no `.rune/decisions.md` exists, skip silently
+### Phase 1 Step 3.5 — Clarification Gate (Lightweight Socratic Check)
+
+Before planning, ask the user at minimum **2 clarifying questions**:
+
+1. **"What does success look like?"** — defines acceptance criteria (how we know we're done)
+2. **"What should NOT change?"** — defines blast radius constraints (what's off-limits)
+
+**Skip conditions** (ALL must be true to skip):
+- Bug fix with clear reproduction steps already provided by user
+- User explicitly said "just do it", "no questions", or "skip questions"
+- Fast mode active AND estimated change < 10 LOC
+- Hotfix chain active (production emergency)
+
+This is NOT the full BA elicitation (5 questions). It's a lightweight 2-question gate that prevents the most common failure: implementing the wrong thing. If the answers reveal complexity → escalate to `rune:ba` for deep requirement analysis.
+
+**Question format**: Use brainstorm's dynamic questioning format when possible (Priority level, Decision Point, Why This Matters, Options table, Default).
+
 4. Invoke scout to scan the codebase:
    - Use `Glob` to find files matching the feature domain (e.g., `**/*auth*`, `**/*user*`)
    - Use `Grep` to search for related patterns, imports, existing implementations
@@ -412,6 +429,32 @@ This is OPT-IN — only activate if:
   - Context-watch has triggered a warning
   - User explicitly requests checkpoints
 ```
+
+## Phase Transition Protocol (MANDATORY)
+
+Before entering ANY Phase N+1, assert ALL of the following:
+
+```
+ASSERT Phase N status == completed (in TodoWrite)
+ASSERT Phase N gate condition met (see Mesh Gates table below)
+ASSERT No BLOCK status from any sub-skill in Phase N
+ASSERT No unresolved CRITICAL findings from quality checks
+
+IF any assertion fails:
+  → STOP. Do NOT proceed to Phase N+1.
+  → Log: "BLOCKED at Phase N→N+1 transition: [specific assertion that failed]"
+  → Fix the blocking issue, then re-check assertions.
+```
+
+**Key transitions to enforce:**
+| Transition | Gate | Common Violation |
+|---|---|---|
+| Phase 1 → 2 | Scout Gate (codebase scanned) | Skipping scout "to save time" |
+| Phase 2 → 3 | Plan Gate (user approved plan) | Starting code without approval |
+| Phase 3 → 4 | Test-First Gate (failing tests exist) | Writing code before tests |
+| Phase 4 → 5 | All tests pass | Moving to quality with failing tests |
+| Phase 5 → 6 | Quality gate (no CRITICAL findings) | Ignoring sentinel CRITICAL |
+| Phase 6 → 7 | Verification green (lint + types + build) | Committing broken build |
 
 ## Phase 6: VERIFY
 

@@ -2,7 +2,7 @@
  * Transform Pipeline
  *
  * Applies all transforms in order to convert a parsed skill into platform-specific output.
- * Pipeline: frontmatter → cross-refs → tool-names → subagents → hooks → branding
+ * Pipeline: frontmatter → cross-refs → tool-names → subagents → compliance → hooks → branding
  */
 
 import { transformCrossReferences } from './transforms/cross-references.js';
@@ -10,6 +10,7 @@ import { transformToolNames } from './transforms/tool-names.js';
 import { transformFrontmatter } from './transforms/frontmatter.js';
 import { transformSubagents } from './transforms/subagents.js';
 import { generateHookConstraints } from './transforms/hooks.js';
+import { transformCompliance } from './transforms/compliance.js';
 import { addBranding } from './transforms/branding.js';
 
 /**
@@ -40,16 +41,19 @@ export function transformSkill(parsedSkill, adapter) {
   // 3. Convert subagent/parallel instructions to sequential
   body = transformSubagents(body, adapter);
 
-  // 4. Platform-specific post-processing
+  // 4. Inject compliance preamble (enforcement for non-Claude platforms)
+  body = transformCompliance(body, adapter);
+
+  // 5. Platform-specific post-processing
   body = adapter.postProcess(body);
 
-  // 5. Generate header (platform-specific frontmatter/preamble)
+  // 6. Generate header (platform-specific frontmatter/preamble)
   const header = adapter.generateHeader(parsedSkill);
 
-  // 6. Generate hook constraints section
+  // 7. Generate hook constraints section
   const hookConstraints = generateHookConstraints(parsedSkill, adapter);
 
-  // 7. Inject hook constraints after the first heading
+  // 8. Inject hook constraints after the first heading
   if (hookConstraints) {
     const firstHeadingEnd = body.indexOf('\n## ');
     if (firstHeadingEnd !== -1) {
@@ -62,7 +66,7 @@ export function transformSkill(parsedSkill, adapter) {
     }
   }
 
-  // 8. Generate footer (branding + CTA)
+  // 9. Generate footer (branding + CTA)
   const footer = adapter.generateFooter();
 
   return { header, body, footer };
