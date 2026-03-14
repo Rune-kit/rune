@@ -280,6 +280,236 @@ async function getLocalizedPrice(
 }
 ```
 
+#### Vietnamese Payment Gateways (SePay, VNPay, MoMo, ZaloPay)
+
+Vietnam market uses QR-based bank transfers and e-wallets instead of card payments. SePay is the simplest (webhook on bank transfer), VNPay is the most widely adopted gateway, MoMo/ZaloPay are e-wallet leaders.
+
+**SePay — QR Bank Transfer (simplest integration)**
+
+```typescript
+// SePay: generate QR code for bank transfer, webhook on payment received
+// Docs: https://my.sepay.vn/docs
+
+interface SePayConfig {
+  apiKey: string;
+  bankAccount: string;  // your receiving bank account
+  bankCode: string;     // e.g., 'MB', 'VCB', 'TCB', 'ACB'
+  webhookSecret: string;
+}
+
+// Generate payment QR — user scans with banking app
+async function createSePayQR(orderId: string, amountVND: number, config: SePayConfig) {
+  // SePay uses structured transfer content for auto-matching
+  const transferContent = `DH${orderId}`;  // prefix for order matching
+
+  return {
+    bankCode: config.bankCode,
+    bankAccount: config.bankAccount,
+    amount: amountVND,
+    content: transferContent,
+    // QR follows VietQR standard (NAPAS)
+    qrUrl: `https://qr.sepay.vn/img?acc=${config.bankAccount}&bank=${config.bankCode}&amount=${amountVND}&des=${transferContent}`,
+  };
+}
+
+// Webhook — SePay calls this when bank transfer is detected
+app.post('/api/webhooks/sepay', async (req, res) => {
+  // Verify webhook signature
+  const signature = req.headers['x-sepay-signature'] as string;
+  const payload = JSON.stringify(req.body);
+  const expected = crypto.createHmac('sha256', process.env.SEPAY_WEBHOOK_SECRET!)
+    .update(payload).digest('hex');
+
+  if (signature !== expected) {
+    return res.status(401).json({ error: 'Invalid signature' });
+  }
+
+  const { transferAmount, transferContent, transactionDate, id } = req.body;
+
+  // Deduplicate
+  const existing = await db.payment.findFirst({ where: { externalId: String(id) } });
+  if (existing) return res.json({ success: true, duplicate: true });
+
+  // Match order by transfer content (DH{orderId})
+  const orderIdMatch = transferContent.match(/DH(\w+)/);
+  if (!orderIdMatch) {
+    console.error('SePay: unmatched transfer', { transferContent, id });
+    return res.json({ success: true, matched: false });
+  }
+
+  await db.$transaction(async (tx) => {
+    await tx.payment.create({
+      data: {
+        orderId: orderIdMatch[1],
+        amount: transferAmount,
+        method: 'BANK_TRANSFER',
+        provider: 'sepay',
+        externalId: String(id),
+        paidAt: new Date(transactionDate),
+      },
+    });
+    await tx.order.update({
+      where: { id: orderIdMatch[1] },
+      data: { status: 'PAID', paidAt: new Date(transactionDate) },
+    });
+  });
+
+  res.json({ success: true });
+});
+```
+
+**VNPay — Vietnam's largest payment gateway**
+
+```typescript
+// VNPay: redirect-based payment with HMAC-SHA512 signature
+// Docs: https://sandbox.vnpayment.vn/apis/docs/huong-dan-tich-hop/
+
+import crypto from 'crypto';
+import qs from 'qs';
+
+interface VNPayConfig {
+  tmnCode: string;      // merchant code
+  hashSecret: string;   // secret key
+  vnpUrl: string;       // 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html' (sandbox)
+  returnUrl: string;    // your callback URL
+}
+
+function createVNPayUrl(orderId: string, amountVND: number, ipAddr: string, config: VNPayConfig): string {
+  const now = new Date();
+  const createDate = now.toISOString().replace(/[-:T.Z]/g, '').slice(0, 14);
+
+  const params: Record<string, string> = {
+    vnp_Version: '2.1.0',
+    vnp_Command: 'pay',
+    vnp_TmnCode: config.tmnCode,
+    vnp_Locale: 'vn',
+    vnp_CurrCode: 'VND',
+    vnp_TxnRef: orderId,
+    vnp_OrderInfo: `Thanh toan don hang ${orderId}`,
+    vnp_OrderType: 'other',
+    vnp_Amount: String(amountVND * 100),  // VNPay uses smallest unit (x100)
+    vnp_ReturnUrl: config.returnUrl,
+    vnp_IpAddr: ipAddr,
+    vnp_CreateDate: createDate,
+  };
+
+  // Sort params alphabetically — REQUIRED by VNPay
+  const sortedParams = Object.keys(params).sort().reduce((acc, key) => {
+    acc[key] = params[key];
+    return acc;
+  }, {} as Record<string, string>);
+
+  const signData = qs.stringify(sortedParams, { encode: false });
+  const hmac = crypto.createHmac('sha512', config.hashSecret);
+  const signed = hmac.update(Buffer.from(signData, 'utf-8')).digest('hex');
+
+  return `${config.vnpUrl}?${signData}&vnp_SecureHash=${signed}`;
+}
+
+// IPN (Instant Payment Notification) — VNPay server-to-server callback
+app.get('/api/webhooks/vnpay-ipn', async (req, res) => {
+  const vnpParams = { ...req.query } as Record<string, string>;
+  const secureHash = vnpParams.vnp_SecureHash;
+  delete vnpParams.vnp_SecureHash;
+  delete vnpParams.vnp_SecureHashType;
+
+  // Verify hash
+  const sortedParams = Object.keys(vnpParams).sort().reduce((acc, key) => {
+    acc[key] = vnpParams[key];
+    return acc;
+  }, {} as Record<string, string>);
+
+  const signData = qs.stringify(sortedParams, { encode: false });
+  const expectedHash = crypto.createHmac('sha512', process.env.VNPAY_HASH_SECRET!)
+    .update(Buffer.from(signData, 'utf-8')).digest('hex');
+
+  if (secureHash !== expectedHash) {
+    return res.json({ RspCode: '97', Message: 'Invalid signature' });
+  }
+
+  const orderId = vnpParams.vnp_TxnRef;
+  const responseCode = vnpParams.vnp_ResponseCode;
+
+  if (responseCode === '00') {
+    await orderService.confirmPayment(orderId, vnpParams.vnp_TransactionNo);
+    return res.json({ RspCode: '00', Message: 'Confirm Success' });
+  }
+
+  await orderService.failPayment(orderId, responseCode);
+  res.json({ RspCode: '00', Message: 'Confirm Success' });  // always return 00 to VNPay
+});
+```
+
+**MoMo — E-wallet payment**
+
+```typescript
+// MoMo: QR or app-switch payment
+// Docs: https://developers.momo.vn/v3/docs/payment/api/
+
+interface MoMoConfig {
+  partnerCode: string;
+  accessKey: string;
+  secretKey: string;
+  endpoint: string;  // 'https://test-payment.momo.vn/v2/gateway/api/create'
+  redirectUrl: string;
+  ipnUrl: string;
+}
+
+async function createMoMoPayment(orderId: string, amountVND: number, config: MoMoConfig) {
+  const requestId = `${config.partnerCode}-${Date.now()}`;
+  const orderInfo = `Thanh toan don hang ${orderId}`;
+  const extraData = '';  // base64 encoded extra data
+
+  // HMAC SHA256 signature — order of fields matters!
+  const rawSignature = [
+    `accessKey=${config.accessKey}`,
+    `amount=${amountVND}`,
+    `extraData=${extraData}`,
+    `ipnUrl=${config.ipnUrl}`,
+    `orderId=${orderId}`,
+    `orderInfo=${orderInfo}`,
+    `partnerCode=${config.partnerCode}`,
+    `redirectUrl=${config.redirectUrl}`,
+    `requestId=${requestId}`,
+    `requestType=payWithMethod`,
+  ].join('&');
+
+  const signature = crypto.createHmac('sha256', config.secretKey)
+    .update(rawSignature).digest('hex');
+
+  const response = await fetch(config.endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      partnerCode: config.partnerCode,
+      accessKey: config.accessKey,
+      requestId,
+      amount: amountVND,
+      orderId,
+      orderInfo,
+      redirectUrl: config.redirectUrl,
+      ipnUrl: config.ipnUrl,
+      extraData,
+      requestType: 'payWithMethod',
+      signature,
+      lang: 'vi',
+    }),
+  });
+
+  const data = await response.json();
+  return { payUrl: data.payUrl, qrCodeUrl: data.qrCodeUrl, deeplink: data.deeplink };
+}
+```
+
+**Sharp Edges — VN Payment Gotchas:**
+- SePay: transfer content MUST be exact match — users sometimes add extra text → payment not auto-matched. Always show exact content to copy.
+- VNPay: `vnp_Amount` is multiplied by 100 (not cents — VND has no decimals). Common bug: double-multiplying.
+- VNPay: ALWAYS return `RspCode: '00'` to IPN even on failure — otherwise VNPay retries indefinitely.
+- MoMo: signature field order is strict — wrong order = invalid signature. Copy exact order from docs.
+- ZaloPay: similar to MoMo but uses HMAC-SHA256 with different field ordering. Check docs at `https://docs.zalopay.vn/`.
+- All VN gateways: amounts are in VND (integer, no decimals). Never use floating point for VND.
+- Sandbox environments often have rate limits and expire — test with real small amounts (10,000 VND) before go-live.
+
 #### Fraud Detection
 
 ```typescript
