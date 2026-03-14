@@ -144,6 +144,23 @@ After GREEN phase, call `verification` to check coverage threshold (80% minimum)
 - If coverage drops below 80%: identify uncovered lines, write additional tests
 - Report coverage gaps with file:line references
 
+### Phase 6.5: Diff-Aware Mode (optional)
+
+When invoked with `mode: "diff-aware"` or by `cook` after implementation:
+
+1. Run `git diff main --name-only` to get changed files
+2. For each changed file, trace its **blast radius**: what imports it? what routes does it serve? what components render it?
+3. Map changed files → affected routes/endpoints/pages
+4. Prioritize tests: files with most downstream dependents get tested first
+5. Generate targeted test commands that cover ONLY affected paths — skip unchanged modules
+
+This mode is valuable for large codebases where running the full suite is slow. It answers: "what could this diff have broken?"
+
+```
+Input:  git diff main --name-only
+Output: Prioritized test plan targeting only affected paths
+```
+
 ## Test Types
 
 | Type | When | Framework | Speed |
@@ -152,6 +169,7 @@ After GREEN phase, call `verification` to check coverage threshold (80% minimum)
 | Integration | API endpoints, DB operations | supertest/httpx/reqwest | Medium |
 | E2E | Critical user flows | Playwright/Cypress via browser-pilot | Slow |
 | Regression | After bug fixes | Same as unit | Fast |
+| Diff-aware | After implementation, large codebases | Same as unit + integration | Fast (targeted) |
 
 ## Error Recovery
 

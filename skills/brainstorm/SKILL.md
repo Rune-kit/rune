@@ -27,6 +27,20 @@ This applies to EVERY task regardless of perceived simplicity.
 ### Discovery Mode (default)
 Normal brainstorming at the start of a task — generate approaches before any code is written.
 
+### Vision Mode
+Activated for product-level rethinks — not "how to implement X" but "should we even build X?" Forces 10x thinking instead of incremental improvement.
+
+**Vision Mode triggers:**
+- Manual: `/rune brainstorm vision <product area>`
+- Called by `@rune-pro/product.feature-spec` when requirements feel incremental
+- When the user says "rethink", "reimagine", "what if we", "step back"
+
+**Vision Mode constraints:**
+1. MUST restate the user's REAL problem (not their proposed solution) — "you asked for a settings page, but your real problem is users can't find the right config"
+2. MUST generate 2-3 approaches where at least 1 eliminates the need for the feature entirely
+3. MUST apply the "10-star experience" lens: what would a 1-star, 5-star, and 10-star version look like?
+4. MUST challenge assumptions: "why does this need to be a page?" "why does the user need to do this at all?"
+
 ### Rescue Mode
 Activated when an approach has been tried and **fundamentally failed** — not a bug, but a wrong approach. Rescue mode forces **category-diverse** alternatives instead of variants of the failed approach.
 
@@ -125,6 +139,7 @@ CRAZY 8s         — 8 ideas in 8 minutes (rapid ideation)
 ### Step 0 — Detect Mode
 
 Check the invocation context:
+- If `mode="vision"` is set, or user says "rethink/reimagine/step back" → **Vision Mode**
 - If `mode="rescue"` is set, or caller is Approach Pivot Gate / 3-Fix Escalation → **Rescue Mode**
 - Otherwise → **Discovery Mode**
 

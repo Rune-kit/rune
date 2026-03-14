@@ -70,14 +70,17 @@ Determine what to review.
 - If context is unclear: use `rune:scout` to identify all files touched by the change
 - List every file in scope before proceeding — do not review files outside the stated scope
 
-### Step 2: Logic Check
+### Step 2: Logic Check (Production-Critical Focus)
 
-Read each changed file and check for correctness.
+Read each changed file. Prioritize bugs that **pass CI but break production** — these are the highest-value findings because linters and type checkers already catch the rest.
 
 - Use `Read` on every file in scope
+- **Race conditions**: async operations without proper sequencing, shared mutable state, missing locks
+- **State corruption**: mutations that affect other consumers, cache invalidation gaps, stale closures
+- **Silent failures**: caught errors that swallow context, empty catch blocks, promises without rejection handling
+- **Data loss paths**: write operations without confirmation, delete without soft-delete, truncation without backup
+- **Edge cases**: empty input, null/undefined, zero, negative numbers, empty arrays, Unicode, timezone boundaries
 - Check for: logic errors, off-by-one errors, incorrect conditionals, broken async/await patterns
-- Check for: missing error handling, uncaught promise rejections, silent failures
-- Check for: edge cases — empty input, null/undefined, zero, negative numbers, empty arrays
 - Flag each finding with file path, line number, and severity
 
 **Common patterns to flag:**
