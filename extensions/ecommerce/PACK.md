@@ -3,7 +3,7 @@ name: "@rune/ecommerce"
 description: E-commerce patterns — Shopify development, payment integration, subscription billing, shopping cart, inventory management, order lifecycle, and tax compliance.
 metadata:
   author: runedev
-  version: "0.2.0"
+  version: "0.3.0"
   layer: L4
   price: "$12"
   target: E-commerce developers
@@ -27,6 +27,33 @@ E-commerce codebases fail at the seams between systems: payment intents that suc
 - `/rune tax-compliance` — set up or audit tax calculation
 - Called by `cook` (L1) when e-commerce project detected
 - Called by `launch` (L1) when preparing storefront for production
+
+## Skills Summary
+
+| Skill | Layer | Model | Purpose |
+|-------|-------|-------|---------|
+| shopify-dev | L4 | sonnet | Shopify theme, Hydrogen, app architecture |
+| payment-integration | L4 | sonnet | Stripe, 3DS, webhooks, fraud detection |
+| subscription-billing | L4 | sonnet | Trials, proration, dunning, plan changes |
+| cart-system | L4 | sonnet | Persistent carts, merging, coupon engine |
+| inventory-mgmt | L4 | sonnet | Atomic stock, reservations, alerts |
+| order-management | L4 | sonnet | State machine, fulfillment, reconciliation |
+| tax-compliance | L4 | sonnet | Tax APIs, VAT, audit trail |
+
+## Common Workflows
+
+| Workflow | Skills Involved | Description |
+|----------|----------------|-------------|
+| Full checkout | cart-system → tax-compliance → payment-integration → order-management | Complete purchase from cart to confirmation |
+| Flash sale | inventory-mgmt → cart-system → payment-integration | High-concurrency stock control |
+| Subscription signup | cart-system → payment-integration → subscription-billing | Free trial with payment method upfront |
+| Plan upgrade | subscription-billing → payment-integration → tax-compliance | Mid-cycle upgrade with proration invoice |
+| Order cancellation | order-management → inventory-mgmt → payment-integration | Cancel + release stock + issue refund |
+| New market launch | tax-compliance → payment-integration (multi-currency) → shopify-dev | Localization, VAT, FX pricing |
+| Fraud review | payment-integration (fraud patterns) → order-management | Risk scoring before order fulfilment |
+| Product catalog | shopify-dev → inventory-mgmt | Variant structure + stock sync |
+
+---
 
 ## Skills Included
 
@@ -96,7 +123,7 @@ function verifyShopifyWebhook(req: Request, secret: string): boolean {
 
 ### payment-integration
 
-Payment integration — Stripe Payment Intents, 3D Secure, webhook handling, refunds, idempotency, PCI compliance.
+Payment integration — Stripe Payment Intents, 3D Secure, webhook handling, refunds, idempotency, PCI compliance, multi-currency, fraud detection.
 
 #### Workflow
 
@@ -177,6 +204,155 @@ app.post('/api/webhooks/stripe', express.raw({ type: 'application/json' }), asyn
   });
 
   res.json({ received: true });
+});
+```
+
+#### Multi-Currency & Localization
+
+```typescript
+// Locale-aware price formatting — ALWAYS use Intl, never manual toFixed()
+function formatPrice(amountInCents: number, currency: string, locale: string): string {
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amountInCents / 100);
+}
+
+// Examples
+formatPrice(1999, 'USD', 'en-US');  // $19.99
+formatPrice(1999, 'EUR', 'de-DE');  // 19,99 €
+formatPrice(1999, 'JPY', 'ja-JP');  // ¥1,999  (JPY has no minor units)
+
+// Currency conversion with FX rate cache
+interface FxRate { from: string; to: string; rate: number; fetchedAt: Date }
+
+class FxService {
+  private cache = new Map<string, FxRate>();
+
+  async convert(amountInCents: number, from: string, to: string): Promise<number> {
+    if (from === to) return amountInCents;
+    const key = `${from}:${to}`;
+    let rate = this.cache.get(key);
+
+    // Refresh if stale (>15 min)
+    if (!rate || Date.now() - rate.fetchedAt.getTime() > 15 * 60 * 1000) {
+      const fresh = await this.fetchRate(from, to);
+      rate = { from, to, rate: fresh, fetchedAt: new Date() };
+      this.cache.set(key, rate);
+    }
+    return Math.round(amountInCents * rate.rate);
+  }
+
+  private async fetchRate(from: string, to: string): Promise<number> {
+    // Use a reliable FX API (e.g., Frankfurter, Open Exchange Rates)
+    const res = await fetch(`https://api.frankfurter.app/latest?from=${from}&to=${to}`);
+    const data = await res.json();
+    return data.rates[to];
+  }
+}
+
+// Locale-aware pricing: show price in user's currency, charge in store's base currency
+interface LocalizedPrice {
+  displayAmount: string;   // "€18.45" — shown to user
+  chargeAmount: number;    // 1999 cents USD — what actually gets charged
+  currency: string;        // 'USD'
+  displayCurrency: string; // 'EUR'
+  exchangeRate: number;
+}
+
+async function getLocalizedPrice(
+  amountInCents: number,
+  storeCurrency: string,
+  userLocale: string,
+  userCurrency: string
+): Promise<LocalizedPrice> {
+  const fx = new FxService();
+  const displayAmountInCents = await fx.convert(amountInCents, storeCurrency, userCurrency);
+  return {
+    displayAmount: formatPrice(displayAmountInCents, userCurrency, userLocale),
+    chargeAmount: amountInCents,      // charge in store base currency
+    currency: storeCurrency,
+    displayCurrency: userCurrency,
+    exchangeRate: displayAmountInCents / amountInCents,
+  };
+}
+```
+
+#### Fraud Detection
+
+```typescript
+// Risk scoring before order fulfilment
+interface FraudSignals {
+  ipAddress: string;
+  userAgent: string;
+  deviceFingerprint: string;
+  email: string;
+  billingCountry: string;
+  shippingCountry: string;
+  orderAmountCents: number;
+  isFirstOrder: boolean;
+}
+
+interface RiskScore {
+  score: number;       // 0–100, higher = riskier
+  action: 'allow' | 'review' | 'block';
+  reasons: string[];
+}
+
+async function scoreFraudRisk(signals: FraudSignals): Promise<RiskScore> {
+  const reasons: string[] = [];
+  let score = 0;
+
+  // Velocity check — same IP, multiple orders in short window
+  const recentOrdersFromIp = await db.order.count({
+    where: { ipAddress: signals.ipAddress, createdAt: { gte: new Date(Date.now() - 3600_000) } },
+  });
+  if (recentOrdersFromIp >= 3) { score += 30; reasons.push('HIGH_VELOCITY_IP'); }
+
+  // Card BIN country mismatch
+  if (signals.billingCountry !== signals.shippingCountry) {
+    score += 15; reasons.push('BILLING_SHIPPING_MISMATCH');
+  }
+
+  // High-value first order — common pattern for stolen cards
+  if (signals.isFirstOrder && signals.orderAmountCents > 50000) {
+    score += 25; reasons.push('HIGH_VALUE_FIRST_ORDER');
+  }
+
+  // Email domain is disposable (temp-mail.org, mailinator.com, etc.)
+  const domain = signals.email.split('@')[1];
+  const isDisposable = await disposableEmailService.check(domain);
+  if (isDisposable) { score += 20; reasons.push('DISPOSABLE_EMAIL'); }
+
+  // Device fingerprint seen with multiple different emails (account farm)
+  const fingerprintEmails = await db.order.findMany({
+    where: { deviceFingerprint: signals.deviceFingerprint },
+    select: { email: true },
+    distinct: ['email'],
+  });
+  if (fingerprintEmails.length > 5) { score += 25; reasons.push('FINGERPRINT_MULTI_ACCOUNT'); }
+
+  const action = score >= 70 ? 'block' : score >= 40 ? 'review' : 'allow';
+  return { score, action, reasons };
+}
+
+// Apply fraud check in checkout flow
+app.post('/api/checkout/confirm', async (req, res) => {
+  const { cartId } = req.body;
+  const signals = extractFraudSignals(req);
+  const risk = await scoreFraudRisk(signals);
+
+  if (risk.action === 'block') {
+    await db.fraudAttempt.create({ data: { ...signals, score: risk.score, reasons: risk.reasons } });
+    return res.status(403).json({ error: 'ORDER_BLOCKED', code: 'FRAUD_RISK' });
+  }
+  if (risk.action === 'review') {
+    // Proceed but flag for manual review after payment
+    await db.order.create({ data: { cartId, fraudScore: risk.score, requiresReview: true } });
+  }
+  // ... normal checkout flow
 });
 ```
 
@@ -418,13 +594,32 @@ async function releaseExpiredReservations() {
     ]);
   }
 }
+
+// Inventory webhook — push stock changes to external systems (3PL, ERP)
+async function emitInventoryWebhook(variantId: string, newStock: number, event: string) {
+  const variant = await prisma.variant.findUniqueOrThrow({
+    where: { id: variantId },
+    include: { product: true },
+  });
+  const payload = {
+    event,                          // 'STOCK_UPDATED' | 'LOW_STOCK' | 'OUT_OF_STOCK'
+    sku: variant.sku,
+    variantId,
+    productId: variant.productId,
+    stock: newStock,
+    threshold: variant.lowStockThreshold,
+    timestamp: new Date().toISOString(),
+  };
+  // Fan-out to all registered webhook endpoints
+  await webhookFanOut(payload, 'inventory.*');
+}
 ```
 
 ---
 
 ### order-management
 
-Order lifecycle — state machine, fulfillment workflows, refund/return flows, email notifications, reconciliation.
+Order lifecycle — state machine, fulfillment workflows, refund/return flows, email notifications, reconciliation, webhook fan-out.
 
 #### Workflow
 
@@ -514,6 +709,31 @@ async function reconcilePayments() {
     }
   }
 }
+
+// Webhook fan-out for order status changes — notify 3PLs, ERPs, analytics
+async function webhookFanOut(payload: Record<string, unknown>, topic: string) {
+  const endpoints = await db.webhookEndpoint.findMany({
+    where: { topics: { has: topic }, active: true },
+  });
+  await Promise.allSettled(
+    endpoints.map(ep =>
+      fetch(ep.url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Rune-Signature': signPayload(payload, ep.secret),
+          'X-Rune-Topic': topic,
+          'X-Rune-Timestamp': String(Date.now()),
+        },
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(5000),
+      }).catch(err => {
+        // Log failure but don't throw — one bad endpoint shouldn't block others
+        console.error(`Webhook delivery failed for ${ep.url}:`, err.message);
+      })
+    )
+  );
+}
 ```
 
 ---
@@ -591,6 +811,16 @@ async function calculateTax(
   };
 }
 
+// EU VAT validation — B2B reverse charge
+async function validateEuVat(vatNumber: string, buyerCountry: string): Promise<boolean> {
+  // Use VIES (VAT Information Exchange System) API
+  const res = await fetch(
+    `https://ec.europa.eu/taxation_customs/vies/rest-api/ms/${buyerCountry}/vat/${vatNumber.replace(/^[A-Z]{2}/, '')}`
+  );
+  const data = await res.json();
+  return data.isValid === true;
+}
+
 // Store tax audit trail per order (required for compliance)
 interface OrderTaxRecord {
   orderId: string;
@@ -600,6 +830,309 @@ interface OrderTaxRecord {
   jurisdiction: string;
   calculatedAt: Date;
   taxApiTransactionId: string;
+}
+
+// Commit tax record immediately at payment creation — never calculate retroactively
+async function commitTaxRecord(orderId: string, calculation: TaxResult, txnId: string) {
+  await prisma.orderTaxRecord.createMany({
+    data: calculation.lineItems.map(li => ({
+      orderId,
+      lineItemId: li.productId,
+      taxAmount: li.tax,
+      taxRate: li.rate,
+      jurisdiction: li.jurisdiction,
+      calculatedAt: new Date(),
+      taxApiTransactionId: txnId,
+    })),
+  });
+}
+```
+
+---
+
+## Checkout Optimization Checklist
+
+### Cart Abandonment Recovery
+- [ ] Track `checkout.started` event when user enters checkout
+- [ ] Set a 1-hour timer — send recovery email if no `order.confirmed` fires
+- [ ] Recovery email includes direct link back to populated cart (use server-side cart ID, not localStorage)
+- [ ] Show the exact items abandoned with updated stock status ("Only 2 left!")
+- [ ] A/B test subject lines: discount vs urgency vs social proof
+- [ ] SMS recovery for mobile checkouts (higher open rate than email for mobile users)
+
+### One-Click Checkout
+```typescript
+// Save payment method + address after first successful order
+async function saveCheckoutProfile(userId: string, orderId: string) {
+  const order = await prisma.order.findUniqueOrThrow({
+    where: { id: orderId },
+    include: { shippingAddress: true, paymentIntent: true },
+  });
+  const paymentIntent = await stripe.paymentIntents.retrieve(order.paymentIntentId);
+  await prisma.checkoutProfile.upsert({
+    where: { userId },
+    create: {
+      userId,
+      stripePaymentMethodId: paymentIntent.payment_method as string,
+      shippingAddressId: order.shippingAddressId,
+    },
+    update: {
+      stripePaymentMethodId: paymentIntent.payment_method as string,
+      shippingAddressId: order.shippingAddressId,
+    },
+  });
+}
+
+// One-click checkout endpoint — reuse saved profile
+app.post('/api/checkout/one-click', requireAuth, async (req, res) => {
+  const { cartId } = req.body;
+  const profile = await prisma.checkoutProfile.findUnique({ where: { userId: req.user.id } });
+  if (!profile) return res.status(400).json({ error: 'NO_SAVED_PROFILE' });
+
+  const cart = await cartService.getVerified(cartId);
+  const tax = await calculateTax(cart.items, profile.shippingAddress, false);
+
+  const intent = await stripe.paymentIntents.create({
+    amount: cart.totalInCents + tax.totalTax,
+    currency: 'usd',
+    customer: req.user.stripeCustomerId,
+    payment_method: profile.stripePaymentMethodId,
+    confirm: true,
+    off_session: true,  // No 3DS prompt for returning customers
+    idempotencyKey: `one-click-${cartId}-v${cart.version}`,
+  });
+  if (intent.status === 'succeeded') {
+    const order = await orderService.create(cart, intent.id, profile.shippingAddressId);
+    return res.json({ orderId: order.id });
+  }
+  res.status(400).json({ error: 'PAYMENT_FAILED', requiresAction: intent.status === 'requires_action' });
+});
+```
+
+### Guest Checkout
+- Never force account creation before purchase — every forced registration step loses ~20% of users
+- Collect email first (for cart recovery), then shipping, then payment
+- After order confirm, offer account creation with password only — pre-fill email from order
+- Store guest cart server-side with TTL; link by `guestToken` cookie (not just localStorage)
+- On account creation post-checkout, transfer order history to new account
+
+### A/B Testing Checkout
+```typescript
+// Deterministic variant assignment — same user always sees same variant
+function getCheckoutVariant(userId: string | null, experimentId: string): 'control' | 'treatment' {
+  const seed = userId ?? crypto.randomUUID(); // guests get random assignment
+  const hash = crypto.createHash('md5').update(`${experimentId}:${seed}`).digest('hex');
+  const bucket = parseInt(hash.substring(0, 8), 16) % 100;
+  return bucket < 50 ? 'control' : 'treatment';
+}
+
+// Track conversion per variant
+async function trackCheckoutEvent(event: string, userId: string | null, experimentId: string) {
+  const variant = getCheckoutVariant(userId, experimentId);
+  await analytics.track({ event, properties: { experimentId, variant, userId } });
+}
+```
+
+---
+
+## Product Search & Filtering
+
+### Faceted Search with Meilisearch
+
+```typescript
+import { MeiliSearch } from 'meilisearch';
+
+const client = new MeiliSearch({ host: process.env.MEILI_HOST!, apiKey: process.env.MEILI_KEY! });
+const index = client.index('products');
+
+// Configure filterable and sortable attributes on index setup
+async function configureSearchIndex() {
+  await index.updateSettings({
+    filterableAttributes: ['category', 'brand', 'inStock', 'priceRange', 'tags', 'rating'],
+    sortableAttributes: ['price', 'createdAt', 'rating', 'salesCount'],
+    searchableAttributes: ['name', 'description', 'brand', 'tags', 'sku'],
+    rankingRules: ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness'],
+  });
+}
+
+// Faceted search query — build filter string from user selections
+interface SearchFilters {
+  category?: string[];
+  brand?: string[];
+  priceMin?: number;
+  priceMax?: number;
+  inStock?: boolean;
+  rating?: number;
+}
+
+async function searchProducts(query: string, filters: SearchFilters, page = 0, hitsPerPage = 24) {
+  const filterParts: string[] = [];
+
+  if (filters.category?.length) {
+    filterParts.push(`category IN [${filters.category.map(c => `"${c}"`).join(', ')}]`);
+  }
+  if (filters.brand?.length) {
+    filterParts.push(`brand IN [${filters.brand.map(b => `"${b}"`).join(', ')}]`);
+  }
+  if (filters.priceMin !== undefined) filterParts.push(`price >= ${filters.priceMin}`);
+  if (filters.priceMax !== undefined) filterParts.push(`price <= ${filters.priceMax}`);
+  if (filters.inStock) filterParts.push('inStock = true');
+  if (filters.rating) filterParts.push(`rating >= ${filters.rating}`);
+
+  return index.search(query, {
+    filter: filterParts.join(' AND '),
+    facets: ['category', 'brand', 'rating'],   // return facet counts for sidebar
+    page,
+    hitsPerPage,
+    attributesToHighlight: ['name', 'description'],
+    highlightPreTag: '<mark>',
+    highlightPostTag: '</mark>',
+  });
+}
+
+// Sync products to Meilisearch on save
+async function syncProductToSearch(product: Product) {
+  await index.addDocuments([{
+    id: product.id,
+    name: product.name,
+    description: product.description,
+    brand: product.brand,
+    category: product.categoryPath, // ['Electronics', 'Phones', 'Smartphones']
+    price: product.priceInCents / 100,
+    priceRange: getPriceRange(product.priceInCents), // 'under-25' | '25-50' | '50-100' | 'over-100'
+    inStock: product.stock > 0,
+    rating: product.averageRating,
+    salesCount: product.salesCount,
+    tags: product.tags,
+    sku: product.sku,
+  }]);
+}
+```
+
+### Algolia Integration Pattern
+
+```typescript
+import algoliasearch from 'algoliasearch';
+
+const algolia = algoliasearch(process.env.ALGOLIA_APP_ID!, process.env.ALGOLIA_ADMIN_KEY!);
+const productsIndex = algolia.initIndex('products');
+
+// Instant search — debounce to avoid burning quota on every keystroke
+import { useDeferredValue, useEffect, useState } from 'react';
+
+function useProductSearch(query: string, filters: SearchFilters) {
+  const deferredQuery = useDeferredValue(query); // built-in React debounce
+  const [results, setResults] = useState<SearchResult[]>([]);
+
+  useEffect(() => {
+    if (!deferredQuery) { setResults([]); return; }
+    productsIndex.search(deferredQuery, { filters: buildAlgoliaFilter(filters) })
+      .then(res => setResults(res.hits as SearchResult[]));
+  }, [deferredQuery, filters]);
+
+  return results;
+}
+```
+
+---
+
+## Cross-Pack Connections
+
+### @rune/analytics
+- Track checkout funnel steps (cart → address → payment → confirm) for drop-off analysis
+- Product view, add-to-cart, and purchase events feed cohort analysis
+- Revenue reporting requires order line items with SKU, category, and margin data
+- Subscription MRR/ARR dashboards fed from `invoice.paid` webhook events
+
+### @rune/security
+- `sentinel` audits payment endpoint for: amount manipulation, replay attacks, IDOR on cart/order IDs
+- Webhook endpoint validation: ensure HMAC verification is present on ALL incoming webhooks
+- Fraud detection logging must be append-only (no deletes) for audit compliance
+- PCI DSS scope: never log raw card numbers or CVV; only log masked PAN and last4
+
+### @rune/ui
+- Cart drawer: optimistic updates via Zustand + skeleton loaders on async ops
+- Checkout form: `react-hook-form` + Zod validation; inline errors per field
+- Payment element: use Stripe's hosted `<PaymentElement>` — never build custom card inputs (PCI scope)
+- Price display: always `Intl.NumberFormat`, monospace font for financial numbers
+- Stock badge: green "In stock" / amber "Only N left" / red "Out of stock" — never color alone
+
+### @rune/backend
+- Order service uses repository pattern — `OrderRepository` with `findById`, `create`, `updateStatus`
+- Queue jobs for: reservation expiry, reconciliation, webhook fan-out (never run in request thread)
+- Rate limiting on `/api/cart/*` (10 req/s per user) and `/api/checkout/*` (3 req/s per user)
+- Database: `orders`, `inventory`, `carts` tables need row-level locking strategy documented
+
+### @rune/saas
+- If product is a SaaS subscription, `subscription-billing` skill handles recurring billing
+- Seat-based billing: `quantity` on Stripe subscription item = seat count
+- Usage-based metering: send meter events to Stripe before invoice finalization window closes
+- Customer portal: Stripe Billing Portal handles plan changes, payment method update, cancellation
+
+---
+
+## Webhook Patterns
+
+### Centralized Webhook Router
+
+```typescript
+// Single endpoint, topic-based routing — more maintainable than one endpoint per provider
+type WebhookTopic =
+  | 'payment.succeeded' | 'payment.failed' | 'payment.refunded'
+  | 'subscription.created' | 'subscription.updated' | 'subscription.cancelled'
+  | 'order.confirmed' | 'order.shipped' | 'order.delivered'
+  | 'inventory.low_stock' | 'inventory.out_of_stock';
+
+interface WebhookHandler {
+  verify: (req: Request) => boolean;
+  normalize: (body: unknown) => { topic: WebhookTopic; payload: Record<string, unknown> };
+}
+
+const handlers: Record<string, WebhookHandler> = {
+  stripe: {
+    verify: (req) => verifyStripeSignature(req),
+    normalize: (body) => normalizeStripeEvent(body as Stripe.Event),
+  },
+  shopify: {
+    verify: (req) => verifyShopifyHmac(req),
+    normalize: (body) => normalizeShopifyWebhook(body),
+  },
+};
+
+app.post('/api/webhooks/:provider', express.raw({ type: '*/*' }), async (req, res) => {
+  const handler = handlers[req.params.provider];
+  if (!handler) return res.status(404).send('Unknown provider');
+  if (!handler.verify(req)) return res.status(401).send('Signature invalid');
+
+  const { topic, payload } = handler.normalize(JSON.parse(req.body.toString()));
+
+  // Idempotency check
+  const eventId = req.headers['x-event-id'] as string ?? generateEventId(req);
+  const seen = await db.webhookEvent.findUnique({ where: { eventId } });
+  if (seen) return res.json({ received: true, duplicate: true });
+
+  await db.$transaction(async (tx) => {
+    await tx.webhookEvent.create({ data: { eventId, topic, provider: req.params.provider } });
+    await routeWebhookEvent(tx, topic, payload);
+  });
+
+  res.json({ received: true });
+});
+
+async function routeWebhookEvent(
+  tx: Prisma.TransactionClient,
+  topic: WebhookTopic,
+  payload: Record<string, unknown>
+) {
+  switch (topic) {
+    case 'payment.succeeded':
+      return orderService.confirmFromPayment(tx, payload);
+    case 'subscription.cancelled':
+      return subscriptionService.deactivate(tx, payload.customerId as string);
+    case 'inventory.low_stock':
+      return alertService.notifyOps(payload);
+    // ... more cases
+  }
 }
 ```
 
@@ -655,6 +1188,8 @@ Called By ← ba (L2): requirements elicitation for e-commerce features
 | Liquid template outputs unescaped metafield content (XSS in Shopify theme) | HIGH | Always use `| escape` filter on user-generated metafield values |
 | Cancelled order stock not returned to inventory | MEDIUM | Use order state machine with side effects — cancellation always triggers `releaseOrderReservations` |
 | Reservation never expires for abandoned checkout (stock locked forever) | MEDIUM | Run reservation expiry job every 5 minutes; default reservation TTL = 15 minutes |
+| Stolen card fraud passes payment but triggers chargeback later | HIGH | Apply fraud scoring before confirmation; hold high-risk orders for manual review |
+| FX rate stale on multi-currency display — user sees wrong price | MEDIUM | Cache FX rates max 15 minutes; show rate timestamp to user; always charge in store base currency |
 
 ## Done When
 
@@ -667,6 +1202,9 @@ Called By ← ba (L2): requirements elicitation for e-commerce features
 - Guest-to-authenticated cart merge works without data loss
 - All prices, discounts, and coupons validated server-side
 - Reconciliation job catches payment/order mismatches
+- Fraud scoring applied to all orders; high-risk orders flagged for review
+- Multi-currency display works with cached FX rates; charges always in base currency
+- Product search configured with faceted filtering and relevance ranking
 - Structured report emitted for each skill invoked
 
 ## Cost Profile
