@@ -19,6 +19,9 @@ node_modules/
 # Compiler output
 dist/
 
+# Admin dashboard (local-only)
+docs/dashboard.html
+
 # Environment
 .env
 .env.local

@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node '${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cjs' session-start",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cjs\" session-start",
             "async": false
           }
         ]
@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node '${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cjs' pre-tool-guard",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cjs\" pre-tool-guard",
             "async": false
           }
         ]
@@ -28,7 +28,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node '${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cjs' context-watch",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cjs\" context-watch",
             "async": true
           }
         ]
@@ -38,7 +38,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node '${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cjs' secrets-scan",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cjs\" secrets-scan",
             "async": false
           }
         ]
@@ -50,12 +50,12 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node '${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cjs' auto-format",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cjs\" auto-format",
             "async": true
           },
           {
             "type": "command",
-            "command": "node '${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cjs' typecheck",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cjs\" typecheck",
             "async": true
           }
         ]
@@ -65,7 +65,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node '${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cjs' metrics-collector",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cjs\" metrics-collector",
             "async": true
           }
         ]
@@ -77,7 +77,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node '${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cjs' pre-compact",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cjs\" pre-compact",
             "async": false
           }
         ]
@@ -89,7 +89,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node '${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cjs' post-session-reflect",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cjs\" post-session-reflect",
             "async": false
           }
         ]
