@@ -2,15 +2,15 @@
 
 **Less skills. Deeper connections.**
 
-A lean, interconnected skill ecosystem for AI coding assistants. 55 skills, 200+ mesh connections, full project lifecycle — from idea to production.
+A lean, interconnected skill ecosystem for AI coding assistants. 58 skills, 200+ mesh connections, full project lifecycle — from idea to production.
 
-Works on **Claude Code** (native plugin) · **Cursor** · **Windsurf** · **Google Antigravity** · any AI IDE
+Works on **Claude Code** (native plugin) · **Cursor** · **Windsurf** · **Google Antigravity** · **OpenAI Codex** · **OpenCode** · any AI IDE
 
 ## Why Rune?
 
 Most skill ecosystems are either **too many isolated skills** (540+ that don't talk to each other) or **rigid pipelines** (A → B → C, if B fails everything stops).
 
-Rune is a **mesh** — 55 skills with 200+ connections across a 5-layer architecture. Skills call each other bidirectionally, forming resilient workflows that adapt when things go wrong.
+Rune is a **mesh** — 58 skills with 200+ connections across a 5-layer architecture. Skills call each other bidirectionally, forming resilient workflows that adapt when things go wrong.
 
 ```
 Pipeline:  A → B → C → D         (B fails = stuck)
@@ -20,18 +20,17 @@ Mesh:      A ↔ B ↔ C             (B fails = A reaches C via D→E)
            D ↔ E ↔ F
 ```
 
-## What's New (v2.1.0)
+## What's New (v2.2.1)
 
-- **Phase-Aware Execution** — cook v0.5.0 resumes multi-session plans automatically. Master plan + phase files = one phase per session, any model executes accurately
-- **Amateur-Proof Plans** — plan v0.4.0 generates self-contained phase files with data flow diagrams, code contracts, failure scenarios, and rejection criteria. Designed so even the weakest model succeeds
-- **Cognitive Bias Detection** — problem-solver v0.3.0 runs mandatory bias checks (12 biases) before every analysis. Reversibility Filter, Pre-Mortem, Weighted Matrix, MECE decomposition
-- **Second-Order Thinking** — sequential-thinking v0.3.0 classifies decision reversibility, traces cascading effects, and cross-checks for anchoring/status-quo/overconfidence biases
-- **6 New Skills** — ba (business analyst), scaffold (project bootstrap), docs (documentation lifecycle), git (semantic commits), mcp-builder (MCP server generator), doc-processor (PDF/DOCX/XLSX)
-- **Multi-Platform Compiler** — all 55 skills compile to Cursor, Windsurf, Antigravity, and generic formats with zero knowledge loss
+- **Enforcement Upgrade** — Antigravity-level IDE compliance: 5-type Request Classifier, File Ownership Matrix, Self-Verification HARD-GATE, Routing Proof, Clarification Gate, Phase Transition Protocol. Distributed via compiler — every skill file gets compliance preamble on non-Claude platforms
+- **All 13 Free Packs Deep** — every L4 extension pack now exceeds 500 lines of production-ready patterns and code examples. Total: 11,096 lines across free packs
+- **8 Platform Adapters** — Claude Code, Cursor, Windsurf, Google Antigravity, OpenAI Codex, OpenCode, OpenClaw, Generic
+- **58 Core Skills** — +3 since v2.1.0: adversary (red team), sentinel-env (env validation), chrome-ext pack
+- **Rune Pro** — 4 premium packs (product, sales, data-science, support) in private repo. $49 lifetime
 
 ## What Rune Is (and Isn't)
 
-Rune started as a **Claude Code plugin** and now compiles to **every major AI IDE**. Same 55 skills, same mesh connections, same workflows — zero knowledge loss across platforms.
+Rune started as a **Claude Code plugin** and now compiles to **every major AI IDE**. Same 58 skills, same mesh connections, same workflows — zero knowledge loss across platforms.
 
 | | Rune Provides | Claude Code Provides |
 |---|---|---|
@@ -55,7 +54,7 @@ Rune started as a **Claude Code plugin** and now compiles to **every major AI ID
 | CI quality gates | `verification` skill: lint + typecheck + tests + build (actual commands, not LLM review) |
 | Memory / state | `session-bridge` + `journal`: cross-session decisions, conventions, ADRs, module health |
 | Multi-model strategy | Every skill has assigned model: haiku (scan), sonnet (code), opus (architecture) |
-| Agent specialization | 55 specialized skills with dedicated roles (architect, coder, reviewer, scanner, researcher, BA, scaffolder) — each runs as a Task agent via Claude Code |
+| Agent specialization | 58 specialized skills with dedicated roles (architect, coder, reviewer, scanner, researcher, BA, scaffolder) — each runs as a Task agent via Claude Code |
 | Security scanning | `sentinel`: OWASP patterns, secret scanning, dependency audit. `sast`: static analysis |
 
 ## Install
@@ -82,13 +81,13 @@ npx @rune-kit/rune init --platform windsurf
 npx @rune-kit/rune init --platform antigravity
 ```
 
-This compiles all 55 skills into your IDE's rules format. Same knowledge, same workflows.
+This compiles all 58 skills into your IDE's rules format. Same knowledge, same workflows.
 
 ### Platform Comparison
 
 | Feature | Claude Code | Cursor / Windsurf / Others |
 |---------|-------------|---------------------------|
-| Skills available | 55/55 | 55/55 |
+| Skills available | 58/58 | 58/58 |
 | Mesh connections | 200+ (programmatic) | 200+ (rule references) |
 | Workflows & HARD-GATEs | Full | Full |
 | Extension packs | 12 | 12 |
@@ -153,7 +152,7 @@ This compiles all 55 skills into your IDE's rules format. Same knowledge, same w
 ║  Full lifecycle workflows                             ║
 ║  cook │ team │ launch │ rescue │ scaffold             ║
 ╠══════════════════════════════════════════════════════╣
-║  L2: WORKFLOW HUBS (26)                               ║
+║  L2: WORKFLOW HUBS (27)                               ║
 ║  Cross-hub mesh — the key differentiator              ║
 ║                                                        ║
 ║  Creation:    plan │ scout │ brainstorm │ design │     ║
@@ -164,8 +163,9 @@ This compiles all 55 skills into your IDE's rules format. Same knowledge, same w
 ║               logic-guardian                            ║
 ║  Delivery:    deploy │ marketing │ incident │ docs     ║
 ║  Rescue:      autopsy │ safeguard │ surgeon            ║
+║  Security:    adversary                                ║
 ╠══════════════════════════════════════════════════════╣
-║  L3: UTILITIES (23)                                   ║
+║  L3: UTILITIES (25)                                   ║
 ║  Stateless, pure capabilities                         ║
 ║                                                        ║
 ║  Knowledge:   research │ docs-seeker │ trend-scout     ║
@@ -182,14 +182,17 @@ This compiles all 55 skills into your IDE's rules format. Same knowledge, same w
 ║  Workspace:   worktree                                 ║
 ║  Git:         git                                      ║
 ║  Documents:   doc-processor                            ║
+║  Security:    sentinel-env                             ║
+║  Memory:      neural-memory                            ║
 ╠══════════════════════════════════════════════════════╣
-║  L4: EXTENSION PACKS (12)                             ║
+║  L4: EXTENSION PACKS (13)                             ║
 ║  Domain-specific, install what you need                ║
 ║                                                        ║
 ║  @rune/ui │ @rune/backend │ @rune/devops │            ║
 ║  @rune/mobile │ @rune/security │ @rune/trading │      ║
 ║  @rune/saas │ @rune/ecommerce │ @rune/ai-ml │        ║
-║  @rune/gamedev │ @rune/content │ @rune/analytics      ║
+║  @rune/gamedev │ @rune/content │ @rune/analytics │    ║
+║  @rune/chrome-ext                                      ║
 ╚══════════════════════════════════════════════════════╝
 ```
 
@@ -310,8 +313,9 @@ Business department packs for product, sales, and data teams. Same PACK.md forma
 | @rune-pro/product | feature-spec, roadmap, metrics, release-comms, user-research, competitive | Product Management |
 | @rune-pro/sales | account-research, call-prep, outreach, pipeline-review, competitive-intel | Sales Enablement |
 | @rune-pro/data-science | data-exploration, sql-advanced, visualization, statistical-testing, dashboards | Data Science |
+| @rune-pro/support | ticket-triage, response-drafting, knowledge-base, escalation, faq, metrics | Customer Support |
 
-Coming soon. See [docs/plans/RUNE-PRO-PLAN.md](docs/plans/RUNE-PRO-PLAN.md) for the full roadmap.
+**$49 lifetime** (Pro) · **$149 lifetime** (Business). See [docs/plans/RUNE-PRO-PLAN.md](docs/plans/RUNE-PRO-PLAN.md).
 
 ## Multi-Platform Compiler
 
@@ -321,13 +325,14 @@ Rune includes a 3-stage compiler that transforms SKILL.md files into platform-na
 skills/*.md → PARSE → TRANSFORM → EMIT → platform rules
 ```
 
-**6 transforms applied per platform:**
-1. Cross-references: `rune:cook` → `@rune-cook.mdc` (Cursor) / prose ref (Windsurf)
-2. Tool names: `Read`, `Edit`, `Bash` → generic language
-3. Frontmatter: strip Claude Code-specific directives
+**8 transforms applied per platform:**
+1. Frontmatter: strip Claude Code-specific directives
+2. Cross-references: `rune:cook` → `@rune-cook.mdc` (Cursor) / prose ref (Windsurf)
+3. Tool names: `Read`, `Edit`, `Bash` → generic language
 4. Subagents: parallel → sequential workflow
-5. Hooks: runtime hooks → inline MUST/NEVER constraints
-6. Branding: Rune attribution footer
+5. Compliance: inject enforcement preamble (non-Claude platforms)
+6. Hooks: runtime hooks → inline MUST/NEVER constraints
+7. Branding: Rune attribution footer
 
 ```bash
 # Build for any platform
@@ -343,13 +348,14 @@ See [docs/MULTI-PLATFORM.md](docs/MULTI-PLATFORM.md) for the full architecture.
 ## Numbers
 
 ```
-Core Skills:       55 (L0: 1 │ L1: 5 │ L2: 26 │ L3: 23)
-Extension Packs:   12 free + 3 pro (coming soon)
-Mesh Connections:  206 cross-references + 151 tool references
-Connections/Skill: 3.7 avg
-Platforms:         5 (Claude Code, Cursor, Windsurf, Antigravity, Generic)
-Compiler:          ~1200 LOC (parser + transforms + adapters + CLI)
-Quality:           55/55 skills with Output Format, Sharp Edges, Done When, Cost Profile
+Core Skills:       58 (L0: 1 │ L1: 5 │ L2: 27 │ L3: 25)
+Extension Packs:   13 free + 4 pro + 2 business
+Mesh Connections:  200+ cross-references
+Connections/Skill: 3.4 avg
+Platforms:         8 (Claude Code, Cursor, Windsurf, Antigravity, Codex, OpenCode, OpenClaw, Generic)
+Compiler:          ~1400 LOC (parser + 8 transforms + 8 adapters + CLI)
+Quality:           58/58 skills with Output Format, Sharp Edges, Done When, Cost Profile
+Pack Depth:        17,013 total lines across 19 packs (all free packs rated Deep)
 ```
 
 ## License

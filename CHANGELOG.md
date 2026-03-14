@@ -3,6 +3,71 @@
 All notable changes to Rune are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.2.1] - 2026-03-14
+
+### Added
+- **Enforcement Upgrade** — Antigravity-level IDE compliance across all platforms
+  - skill-router v1.2.0: 5-type Request Classifier (CODE_CHANGE|QUESTION|DEBUG|REVIEW|EXPLORE), File Ownership Matrix, Self-Verification HARD-GATE, Routing Proof line
+  - brainstorm v0.4.0: Problem Restatement requirement, Dynamic Questioning (P0/P1/P2)
+  - cook v0.6.0: Clarification Gate (2-question minimum), Phase Transition Protocol
+  - `compiler/transforms/compliance.js`: distributes enforcement preamble to all non-Claude platform builds
+- **L4 Pack Enrichment** — all 13 free packs now rated Deep (500+ lines)
+  - @rune/ecommerce 675→1212: multi-currency, fraud detection, checkout optimization, search/filtering, webhooks
+  - @rune/content 382→1567: search integration, newsletter, scheduling, accessibility, rich media, analytics
+  - @rune/gamedev 393→1513: multiplayer/networking, audio, input, ECS, particles, camera, scene management
+- Antigravity Kit gap analysis documentation
+
+### Changed
+- Compiler pipeline: 7→8 stages (added compliance transform after subagents, before hooks)
+- Free pack total lines: 8,253→11,096
+- Grand total across 19 packs: 14,170→17,013
+
+## [2.2.0] - 2026-03-09
+
+### Added
+- **OpenCode adapter** — 8th supported platform
+- **Skills catalog page** — browsable skill listing
+- Guides and documentation updates
+
+## [2.1.1] - 2026-03-12
+
+### Added
+- **tools: field** on all 55 skills — permission scope per skill
+- **@rune-pro/sales** pack (6 skills, private repo)
+- **@rune-pro/data-science** pack (7 skills, 1356 lines)
+- **@rune-pro/support** pack (6 skills, 802 lines)
+- **@rune/chrome-ext** pack (6 skills, 995 lines, FREE)
+
+### Changed
+- L4 Tier 1 packs enriched: ui 225→947, security 216→536, backend 257→678, saas 276→805
+- Pricing model: subscription → lifetime ($49 Pro, $149 Business)
+- Pro packs moved to private repo (rune-kit/rune-pro)
+
+## [2.1.0] - 2026-03-11
+
+### Added
+- **6 new skills** (55→58 after adversary + sentinel-env later): ba, scaffold, docs, git, mcp-builder, doc-processor
+- **cook v0.5.0**: Phase-aware execution, phase-file resume, master plan tracking
+- **plan v0.4.0**: Amateur-Proof Template with master plan + phase files
+- **@rune-pro/product** pack (6 skills, 1253 lines)
+- **@rune/trading**: experiment-loop skill
+
+### Changed
+- Skill count: 49→55 (L1: 4→5, L2: 23→26, L3: 21→23)
+- Mesh connections: 170+→200+
+
+## [2.0.0] - 2026-03-08
+
+### Added
+- **Multi-platform compiler** — 3-stage pipeline (Parse → Transform → Emit)
+- 6 compiler transforms: cross-refs, tool-names, frontmatter, subagents, hooks, branding
+- 5 platform adapters: claude, cursor, windsurf, antigravity, generic
+- CLI: `npx @rune-kit/rune init|build|doctor`
+- All 49 skills compile to ALL platforms with zero knowledge loss
+
+### Changed
+- Architecture: from Claude-Code-only to multi-platform mesh
+
 ## [1.5.1] - 2025-03-05
 
 ### Added

@@ -16,11 +16,11 @@ Every session, research real-world pain points to strengthen existing skills, de
 | @rune/analytics | 557 | 6 | Deep | Medium |
 | @rune/devops | 520 | 7 | Deep | Medium |
 | @rune/ai-ml | 517 | 6 | Deep | Medium |
-| @rune/gamedev | 393 | 5 | Adequate | High |
-| @rune/content | 381 | 5 | Adequate | High |
+| @rune/gamedev | 1513 | 5 | Deep | Low (enriched) |
+| @rune/content | 1567 | 5 | Deep | Low (enriched) |
 | @rune/ui | 947 | 7 | Deep | Low (enriched) |
 | @rune/saas | 805 | 7 | Deep | Low (enriched) |
-| @rune/ecommerce | 674 | 7 | Deep | Low (enriched) |
+| @rune/ecommerce | 1212 | 7 | Deep | Low (enriched) |
 | @rune/backend | 678 | 7 | Deep | Low (enriched) |
 | @rune/mobile | 653 | 7 | Deep | Low (enriched) |
 | @rune/security | 536 | 6 | Deep | Low (enriched) |
@@ -84,8 +84,7 @@ Types of enrichment:
 ### Tier 1: High (enrichment adds solid value)
 | Target | Current | Goal | Key Pain Points to Research |
 |--------|---------|------|---------------------------|
-| @rune/gamedev | 393 | 600+ | Unity/Godot workflow, asset pipeline, multiplayer patterns |
-| @rune/content | 381 | 600+ | CMS integration, SEO automation, content pipeline |
+| *All Tier 1 targets completed (2026-03-14)* | | | |
 
 ### Tier 2: Maintain (already deep, refresh only)
 | Target | Current | Focus |
