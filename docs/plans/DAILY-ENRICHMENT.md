@@ -102,6 +102,15 @@ Patterns extracted from repos but not yet applied. Pick from here before researc
 | Self-host + SaaS toggle | FujiwaraChoki/supoclip | `@rune/saas` | Single `SELF_HOST=true` env var bypasses billing, dual auth paths (JWT for paid, header for self-hosted). Pattern for OSS→SaaS products | Medium |
 | Credit billing with AI cost passthrough | mendableai/firecrawl | `@rune/saas` | Dynamic credit calculation: base cost × engine multiplier × format multiplier + extras. AI token cost → user credits via `Math.ceil(totalCost * 1800)` | Medium |
 | CLAUDE.md template injection | blitzdotdev/blitz-mac | `scaffold` (L1) or `onboard` (L2) | Bake opinionated agent instructions into scaffolded projects — mandatory first action, ordered build workflow, guards against common failure modes | Low |
+| Two-stage review protocol | obra/superpowers (84k★) | `review` (L2) | Separate Stage 1 (Spec Compliance: does code match spec?) from Stage 2 (Code Quality: clean, DRY, naming). Tasks only pass after BOTH stages. Current review mixes them | High |
+| Anti-performative review response | obra/superpowers | `review-intake` (L2) | Ban "You're absolutely right!" / "Great point!" — replace with technical-only responses: "Fixed. [change]" / "Resolved: [fix]". Counter AI sycophancy in code review | High |
+| Subagent status protocol | obra/superpowers | `team` (L1) or `cook` (L1) | 4-status protocol: DONE / DONE_WITH_CONCERNS / NEEDS_CONTEXT / BLOCKED. Current cook has less structured status handling. Adds DONE_WITH_CONCERNS (complete but issues noted) | High |
+| 5-step verification gate | obra/superpowers | `completion-gate` (L3) | IDENTIFY→RUN→READ→VERIFY→CLAIM pipeline. Current gate checks evidence but lacks explicit "read every line of output" + "match claim to evidence quote" steps | Medium |
+| Visual brainstorming companion | obra/superpowers | `brainstorm` (L2) | Lightweight zero-dep browser server for mockups/wireframes/diagrams during brainstorming. Auto-shutdown 30min idle. Use only for visual questions | Medium |
+| CSO frontmatter discipline | obra/superpowers | `skill-forge` (L2) | Skill descriptions must contain ONLY "Use when..." triggers, NOT workflow summary. AI reads description → follows it → loses full skill detail if description contains workflow | Medium |
+| Plan task format | obra/superpowers | `plan` (L2) | Each task: exact file path + test file path + complete test code + verification command + commit message. 2-5 min granularity. No "final cleanup" phase | Medium |
+| YAGNI pushback in review | obra/superpowers | `review` (L2) | When reviewer suggests "add X": grep codebase → if feature uncalled → respond "Not called anywhere. Remove? (YAGNI)". Valid pushback, not laziness | Low |
+| Skill TDD methodology | obra/superpowers | `skill-forge` (L2) | Write skills using TDD: RED (run scenario WITHOUT skill → document failures) → GREEN (write skill targeting failures) → REFACTOR (find new bypasses → add blocks) | Low |
 
 ## Anti-Patterns (NEVER do these)
 
