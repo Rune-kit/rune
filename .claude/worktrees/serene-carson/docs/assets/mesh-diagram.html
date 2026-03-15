@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rune — 57-Skill Mesh Architecture</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0a0e17;
+    color: #e2e8f0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+
+  .canvas {
+    position: relative;
+    width: 1200px;
+    height: 900px;
+  }
+
+  svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Glow filters */
+  .glow-l0 { filter: drop-shadow(0 0 8px #f59e0b); }
+  .glow-l1 { filter: drop-shadow(0 0 6px #ef4444); }
+  .glow-l2 { filter: drop-shadow(0 0 5px #6366f1); }
+  .glow-l3 { filter: drop-shadow(0 0 4px #10b981); }
+  .glow-l4 { filter: drop-shadow(0 0 3px #06b6d4); }
+
+  /* Connection animations */
+  @keyframes pulse-connection {
+    0%, 100% { opacity: 0.15; }
+    50% { opacity: 0.6; }
+  }
+
+  @keyframes flow-dash {
+    to { stroke-dashoffset: -20; }
+  }
+
+  @keyframes node-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
+
+  @keyframes fade-in-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .connection {
+    animation: pulse-connection 3s ease-in-out infinite;
+  }
+
+  .connection-flow {
+    stroke-dasharray: 8 12;
+    animation: flow-dash 1.5s linear infinite;
+  }
+
+  .node-group {
+    cursor: pointer;
+    transition: transform 0.2s ease;
+  }
+
+  .node-group:hover {
+    transform: scale(1.15);
+  }
+
+  /* Legend */
+  .legend {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 32px;
+    font-size: 13px;
+    font-weight: 500;
+    animation: fade-in-up 1s ease 0.5s both;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+  }
+
+  /* Title */
+  .title {
+    position: absolute;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    animation: fade-in-up 1s ease both;
+  }
+
+  .title h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: #f8fafc;
+    letter-spacing: -0.5px;
+  }
+
+  .title p {
+    font-size: 14px;
+    color: #64748b;
+    margin-top: 4px;
+  }
+
+  /* Stats */
+  .stats {
+    position: absolute;
+    top: 24px;
+    right: 30px;
+    text-align: right;
+    animation: fade-in-up 1s ease 0.3s both;
+  }
+
+  .stat-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 24px;
+    font-weight: 700;
+    color: #f59e0b;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+</style>
+</head>
+<body>
+
+<div class="canvas">
+  <div class="title">
+    <h1>Rune Skill Mesh</h1>
+    <p>5-Layer Architecture &bull; 200+ Connections</p>
+  </div>
+
+  <div class="stats">
+    <div class="stat-value">57</div>
+    <div class="stat-label">Skills</div>
+    <div class="stat-value" style="margin-top:8px">200+</div>
+    <div class="stat-label">Connections</div>
+  </div>
+
+  <svg viewBox="0 0 1200 900" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <!-- Radial gradients for rings -->
+      <radialGradient id="ring-l4" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.03"/>
+        <stop offset="100%" stop-color="#06b6d4" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="ring-l3" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#10b981" stop-opacity="0.04"/>
+        <stop offset="100%" stop-color="#10b981" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="ring-l2" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#6366f1" stop-opacity="0.05"/>
+        <stop offset="100%" stop-color="#6366f1" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="ring-l1" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#ef4444" stop-opacity="0.06"/>
+        <stop offset="100%" stop-color="#ef4444" stop-opacity="0"/>
+      </radialGradient>
+
+      <!-- Glow filter -->
+      <filter id="glow">
+        <feGaussianBlur stdDeviation="3" result="blur"/>
+        <feMerge>
+          <feMergeNode in="blur"/>
+          <feMergeNode in="SourceGraphic"/>
+        </feMerge>
+      </filter>
+
+      <filter id="glow-strong">
+        <feGaussianBlur stdDeviation="6" result="blur"/>
+        <feMerge>
+          <feMergeNode in="blur"/>
+          <feMergeNode in="SourceGraphic"/>
+        </feMerge>
+      </filter>
+    </defs>
+
+    <!-- Ring backgrounds -->
+    <circle cx="600" cy="440" r="380" fill="url(#ring-l4)" stroke="#06b6d4" stroke-opacity="0.08" stroke-width="1"/>
+    <circle cx="600" cy="440" r="300" fill="url(#ring-l3)" stroke="#10b981" stroke-opacity="0.1" stroke-width="1"/>
+    <circle cx="600" cy="440" r="210" fill="url(#ring-l2)" stroke="#6366f1" stroke-opacity="0.12" stroke-width="1"/>
+    <circle cx="600" cy="440" r="110" fill="url(#ring-l1)" stroke="#ef4444" stroke-opacity="0.15" stroke-width="1"/>
+
+    <!-- Ring labels -->
+    <text x="600" y="82" text-anchor="middle" fill="#06b6d4" opacity="0.4" font-size="11" font-weight="500" letter-spacing="2">L4 EXTENSIONS</text>
+    <text x="600" y="158" text-anchor="middle" fill="#10b981" opacity="0.4" font-size="11" font-weight="500" letter-spacing="2">L3 UTILITIES</text>
+    <text x="600" y="248" text-anchor="middle" fill="#6366f1" opacity="0.4" font-size="11" font-weight="500" letter-spacing="2">L2 WORKFLOW HUBS</text>
+    <text x="600" y="345" text-anchor="middle" fill="#ef4444" opacity="0.4" font-size="11" font-weight="500" letter-spacing="2">L1 ORCHESTRATORS</text>
+
+    <!-- ==================== CONNECTIONS ==================== -->
+    <g id="connections">
+      <!-- L0 → L1 connections -->
+      <line x1="600" y1="440" x2="510" y2="380" stroke="#f59e0b" stroke-opacity="0.3" stroke-width="1.5" class="connection"/>
+      <line x1="600" y1="440" x2="690" y2="380" stroke="#f59e0b" stroke-opacity="0.3" stroke-width="1.5" class="connection"/>
+      <line x1="600" y1="440" x2="600" y2="340" stroke="#f59e0b" stroke-opacity="0.3" stroke-width="1.5" class="connection"/>
+      <line x1="600" y1="440" x2="520" y2="500" stroke="#f59e0b" stroke-opacity="0.3" stroke-width="1.5" class="connection"/>
+      <line x1="600" y1="440" x2="680" y2="500" stroke="#f59e0b" stroke-opacity="0.3" stroke-width="1.5" class="connection"/>
+
+      <!-- L1 → L2 connections (cook → plan, scout, test, fix, etc.) -->
+      <!-- cook connections -->
+      <path d="M600,340 Q550,280 430,270" stroke="#ef4444" stroke-opacity="0.2" stroke-width="1" fill="none" class="connection connection-flow"/>
+      <path d="M600,340 Q650,280 770,270" stroke="#ef4444" stroke-opacity="0.2" stroke-width="1" fill="none" class="connection connection-flow"/>
+      <path d="M600,340 Q600,260 600,240" stroke="#ef4444" stroke-opacity="0.2" stroke-width="1" fill="none" class="connection connection-flow"/>
+      <path d="M600,340 Q500,300 400,320" stroke="#ef4444" stroke-opacity="0.2" stroke-width="1" fill="none" class="connection connection-flow"/>
+      <path d="M600,340 Q700,300 800,320" stroke="#ef4444" stroke-opacity="0.2" stroke-width="1" fill="none" class="connection connection-flow"/>
+
+      <!-- team connections -->
+      <path d="M510,380 Q450,330 390,300" stroke="#ef4444" stroke-opacity="0.15" stroke-width="1" fill="none" class="connection"/>
+      <path d="M510,380 Q460,420 410,430" stroke="#ef4444" stroke-opacity="0.15" stroke-width="1" fill="none" class="connection"/>
+
+      <!-- L2 ↔ L2 cross-hub connections (the mesh!) -->
+      <!-- plan ↔ brainstorm -->
+      <path d="M430,270 Q480,240 540,260" stroke="#6366f1" stroke-opacity="0.2" stroke-width="1" fill="none" class="connection connection-flow"/>
+      <!-- fix ↔ debug -->
+      <path d="M770,270 Q720,240 660,260" stroke="#6366f1" stroke-opacity="0.2" stroke-width="1" fill="none" class="connection connection-flow"/>
+      <!-- debug → scout -->
+      <path d="M660,260 Q560,230 480,240" stroke="#6366f1" stroke-opacity="0.15" stroke-width="1" fill="none" class="connection"/>
+      <!-- review → test -->
+      <path d="M800,320 Q780,350 760,380" stroke="#6366f1" stroke-opacity="0.15" stroke-width="1" fill="none" class="connection"/>
+      <!-- sentinel → preflight -->
+      <path d="M410,430 Q380,460 370,500" stroke="#6366f1" stroke-opacity="0.15" stroke-width="1" fill="none" class="connection"/>
+      <!-- fix → review -->
+      <path d="M770,270 Q790,290 800,320" stroke="#6366f1" stroke-opacity="0.15" stroke-width="1" fill="none" class="connection"/>
+      <!-- plan → scout -->
+      <path d="M430,270 Q400,250 380,240" stroke="#6366f1" stroke-opacity="0.15" stroke-width="1" fill="none" class="connection"/>
+      <!-- audit → sentinel -->
+      <path d="M450,540 Q430,500 410,430" stroke="#6366f1" stroke-opacity="0.15" stroke-width="1" fill="none" class="connection"/>
+      <!-- surgeon → safeguard -->
+      <path d="M750,540 Q730,500 720,460" stroke="#6366f1" stroke-opacity="0.15" stroke-width="1" fill="none" class="connection"/>
+
+      <!-- Additional L2 cross-connections (more mesh density) -->
+      <path d="M400,320 Q500,350 600,240" stroke="#6366f1" stroke-opacity="0.1" stroke-width="0.8" fill="none" class="connection"/>
+      <path d="M540,260 Q600,300 660,260" stroke="#6366f1" stroke-opacity="0.1" stroke-width="0.8" fill="none" class="connection"/>
+      <path d="M370,500 Q400,540 450,540" stroke="#6366f1" stroke-opacity="0.1" stroke-width="0.8" fill="none" class="connection"/>
+      <path d="M800,320 Q820,380 790,430" stroke="#6366f1" stroke-opacity="0.1" stroke-width="0.8" fill="none" class="connection"/>
+      <path d="M480,240 Q450,300 400,320" stroke="#6366f1" stroke-opacity="0.1" stroke-width="0.8" fill="none" class="connection"/>
+
+      <!-- L2 → L3 connections -->
+      <path d="M430,270 Q360,200 320,180" stroke="#10b981" stroke-opacity="0.12" stroke-width="0.8" fill="none" class="connection"/>
+      <path d="M660,260 Q700,200 740,180" stroke="#10b981" stroke-opacity="0.12" stroke-width="0.8" fill="none" class="connection"/>
+      <path d="M770,270 Q800,210 850,190" stroke="#10b981" stroke-opacity="0.12" stroke-width="0.8" fill="none" class="connection"/>
+      <path d="M410,430 Q350,390 300,350" stroke="#10b981" stroke-opacity="0.12" stroke-width="0.8" fill="none" class="connection"/>
+      <path d="M800,320 Q850,300 900,280" stroke="#10b981" stroke-opacity="0.12" stroke-width="0.8" fill="none" class="connection"/>
+      <path d="M450,540 Q400,560 350,560" stroke="#10b981" stroke-opacity="0.12" stroke-width="0.8" fill="none" class="connection"/>
+      <path d="M750,540 Q800,530 860,510" stroke="#10b981" stroke-opacity="0.12" stroke-width="0.8" fill="none" class="connection"/>
+      <path d="M600,240 Q550,180 500,160" stroke="#10b981" stroke-opacity="0.12" stroke-width="0.8" fill="none" class="connection"/>
+      <path d="M540,260 Q500,200 460,170" stroke="#10b981" stroke-opacity="0.12" stroke-width="0.8" fill="none" class="connection"/>
+
+      <!-- L4 → L3 connections (outer) -->
+      <path d="M250,120 Q280,150 320,180" stroke="#06b6d4" stroke-opacity="0.1" stroke-width="0.6" fill="none" class="connection"/>
+      <path d="M950,120 Q920,150 880,180" stroke="#06b6d4" stroke-opacity="0.1" stroke-width="0.6" fill="none" class="connection"/>
+      <path d="M180,400 Q220,380 280,350" stroke="#06b6d4" stroke-opacity="0.1" stroke-width="0.6" fill="none" class="connection"/>
+      <path d="M1020,400 Q980,380 920,360" stroke="#06b6d4" stroke-opacity="0.1" stroke-width="0.6" fill="none" class="connection"/>
+      <path d="M300,680 Q330,640 370,600" stroke="#06b6d4" stroke-opacity="0.1" stroke-width="0.6" fill="none" class="connection"/>
+      <path d="M900,680 Q870,640 830,600" stroke="#06b6d4" stroke-opacity="0.1" stroke-width="0.6" fill="none" class="connection"/>
+    </g>
+
+    <!-- ==================== L4 EXTENSION NODES ==================== -->
+    <g id="layer-4">
+      <!-- Top arc -->
+      <g class="node-group" transform="translate(250,100)">
+        <circle r="18" fill="#0e2a3a" stroke="#06b6d4" stroke-width="1.5" stroke-opacity="0.6"/>
+        <text y="1" text-anchor="middle" fill="#06b6d4" font-size="7" font-weight="600">ui</text>
+      </g>
+      <g class="node-group" transform="translate(390,80)">
+        <circle r="18" fill="#0e2a3a" stroke="#06b6d4" stroke-width="1.5" stroke-opacity="0.6"/>
+        <text y="1" text-anchor="middle" fill="#06b6d4" font-size="6.5" font-weight="600">backend</text>
+      </g>
+      <g class="node-group" transform="translate(530,70)">
+        <circle r="18" fill="#0e2a3a" stroke="#06b6d4" stroke-width="1.5" stroke-opacity="0.6"/>
+        <text y="1" text-anchor="middle" fill="#06b6d4" font-size="6.5" font-weight="600">devops</text>
+      </g>
+      <g class="node-group" transform="translate(670,70)">
+        <circle r="18" fill="#0e2a3a" stroke="#06b6d4" stroke-width="1.5" stroke-opacity="0.6"/>
+        <text y="1" text-anchor="middle" fill="#06b6d4" font-size="6.5" font-weight="600">mobile</text>
+      </g>
+      <g class="node-group" transform="translate(810,80)">
+        <circle r="18" fill="#0e2a3a" stroke="#06b6d4" stroke-width="1.5" stroke-opacity="0.6"/>
+        <text y="1" text-anchor="middle" fill="#06b6d4" font-size="6" font-weight="600">security</text>
+      </g>
+      <g class="node-group" transform="translate(950,100)">
+        <circle r="18" fill="#0e2a3a" stroke="#06b6d4" stroke-width="1.5" stroke-opacity="0.6"/>
+        <text y="1" text-anchor="middle" fill="#06b6d4" font-size="6.5" font-weight="600">trading</text>
+      </g>
+
+      <!-- Side nodes -->
+      <g class="node-group" transform="translate(170,280)">
+        <circle r="18" fill="#0e2a3a" stroke="#06b6d4" stroke-width="1.5" stroke-opacity="0.6"/>
+        <text y="1" text-anchor="middle" fill="#06b6d4" font-size="7" font-weight="600">saas</text>
+      </g>
+      <g class="node-group" transform="translate(1030,280)">
+        <circle r="18" fill="#0e2a3a" stroke="#06b6d4" stroke-width="1.5" stroke-opacity="0.6"/>
+        <text y="1" text-anchor="middle" fill="#06b6d4" font-size="5.5" font-weight="600">ecomm</text>
+      </g>
+
+      <!-- Bottom arc -->
+      <g class="node-group" transform="translate(170,560)">
+        <circle r="18" fill="#0e2a3a" stroke="#06b6d4" stroke-width="1.5" stroke-opacity="0.6"/>
+        <text y="1" text-anchor="middle" fill="#06b6d4" font-size="7" font-weight="600">ai-ml</text>
+      </g>
+      <g class="node-group" transform="translate(300,680)">
+        <circle r="18" fill="#0e2a3a" stroke="#06b6d4" stroke-width="1.5" stroke-opacity="0.6"/>
+        <text y="1" text-anchor="middle" fill="#06b6d4" font-size="5.5" font-weight="600">gamedev</text>
+      </g>
+      <g class="node-group" transform="translate(500,730)">
+        <circle r="18" fill="#0e2a3a" stroke="#06b6d4" stroke-width="1.5" stroke-opacity="0.6"/>
+        <text y="1" text-anchor="middle" fill="#06b6d4" font-size="5.5" font-weight="600">content</text>
+      </g>
+      <g class="node-group" transform="translate(700,730)">
+        <circle r="18" fill="#0e2a3a" stroke="#06b6d4" stroke-width="1.5" stroke-opacity="0.6"/>
+        <text y="1" text-anchor="middle" fill="#06b6d4" font-size="5" font-weight="600">analytics</text>
+      </g>
+      <g class="node-group" transform="translate(900,680)">
+        <circle r="18" fill="#0e2a3a" stroke="#06b6d4" stroke-width="1.5" stroke-opacity="0.6"/>
+        <text y="1" text-anchor="middle" fill="#06b6d4" font-size="4.5" font-weight="600">chrome</text>
+      </g>
+    </g>
+
+    <!-- ==================== L3 UTILITY NODES ==================== -->
+    <g id="layer-3">
+      <!-- Knowledge cluster (top-left) -->
+      <g class="node-group" transform="translate(280,170)">
+        <circle r="14" fill="#0a2920" stroke="#10b981" stroke-width="1.5" stroke-opacity="0.7"/>
+        <text y="1" text-anchor="middle" fill="#10b981" font-size="6.5" font-weight="600">research</text>
+      </g>
+      <g class="node-group" transform="translate(340,145)">
+        <circle r="13" fill="#0a2920" stroke="#10b981" stroke-width="1.5" stroke-opacity="0.7"/>
+        <text y="1" text-anchor="middle" fill="#10b981" font-size="5.5" font-weight="600">docs-seek</text>
+      </g>
+      <g class="node-group" transform="translate(220,215)">
+        <circle r="13" fill="#0a2920" stroke="#10b981" stroke-width="1.5" stroke-opacity="0.7"/>
+        <text y="1" text-anchor="middle" fill="#10b981" font-size="5" font-weight="600">trend-sct</text>
+      </g>
+
+      <!-- Validation cluster (top-right) -->
+      <g class="node-group" transform="translate(880,170)">
+        <circle r="14" fill="#0a2920" stroke="#10b981" stroke-width="1.5" stroke-opacity="0.7"/>
+        <text y="1" text-anchor="middle" fill="#10b981" font-size="5" font-weight="600">verifictn</text>
+      </g>
+      <g class="node-group" transform="translate(940,200)">
+        <circle r="13" fill="#0a2920" stroke="#10b981" stroke-width="1.5" stroke-opacity="0.7"/>
+        <text y="1" text-anchor="middle" fill="#10b981" font-size="4.5" font-weight="600">halluc-grd</text>
+      </g>
+      <g class="node-group" transform="translate(820,145)">
+        <circle r="13" fill="#0a2920" stroke="#10b981" stroke-width="1.5" stroke-opacity="0.7"/>
+        <text y="1" text-anchor="middle" fill="#10b981" font-size="4.5" font-weight="600">complt-gte</text>
+      </g>
+      <g class="node-group" transform="translate(960,260)">
+        <circle r="12" fill="#0a2920" stroke="#10b981" stroke-width="1.5" stroke-opacity="0.7"/>
+        <text y="1" text-anchor="middle" fill="#10b981" font-size="5.5" font-weight="600">sast</text>
+      </g>
+      <g class="node-group" transform="translate(980,330)">
+        <circle r="12" fill="#0a2920" stroke="#10b981" stroke-width="1.5" stroke-opacity="0.7"/>
+        <text y="1" text-anchor="middle" fill="#10b981" font-size="4.5" font-weight="600">integrity</text>
+      </g>
+      <g class="node-group" transform="translate(970,400)">
+        <circle r="12" fill="#0a2920" stroke="#10b981" stroke-width="1.5" stroke-opacity="0.7"/>
+        <text y="1" text-anchor="middle" fill="#10b981" font-size="4.5" font-weight="600">constrnt</text>
+      </g>
+
+      <!-- Reasoning cluster (left-mid) -->
+      <g class="node-group" transform="translate(220,340)">
+        <circle r="13" fill="#0a2920" stroke="#10b981" stroke-width="1.5" stroke-opacity="0.7"/>
+        <text y="1" text-anchor="middle" fill="#10b981" font-size="4.5" font-weight="600">prob-solv</text>
+      </g>
+      <g class="node-group" transform="translate(215,400)">
+        <circle r="13" fill="#0a2920" stroke="#10b981" stroke-width="1.5" stroke-opacity="0.7"/>
+        <text y="1" text-anchor="middle" fill="#10b981" font-size="4.5" font-weight="600">seq-think</text>
+      </g>
+
+      <!-- State cluster (bottom-left) -->
+      <g class="node-group" transform="translate(230,500)">
+        <circle r="13" fill="#0a2920" stroke="#10b981" stroke-width="1.5" stroke-opacity="0.7"/>
+        <text y="1" text-anchor="middle" fill="#10b981" font-size="5" font-weight="600">ctx-eng</text>
+      </g>
+      <g class="node-group" transform="translate(250,560)">
+        <circle r="12" fill="#0a2920" stroke="#10b981" stroke-width="1.5" stroke-opacity="0.7"/>
+        <text y="1" text-anchor="middle" fill="#10b981" font-size="5.5" font-weight="600">journal</text>
+      </g>
+      <g class="node-group" transform="translate(300,610)">
+        <circle r="12" fill="#0a2920" stroke="#10b981" stroke-width="1.5" stroke-opacity="0.7"/>
+        <text y="1" text-anchor="middle" fill="#10b981" font-size="4.5" font-weight="600">sess-brdg</text>
+      </g>
+
+      <!-- Tools cluster (bottom-right) -->
+      <g class="node-group" transform="translate(860,510)">
+        <circle r="13" fill="#0a2920" stroke="#10b981" stroke-width="1.5" stroke-opacity="0.7"/>
+        <text y="1" text-anchor="middle" fill="#10b981" font-size="5" font-weight="600">watchdog</text>
+      </g>
+      <g class="node-group" transform="translate(910,560)">
+        <circle r="12" fill="#0a2920" stroke="#10b981" stroke-width="1.5" stroke-opacity="0.7"/>
+        <text y="1" text-anchor="middle" fill="#10b981" font-size="4.5" font-weight="600">scope-grd</text>
+      </g>
+      <g class="node-group" transform="translate(840,580)">
+        <circle r="12" fill="#0a2920" stroke="#10b981" stroke-width="1.5" stroke-opacity="0.7"/>
+        <text y="1" text-anchor="middle" fill="#10b981" font-size="4.5" font-weight="600">browser</text>
+      </g>
+      <g class="node-group" transform="translate(950,470)">
+        <circle r="12" fill="#0a2920" stroke="#10b981" stroke-width="1.5" stroke-opacity="0.7"/>
+        <text y="1" text-anchor="middle" fill="#10b981" font-size="4.5" font-weight="600">dep-doc</text>
+      </g>
+
+      <!-- Remaining L3 nodes -->
+      <g class="node-group" transform="translate(460,155)">
+        <circle r="12" fill="#0a2920" stroke="#10b981" stroke-width="1.5" stroke-opacity="0.7"/>
+        <text y="1" text-anchor="middle" fill="#10b981" font-size="5" font-weight="600">worktree</text>
+      </g>
+      <g class="node-group" transform="translate(740,155)">
+        <circle r="12" fill="#0a2920" stroke="#10b981" stroke-width="1.5" stroke-opacity="0.7"/>
+        <text y="1" text-anchor="middle" fill="#10b981" font-size="7" font-weight="600">git</text>
+      </g>
+      <g class="node-group" transform="translate(780,620)">
+        <circle r="12" fill="#0a2920" stroke="#10b981" stroke-width="1.5" stroke-opacity="0.7"/>
+        <text y="1" text-anchor="middle" fill="#10b981" font-size="4.5" font-weight="600">asset-crt</text>
+      </g>
+      <g class="node-group" transform="translate(700,650)">
+        <circle r="12" fill="#0a2920" stroke="#10b981" stroke-width="1.5" stroke-opacity="0.7"/>
+        <text y="1" text-anchor="middle" fill="#10b981" font-size="4.5" font-weight="600">video-crt</text>
+      </g>
+      <g class="node-group" transform="translate(500,660)">
+        <circle r="12" fill="#0a2920" stroke="#10b981" stroke-width="1.5" stroke-opacity="0.7"/>
+        <text y="1" text-anchor="middle" fill="#10b981" font-size="4.5" font-weight="600">doc-proc</text>
+      </g>
+      <g class="node-group" transform="translate(400,640)">
+        <circle r="12" fill="#0a2920" stroke="#10b981" stroke-width="1.5" stroke-opacity="0.7"/>
+        <text y="1" text-anchor="middle" fill="#10b981" font-size="4.5" font-weight="600">sent-env</text>
+      </g>
+    </g>
+
+    <!-- ==================== L2 WORKFLOW HUB NODES ==================== -->
+    <g id="layer-2">
+      <!-- CREATION cluster (top) -->
+      <g class="node-group" transform="translate(430,270)">
+        <circle r="20" fill="#1a1540" stroke="#6366f1" stroke-width="2" stroke-opacity="0.8" filter="url(#glow)"/>
+        <text y="1" text-anchor="middle" fill="#a5b4fc" font-size="8" font-weight="700">plan</text>
+      </g>
+      <g class="node-group" transform="translate(540,260)">
+        <circle r="18" fill="#1a1540" stroke="#6366f1" stroke-width="2" stroke-opacity="0.8"/>
+        <text y="1" text-anchor="middle" fill="#a5b4fc" font-size="6.5" font-weight="600">brainstm</text>
+      </g>
+      <g class="node-group" transform="translate(480,230)">
+        <circle r="16" fill="#1a1540" stroke="#6366f1" stroke-width="2" stroke-opacity="0.8"/>
+        <text y="1" text-anchor="middle" fill="#a5b4fc" font-size="7" font-weight="600">scout</text>
+      </g>
+      <g class="node-group" transform="translate(600,230)">
+        <circle r="16" fill="#1a1540" stroke="#6366f1" stroke-width="2" stroke-opacity="0.8"/>
+        <text y="1" text-anchor="middle" fill="#a5b4fc" font-size="7" font-weight="600">design</text>
+      </g>
+      <g class="node-group" transform="translate(370,240)">
+        <circle r="14" fill="#1a1540" stroke="#6366f1" stroke-width="2" stroke-opacity="0.8"/>
+        <text y="1" text-anchor="middle" fill="#a5b4fc" font-size="5" font-weight="600">skl-forge</text>
+      </g>
+      <g class="node-group" transform="translate(520,290)">
+        <circle r="14" fill="#1a1540" stroke="#6366f1" stroke-width="2" stroke-opacity="0.8"/>
+        <text y="1" text-anchor="middle" fill="#a5b4fc" font-size="8" font-weight="600">ba</text>
+      </g>
+      <g class="node-group" transform="translate(680,230)">
+        <circle r="14" fill="#1a1540" stroke="#6366f1" stroke-width="2" stroke-opacity="0.8"/>
+        <text y="1" text-anchor="middle" fill="#a5b4fc" font-size="5" font-weight="600">mcp-bldr</text>
+      </g>
+
+      <!-- DEVELOPMENT cluster (right) -->
+      <g class="node-group" transform="translate(660,265)">
+        <circle r="18" fill="#1a1540" stroke="#6366f1" stroke-width="2" stroke-opacity="0.8"/>
+        <text y="1" text-anchor="middle" fill="#a5b4fc" font-size="7" font-weight="600">debug</text>
+      </g>
+      <g class="node-group" transform="translate(770,270)">
+        <circle r="20" fill="#1a1540" stroke="#6366f1" stroke-width="2" stroke-opacity="0.8" filter="url(#glow)"/>
+        <text y="1" text-anchor="middle" fill="#a5b4fc" font-size="9" font-weight="700">fix</text>
+      </g>
+      <g class="node-group" transform="translate(760,370)">
+        <circle r="17" fill="#1a1540" stroke="#6366f1" stroke-width="2" stroke-opacity="0.8"/>
+        <text y="1" text-anchor="middle" fill="#a5b4fc" font-size="8" font-weight="600">test</text>
+      </g>
+      <g class="node-group" transform="translate(800,320)">
+        <circle r="17" fill="#1a1540" stroke="#6366f1" stroke-width="2" stroke-opacity="0.8"/>
+        <text y="1" text-anchor="middle" fill="#a5b4fc" font-size="7" font-weight="600">review</text>
+      </g>
+      <g class="node-group" transform="translate(830,400)">
+        <circle r="14" fill="#1a1540" stroke="#6366f1" stroke-width="2" stroke-opacity="0.8"/>
+        <text y="1" text-anchor="middle" fill="#a5b4fc" font-size="8" font-weight="600">db</text>
+      </g>
+
+      <!-- QUALITY cluster (left) -->
+      <g class="node-group" transform="translate(410,420)">
+        <circle r="18" fill="#1a1540" stroke="#6366f1" stroke-width="2" stroke-opacity="0.8" filter="url(#glow)"/>
+        <text y="1" text-anchor="middle" fill="#a5b4fc" font-size="6.5" font-weight="700">sentinel</text>
+      </g>
+      <g class="node-group" transform="translate(370,490)">
+        <circle r="16" fill="#1a1540" stroke="#6366f1" stroke-width="2" stroke-opacity="0.8"/>
+        <text y="1" text-anchor="middle" fill="#a5b4fc" font-size="6" font-weight="600">preflight</text>
+      </g>
+      <g class="node-group" transform="translate(340,370)">
+        <circle r="15" fill="#1a1540" stroke="#6366f1" stroke-width="2" stroke-opacity="0.8"/>
+        <text y="1" text-anchor="middle" fill="#a5b4fc" font-size="6" font-weight="600">onboard</text>
+      </g>
+      <g class="node-group" transform="translate(400,330)">
+        <circle r="14" fill="#1a1540" stroke="#6366f1" stroke-width="2" stroke-opacity="0.8"/>
+        <text y="1" text-anchor="middle" fill="#a5b4fc" font-size="8" font-weight="600">perf</text>
+      </g>
+      <g class="node-group" transform="translate(330,440)">
+        <circle r="13" fill="#1a1540" stroke="#6366f1" stroke-width="2" stroke-opacity="0.8"/>
+        <text y="1" text-anchor="middle" fill="#a5b4fc" font-size="5" font-weight="600">logic-grd</text>
+      </g>
+      <g class="node-group" transform="translate(740,440)">
+        <circle r="14" fill="#1a1540" stroke="#6366f1" stroke-width="2" stroke-opacity="0.8"/>
+        <text y="1" text-anchor="middle" fill="#a5b4fc" font-size="5" font-weight="600">rvw-intk</text>
+      </g>
+      <g class="node-group" transform="translate(350,310)">
+        <circle r="13" fill="#1a1540" stroke="#6366f1" stroke-width="2" stroke-opacity="0.8"/>
+        <text y="1" text-anchor="middle" fill="#a5b4fc" font-size="5" font-weight="600">adversry</text>
+      </g>
+
+      <!-- DELIVERY cluster (bottom) -->
+      <g class="node-group" transform="translate(560,560)">
+        <circle r="16" fill="#1a1540" stroke="#6366f1" stroke-width="2" stroke-opacity="0.8"/>
+        <text y="1" text-anchor="middle" fill="#a5b4fc" font-size="7" font-weight="600">deploy</text>
+      </g>
+      <g class="node-group" transform="translate(640,570)">
+        <circle r="15" fill="#1a1540" stroke="#6366f1" stroke-width="2" stroke-opacity="0.8"/>
+        <text y="1" text-anchor="middle" fill="#a5b4fc" font-size="5.5" font-weight="600">marketng</text>
+      </g>
+      <g class="node-group" transform="translate(600,610)">
+        <circle r="14" fill="#1a1540" stroke="#6366f1" stroke-width="2" stroke-opacity="0.8"/>
+        <text y="1" text-anchor="middle" fill="#a5b4fc" font-size="5.5" font-weight="600">incident</text>
+      </g>
+      <g class="node-group" transform="translate(480,570)">
+        <circle r="14" fill="#1a1540" stroke="#6366f1" stroke-width="2" stroke-opacity="0.8"/>
+        <text y="1" text-anchor="middle" fill="#a5b4fc" font-size="8" font-weight="600">docs</text>
+      </g>
+
+      <!-- RESCUE cluster (bottom-sides) -->
+      <g class="node-group" transform="translate(450,540)">
+        <circle r="16" fill="#1a1540" stroke="#6366f1" stroke-width="2" stroke-opacity="0.8"/>
+        <text y="1" text-anchor="middle" fill="#a5b4fc" font-size="7" font-weight="600">audit</text>
+      </g>
+      <g class="node-group" transform="translate(750,540)">
+        <circle r="15" fill="#1a1540" stroke="#6366f1" stroke-width="2" stroke-opacity="0.8"/>
+        <text y="1" text-anchor="middle" fill="#a5b4fc" font-size="6" font-weight="600">surgeon</text>
+      </g>
+      <g class="node-group" transform="translate(720,480)">
+        <circle r="14" fill="#1a1540" stroke="#6366f1" stroke-width="2" stroke-opacity="0.8"/>
+        <text y="1" text-anchor="middle" fill="#a5b4fc" font-size="5.5" font-weight="600">safegrd</text>
+      </g>
+      <g class="node-group" transform="translate(790,480)">
+        <circle r="14" fill="#1a1540" stroke="#6366f1" stroke-width="2" stroke-opacity="0.8"/>
+        <text y="1" text-anchor="middle" fill="#a5b4fc" font-size="6" font-weight="600">autopsy</text>
+      </g>
+    </g>
+
+    <!-- ==================== L1 ORCHESTRATOR NODES ==================== -->
+    <g id="layer-1">
+      <g class="node-group" transform="translate(600,340)">
+        <circle r="26" fill="#2a0a0a" stroke="#ef4444" stroke-width="2.5" stroke-opacity="0.9" filter="url(#glow-strong)"/>
+        <text y="1" text-anchor="middle" fill="#fca5a5" font-size="11" font-weight="700">cook</text>
+      </g>
+      <g class="node-group" transform="translate(510,380)">
+        <circle r="22" fill="#2a0a0a" stroke="#ef4444" stroke-width="2" stroke-opacity="0.8" filter="url(#glow)"/>
+        <text y="1" text-anchor="middle" fill="#fca5a5" font-size="10" font-weight="700">team</text>
+      </g>
+      <g class="node-group" transform="translate(690,380)">
+        <circle r="20" fill="#2a0a0a" stroke="#ef4444" stroke-width="2" stroke-opacity="0.8"/>
+        <text y="1" text-anchor="middle" fill="#fca5a5" font-size="8" font-weight="600">launch</text>
+      </g>
+      <g class="node-group" transform="translate(520,470)">
+        <circle r="18" fill="#2a0a0a" stroke="#ef4444" stroke-width="2" stroke-opacity="0.8"/>
+        <text y="1" text-anchor="middle" fill="#fca5a5" font-size="7.5" font-weight="600">rescue</text>
+      </g>
+      <g class="node-group" transform="translate(680,470)">
+        <circle r="18" fill="#2a0a0a" stroke="#ef4444" stroke-width="2" stroke-opacity="0.8"/>
+        <text y="1" text-anchor="middle" fill="#fca5a5" font-size="6.5" font-weight="600">scaffold</text>
+      </g>
+    </g>
+
+    <!-- ==================== L0 ROUTER NODE ==================== -->
+    <g id="layer-0">
+      <g class="node-group" transform="translate(600,440)">
+        <circle r="32" fill="#1a1200" stroke="#f59e0b" stroke-width="3" stroke-opacity="0.9" filter="url(#glow-strong)">
+          <animate attributeName="r" values="32;34;32" dur="3s" repeatCount="indefinite"/>
+        </circle>
+        <text y="-4" text-anchor="middle" fill="#fcd34d" font-size="8" font-weight="700">skill</text>
+        <text y="8" text-anchor="middle" fill="#fcd34d" font-size="8" font-weight="700">router</text>
+      </g>
+    </g>
+  </svg>
+
+  <!-- Legend -->
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#f59e0b"></div>
+      <span style="color:#f59e0b">L0 Router</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#ef4444"></div>
+      <span style="color:#ef4444">L1 Orchestrators</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#6366f1"></div>
+      <span style="color:#6366f1">L2 Workflow Hubs</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#10b981"></div>
+      <span style="color:#10b981">L3 Utilities</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#06b6d4"></div>
+      <span style="color:#06b6d4">L4 Extensions</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Staggered animation for nodes
+  document.querySelectorAll('.node-group').forEach((node, i) => {
+    node.style.opacity = '0';
+    node.style.animation = `fade-in-up 0.5s ease ${i * 30}ms forwards`;
+  });
+
+  // Staggered animation for connections
+  document.querySelectorAll('.connection').forEach((conn, i) => {
+    conn.style.animationDelay = `${i * 100}ms`;
+  });
+</script>
+
+</body>
+</html>

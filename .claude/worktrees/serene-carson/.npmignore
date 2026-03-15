@@ -1,0 +1,16 @@
+# Dev files
+.claude/
+.claude-plugin/
+.rune/
+.github/
+docs/
+compiler/__tests__/
+
+# Config
+.gitignore
+.eslintrc*
+.prettierrc*
+rune.config.json
+
+# References (local only)
+docs/references/

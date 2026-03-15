@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rune — Less skills. Deeper connections.</title>
+  <meta name="description" content="55-skill mesh ecosystem for AI coding assistants. Works on Claude Code, Cursor, Windsurf, and any AI IDE.">
+  <meta property="og:title" content="Rune — AI Skill Mesh">
+  <meta property="og:description" content="55 skills, 200+ mesh connections, 5 platforms. From idea to production.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://rune-kit.github.io/rune">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- NAV -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="#" class="nav-logo">
+        <span class="logo-rune">&#9670;</span> Rune
+      </a>
+      <div class="nav-links">
+        <a href="#architecture">Architecture</a>
+        <a href="#workflows">Workflows</a>
+        <a href="#pricing">Pricing</a>
+        <a href="https://github.com/rune-kit/rune" class="btn btn-sm" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-mesh" aria-hidden="true">
+      <canvas id="mesh-canvas"></canvas>
+    </div>
+    <div class="hero-content">
+      <p class="hero-badge">v2.1.1 &mdash; 55 skills &bull; 5 platforms &bull; MIT</p>
+      <h1>Less skills.<br><span class="accent">Deeper connections.</span></h1>
+      <p class="hero-sub">A mesh ecosystem for AI coding assistants. Skills call each other bidirectionally, forming resilient workflows that adapt when things go wrong.</p>
+      <div class="hero-actions">
+        <a href="#install" class="btn btn-primary">Get Started</a>
+        <a href="https://github.com/rune-kit/rune" class="btn btn-ghost" target="_blank" rel="noopener">View Source</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROBLEM -->
+  <section class="section" id="problem">
+    <div class="container">
+      <h2>Why a Mesh?</h2>
+      <p class="section-sub">Most skill ecosystems are either too many isolated skills or rigid pipelines. Rune is neither.</p>
+      <div class="compare-grid">
+        <div class="compare-card compare-bad">
+          <h3>Pipeline</h3>
+          <pre class="compare-diagram">A &rarr; B &rarr; C &rarr; D
+       <span class="text-loss">&#10006; B fails = stuck</span></pre>
+          <p>Linear. If one step fails, everything stops.</p>
+        </div>
+        <div class="compare-card compare-bad">
+          <h3>Hub-Spoke</h3>
+          <pre class="compare-diagram">A &rarr; HUB &rarr; C
+    <span class="text-loss">&#10006; HUB fails = stuck</span></pre>
+          <p>Central bottleneck. Single point of failure.</p>
+        </div>
+        <div class="compare-card compare-good">
+          <h3>Mesh</h3>
+          <pre class="compare-diagram">A &harr; B &harr; C
+&UpDownArrow;       &UpDownArrow;
+D &harr; E &harr; F
+<span class="text-profit">&#10004; B fails = A&rarr;D&rarr;E&rarr;C</span></pre>
+          <p>Resilient. Skills route around failures automatically.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ARCHITECTURE -->
+  <section class="section section-dark" id="architecture">
+    <div class="container">
+      <h2>5-Layer Architecture</h2>
+      <p class="section-sub">Each layer has a clear responsibility. Skills only call downward (with documented exceptions).</p>
+      <div class="layers">
+        <div class="layer layer-0">
+          <div class="layer-label">L0</div>
+          <div class="layer-content">
+            <strong>Router</strong>
+            <span class="layer-count">1 skill</span>
+            <p>Meta-enforcement. Routes every action to the correct skill.</p>
+          </div>
+        </div>
+        <div class="layer layer-1">
+          <div class="layer-label">L1</div>
+          <div class="layer-content">
+            <strong>Orchestrators</strong>
+            <span class="layer-count">5 skills</span>
+            <p>cook &bull; team &bull; launch &bull; rescue &bull; scaffold</p>
+          </div>
+        </div>
+        <div class="layer layer-2">
+          <div class="layer-label">L2</div>
+          <div class="layer-content">
+            <strong>Workflow Hubs</strong>
+            <span class="layer-count">26 skills</span>
+            <p>plan &bull; debug &bull; fix &bull; test &bull; review &bull; sentinel &bull; design &bull; ba &bull; docs &bull; and 17 more</p>
+          </div>
+        </div>
+        <div class="layer layer-3">
+          <div class="layer-label">L3</div>
+          <div class="layer-content">
+            <strong>Utilities</strong>
+            <span class="layer-count">23 skills</span>
+            <p>research &bull; problem-solver &bull; verification &bull; git &bull; session-bridge &bull; and 18 more</p>
+          </div>
+        </div>
+        <div class="layer layer-4">
+          <div class="layer-label">L4</div>
+          <div class="layer-content">
+            <strong>Extension Packs</strong>
+            <span class="layer-count">12 packs</span>
+            <p>Domain-specific: trading, SaaS, mobile, AI/ML, gamedev, and 7 more</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WORKFLOWS -->
+  <section class="section" id="workflows">
+    <div class="container">
+      <h2>Key Workflows</h2>
+      <p class="section-sub">Orchestrators coordinate the mesh into end-to-end workflows.</p>
+      <div class="workflow-grid">
+        <div class="workflow-card">
+          <h3><code>/rune cook</code></h3>
+          <p class="workflow-desc">Build any feature with TDD discipline</p>
+          <div class="workflow-phases">
+            <div class="phase"><span class="phase-num">0</span> RESUME &mdash; detect existing plans</div>
+            <div class="phase"><span class="phase-num">1</span> UNDERSTAND &mdash; scout + ba</div>
+            <div class="phase"><span class="phase-num">2</span> PLAN &mdash; master plan + phase files</div>
+            <div class="phase"><span class="phase-num">3</span> TEST &mdash; failing tests first</div>
+            <div class="phase"><span class="phase-num">4</span> IMPLEMENT &mdash; write code</div>
+            <div class="phase"><span class="phase-num">5</span> QUALITY &mdash; preflight + sentinel + review</div>
+            <div class="phase"><span class="phase-num">6</span> VERIFY &mdash; verification + hallucination-guard</div>
+            <div class="phase"><span class="phase-num">7</span> COMMIT &mdash; semantic git commit</div>
+          </div>
+        </div>
+        <div class="workflow-card">
+          <h3><code>/rune rescue</code></h3>
+          <p class="workflow-desc">Refactor legacy code safely</p>
+          <div class="workflow-phases">
+            <div class="phase"><span class="phase-num">0</span> RECON &mdash; autopsy health score</div>
+            <div class="phase"><span class="phase-num">1</span> SAFETY NET &mdash; characterization tests</div>
+            <div class="phase"><span class="phase-num">2</span> SURGERY &mdash; 1 module per session</div>
+            <div class="phase"><span class="phase-num">3</span> CLEANUP &mdash; remove legacy markers</div>
+            <div class="phase"><span class="phase-num">4</span> VERIFY &mdash; before vs after score</div>
+          </div>
+        </div>
+        <div class="workflow-card">
+          <h3><code>/rune team</code></h3>
+          <p class="workflow-desc">Parallel multi-agent execution</p>
+          <div class="workflow-phases">
+            <div class="phase"><span class="phase-num">1</span> DECOMPOSE &mdash; DAG analysis</div>
+            <div class="phase"><span class="phase-num">2</span> ASSIGN &mdash; worktree per stream</div>
+            <div class="phase"><span class="phase-num">3</span> EXECUTE &mdash; parallel agents</div>
+            <div class="phase"><span class="phase-num">4</span> MERGE &mdash; conflict resolution</div>
+            <div class="phase"><span class="phase-num">5</span> VALIDATE &mdash; completion-gate</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="section section-dark" id="features">
+    <div class="container">
+      <h2>Built Different</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">&#9881;</div>
+          <h3>Phase-Aware Execution</h3>
+          <p>Master plan + phase files. One phase per session. Any model executes accurately. Resumes across sessions automatically.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">&#9888;</div>
+          <h3>Cognitive Bias Detection</h3>
+          <p>12 biases checked before every analysis. Reversibility filter, pre-mortem, MECE decomposition. Structured reasoning, not gut feelings.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">&#9733;</div>
+          <h3>Cost Intelligence</h3>
+          <p>Every skill auto-selects the optimal model. Haiku for scanning, Sonnet for code, Opus for architecture. ~$0.05-0.15 per feature.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">&#9851;</div>
+          <h3>Mesh Resilience</h3>
+          <p>200+ connections. If debug fails, problem-solver takes over. If scout fails, research + docs-seeker route around. Max depth 8, max 2 visits.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">&#128274;</div>
+          <h3>Security Gates</h3>
+          <p>sentinel (OWASP, secrets, deps) + sast (static analysis) + integrity-check (prompt injection detection). Gates, not suggestions.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">&#127760;</div>
+          <h3>Multi-Platform</h3>
+          <p>Same 55 skills compile to Claude Code, Cursor, Windsurf, Antigravity, OpenClaw, and generic. Zero knowledge loss across IDEs.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INSTALL -->
+  <section class="section" id="install">
+    <div class="container">
+      <h2>Get Started</h2>
+      <div class="install-grid">
+        <div class="install-card">
+          <h3>Claude Code</h3>
+          <p class="install-badge">Native Plugin</p>
+          <pre class="code-block"><code>/plugin install rune@rune-kit</code></pre>
+          <p>Full mesh: subagents, hooks, adaptive routing, analytics.</p>
+        </div>
+        <div class="install-card">
+          <h3>Cursor / Windsurf / Any IDE</h3>
+          <p class="install-badge">Compiled Rules</p>
+          <pre class="code-block"><code>npx @rune-kit/rune init</code></pre>
+          <p>Auto-detects platform. Compiles all 55 skills to native rule format.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section class="section section-dark" id="pricing">
+    <div class="container">
+      <h2>Pick Your Pack</h2>
+      <p class="section-sub">The full development mesh is free forever. Pro and Business add department-specific skills for teams that ship products.</p>
+
+      <!-- Who needs what -->
+      <div class="pricing-personas">
+        <div class="persona-card">
+          <div class="persona-icon">&#9997;</div>
+          <p><strong>Solo dev or open-source contributor?</strong> Free has everything you need. 55 skills, full mesh, all platforms.</p>
+        </div>
+        <div class="persona-card">
+          <div class="persona-icon">&#9881;</div>
+          <p><strong>Shipping a product with a team?</strong> Pro adds Product, Sales, Data Science, and Support workflows to your AI assistant.</p>
+        </div>
+        <div class="persona-card">
+          <div class="persona-icon">&#127970;</div>
+          <p><strong>Running a company?</strong> Business adds Finance, Legal, HR, and Enterprise Search on top of Pro.</p>
+        </div>
+      </div>
+
+      <div class="pricing-grid pricing-grid-3">
+        <!-- FREE -->
+        <div class="pricing-card pricing-free">
+          <div class="pricing-tier">
+            <span class="pricing-badge pricing-badge-free">MIT License</span>
+            <h3>Rune</h3>
+            <div class="pricing-price">Free<span class="pricing-forever"> forever</span></div>
+          </div>
+          <p class="pricing-desc">Everything you need to build, test, deploy, and maintain software.</p>
+          <p class="pricing-who">Best for: individual developers, open-source projects, learning AI-assisted coding.</p>
+          <ul class="pricing-features">
+            <li>55 core skills (L0&ndash;L3)</li>
+            <li>12 domain extension packs</li>
+            <li>200+ mesh connections</li>
+            <li>5-layer architecture</li>
+            <li>Multi-platform compiler (6 targets)</li>
+            <li>Phase-aware execution</li>
+            <li>Security gates (sentinel, sast)</li>
+            <li>Adaptive model routing</li>
+            <li>Session persistence</li>
+            <li>Context delegation (spawn-agent)</li>
+            <li>Community support</li>
+          </ul>
+          <a href="#install" class="btn btn-primary" style="width:100%">Get Started</a>
+        </div>
+
+        <!-- PRO -->
+        <div class="pricing-card pricing-pro">
+          <div class="pricing-tier">
+            <span class="pricing-badge pricing-badge-pro">Premium</span>
+            <h3>Rune Pro</h3>
+            <div class="pricing-price">$49<span class="pricing-period"> lifetime</span></div>
+          </div>
+          <p class="pricing-desc">Business department skills that turn your AI assistant into a cross-functional teammate.</p>
+          <p class="pricing-who">Best for: product teams, startups, SaaS companies shipping features to real users.</p>
+          <ul class="pricing-features">
+            <li><strong>Everything in Free, plus:</strong></li>
+            <li>Product Management &mdash; PRDs, roadmaps, KPI tracking, release comms</li>
+            <li>Sales Enablement &mdash; account research, outreach sequences, pipeline review</li>
+            <li>Data Science &mdash; exploration, advanced SQL, dashboards, ML eval</li>
+            <li>Customer Support &mdash; ticket triage, knowledge base, escalation</li>
+            <li>Business memory layer &mdash; stakeholders, glossary, processes</li>
+            <li>MCP connector templates &mdash; Slack, CRM, Linear, Notion</li>
+            <li>All future Pro packs included</li>
+          </ul>
+          <a href="https://github.com/sponsors/rune-kit" class="btn btn-pro" target="_blank" rel="noopener" style="width:100%">Get Rune Pro &mdash; $49</a>
+          <p class="pricing-note">Pay once, use forever. No subscriptions.</p>
+        </div>
+
+        <!-- BUSINESS -->
+        <div class="pricing-card pricing-biz">
+          <div class="pricing-tier">
+            <span class="pricing-badge pricing-badge-biz">Enterprise</span>
+            <h3>Rune Business</h3>
+            <div class="pricing-price">$149<span class="pricing-period"> lifetime</span></div>
+          </div>
+          <p class="pricing-desc">Full department coverage for companies that need AI assistance across every business function.</p>
+          <p class="pricing-who">Best for: scaling companies, agencies, enterprises with cross-department AI workflows.</p>
+          <ul class="pricing-features">
+            <li><strong>Everything in Pro, plus:</strong></li>
+            <li>Finance Ops &mdash; invoicing, expense tracking, financial reporting</li>
+            <li>Legal &amp; Compliance &mdash; contract review, policy drafting, audit prep</li>
+            <li>HR &amp; Recruiting &mdash; job descriptions, candidate screening, onboarding</li>
+            <li>Enterprise Search &mdash; cross-system knowledge retrieval</li>
+            <li>Custom Skill Forge &mdash; build private skills for your organization</li>
+            <li>Priority support &mdash; direct access to maintainers</li>
+            <li>All future Business packs included</li>
+          </ul>
+          <a href="https://github.com/sponsors/rune-kit" class="btn btn-biz" target="_blank" rel="noopener" style="width:100%">Get Rune Business &mdash; $149</a>
+          <p class="pricing-note">Pay once, use forever. No subscriptions.</p>
+        </div>
+      </div>
+
+      <!-- Comparison table -->
+      <div class="pricing-compare">
+        <h3>Feature Comparison</h3>
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th>Capability</th>
+              <th>Free</th>
+              <th>Pro <span class="table-price">$49</span></th>
+              <th>Business <span class="table-price">$149</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Core dev skills (55)</td>
+              <td class="check">&#10003;</td>
+              <td class="check">&#10003;</td>
+              <td class="check">&#10003;</td>
+            </tr>
+            <tr>
+              <td>Domain packs (12)</td>
+              <td class="check">&#10003;</td>
+              <td class="check">&#10003;</td>
+              <td class="check">&#10003;</td>
+            </tr>
+            <tr>
+              <td>Multi-platform compiler</td>
+              <td class="check">&#10003;</td>
+              <td class="check">&#10003;</td>
+              <td class="check">&#10003;</td>
+            </tr>
+            <tr>
+              <td>Security gates &amp; SAST</td>
+              <td class="check">&#10003;</td>
+              <td class="check">&#10003;</td>
+              <td class="check">&#10003;</td>
+            </tr>
+            <tr>
+              <td>Product Management</td>
+              <td class="dash">&mdash;</td>
+              <td class="check">&#10003;</td>
+              <td class="check">&#10003;</td>
+            </tr>
+            <tr>
+              <td>Sales Enablement</td>
+              <td class="dash">&mdash;</td>
+              <td class="check">&#10003;</td>
+              <td class="check">&#10003;</td>
+            </tr>
+            <tr>
+              <td>Data Science</td>
+              <td class="dash">&mdash;</td>
+              <td class="check">&#10003;</td>
+              <td class="check">&#10003;</td>
+            </tr>
+            <tr>
+              <td>Customer Support</td>
+              <td class="dash">&mdash;</td>
+              <td class="check">&#10003;</td>
+              <td class="check">&#10003;</td>
+            </tr>
+            <tr>
+              <td>Business memory layer</td>
+              <td class="dash">&mdash;</td>
+              <td class="check">&#10003;</td>
+              <td class="check">&#10003;</td>
+            </tr>
+            <tr>
+              <td>MCP connector templates</td>
+              <td class="dash">&mdash;</td>
+              <td class="check">&#10003;</td>
+              <td class="check">&#10003;</td>
+            </tr>
+            <tr>
+              <td>Finance Ops</td>
+              <td class="dash">&mdash;</td>
+              <td class="dash">&mdash;</td>
+              <td class="check">&#10003;</td>
+            </tr>
+            <tr>
+              <td>Legal &amp; Compliance</td>
+              <td class="dash">&mdash;</td>
+              <td class="dash">&mdash;</td>
+              <td class="check">&#10003;</td>
+            </tr>
+            <tr>
+              <td>HR &amp; Recruiting</td>
+              <td class="dash">&mdash;</td>
+              <td class="dash">&mdash;</td>
+              <td class="check">&#10003;</td>
+            </tr>
+            <tr>
+              <td>Enterprise Search</td>
+              <td class="dash">&mdash;</td>
+              <td class="dash">&mdash;</td>
+              <td class="check">&#10003;</td>
+            </tr>
+            <tr>
+              <td>Custom Skill Forge</td>
+              <td class="dash">&mdash;</td>
+              <td class="dash">&mdash;</td>
+              <td class="check">&#10003;</td>
+            </tr>
+            <tr>
+              <td>Priority support</td>
+              <td class="dash">&mdash;</td>
+              <td class="dash">&mdash;</td>
+              <td class="check">&#10003;</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- EXTENSIONS -->
+  <section class="section" id="extensions">
+    <div class="container">
+      <h2>Free Extension Packs</h2>
+      <p class="section-sub">12 domain-specific packs included with Rune. Install what you need.</p>
+      <div class="ext-grid">
+        <div class="ext-card"><strong>@rune/ui</strong><span>Frontend</span></div>
+        <div class="ext-card"><strong>@rune/backend</strong><span>Backend</span></div>
+        <div class="ext-card"><strong>@rune/devops</strong><span>DevOps</span></div>
+        <div class="ext-card"><strong>@rune/mobile</strong><span>Mobile</span></div>
+        <div class="ext-card"><strong>@rune/security</strong><span>Security</span></div>
+        <div class="ext-card"><strong>@rune/trading</strong><span>Fintech</span></div>
+        <div class="ext-card"><strong>@rune/saas</strong><span>SaaS</span></div>
+        <div class="ext-card"><strong>@rune/ecommerce</strong><span>E-commerce</span></div>
+        <div class="ext-card"><strong>@rune/ai-ml</strong><span>AI/ML</span></div>
+        <div class="ext-card"><strong>@rune/gamedev</strong><span>Games</span></div>
+        <div class="ext-card"><strong>@rune/content</strong><span>Content</span></div>
+        <div class="ext-card"><strong>@rune/analytics</strong><span>Growth</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- NUMBERS -->
+  <section class="section" id="numbers">
+    <div class="container">
+      <div class="stats-grid">
+        <div class="stat">
+          <span class="stat-num" data-target="55">0</span>
+          <span class="stat-label">Core Skills</span>
+        </div>
+        <div class="stat">
+          <span class="stat-num" data-target="206">0</span>
+          <span class="stat-label">Cross-References</span>
+        </div>
+        <div class="stat">
+          <span class="stat-num" data-target="13">0</span>
+          <span class="stat-label">Extension Packs</span>
+        </div>
+        <div class="stat">
+          <span class="stat-num" data-target="6">0</span>
+          <span class="stat-label">Platforms</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container footer-inner">
+      <p><span class="logo-rune">&#9670;</span> Rune &mdash; Less skills. Deeper connections.</p>
+      <div class="footer-links">
+        <a href="https://github.com/rune-kit/rune" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://github.com/rune-kit/rune/blob/master/LICENSE" target="_blank" rel="noopener">MIT License</a>
+        <a href="https://github.com/rune-kit/rune/issues" target="_blank" rel="noopener">Issues</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+{
+  "name": "@rune-kit/rune",
+  "version": "2.2.0",
+  "description": "58-skill mesh for AI coding assistants — 5-layer architecture, 200+ connections, 8 platforms (Claude Code, Cursor, Windsurf, Antigravity, Codex, OpenCode, OpenClaw, Generic)",
+  "type": "module",
+  "bin": {
+    "rune": "./compiler/bin/rune.js"
+  },
+  "scripts": {
+    "build": "node compiler/bin/rune.js build",
+    "doctor": "node compiler/bin/rune.js doctor",
+    "test": "node --test compiler/__tests__/*.test.js"
+  },
+  "keywords": [
+    "claude-code",
+    "cursor",
+    "windsurf",
+    "antigravity",
+    "codex",
+    "opencode",
+    "openclaw",
+    "ai-assistant",
+    "ai-coding",
+    "skills",
+    "coding-agent",
+    "tdd",
+    "multi-platform"
+  ],
+  "author": "runedev",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rune-kit/rune"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "compiler/",
+    "skills/",
+    "extensions/",
+    "contexts/",
+    "commands/",
+    "agents/"
+  ],
+  "homepage": "https://github.com/rune-kit/rune",
+  "bugs": {
+    "url": "https://github.com/rune-kit/rune/issues"
+  }
+}

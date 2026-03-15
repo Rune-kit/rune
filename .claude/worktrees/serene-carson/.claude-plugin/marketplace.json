@@ -1,0 +1,173 @@
+{
+  "name": "rune-kit",
+  "owner": {
+    "name": "Rune Contributors"
+  },
+  "metadata": {
+    "description": "Less skills. Deeper connections. A lean, interconnected skill ecosystem for Claude Code."
+  },
+  "plugins": [
+    {
+      "name": "rune",
+      "source": "./",
+      "description": "49 skills wired into a self-aware 5-layer mesh — 170+ connections, adaptive routing, mesh analytics, logic preservation. Use rune:cook for any code task, rune:team for parallel work, rune:launch for deploy, rune:rescue for legacy code. From idea to shipped MVP in one cook invocation.",
+      "strict": false,
+      "author": {
+        "name": "Rune Contributors"
+      },
+      "homepage": "https://github.com/rune-kit/rune",
+      "repository": "https://github.com/rune-kit/rune",
+      "license": "MIT",
+      "version": "1.5.1",
+      "category": "workflow",
+      "tags": ["skills", "orchestration", "mesh", "workflow", "tdd", "security", "debugging", "sast", "pre-commit", "analytics", "adaptive-routing", "logic-preservation"],
+      "skills": [
+        "./skills/skill-router",
+        "./skills/cook",
+        "./skills/team",
+        "./skills/launch",
+        "./skills/rescue",
+        "./skills/plan",
+        "./skills/scout",
+        "./skills/brainstorm",
+        "./skills/design",
+        "./skills/skill-forge",
+        "./skills/debug",
+        "./skills/fix",
+        "./skills/test",
+        "./skills/review",
+        "./skills/review-intake",
+        "./skills/db",
+        "./skills/sentinel",
+        "./skills/preflight",
+        "./skills/onboard",
+        "./skills/audit",
+        "./skills/perf",
+        "./skills/logic-guardian",
+        "./skills/deploy",
+        "./skills/marketing",
+        "./skills/incident",
+        "./skills/autopsy",
+        "./skills/safeguard",
+        "./skills/surgeon",
+        "./skills/research",
+        "./skills/docs-seeker",
+        "./skills/trend-scout",
+        "./skills/problem-solver",
+        "./skills/sequential-thinking",
+        "./skills/verification",
+        "./skills/hallucination-guard",
+        "./skills/completion-gate",
+        "./skills/constraint-check",
+        "./skills/sast",
+        "./skills/integrity-check",
+        "./skills/context-engine",
+        "./skills/journal",
+        "./skills/session-bridge",
+        "./skills/worktree",
+        "./skills/watchdog",
+        "./skills/scope-guard",
+        "./skills/browser-pilot",
+        "./skills/asset-creator",
+        "./skills/video-creator",
+        "./skills/dependency-doctor"
+      ]
+    },
+    {
+      "name": "@rune/ui",
+      "source": "./extensions/ui",
+      "description": "Frontend UI patterns — design systems, accessibility, animation",
+      "version": "0.1.0",
+      "category": "frontend",
+      "tags": ["ui", "design-system", "a11y", "components", "animation"]
+    },
+    {
+      "name": "@rune/backend",
+      "source": "./extensions/backend",
+      "description": "Backend patterns — API, auth, database, middleware",
+      "version": "0.1.0",
+      "category": "backend",
+      "tags": ["api", "auth", "database", "middleware"]
+    },
+    {
+      "name": "@rune/devops",
+      "source": "./extensions/devops",
+      "description": "DevOps — Docker, CI/CD, monitoring, server setup",
+      "version": "0.1.0",
+      "category": "devops",
+      "tags": ["docker", "cicd", "monitoring", "server"]
+    },
+    {
+      "name": "@rune/mobile",
+      "source": "./extensions/mobile",
+      "description": "Mobile — React Native, Flutter, app store, native bridge",
+      "version": "0.1.0",
+      "category": "mobile",
+      "tags": ["react-native", "flutter", "mobile", "app-store"]
+    },
+    {
+      "name": "@rune/security",
+      "source": "./extensions/security",
+      "description": "Deep security — OWASP audit, pentest, compliance",
+      "version": "0.1.0",
+      "category": "security",
+      "tags": ["security", "owasp", "pentest", "compliance"]
+    },
+    {
+      "name": "@rune/trading",
+      "source": "./extensions/trading",
+      "description": "Fintech — real-time data, charts, indicators, trade logic preservation",
+      "version": "0.1.0",
+      "category": "domain",
+      "tags": ["fintech", "trading", "realtime", "charts"]
+    },
+    {
+      "name": "@rune/saas",
+      "source": "./extensions/saas",
+      "description": "SaaS — multi-tenant, billing, subscription, onboarding",
+      "version": "0.1.0",
+      "category": "domain",
+      "tags": ["saas", "billing", "multi-tenant", "subscription"]
+    },
+    {
+      "name": "@rune/ecommerce",
+      "source": "./extensions/ecommerce",
+      "description": "E-commerce — Shopify, payments, cart, inventory",
+      "version": "0.1.0",
+      "category": "domain",
+      "tags": ["ecommerce", "shopify", "payments", "cart"]
+    },
+    {
+      "name": "@rune/ai-ml",
+      "source": "./extensions/ai-ml",
+      "description": "AI/ML — LLM integration, RAG, embeddings, fine-tuning",
+      "version": "0.1.0",
+      "category": "domain",
+      "tags": ["ai", "ml", "llm", "rag", "embeddings"]
+    },
+    {
+      "name": "@rune/gamedev",
+      "source": "./extensions/gamedev",
+      "description": "Game dev — Three.js, WebGL, game loops, physics",
+      "version": "0.1.0",
+      "category": "domain",
+      "tags": ["gamedev", "threejs", "webgl", "physics"]
+    },
+    {
+      "name": "@rune/content",
+      "source": "./extensions/content",
+      "description": "Content — blog, CMS, MDX, i18n, SEO",
+      "version": "0.1.0",
+      "category": "domain",
+      "tags": ["content", "blog", "cms", "seo", "i18n"]
+    },
+    {
+      "name": "@rune/analytics",
+      "source": "./extensions/analytics",
+      "description": "Analytics — tracking, A/B testing, funnels, dashboards",
+      "version": "0.1.0",
+      "category": "domain",
+      "tags": ["analytics", "tracking", "ab-testing", "funnels"]
+    }
+  ]
+}

@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rune Skills Catalog — 58 skills · 5 layers · 200+ connections</title>
+  <meta name="description" content="Visual reference of all 58 Rune skills organized by layer. Filter by layer, search by name, sort by model.">
+  <meta property="og:title" content="Rune Skills Catalog">
+  <meta property="og:description" content="58 skills · 5 layers · 200+ connections. The complete Rune skill reference.">
+  <meta property="og:type" content="website">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    /* ─── DESIGN TOKENS ─── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-base: #0a0f1a;
+      --bg-card: #111827;
+      --bg-elevated: #1a2332;
+      --bg-section-alt: #080c14;
+      --bg-code: rgba(0,0,0,0.4);
+      --text-primary: #f0f4f8;
+      --text-secondary: #8896a8;
+      --text-muted: #5a6a7a;
+      --border: #1e2d3d;
+      --accent: #10b981;
+      --accent-dim: rgba(16, 185, 129, 0.15);
+      --accent-glow: rgba(16, 185, 129, 0.3);
+      --cyan: #06b6d4;
+      --nav-bg: rgba(10, 15, 26, 0.85);
+      --font-display: 'Space Grotesk', system-ui, sans-serif;
+      --font-body: 'Inter', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --shadow-card: 0 4px 24px rgba(0,0,0,0.3);
+      --transition: 250ms ease;
+      --max-width: 1280px;
+      --nav-h: 56px;
+
+      /* Layer colors */
+      --l0-color: #10b981;
+      --l0-bg: rgba(16, 185, 129, 0.12);
+      --l1-color: #ef4444;
+      --l1-bg: rgba(239, 68, 68, 0.12);
+      --l2-color: #3b82f6;
+      --l2-bg: rgba(59, 130, 246, 0.12);
+      --l3-color: #10b981;
+      --l3-bg: rgba(16, 185, 129, 0.1);
+      --l4-color: #f59e0b;
+      --l4-bg: rgba(245, 158, 11, 0.12);
+
+      /* Model colors */
+      --haiku-color: #10b981;
+      --haiku-bg: rgba(16, 185, 129, 0.1);
+      --sonnet-color: #3b82f6;
+      --sonnet-bg: rgba(59, 130, 246, 0.1);
+      --opus-color: #8b5cf6;
+      --opus-bg: rgba(139, 92, 246, 0.1);
+    }
+
+    /* ─── LIGHT MODE ─── */
+    [data-theme="light"] {
+      --bg-base: #f8fafb;
+      --bg-card: #ffffff;
+      --bg-elevated: #f1f5f9;
+      --bg-section-alt: #eef2f6;
+      --bg-code: rgba(0,0,0,0.04);
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+      --border: #e2e8f0;
+      --accent: #059669;
+      --accent-dim: rgba(5, 150, 105, 0.1);
+      --accent-glow: rgba(5, 150, 105, 0.2);
+      --nav-bg: rgba(248, 250, 251, 0.88);
+      --shadow-card: 0 4px 24px rgba(0,0,0,0.08);
+      --l0-bg: rgba(5, 150, 105, 0.08);
+      --l1-bg: rgba(220, 38, 38, 0.08);
+      --l2-bg: rgba(37, 99, 235, 0.08);
+      --l3-bg: rgba(5, 150, 105, 0.06);
+      --l4-bg: rgba(217, 119, 6, 0.08);
+      --haiku-bg: rgba(5, 150, 105, 0.07);
+      --sonnet-bg: rgba(37, 99, 235, 0.07);
+      --opus-bg: rgba(109, 40, 217, 0.07);
+    }
+    [data-theme="light"] .search-input { background: var(--bg-card); }
+    [data-theme="light"] .skill-card:hover { box-shadow: 0 8px 32px rgba(0,0,0,0.1); }
+    [data-theme="light"] .pack-card:hover { box-shadow: 0 8px 32px rgba(0,0,0,0.1); }
+
+    html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg-base);
+      color: var(--text-primary);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    a { color: var(--accent); text-decoration: none; transition: opacity var(--transition); }
+    a:hover { opacity: 0.8; }
+
+    /* ─── NAV ─── */
+    .nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: var(--nav-bg);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      height: var(--nav-h);
+    }
+    .nav-inner {
+      max-width: var(--max-width); margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; height: 100%;
+    }
+    .nav-logo {
+      font-family: var(--font-display); font-weight: 700; font-size: 20px;
+      color: var(--text-primary); display: flex; align-items: center; gap: 8px;
+      text-decoration: none;
+    }
+    .logo-rune { color: var(--accent); }
+    .nav-links { display: flex; align-items: center; gap: 24px; }
+    .nav-links a {
+      color: var(--text-secondary); font-size: 14px; font-weight: 500;
+      transition: color var(--transition);
+    }
+    .nav-links a:hover { color: var(--text-primary); opacity: 1; }
+    .nav-links a.active { color: var(--accent); }
+    .nav-controls { display: flex; align-items: center; gap: 8px; }
+    .theme-toggle {
+      background: none; border: 1px solid var(--border); color: var(--text-secondary);
+      width: 34px; height: 34px; border-radius: var(--radius-sm);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 16px; transition: all var(--transition);
+    }
+    .theme-toggle:hover { border-color: var(--accent); color: var(--text-primary); }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 8px 18px; border-radius: var(--radius-sm);
+      font-family: var(--font-body); font-weight: 600; font-size: 13px;
+      cursor: pointer; transition: all var(--transition); border: 1px solid var(--border);
+      background: transparent; color: var(--text-secondary);
+    }
+    .btn:hover { border-color: var(--accent); color: var(--text-primary); opacity: 1; }
+
+    /* ─── PAGE HEADER ─── */
+    .page-header {
+      padding: calc(var(--nav-h) + 56px) 24px 48px;
+      max-width: var(--max-width); margin: 0 auto;
+    }
+    .page-header-badge {
+      display: inline-block; font-family: var(--font-mono); font-size: 12px;
+      color: var(--accent); background: var(--accent-dim);
+      padding: 4px 14px; border-radius: 999px; margin-bottom: 20px;
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      letter-spacing: 0.02em;
+    }
+    .page-header h1 {
+      font-family: var(--font-display); font-size: clamp(32px, 5vw, 52px);
+      font-weight: 700; line-height: 1.15; margin-bottom: 12px;
+    }
+    .page-header h1 span { color: var(--accent); }
+    .page-header p {
+      font-size: 17px; color: var(--text-secondary); max-width: 560px;
+    }
+
+    /* ─── STATS BAR ─── */
+    .stats-bar {
+      max-width: var(--max-width); margin: 0 auto 40px;
+      padding: 0 24px;
+      display: flex; gap: 0; flex-wrap: wrap;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); overflow: hidden;
+    }
+    .stat-item {
+      flex: 1; min-width: 120px;
+      padding: 18px 24px;
+      display: flex; flex-direction: column; gap: 4px;
+      border-right: 1px solid var(--border);
+    }
+    .stat-item:last-child { border-right: none; }
+    .stat-value {
+      font-family: var(--font-mono); font-size: 26px; font-weight: 700;
+      color: var(--accent); line-height: 1;
+    }
+    .stat-label { font-size: 12px; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* ─── CONTROLS ─── */
+    .catalog-controls {
+      max-width: var(--max-width); margin: 0 auto 28px;
+      padding: 0 24px;
+      display: flex; flex-direction: column; gap: 16px;
+    }
+    .filter-row {
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    }
+    .filter-label {
+      font-size: 12px; font-weight: 600; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap;
+    }
+    .filter-tabs {
+      display: flex; gap: 6px; flex-wrap: wrap;
+    }
+    .filter-tab {
+      padding: 6px 14px; border-radius: 999px; font-size: 13px; font-weight: 500;
+      cursor: pointer; border: 1px solid var(--border); background: transparent;
+      color: var(--text-secondary); transition: all var(--transition); font-family: var(--font-body);
+    }
+    .filter-tab:hover { border-color: var(--accent); color: var(--text-primary); }
+    .filter-tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .filter-tab[data-layer="L0"].active { background: var(--l0-color); border-color: var(--l0-color); }
+    .filter-tab[data-layer="L1"].active { background: var(--l1-color); border-color: var(--l1-color); }
+    .filter-tab[data-layer="L2"].active { background: var(--l2-color); border-color: var(--l2-color); }
+    .filter-tab[data-layer="L3"].active { background: var(--l3-color); border-color: var(--l3-color); }
+    .filter-tab[data-layer="L4"].active { background: var(--l4-color); border-color: var(--l4-color); color: #000; }
+
+    .search-row {
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    }
+    .search-wrap { position: relative; flex: 1; min-width: 220px; max-width: 400px; }
+    .search-icon {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      color: var(--text-muted); font-size: 14px; pointer-events: none;
+    }
+    .search-input {
+      width: 100%; padding: 8px 12px 8px 36px;
+      background: var(--bg-elevated); border: 1px solid var(--border);
+      border-radius: var(--radius-md); color: var(--text-primary);
+      font-family: var(--font-body); font-size: 14px;
+      transition: border-color var(--transition); outline: none;
+    }
+    .search-input::placeholder { color: var(--text-muted); }
+    .search-input:focus { border-color: var(--accent); }
+
+    .sort-wrap { display: flex; align-items: center; gap: 8px; }
+    .sort-label { font-size: 12px; color: var(--text-muted); font-weight: 500; white-space: nowrap; }
+    .sort-select {
+      padding: 7px 28px 7px 10px; background: var(--bg-elevated);
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      color: var(--text-secondary); font-family: var(--font-body); font-size: 13px;
+      cursor: pointer; outline: none; appearance: none; -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='%235a6a7a'%3E%3Cpath d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center;
+      transition: border-color var(--transition);
+    }
+    .sort-select:focus { border-color: var(--accent); }
+
+    .results-count {
+      font-size: 13px; color: var(--text-muted); white-space: nowrap;
+      font-family: var(--font-mono);
+    }
+
+    /* ─── SKILLS GRID ─── */
+    .catalog-section {
+      max-width: var(--max-width); margin: 0 auto;
+      padding: 0 24px;
+    }
+    .section-divider {
+      display: flex; align-items: center; gap: 14px;
+      margin-bottom: 20px; margin-top: 40px;
+    }
+    .section-divider:first-of-type { margin-top: 0; }
+    .section-divider-label {
+      font-family: var(--font-display); font-size: 14px; font-weight: 700;
+      color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em;
+      white-space: nowrap;
+    }
+    .section-divider-line {
+      flex: 1; height: 1px; background: var(--border);
+    }
+    .section-divider-count {
+      font-family: var(--font-mono); font-size: 12px; color: var(--text-muted);
+      background: var(--bg-elevated); border: 1px solid var(--border);
+      padding: 2px 8px; border-radius: 4px; white-space: nowrap;
+    }
+
+    .skills-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .skill-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-md); padding: 16px 18px;
+      display: flex; flex-direction: column; gap: 10px;
+      transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+      cursor: default;
+    }
+    .skill-card:hover {
+      border-color: var(--accent); transform: translateY(-1px);
+      box-shadow: 0 6px 24px rgba(0,0,0,0.2);
+    }
+    .skill-card-top {
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;
+    }
+    .skill-name {
+      font-family: var(--font-mono); font-size: 14px; font-weight: 700;
+      color: var(--text-primary); letter-spacing: -0.01em;
+    }
+    .skill-badges { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; flex-shrink: 0; }
+    .badge {
+      display: inline-flex; align-items: center;
+      padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;
+      font-family: var(--font-mono); letter-spacing: 0.02em; white-space: nowrap;
+    }
+    .badge-l0 { background: var(--l0-bg); color: var(--l0-color); }
+    .badge-l1 { background: var(--l1-bg); color: var(--l1-color); }
+    .badge-l2 { background: var(--l2-bg); color: var(--l2-color); }
+    .badge-l3 { background: var(--l3-bg); color: var(--l3-color); }
+    .badge-l4 { background: var(--l4-bg); color: var(--l4-color); }
+    .badge-haiku { background: var(--haiku-bg); color: var(--haiku-color); }
+    .badge-sonnet { background: var(--sonnet-bg); color: var(--sonnet-color); }
+    .badge-opus { background: var(--opus-bg); color: var(--opus-color); }
+
+    .skill-desc {
+      font-size: 13px; color: var(--text-secondary); line-height: 1.55;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .skill-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      padding-top: 8px; border-top: 1px solid var(--border);
+    }
+    .skill-tools {
+      font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);
+      display: flex; align-items: center; gap: 5px;
+    }
+    .skill-tools-dot {
+      width: 3px; height: 3px; border-radius: 50%;
+      background: var(--text-muted); display: inline-block;
+    }
+
+    /* ─── EMPTY STATE ─── */
+    .empty-state {
+      text-align: center; padding: 60px 24px; color: var(--text-muted);
+      display: none;
+    }
+    .empty-state.visible { display: block; }
+    .empty-state-icon { font-size: 40px; margin-bottom: 14px; opacity: 0.5; }
+    .empty-state p { font-size: 15px; }
+
+    /* ─── L4 PACKS SECTION ─── */
+    .packs-section {
+      max-width: var(--max-width); margin: 0 auto;
+      padding: 60px 24px 40px;
+    }
+    .packs-header { margin-bottom: 28px; }
+    .packs-header h2 {
+      font-family: var(--font-display); font-size: 28px; font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .packs-header p { font-size: 15px; color: var(--text-secondary); }
+    .packs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 14px;
+    }
+    .pack-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 22px;
+      display: flex; flex-direction: column; gap: 10px;
+      transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+    }
+    .pack-card:hover {
+      border-color: var(--l4-color); transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(245, 158, 11, 0.08);
+    }
+    .pack-name {
+      font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+      color: var(--l4-color);
+    }
+    .pack-meta {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    }
+    .pack-badge {
+      font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .pack-badge-free { background: var(--accent-dim); color: var(--accent); }
+    .pack-badge-paid { background: var(--l4-bg); color: var(--l4-color); }
+    .pack-skills-count {
+      font-size: 12px; color: var(--text-muted); font-family: var(--font-mono);
+    }
+    .pack-desc {
+      font-size: 13px; color: var(--text-secondary); line-height: 1.55;
+      display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .pack-target {
+      font-size: 11px; color: var(--text-muted); margin-top: 4px;
+    }
+
+    /* ─── FOOTER ─── */
+    .footer {
+      border-top: 1px solid var(--border); padding: 32px 24px;
+      max-width: var(--max-width); margin: 60px auto 0;
+    }
+    .footer-inner {
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+    }
+    .footer-inner p { font-size: 14px; color: var(--text-secondary); }
+    .footer-links { display: flex; gap: 24px; }
+    .footer-links a { font-size: 13px; color: var(--text-muted); }
+    .footer-links a:hover { color: var(--text-primary); }
+
+    /* ─── FADE-IN ANIMATION ─── */
+    @media (prefers-reduced-motion: no-preference) {
+      .skill-card {
+        opacity: 0; transform: translateY(12px);
+        animation: fadeUp 0.35s ease forwards;
+      }
+      .pack-card {
+        opacity: 0; transform: translateY(12px);
+        animation: fadeUp 0.35s ease forwards;
+      }
+    }
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 768px) {
+      .stats-bar { flex-direction: column; gap: 0; }
+      .stat-item { border-right: none; border-bottom: 1px solid var(--border); }
+      .stat-item:last-child { border-bottom: none; }
+      .skills-grid { grid-template-columns: 1fr; }
+      .packs-grid { grid-template-columns: 1fr; }
+      .nav-links a:not(.btn):not([data-keep]) { display: none; }
+      .page-header { padding-top: calc(var(--nav-h) + 36px); }
+    }
+    @media (max-width: 480px) {
+      .filter-tabs { gap: 4px; }
+      .filter-tab { padding: 5px 10px; font-size: 12px; }
+      .search-wrap { max-width: 100%; }
+    }
+
+    /* Highlight for search matches */
+    mark {
+      background: rgba(16, 185, 129, 0.25); color: inherit;
+      border-radius: 2px; padding: 0 1px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="../index.html" class="nav-logo">
+        <span class="logo-rune">&#9670;</span> Rune
+      </a>
+      <div class="nav-links">
+        <a href="../index.html">Home</a>
+        <a href="../guides/">Guides</a>
+        <a href="index.html" class="active" data-keep>Skills</a>
+        <div class="nav-controls">
+          <button class="theme-toggle" id="theme-toggle" aria-label="Toggle light/dark mode" title="Toggle theme">&#9790;</button>
+        </div>
+        <a href="https://github.com/rune-kit/rune" class="btn" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <p class="page-header-badge">v2.2.0 — Skills Reference</p>
+    <h1>Rune <span>Skills</span> Catalog</h1>
+    <p>58 skills &middot; 5 layers &middot; 200+ mesh connections. Every skill has a clear responsibility and knows exactly which skills to call.</p>
+  </div>
+
+  <!-- STATS BAR -->
+  <div class="stats-bar">
+    <div class="stat-item">
+      <span class="stat-value">58</span>
+      <span class="stat-label">Total Skills</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-value" style="color: var(--l1-color)">1+5</span>
+      <span class="stat-label">L0 Router + L1 Orchestrators</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-value" style="color: var(--l2-color)">27</span>
+      <span class="stat-label">L2 Workflow Hubs</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-value">24</span>
+      <span class="stat-label">L3 Utilities</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-value" style="color: var(--l4-color)">13</span>
+      <span class="stat-label">L4 Extension Packs</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-value">200+</span>
+      <span class="stat-label">Mesh Connections</span>
+    </div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="catalog-controls">
+    <div class="filter-row">
+      <span class="filter-label">Layer</span>
+      <div class="filter-tabs" id="layer-tabs">
+        <button class="filter-tab active" data-layer="all">All</button>
+        <button class="filter-tab" data-layer="L0">L0 Router</button>
+        <button class="filter-tab" data-layer="L1">L1 Orchestrators</button>
+        <button class="filter-tab" data-layer="L2">L2 Workflows</button>
+        <button class="filter-tab" data-layer="L3">L3 Utilities</button>
+      </div>
+    </div>
+    <div class="search-row">
+      <div class="search-wrap">
+        <span class="search-icon">&#128269;</span>
+        <input type="search" class="search-input" id="skill-search" placeholder="Search skills by name or description..." aria-label="Search skills">
+      </div>
+      <div class="sort-wrap">
+        <span class="sort-label">Sort</span>
+        <select class="sort-select" id="sort-select" aria-label="Sort skills">
+          <option value="layer">By layer</option>
+          <option value="name">By name</option>
+          <option value="model">By model</option>
+          <option value="tools">By tools count</option>
+        </select>
+      </div>
+      <span class="results-count" id="results-count">57 skills</span>
+    </div>
+  </div>
+
+  <!-- SKILLS CATALOG -->
+  <div class="catalog-section" id="catalog-section">
+    <!-- populated by JS -->
+  </div>
+
+  <div class="empty-state" id="empty-state">
+    <div class="empty-state-icon">&#128269;</div>
+    <p>No skills match your search. Try a different query.</p>
+  </div>
+
+  <!-- L4 EXTENSION PACKS -->
+  <div class="packs-section" id="packs-section">
+    <div class="packs-header">
+      <h2>L4 Extension Packs</h2>
+      <p>Domain-specific skill bundles. Install only what you need. Free packs are MIT-licensed — Pro packs require Rune Pro.</p>
+    </div>
+    <div class="packs-grid" id="packs-grid">
+      <!-- populated by JS -->
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-inner">
+      <p>Rune &mdash; Less skills. Deeper connections. &copy; 2025 rune-kit</p>
+      <div class="footer-links">
+        <a href="https://github.com/rune-kit/rune" target="_blank" rel="noopener">GitHub</a>
+        <a href="../index.html">Home</a>
+        <a href="../guides/">Guides</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ─── THEME TOGGLE ───
+    const themeToggle = document.getElementById('theme-toggle');
+    const saved = localStorage.getItem('rune-theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', saved);
+    themeToggle.textContent = saved === 'dark' ? '☀' : '☾';
+    themeToggle.addEventListener('click', () => {
+      const cur = document.documentElement.getAttribute('data-theme');
+      const next = cur === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('rune-theme', next);
+      themeToggle.textContent = next === 'dark' ? '☀' : '☾';
+    });
+
+    // ─── SKILL DATA ───
+    const SKILLS = [
+      // L0
+      { name: 'skill-router', layer: 'L0', model: 'haiku', tools: 3, desc: 'Meta-enforcement layer that routes every agent action through the correct skill. Prevents hallucinated commands by mapping intent to the canonical skill.' },
+      // L1
+      { name: 'cook', layer: 'L1', model: 'sonnet', tools: 6, desc: 'Feature implementation orchestrator. Use for ANY code change — the primary entry point for development work with phase-aware execution.' },
+      { name: 'team', layer: 'L1', model: 'opus', tools: 6, desc: 'Multi-agent meta-orchestrator for tasks spanning 5+ files or 3+ modules. Spawns and coordinates parallel specialist agents.' },
+      { name: 'launch', layer: 'L1', model: 'sonnet', tools: 6, desc: 'Deploy + marketing orchestrator. Handles production deployment plus announcement strategy in one coordinated workflow.' },
+      { name: 'rescue', layer: 'L1', model: 'sonnet', tools: 6, desc: 'Legacy refactoring orchestrator. Assesses technical debt, creates safety nets, and incrementally modernizes codebases.' },
+      { name: 'scaffold', layer: 'L1', model: 'sonnet', tools: 8, desc: 'Autonomous project bootstrapper. Generates a complete project from a description — structure, code, tests, and CI/CD config.' },
+      // L2
+      { name: 'adversary', layer: 'L2', model: 'opus', tools: 3, desc: 'Pre-implementation red-team analysis. Stress-tests plans across edge cases, security, scalability, and integration risk before code is written.' },
+      { name: 'audit', layer: 'L2', model: 'sonnet', tools: 4, desc: 'Comprehensive project audit across security, dependencies, code quality, architecture, and performance.' },
+      { name: 'autopsy', layer: 'L2', model: 'opus', tools: 4, desc: 'Full codebase health assessment. Analyzes complexity, dependencies, dead code, tech debt, and git history hotspots.' },
+      { name: 'ba', layer: 'L2', model: 'opus', tools: 3, desc: 'Business Analyst agent. Elicits and validates requirements before planning begins — uncovers hidden constraints and ambiguities.' },
+      { name: 'brainstorm', layer: 'L2', model: 'opus', tools: 3, desc: 'Creative ideation and solution exploration. Generates multiple approaches with trade-offs; includes Rescue Mode for divergent alternatives.' },
+      { name: 'db', layer: 'L2', model: 'sonnet', tools: 6, desc: 'Database workflow specialist. Generates migration files with rollback scripts, detects breaking schema changes, and audits query performance.' },
+      { name: 'debug', layer: 'L2', model: 'sonnet', tools: 4, desc: 'Root cause analysis for bugs and unexpected behavior. Traces symptoms to origin and classifies whether escalation is needed.' },
+      { name: 'deploy', layer: 'L2', model: 'sonnet', tools: 6, desc: 'Deploy application to target platform. Handles Vercel, Railway, Fly.io, AWS, and Docker with environment validation.' },
+      { name: 'design', layer: 'L2', model: 'sonnet', tools: 5, desc: 'Design system reasoning. Maps product domain to style, palette, typography, and platform-specific patterns.' },
+      { name: 'docs', layer: 'L2', model: 'sonnet', tools: 5, desc: 'Auto-generate and maintain project documentation — README, API docs, architecture docs, and changelogs.' },
+      { name: 'fix', layer: 'L2', model: 'sonnet', tools: 6, desc: 'Apply code changes and bug fixes. Writes implementation code and verifies changes with targeted tests.' },
+      { name: 'incident', layer: 'L2', model: 'sonnet', tools: 6, desc: 'Structured incident response. Triage, mitigation, root cause analysis, and post-mortem generation.' },
+      { name: 'logic-guardian', layer: 'L2', model: 'sonnet', tools: 5, desc: 'Protects complex business logic from accidental deletion or overwrite during refactoring.' },
+      { name: 'marketing', layer: 'L2', model: 'sonnet', tools: 7, desc: 'Create marketing assets and execute launch strategy — copy, social posts, landing pages, and SEO audits.' },
+      { name: 'mcp-builder', layer: 'L2', model: 'sonnet', tools: 6, desc: 'Build Model Context Protocol servers from specifications in TypeScript or Python with tests and docs.' },
+      { name: 'onboard', layer: 'L2', model: 'sonnet', tools: 5, desc: 'Auto-generate project context for AI sessions — scans codebase, creates CLAUDE.md and architecture summaries.' },
+      { name: 'perf', layer: 'L2', model: 'sonnet', tools: 4, desc: 'Performance regression gate. Detects N+1 queries, sync-in-async patterns, missing indexes, and memory leaks.' },
+      { name: 'plan', layer: 'L2', model: 'opus', tools: 5, desc: 'Create structured implementation plans from requirements. Supports Feature Spec Mode and Roadmap Mode with ICE scoring.' },
+      { name: 'preflight', layer: 'L2', model: 'sonnet', tools: 4, desc: 'Pre-commit quality gate. Catches "almost right" code — type errors, missing tests, lint failures, and broken imports.' },
+      { name: 'review', layer: 'L2', model: 'sonnet', tools: 3, desc: 'Code quality review covering patterns, security vulnerabilities, performance, and correctness.' },
+      { name: 'review-intake', layer: 'L2', model: 'sonnet', tools: 3, desc: 'Process external code review feedback or PR comments before implementing changes.' },
+      { name: 'safeguard', layer: 'L2', model: 'sonnet', tools: 6, desc: 'Build safety nets before refactoring — characterization tests, boundary markers, and config freeze snapshots.' },
+      { name: 'scout', layer: 'L2', model: 'haiku', tools: 3, desc: 'Fast codebase scanner. Provides architecture context to other skills without loading full file contents.' },
+      { name: 'sentinel', layer: 'L2', model: 'sonnet', tools: 4, desc: 'Automated security gatekeeper. Blocks unsafe code — secret scanning, OWASP top 10, dependency vulnerabilities.' },
+      { name: 'sentinel-env', layer: 'L2', model: 'haiku', tools: 4, desc: 'Environment-aware pre-flight check. Validates OS, runtime versions, installed tools, and port availability.' },
+      { name: 'skill-forge', layer: 'L2', model: 'opus', tools: 6, desc: 'Create new Rune skills, edit existing ones, and verify skill quality before deployment.' },
+      { name: 'surgeon', layer: 'L2', model: 'sonnet', tools: 6, desc: 'Incremental refactorer. Refactors one module per session using Strangler Fig, Branch by Abstraction, and Parallel Run patterns.' },
+      { name: 'test', layer: 'L2', model: 'sonnet', tools: 6, desc: 'TDD test writer. Writes failing tests first (red), verifies they pass after implementation (green), enforces 80% coverage.' },
+      // L3
+      { name: 'asset-creator', layer: 'L3', model: 'sonnet', tools: 5, desc: 'Creates code-based visual assets — SVG icons, OG image HTML templates, social banners, and icon sets.' },
+      { name: 'browser-pilot', layer: 'L3', model: 'sonnet', tools: 4, desc: 'Playwright browser automation. Navigates URLs, takes screenshots, checks accessibility, and interacts with web UIs.' },
+      { name: 'completion-gate', layer: 'L3', model: 'haiku', tools: 4, desc: 'Validates agent claims against evidence trail. Catches "done" without proof and "tests pass" without output.' },
+      { name: 'constraint-check', layer: 'L3', model: 'haiku', tools: 3, desc: 'Meta-validator for HARD-GATEs. Verifies that skills\' mandatory constraints were followed during a workflow step.' },
+      { name: 'context-engine', layer: 'L3', model: 'haiku', tools: 3, desc: 'Context window management. Auto-triggered when context is filling up — summarizes and compacts without losing state.' },
+      { name: 'dependency-doctor', layer: 'L3', model: 'haiku', tools: 4, desc: 'Dependency health management. Detects outdated packages and vulnerabilities across npm, pip, cargo, and go modules.' },
+      { name: 'doc-processor', layer: 'L3', model: 'sonnet', tools: 6, desc: 'Generate and parse office documents — PDF, DOCX, XLSX, PPTX, and CSV files.' },
+      { name: 'docs-seeker', layer: 'L3', model: 'haiku', tools: 5, desc: 'Find documentation for APIs, libraries, and error messages via web search and curated sources.' },
+      { name: 'git', layer: 'L3', model: 'haiku', tools: 4, desc: 'Specialized git operations — semantic commits, PR descriptions, branch management, and conflict resolution.' },
+      { name: 'hallucination-guard', layer: 'L3', model: 'haiku', tools: 4, desc: 'Verify AI-generated imports, API calls, and packages actually exist before code is written.' },
+      { name: 'integrity-check', layer: 'L3', model: 'haiku', tools: 3, desc: 'Verify integrity of persisted state, skill outputs, and context bus data across workflow steps.' },
+      { name: 'journal', layer: 'L3', model: 'haiku', tools: 5, desc: 'Persistent state tracking and Architecture Decision Records. Maintains project history across sessions.' },
+      { name: 'neural-memory', layer: 'L3', model: 'haiku', tools: 1, desc: 'Cross-session cognitive persistence via Neural Memory MCP. Stores and recalls decisions, patterns, and context.' },
+      { name: 'problem-solver', layer: 'L3', model: 'sonnet', tools: 3, desc: 'Structured reasoning frameworks for complex multi-variable problems. Applies first-principles and systems thinking.' },
+      { name: 'research', layer: 'L3', model: 'haiku', tools: 5, desc: 'Web search and external knowledge lookup. Gathers data on technologies, libraries, and best practices.' },
+      { name: 'sast', layer: 'L3', model: 'haiku', tools: 4, desc: 'Static analysis tool runner. Wraps ESLint, Semgrep, Bandit, Clippy, and language-specific analyzers.' },
+      { name: 'scope-guard', layer: 'L3', model: 'haiku', tools: 3, desc: 'Detects scope creep. Auto-triggered by L1 orchestrators when files exceed the original plan.' },
+      { name: 'sequential-thinking', layer: 'L3', model: 'sonnet', tools: 3, desc: 'Step-by-step complex reasoning for multi-variable problems with explicit dependency tracking.' },
+      { name: 'session-bridge', layer: 'L3', model: 'haiku', tools: 5, desc: 'Universal context persistence across sessions. Auto-saves decisions, conventions, and progress to project files.' },
+      { name: 'trend-scout', layer: 'L3', model: 'haiku', tools: 5, desc: 'Scan market trends, competitor activity, and emerging technology patterns.' },
+      { name: 'verification', layer: 'L3', model: 'haiku', tools: 4, desc: 'Universal verification runner. Runs lint, type-check, tests, and build in one coordinated pass.' },
+      { name: 'video-creator', layer: 'L3', model: 'sonnet', tools: 5, desc: 'Video content planning. Writes narration scripts, storyboards, shot lists, and asset checklists.' },
+      { name: 'watchdog', layer: 'L3', model: 'sonnet', tools: 4, desc: 'Post-deploy monitoring. Checks HTTP status, response times, error rates, and service health after deployment.' },
+      { name: 'worktree', layer: 'L3', model: 'haiku', tools: 4, desc: 'Git worktree lifecycle management. Creates isolated workspaces for parallel feature development.' },
+    ];
+
+    const PACKS = [
+      { name: '@rune/ui', desc: 'Frontend UI patterns — design systems, color palettes, typography, component architecture, landing page sections, accessibility audits, and animation patterns.', target: 'Frontend developers', price: 'free', skills: 8 },
+      { name: '@rune/backend', desc: 'Backend patterns — API design, authentication, database patterns, middleware architecture, caching strategies, and background job processing.', target: 'Backend developers', price: 'free', skills: 7 },
+      { name: '@rune/devops', desc: 'DevOps patterns — Docker, CI/CD pipelines, monitoring setup, server configuration, and SSL/domain management.', target: 'DevOps engineers', price: '$12', skills: 7 },
+      { name: '@rune/mobile', desc: 'Mobile development patterns — React Native, Flutter, app store preparation, and native bridge integration.', target: 'Mobile developers', price: '$15', skills: 5 },
+      { name: '@rune/security', desc: 'Deep security analysis — OWASP audit, penetration testing patterns, secret management, compliance checking, and API hardening.', target: 'Security engineers', price: '$15', skills: 6 },
+      { name: '@rune/trading', desc: 'Fintech and trading patterns — real-time data, financial dashboards, technical indicators, WebSocket architecture, and strategy development.', target: 'Fintech developers', price: '$15', skills: 7 },
+      { name: '@rune/saas', desc: 'SaaS patterns — multi-tenancy, billing integration, subscription management, feature flags, team permissions, and user onboarding flows.', target: 'SaaS builders', price: '$12', skills: 6 },
+      { name: '@rune/ecommerce', desc: 'E-commerce patterns — Shopify development, payment integration, shopping cart state machines, and inventory management.', target: 'E-commerce developers', price: '$12', skills: 5 },
+      { name: '@rune/ai-ml', desc: 'AI/ML integration patterns — LLM integration, RAG pipelines, embeddings, fine-tuning workflows, and prompt engineering.', target: 'AI engineers', price: '$15', skills: 6 },
+      { name: '@rune/gamedev', desc: 'Game development patterns — Three.js, WebGL, game loops, physics engines, and asset pipelines.', target: 'Game developers', price: '$12', skills: 5 },
+      { name: '@rune/content', desc: 'Content platform patterns — blog systems, CMS integration, MDX authoring, internationalization, and SEO.', target: 'Content creators', price: '$9', skills: 5 },
+      { name: '@rune/analytics', desc: 'Analytics patterns — tracking setup, A/B testing, funnel analysis, statistical significance, and dashboard design.', target: 'Growth engineers', price: '$12', skills: 6 },
+      { name: '@rune/chrome-ext', desc: 'Chrome extension development — Manifest V3 scaffolding, service worker lifecycle, message passing, CWS compliance, and Chrome AI integration.', target: 'Chrome extension developers', price: 'free', skills: 6 },
+    ];
+
+    // ─── LAYER ORDER ───
+    const LAYER_ORDER = { L0: 0, L1: 1, L2: 2, L3: 3, L4: 4 };
+    const LAYER_LABELS = {
+      L0: 'L0 — Router',
+      L1: 'L1 — Orchestrators',
+      L2: 'L2 — Workflow Hubs',
+      L3: 'L3 — Utilities',
+    };
+
+    // ─── STATE ───
+    let activeLayer = 'all';
+    let searchQuery = '';
+    let sortBy = 'layer';
+
+    // ─── RENDER ───
+    function escapeHTML(str) {
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function highlight(text, query) {
+      if (!query) return escapeHTML(text);
+      const escaped = escapeHTML(text);
+      const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      return escaped.replace(new RegExp(escapedQuery, 'gi'), match => `<mark>${match}</mark>`);
+    }
+
+    function renderSkillCard(skill, query, delay) {
+      const layerClass = `badge-${skill.layer.toLowerCase()}`;
+      const modelClass = `badge-${skill.model}`;
+      return `
+        <div class="skill-card" data-layer="${skill.layer}" style="animation-delay:${delay}ms">
+          <div class="skill-card-top">
+            <span class="skill-name">${highlight(skill.name, query)}</span>
+            <div class="skill-badges">
+              <span class="badge ${layerClass}">${skill.layer}</span>
+              <span class="badge ${modelClass}">${skill.model}</span>
+            </div>
+          </div>
+          <p class="skill-desc">${highlight(skill.desc, query)}</p>
+          <div class="skill-footer">
+            <span class="skill-tools">
+              <span class="skill-tools-dot"></span>
+              ${skill.tools} tool${skill.tools !== 1 ? 's' : ''}
+            </span>
+          </div>
+        </div>`;
+    }
+
+    function getFilteredSorted() {
+      let filtered = SKILLS.filter(s => {
+        if (activeLayer !== 'all' && s.layer !== activeLayer) return false;
+        if (searchQuery) {
+          const q = searchQuery.toLowerCase();
+          return s.name.includes(q) || s.desc.toLowerCase().includes(q);
+        }
+        return true;
+      });
+
+      filtered.sort((a, b) => {
+        if (sortBy === 'name') return a.name.localeCompare(b.name);
+        if (sortBy === 'model') {
+          const modelOrder = { haiku: 0, sonnet: 1, opus: 2 };
+          return modelOrder[a.model] - modelOrder[b.model] || a.name.localeCompare(b.name);
+        }
+        if (sortBy === 'tools') return b.tools - a.tools;
+        // default: layer
+        return (LAYER_ORDER[a.layer] - LAYER_ORDER[b.layer]) || a.name.localeCompare(b.name);
+      });
+
+      return filtered;
+    }
+
+    function render() {
+      const filtered = getFilteredSorted();
+      const section = document.getElementById('catalog-section');
+      const emptyState = document.getElementById('empty-state');
+      const countEl = document.getElementById('results-count');
+      const packsSection = document.getElementById('packs-section');
+
+      countEl.textContent = `${filtered.length} skill${filtered.length !== 1 ? 's' : ''}`;
+
+      if (filtered.length === 0) {
+        section.innerHTML = '';
+        emptyState.classList.add('visible');
+        return;
+      }
+      emptyState.classList.remove('visible');
+
+      // Group by layer when sort=layer and no specific layer filter
+      const groupByLayer = sortBy === 'layer' && activeLayer === 'all';
+
+      if (groupByLayer) {
+        const groups = {};
+        for (const skill of filtered) {
+          if (!groups[skill.layer]) groups[skill.layer] = [];
+          groups[skill.layer].push(skill);
+        }
+        let html = '';
+        let globalDelay = 0;
+        for (const layer of ['L0', 'L1', 'L2', 'L3']) {
+          if (!groups[layer]) continue;
+          html += `
+            <div class="section-divider">
+              <span class="section-divider-label">${LAYER_LABELS[layer]}</span>
+              <div class="section-divider-line"></div>
+              <span class="section-divider-count">${groups[layer].length} skill${groups[layer].length !== 1 ? 's' : ''}</span>
+            </div>
+            <div class="skills-grid">
+              ${groups[layer].map((s, i) => renderSkillCard(s, searchQuery, (globalDelay + i) * 30)).join('')}
+            </div>`;
+          globalDelay += groups[layer].length;
+        }
+        section.innerHTML = html;
+      } else {
+        section.innerHTML = `
+          <div class="skills-grid">
+            ${filtered.map((s, i) => renderSkillCard(s, searchQuery, i * 25)).join('')}
+          </div>`;
+      }
+
+      // Show/hide L4 packs section based on filter
+      packsSection.style.display = (activeLayer === 'all' || activeLayer === 'L4') ? '' : 'none';
+    }
+
+    function renderPacks() {
+      const grid = document.getElementById('packs-grid');
+      grid.innerHTML = PACKS.map((p, i) => {
+        const isFree = p.price === 'free';
+        return `
+          <div class="pack-card" style="animation-delay:${i * 40}ms">
+            <span class="pack-name">${escapeHTML(p.name)}</span>
+            <div class="pack-meta">
+              <span class="pack-badge ${isFree ? 'pack-badge-free' : 'pack-badge-paid'}">${isFree ? 'FREE' : p.price}</span>
+              <span class="pack-skills-count">${p.skills} skills</span>
+            </div>
+            <p class="pack-desc">${escapeHTML(p.desc)}</p>
+            <span class="pack-target">&#128100; ${escapeHTML(p.target)}</span>
+          </div>`;
+      }).join('');
+    }
+
+    // ─── EVENT LISTENERS ───
+    document.getElementById('layer-tabs').addEventListener('click', e => {
+      const tab = e.target.closest('.filter-tab');
+      if (!tab) return;
+      document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      activeLayer = tab.dataset.layer;
+      render();
+    });
+
+    document.getElementById('skill-search').addEventListener('input', e => {
+      searchQuery = e.target.value.trim();
+      render();
+    });
+
+    document.getElementById('sort-select').addEventListener('change', e => {
+      sortBy = e.target.value;
+      render();
+    });
+
+    // ─── INIT ───
+    render();
+    renderPacks();
+  </script>
+</body>
+</html>

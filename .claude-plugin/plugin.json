@@ -1,0 +1,8 @@
+{
+  "name": "rune",
+  "version": "2.2.0",
+  "description": "58-skill mesh for Claude Code — 200+ connections, adaptive routing, mesh analytics. Use rune:cook for any code task, rune:team for parallel work, rune:launch for deploy, rune:rescue for legacy code.",
+  "author": {
+    "name": "Rune Contributors"
+  }
+}

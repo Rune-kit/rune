@@ -1,0 +1,215 @@
+1
+00:00:00,000 --> 00:00:04,000
+You're debugging for the 4th time.
+Claude keeps suggesting the same fix.
+
+2
+00:00:04,000 --> 00:00:06,500
+Same loop. Same frustration.
+
+3
+00:00:06,500 --> 00:00:08,000
+What if your AI assistant had a
+structured workflow that actually worked?
+
+4
+00:00:08,000 --> 00:00:12,000
+This is Rune — a 57-skill mesh
+that turns your AI coding assistant
+
+5
+00:00:12,000 --> 00:00:15,000
+from a chatbot into
+an engineering team.
+
+6
+00:00:15,000 --> 00:00:18,000
+It works on Claude Code, Cursor,
+Windsurf, and Antigravity.
+
+7
+00:00:18,000 --> 00:00:20,000
+Let me show you.
+
+8
+00:00:20,000 --> 00:00:22,000
+Install takes 10 seconds.
+
+9
+00:00:22,000 --> 00:00:27,000
+claude plugin install rune-kit/rune
+
+10
+00:00:27,000 --> 00:00:30,000
+57 skills loaded.
+
+11
+00:00:30,000 --> 00:00:34,000
+For Cursor or Windsurf, one command
+compiles all skills into your IDE's format.
+
+12
+00:00:34,000 --> 00:00:40,000
+npx --yes @rune-kit/rune init
+--platform cursor
+
+13
+00:00:40,000 --> 00:00:44,000
+First thing — let Rune
+understand your project.
+
+14
+00:00:44,000 --> 00:00:47,000
+/rune onboard
+
+15
+00:00:47,000 --> 00:00:52,000
+Rune scans your codebase, detects
+your stack, and creates context files
+
+16
+00:00:52,000 --> 00:00:57,000
+that persist across sessions.
+No more re-explaining your project.
+
+17
+00:00:57,000 --> 00:01:00,000
+Now let's debug.
+
+18
+00:01:00,000 --> 00:01:04,000
+Users report login returns 401
+for valid credentials.
+
+19
+00:01:04,000 --> 00:01:08,000
+/rune debug "login returns 401
+for valid credentials"
+
+20
+00:01:08,000 --> 00:01:14,000
+Rune's debug skill traces the code path,
+finds the root cause —
+
+21
+00:01:14,000 --> 00:01:18,000
+an expired JWT secret rotation —
+and hands it to fix.
+
+22
+00:01:18,000 --> 00:01:22,000
+Fix writes the code change.
+Verification runs automatically.
+
+23
+00:01:22,000 --> 00:01:26,000
+Lint pass. Typecheck pass.
+Tests pass.
+
+24
+00:01:26,000 --> 00:01:30,000
+Fixed. Verified. One command.
+
+25
+00:01:30,000 --> 00:01:34,000
+Now let's build something.
+Add Stripe billing to our SaaS app.
+
+26
+00:01:34,000 --> 00:01:40,000
+/rune cook "add Stripe subscription
+billing with plan management"
+
+27
+00:01:40,000 --> 00:01:46,000
+Cook activates: scout scans the codebase,
+detects the @rune/saas extension pack.
+
+28
+00:01:46,000 --> 00:01:50,000
+Plan creates implementation steps.
+
+29
+00:01:50,000 --> 00:01:56,000
+See that? Before writing a single line
+of code, Rune's adversary skill
+
+30
+00:01:56,000 --> 00:02:00,000
+red-teams the plan. Found a missing
+webhook security check.
+
+31
+00:02:00,000 --> 00:02:04,000
+Plan updated. User approves.
+
+32
+00:02:04,000 --> 00:02:08,000
+Test writes failing tests first.
+TDD from the start.
+
+33
+00:02:08,000 --> 00:02:12,000
+Fix implements the code.
+Preflight, sentinel, and review
+
+34
+00:02:12,000 --> 00:02:15,000
+run quality checks in parallel.
+
+35
+00:02:15,000 --> 00:02:19,000
+8 phases. TDD. Security scan.
+Code review.
+
+36
+00:02:19,000 --> 00:02:22,000
+All orchestrated automatically.
+
+37
+00:02:22,000 --> 00:02:26,000
+This isn't a list of
+independent tools. It's a mesh.
+
+38
+00:02:26,000 --> 00:02:30,000
+When debug can't find the cause,
+it escalates to problem-solver.
+
+39
+00:02:30,000 --> 00:02:34,000
+When cook hits a wall 3 times,
+it pivots to brainstorm.
+
+40
+00:02:34,000 --> 00:02:38,000
+When sentinel finds a vulnerability,
+it blocks the commit.
+
+41
+00:02:38,000 --> 00:02:42,000
+57 skills. 200+ connections.
+They talk to each other
+
+42
+00:02:42,000 --> 00:02:45,000
+so you don't have to.
+
+43
+00:02:45,000 --> 00:02:48,000
+Rune is free and open source.
+MIT license.
+
+44
+00:02:48,000 --> 00:02:52,000
+claude plugin install rune-kit/rune
+
+45
+00:02:52,000 --> 00:02:55,000
+Or for any IDE:
+npx --yes @rune-kit/rune init
+
+46
+00:02:55,000 --> 00:03:00,000
+Less skills. Deeper connections.
+Link in description.

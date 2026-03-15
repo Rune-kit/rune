@@ -1,0 +1,1346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rune Guides — From Install to Production</title>
+  <meta name="description" content="Complete guide to using Rune — the 58-skill mesh for AI coding assistants. Install, configure, and master every workflow.">
+  <meta property="og:title" content="Rune Guides — From Install to Production">
+  <meta property="og:description" content="Learn how to use Rune's 58-skill mesh to supercharge your AI coding assistant.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://rune-kit.github.io/rune/guides/">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    /* ─── DESIGN TOKENS (shared with landing page) ─── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-base: #0a0f1a;
+      --bg-card: #111827;
+      --bg-elevated: #1a2332;
+      --bg-sidebar: #080c14;
+      --bg-code: #0d1117;
+      --text-primary: #f0f4f8;
+      --text-secondary: #8896a8;
+      --text-muted: #5a6a7a;
+      --border: #1e2d3d;
+      --border-active: #2a4a5a;
+      --accent: #10b981;
+      --accent-dim: rgba(16, 185, 129, 0.15);
+      --accent-glow: rgba(16, 185, 129, 0.3);
+      --nav-bg: rgba(10, 15, 26, 0.92);
+      --purple: #8b5cf6;
+      --blue: #3b82f6;
+      --amber: #f59e0b;
+      --cyan: #06b6d4;
+      --red: #ef4444;
+      --font-display: 'Space Grotesk', system-ui, sans-serif;
+      --font-body: 'Inter', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --shadow-card: 0 4px 24px rgba(0,0,0,0.3);
+      --transition: 250ms ease;
+      --sidebar-w: 280px;
+      --nav-h: 56px;
+    }
+
+    /* ─── LIGHT MODE ─── */
+    [data-theme="light"] {
+      --bg-base: #f8fafb;
+      --bg-card: #ffffff;
+      --bg-elevated: #f1f5f9;
+      --bg-sidebar: #f1f5f9;
+      --bg-code: #f1f5f9;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+      --border: #e2e8f0;
+      --border-active: #cbd5e1;
+      --accent: #059669;
+      --accent-dim: rgba(5, 150, 105, 0.1);
+      --accent-glow: rgba(5, 150, 105, 0.2);
+      --nav-bg: rgba(248, 250, 251, 0.92);
+      --shadow-card: 0 4px 24px rgba(0,0,0,0.08);
+    }
+    [data-theme="light"] .code-block { background: var(--bg-code); border-color: var(--border); }
+    [data-theme="light"] .ba-card.before h4 { color: #dc2626; }
+    [data-theme="light"] .callout-tip { background: rgba(5, 150, 105, 0.06); }
+    [data-theme="light"] .callout-warn { background: rgba(217, 119, 6, 0.06); }
+    [data-theme="light"] .callout-info { background: rgba(37, 99, 235, 0.06); }
+
+    html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg-base);
+      color: var(--text-primary);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: var(--accent); text-decoration: none; transition: opacity var(--transition); }
+    a:hover { opacity: 0.85; }
+
+    /* ─── TOP NAV ─── */
+    .nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: var(--nav-bg);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      height: var(--nav-h);
+    }
+    .nav-inner {
+      max-width: 100%; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; height: 100%;
+    }
+    .nav-logo {
+      font-family: var(--font-display); font-weight: 700; font-size: 20px;
+      color: var(--text-primary); display: flex; align-items: center; gap: 8px;
+    }
+    .logo-rune { color: var(--accent); font-size: 18px; }
+    .nav-links { display: flex; align-items: center; gap: 24px; }
+    .nav-links a { color: var(--text-secondary); font-size: 14px; font-weight: 500; }
+    .nav-links a:hover { color: var(--text-primary); opacity: 1; }
+    .nav-links a.active { color: var(--accent); }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 7px 16px; border-radius: var(--radius-sm);
+      font-family: var(--font-body); font-weight: 600; font-size: 13px;
+      cursor: pointer; transition: all var(--transition); border: none;
+    }
+    .btn-sm { padding: 6px 14px; font-size: 13px; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: #0ea572; opacity: 1; }
+    .btn-ghost { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--text-primary); opacity: 1; }
+
+    /* ─── MOBILE TOGGLE ─── */
+    .sidebar-toggle {
+      display: none; background: none; border: none; color: var(--text-primary);
+      font-size: 24px; cursor: pointer; padding: 4px;
+    }
+
+    /* ─── LAYOUT ─── */
+    .layout {
+      display: flex; min-height: 100vh;
+      padding-top: var(--nav-h);
+    }
+
+    /* ─── SIDEBAR ─── */
+    .sidebar {
+      position: fixed; top: var(--nav-h); left: 0; bottom: 0;
+      width: var(--sidebar-w); background: var(--bg-sidebar);
+      border-right: 1px solid var(--border);
+      overflow-y: auto; padding: 24px 0;
+      z-index: 50;
+    }
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .sidebar-search {
+      padding: 0 16px; margin-bottom: 20px;
+    }
+    .sidebar-search input {
+      width: 100%; padding: 8px 12px;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); color: var(--text-primary);
+      font-family: var(--font-body); font-size: 13px;
+      outline: none; transition: border-color var(--transition);
+    }
+    .sidebar-search input::placeholder { color: var(--text-muted); }
+    .sidebar-search input:focus { border-color: var(--accent); }
+
+    .sidebar-group { margin-bottom: 24px; }
+    .sidebar-group-title {
+      font-family: var(--font-display); font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1.2px;
+      color: var(--text-muted); padding: 0 20px; margin-bottom: 6px;
+    }
+    .sidebar-link {
+      display: block; padding: 6px 20px 6px 20px;
+      font-size: 13px; color: var(--text-secondary);
+      transition: all 150ms ease; border-left: 2px solid transparent;
+      cursor: pointer;
+    }
+    .sidebar-link:hover {
+      color: var(--text-primary); background: rgba(255,255,255,0.03);
+      opacity: 1;
+    }
+    .sidebar-link.active {
+      color: var(--accent); border-left-color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    /* ─── MAIN CONTENT ─── */
+    .main {
+      flex: 1; margin-left: var(--sidebar-w);
+      max-width: 860px; padding: 40px 48px 120px;
+    }
+
+    /* ─── TYPOGRAPHY ─── */
+    .main h1 {
+      font-family: var(--font-display); font-size: 36px; font-weight: 700;
+      margin-bottom: 8px; line-height: 1.2;
+    }
+    .main h2 {
+      font-family: var(--font-display); font-size: 26px; font-weight: 700;
+      margin-top: 56px; margin-bottom: 16px; padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+    .main h2:first-of-type { border-top: none; margin-top: 32px; }
+    .main h3 {
+      font-family: var(--font-display); font-size: 20px; font-weight: 600;
+      margin-top: 36px; margin-bottom: 12px; color: var(--text-primary);
+    }
+    .main p { margin-bottom: 16px; color: var(--text-secondary); font-size: 15px; }
+    .main strong { color: var(--text-primary); }
+    .main ul, .main ol {
+      margin-bottom: 16px; padding-left: 24px;
+      color: var(--text-secondary); font-size: 15px;
+    }
+    .main li { margin-bottom: 6px; }
+    .main li::marker { color: var(--accent); }
+    .page-desc {
+      font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;
+      line-height: 1.7; max-width: 640px;
+    }
+
+    /* ─── CODE BLOCKS ─── */
+    .code-block {
+      background: var(--bg-code); border: 1px solid var(--border);
+      border-radius: var(--radius-md); padding: 18px 22px;
+      font-family: var(--font-mono); font-size: 13px; line-height: 1.7;
+      color: var(--accent); margin-bottom: 20px;
+      overflow-x: auto; position: relative;
+    }
+    .code-block .comment { color: var(--text-muted); }
+    .code-block .cmd { color: var(--text-primary); }
+    .code-block .flag { color: var(--amber); }
+    .code-block .output { color: var(--text-secondary); font-style: italic; }
+    code {
+      font-family: var(--font-mono); font-size: 13px;
+      background: rgba(16, 185, 129, 0.1); padding: 2px 7px;
+      border-radius: 4px; color: var(--accent);
+    }
+
+    /* ─── COPY BUTTON ─── */
+    .code-wrapper { position: relative; }
+    .copy-btn {
+      position: absolute; top: 10px; right: 10px;
+      background: var(--bg-elevated); border: 1px solid var(--border);
+      color: var(--text-muted); font-size: 12px; padding: 4px 10px;
+      border-radius: 4px; cursor: pointer; font-family: var(--font-mono);
+      transition: all 150ms ease; opacity: 0;
+    }
+    .code-wrapper:hover .copy-btn { opacity: 1; }
+    .copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+    /* ─── CALLOUT BOXES ─── */
+    .callout {
+      border-radius: var(--radius-md); padding: 16px 20px;
+      margin-bottom: 20px; font-size: 14px; border-left: 3px solid;
+    }
+    .callout-tip {
+      background: rgba(16, 185, 129, 0.08); border-color: var(--accent);
+    }
+    .callout-tip strong { color: var(--accent); }
+    .callout-warn {
+      background: rgba(245, 158, 11, 0.08); border-color: var(--amber);
+    }
+    .callout-warn strong { color: var(--amber); }
+    .callout-info {
+      background: rgba(59, 130, 246, 0.08); border-color: var(--blue);
+    }
+    .callout-info strong { color: var(--blue); }
+
+    /* ─── COMPARISON TABLE ─── */
+    .compare-table {
+      width: 100%; border-collapse: collapse; margin-bottom: 24px;
+      font-size: 13px;
+    }
+    .compare-table th {
+      font-family: var(--font-display); font-weight: 600; font-size: 13px;
+      color: var(--text-primary); padding: 10px 14px;
+      border-bottom: 2px solid var(--border); text-align: left;
+    }
+    .compare-table td {
+      padding: 10px 14px; border-bottom: 1px solid var(--border);
+      color: var(--text-secondary);
+    }
+    .compare-table tr:hover { background: rgba(255,255,255,0.02); }
+    .check { color: var(--accent); font-weight: 700; }
+
+    /* ─── PLATFORM TABS ─── */
+    .tab-group { margin-bottom: 24px; }
+    .tab-buttons {
+      display: flex; gap: 0; margin-bottom: 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .tab-btn {
+      padding: 10px 20px; font-family: var(--font-body); font-size: 13px;
+      font-weight: 600; color: var(--text-muted); background: none;
+      border: none; cursor: pointer; border-bottom: 2px solid transparent;
+      transition: all 150ms ease; margin-bottom: -1px;
+    }
+    .tab-btn:hover { color: var(--text-secondary); }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-panel { display: none; padding-top: 16px; }
+    .tab-panel.active { display: block; }
+
+    /* ─── WORKFLOW DIAGRAM ─── */
+    .flow {
+      display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+      margin-bottom: 24px;
+    }
+    .flow-step {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 8px 14px;
+      font-family: var(--font-mono); font-size: 12px; color: var(--text-primary);
+      white-space: nowrap;
+    }
+    .flow-step.highlight { border-color: var(--accent); color: var(--accent); }
+    .flow-arrow { color: var(--text-muted); font-size: 16px; }
+
+    /* ─── SKILL CARD ─── */
+    .skill-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px; margin-bottom: 24px;
+    }
+    .skill-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-md); padding: 14px 16px;
+      transition: border-color 150ms ease;
+    }
+    .skill-card:hover { border-color: var(--accent); }
+    .skill-card strong {
+      font-family: var(--font-mono); font-size: 13px;
+      display: block; margin-bottom: 4px;
+    }
+    .skill-card span { font-size: 12px; color: var(--text-muted); }
+
+    /* ─── LAYER BADGE ─── */
+    .layer-badge {
+      display: inline-block; font-family: var(--font-mono); font-size: 11px;
+      font-weight: 700; padding: 2px 8px; border-radius: 4px;
+      margin-right: 6px;
+    }
+    .layer-badge.l0 { background: rgba(16, 185, 129, 0.15); color: var(--accent); }
+    .layer-badge.l1 { background: rgba(99, 102, 241, 0.15); color: #6366f1; }
+    .layer-badge.l2 { background: rgba(59, 130, 246, 0.15); color: var(--blue); }
+    .layer-badge.l3 { background: rgba(139, 92, 246, 0.15); color: var(--purple); }
+    .layer-badge.l4 { background: rgba(245, 158, 11, 0.15); color: var(--amber); }
+
+    /* ─── MESH EMBED ─── */
+    .mesh-embed {
+      width: 100%; height: 500px; border: 1px solid var(--border);
+      border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 24px;
+    }
+    .mesh-embed iframe { width: 100%; height: 100%; border: none; }
+
+    /* ─── BEFORE/AFTER ─── */
+    .before-after {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+      margin-bottom: 24px;
+    }
+    .ba-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-md); padding: 20px;
+    }
+    .ba-card h4 {
+      font-family: var(--font-display); font-size: 14px; font-weight: 700;
+      margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .ba-card.before h4 { color: var(--red); }
+    .ba-card.after h4 { color: var(--accent); }
+    .ba-card p, .ba-card ul { font-size: 13px; }
+    .ba-card li { margin-bottom: 4px; }
+
+    /* ─── VIDEO PLACEHOLDER ─── */
+    .video-placeholder {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 48px;
+      text-align: center; margin-bottom: 24px;
+    }
+    .video-placeholder .play-icon {
+      font-size: 48px; color: var(--accent); margin-bottom: 12px;
+    }
+    .video-placeholder p { color: var(--text-muted); font-size: 14px; }
+
+    /* ─── THEME TOGGLE + TRANSLATE ─── */
+    .nav-controls { display: flex; align-items: center; gap: 8px; }
+    .theme-toggle {
+      background: none; border: 1px solid var(--border); color: var(--text-secondary);
+      width: 34px; height: 34px; border-radius: var(--radius-sm);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 16px; transition: all var(--transition); flex-shrink: 0;
+    }
+    .theme-toggle:hover { border-color: var(--accent); color: var(--text-primary); }
+    .goog-te-banner-frame { display: none !important; }
+    body { top: 0 !important; }
+    .goog-te-gadget > span { display: none !important; }
+    .goog-te-gadget { font-size: 0; line-height: 0; }
+    .goog-te-combo {
+      background: var(--bg-card); color: var(--text-secondary);
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      padding: 5px 8px; font-family: var(--font-body); font-size: 12px;
+      cursor: pointer; outline: none;
+    }
+    .goog-te-combo:hover { border-color: var(--accent); }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 900px) {
+      .sidebar { transform: translateX(-100%); transition: transform 300ms ease; z-index: 200; }
+      .sidebar.open { transform: translateX(0); }
+      .sidebar-toggle { display: block; }
+      .main { margin-left: 0; padding: 32px 20px 80px; }
+      .before-after { grid-template-columns: 1fr; }
+      .mesh-embed { height: 350px; }
+      .nav-links a:not(.btn):not(.active) { display: none; }
+    }
+    @media (max-width: 640px) {
+      .main h1 { font-size: 28px; }
+      .main h2 { font-size: 22px; }
+      .skill-grid { grid-template-columns: 1fr; }
+    }
+
+    /* Sidebar overlay for mobile */
+    .sidebar-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      z-index: 150;
+    }
+    .sidebar-overlay.visible { display: block; }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <div style="display:flex;align-items:center;gap:16px;">
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">&#9776;</button>
+        <a href="../" class="nav-logo">
+          <span class="logo-rune">&#9670;</span> Rune
+        </a>
+      </div>
+      <div class="nav-links">
+        <a href="../">Home</a>
+        <a href="./" class="active">Guides</a>
+        <a href="../#pricing">Pricing</a>
+        <div class="nav-controls">
+          <button class="theme-toggle" id="theme-toggle" aria-label="Toggle light/dark mode" title="Toggle theme">&#9790;</button>
+          <div id="google_translate_element"></div>
+        </div>
+        <a href="https://github.com/rune-kit/rune" class="btn btn-ghost btn-sm" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="layout">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-search">
+        <input type="text" id="guide-search" placeholder="Search guides..." aria-label="Search guides">
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-group-title">Getting Started</div>
+        <a href="#what-is-rune" class="sidebar-link">What is Rune?</a>
+        <a href="#install" class="sidebar-link">Installation</a>
+        <a href="#first-run" class="sidebar-link">First Run</a>
+        <a href="#existing-project" class="sidebar-link">Add to Existing Project</a>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-group-title">Core Concepts</div>
+        <a href="#mesh-architecture" class="sidebar-link">Mesh Architecture</a>
+        <a href="#five-layers" class="sidebar-link">5-Layer System</a>
+        <a href="#skill-connections" class="sidebar-link">Skill Connections</a>
+        <a href="#model-routing" class="sidebar-link">Model Routing</a>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-group-title">Workflows</div>
+        <a href="#wf-cook" class="sidebar-link">/rune cook</a>
+        <a href="#wf-debug" class="sidebar-link">/rune debug</a>
+        <a href="#wf-rescue" class="sidebar-link">/rune rescue</a>
+        <a href="#wf-team" class="sidebar-link">/rune team</a>
+        <a href="#wf-onboard" class="sidebar-link">/rune onboard</a>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-group-title">IDE & Platforms</div>
+        <a href="#ide-claude" class="sidebar-link">Claude Code</a>
+        <a href="#ide-cursor" class="sidebar-link">Cursor</a>
+        <a href="#ide-windsurf" class="sidebar-link">Windsurf</a>
+        <a href="#ide-antigravity" class="sidebar-link">Antigravity</a>
+        <a href="#ide-codex" class="sidebar-link">OpenAI Codex</a>
+        <a href="#ide-opencode" class="sidebar-link">OpenCode</a>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-group-title">Extension Packs</div>
+        <a href="#ext-using" class="sidebar-link">Using Packs</a>
+        <a href="#ext-list" class="sidebar-link">Available Packs</a>
+        <a href="#ext-creating" class="sidebar-link">Creating Packs</a>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-group-title">Configuration</div>
+        <a href="#config-file" class="sidebar-link">rune.config.json</a>
+        <a href="#config-disable" class="sidebar-link">Disabling Skills</a>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-group-title">Troubleshooting</div>
+        <a href="#troubleshooting" class="sidebar-link">Common Issues</a>
+        <a href="#faq" class="sidebar-link">FAQ</a>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main">
+
+      <h1>Rune Guides</h1>
+      <p class="page-desc">
+        Everything you need to go from install to production. Rune turns your AI coding assistant into a
+        structured engineering team with 58 interconnected skills.
+      </p>
+
+      <!-- ═══════════════════════════════════ -->
+      <!-- GETTING STARTED -->
+      <!-- ═══════════════════════════════════ -->
+
+      <h2 id="what-is-rune">What is Rune?</h2>
+
+      <p>
+        <strong>Rune is a 58-skill mesh ecosystem</strong> for AI coding assistants. Instead of giving your AI one prompt at a time,
+        Rune gives it structured workflows where skills call each other automatically.
+      </p>
+
+      <div class="before-after">
+        <div class="ba-card before">
+          <h4>Without Rune</h4>
+          <ul>
+            <li>You prompt "fix this bug"</li>
+            <li>AI guesses a fix, might break tests</li>
+            <li>No security check before commit</li>
+            <li>Same mistake next session</li>
+            <li>Context lost between sessions</li>
+          </ul>
+        </div>
+        <div class="ba-card after">
+          <h4>With Rune</h4>
+          <ul>
+            <li>You say <code>/rune cook "fix login bug"</code></li>
+            <li>scout scans codebase, debug traces root cause</li>
+            <li>fix writes code, test verifies, sentinel blocks secrets</li>
+            <li>session-bridge saves context for next session</li>
+            <li>git creates semantic commit automatically</li>
+          </ul>
+        </div>
+      </div>
+
+      <p>
+        Think of it like this: without Rune, your AI is a solo intern. With Rune, your AI is a
+        coordinated engineering team — debugger, tester, security auditor, architect, all talking to each other.
+      </p>
+
+      <!-- INSTALL -->
+      <h2 id="install">Installation</h2>
+
+      <div class="tab-group">
+        <div class="tab-buttons">
+          <button class="tab-btn active" data-tab="install-claude">Claude Code</button>
+          <button class="tab-btn" data-tab="install-cursor">Cursor</button>
+          <button class="tab-btn" data-tab="install-windsurf">Windsurf</button>
+          <button class="tab-btn" data-tab="install-antigravity">Antigravity</button>
+        </div>
+
+        <div class="tab-panel active" id="install-claude">
+          <p>Claude Code uses Rune as a <strong>native plugin</strong> — no compilation needed.</p>
+          <div class="code-wrapper">
+            <div class="code-block"><span class="comment"># Install the plugin</span>
+<span class="cmd">claude plugin install rune-kit/rune</span>
+
+<span class="comment"># Verify it's loaded</span>
+<span class="cmd">claude</span>
+<span class="output">  58 skills loaded from rune</span></div>
+            <button class="copy-btn" data-copy="claude plugin install rune-kit/rune">Copy</button>
+          </div>
+          <div class="callout callout-tip">
+            <strong>Tip:</strong> Claude Code loads SKILL.md files directly from the plugin source.
+            No compilation step, no configuration needed. Just install and go.
+          </div>
+        </div>
+
+        <div class="tab-panel" id="install-cursor">
+          <p>Cursor uses <code>.mdc</code> rule files. Rune compiles all 58 skills into Cursor's format.</p>
+          <div class="code-wrapper">
+            <div class="code-block"><span class="comment"># In your project directory</span>
+<span class="cmd">npx --yes @rune-kit/rune init <span class="flag">--platform cursor</span></span>
+
+<span class="output">  → Detected: cursor</span>
+<span class="output">  ✓ Created rune.config.json</span>
+<span class="output">  ✓ Built 58 skills + 12 extensions to .cursor/rules/</span></div>
+            <button class="copy-btn" data-copy="npx --yes @rune-kit/rune init --platform cursor">Copy</button>
+          </div>
+          <p>Skills are compiled into <code>.cursor/rules/</code>. Cursor picks them up automatically.</p>
+        </div>
+
+        <div class="tab-panel" id="install-windsurf">
+          <p>Windsurf uses <code>.md</code> rule files in its rules directory.</p>
+          <div class="code-wrapper">
+            <div class="code-block"><span class="cmd">npx --yes @rune-kit/rune init <span class="flag">--platform windsurf</span></span>
+
+<span class="output">  ✓ Built 58 skills + 12 extensions to .windsurf/rules/</span></div>
+            <button class="copy-btn" data-copy="npx --yes @rune-kit/rune init --platform windsurf">Copy</button>
+          </div>
+        </div>
+
+        <div class="tab-panel" id="install-antigravity">
+          <p>Google Antigravity (formerly Jules) uses the <code>.agent/</code> directory.</p>
+          <div class="code-wrapper">
+            <div class="code-block"><span class="cmd">npx --yes @rune-kit/rune init <span class="flag">--platform antigravity</span></span>
+
+<span class="output">  ✓ Built 58 skills + 12 extensions to .agent/rules/</span></div>
+            <button class="copy-btn" data-copy="npx --yes @rune-kit/rune init --platform antigravity">Copy</button>
+          </div>
+          <div class="callout callout-info">
+            <strong>Note:</strong> Antigravity is currently in early access. Install it from
+            <a href="https://idx.google.com/" target="_blank" rel="noopener">idx.google.com</a> (Project IDX)
+            or via your Google Cloud workspace.
+          </div>
+        </div>
+      </div>
+
+      <!-- FIRST RUN -->
+      <h2 id="first-run">First Run</h2>
+
+      <p>After installing, <strong>onboard your project</strong> so Rune understands your codebase:</p>
+
+      <div class="code-wrapper">
+        <div class="code-block"><span class="cmd">/rune onboard</span>
+
+<span class="output">  [scout] Scanning project structure...</span>
+<span class="output">  [scout] Detected: Next.js 16 + TypeScript + Prisma + TailwindCSS 4</span>
+<span class="output">  [onboard] Created .rune/conventions.md</span>
+<span class="output">  [onboard] Created .rune/decisions.md</span>
+<span class="output">  [onboard] Created CLAUDE.md (project configuration)</span>
+<span class="output">  ✓ Project context ready. Rune will remember this across sessions.</span></div>
+      </div>
+
+      <p>This creates persistent context files that every Rune skill reads. No more re-explaining your stack every session.</p>
+
+      <div class="callout callout-tip">
+        <strong>Tip:</strong> Commit the <code>.rune/</code> directory to your repo. This way every team member
+        (and every AI session) starts with the same project understanding.
+      </div>
+
+      <!-- EXISTING PROJECT -->
+      <h2 id="existing-project">Add to Existing Project</h2>
+
+      <p>
+        <strong>"I already have a project. How do I make Rune debug it?"</strong> — Great question.
+        Rune works on any existing codebase. Here's the 3-step flow:
+      </p>
+
+      <ol>
+        <li><strong>Install Rune</strong> (see platform tabs above)</li>
+        <li><strong>Run onboard</strong> — <code>/rune onboard</code> scans your codebase, detects stack, frameworks, patterns</li>
+        <li><strong>Start using workflows</strong> — <code>/rune debug "my error"</code>, <code>/rune cook "add feature"</code>, etc.</li>
+      </ol>
+
+      <p>
+        Rune's <code>scout</code> skill reads your files, <code>onboard</code> creates context,
+        and from there every skill knows your project structure, conventions, and dependencies.
+        You don't need to configure anything manually.
+      </p>
+
+      <div class="code-wrapper">
+        <div class="code-block"><span class="comment"># Example: debug a real bug in your existing project</span>
+<span class="cmd">/rune debug "API returns 500 on /api/users when filtering by date"</span>
+
+<span class="output">  [scout] Scanning: src/api/users/route.ts, src/lib/db.ts...</span>
+<span class="output">  [debug] Root cause: Date parsing fails for ISO format without timezone</span>
+<span class="output">  [debug] → Handing off to fix</span>
+<span class="output">  [fix] Patched: src/lib/db.ts:47 — added timezone normalization</span>
+<span class="output">  [verification] ✓ All tests pass</span></div>
+      </div>
+
+      <!-- ═══════════════════════════════════ -->
+      <!-- CORE CONCEPTS -->
+      <!-- ═══════════════════════════════════ -->
+
+      <h2 id="mesh-architecture">Mesh Architecture</h2>
+
+      <p>
+        Unlike a pipeline (A→B→C) or hub-spoke (everything through one center), Rune's mesh means
+        <strong>skills call each other bidirectionally</strong> and <strong>route around failures</strong>.
+      </p>
+
+      <div class="mesh-embed">
+        <iframe src="../assets/mesh-diagram.html" title="Rune Mesh Architecture — Interactive Diagram" loading="lazy"></iframe>
+      </div>
+
+      <p>
+        200+ connections between 58 skills. When <code>debug</code> can't find the cause,
+        it escalates to <code>problem-solver</code>. When <code>cook</code> hits a wall 3 times,
+        it pivots to <code>brainstorm</code>. When <code>sentinel</code> finds a vulnerability,
+        it blocks the commit. The mesh is self-healing.
+      </p>
+
+      <!-- FIVE LAYERS -->
+      <h2 id="five-layers">5-Layer System</h2>
+
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th>Layer</th>
+            <th>Role</th>
+            <th>Count</th>
+            <th>Examples</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="layer-badge l0">L0</span></td>
+            <td>Router</td>
+            <td>1</td>
+            <td>skill-router — routes every action to the right skill</td>
+          </tr>
+          <tr>
+            <td><span class="layer-badge l1">L1</span></td>
+            <td>Orchestrators</td>
+            <td>5</td>
+            <td>cook, team, launch, rescue, scaffold</td>
+          </tr>
+          <tr>
+            <td><span class="layer-badge l2">L2</span></td>
+            <td>Workflow Hubs</td>
+            <td>27</td>
+            <td>plan, debug, fix, test, review, sentinel, design, ba, adversary...</td>
+          </tr>
+          <tr>
+            <td><span class="layer-badge l3">L3</span></td>
+            <td>Utilities</td>
+            <td>24</td>
+            <td>research, verification, git, session-bridge, sentinel-env...</td>
+          </tr>
+          <tr>
+            <td><span class="layer-badge l4">L4</span></td>
+            <td>Extension Packs</td>
+            <td>13</td>
+            <td>@rune/trading, @rune/saas, @rune/ai-ml, @rune/gamedev...</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        <strong>Layer rules:</strong> Skills only call downward (L1→L2→L3).
+        L3 utilities never call L1 orchestrators.
+        This prevents circular dependencies and keeps the mesh predictable.
+      </p>
+
+      <!-- SKILL CONNECTIONS -->
+      <h2 id="skill-connections">Skill Connections</h2>
+
+      <p>Every skill declares who it calls and who calls it. Here's how <code>cook</code> orchestrates a feature:</p>
+
+      <div class="flow">
+        <div class="flow-step highlight">cook</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">scout</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">ba</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">plan</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">adversary</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">test</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">fix</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">preflight</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">sentinel</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">review</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">git</div>
+      </div>
+
+      <p>
+        This is just one path. If <code>fix</code> fails 3 times, <code>cook</code> escalates:
+        first to <code>debug</code>, then to <code>brainstorm</code> (rescue mode),
+        then asks the user. The mesh adapts.
+      </p>
+
+      <!-- MODEL ROUTING -->
+      <h2 id="model-routing">Model Routing</h2>
+
+      <p>Rune auto-selects the cheapest model that can handle each task:</p>
+
+      <table class="compare-table">
+        <thead>
+          <tr><th>Model</th><th>Cost</th><th>Used For</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Haiku</strong></td><td>Lowest</td><td>scout, verification, git, sentinel-env — scanning, checking</td></tr>
+          <tr><td><strong>Sonnet</strong></td><td>Medium</td><td>fix, test, review, design — code writing, analysis</td></tr>
+          <tr><td><strong>Opus</strong></td><td>Highest</td><td>plan, architect, adversary, ba — deep reasoning, decisions</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout callout-tip">
+        <strong>Cost estimate:</strong> A typical <code>/rune cook</code> feature costs ~$0.05-0.15 in API tokens.
+        Most of the work is done by Haiku and Sonnet.
+      </div>
+
+      <!-- ═══════════════════════════════════ -->
+      <!-- WORKFLOWS -->
+      <!-- ═══════════════════════════════════ -->
+
+      <h2 id="wf-cook">/rune cook — Build Features</h2>
+
+      <p>The primary workflow. Builds any feature with TDD discipline, security gates, and automatic verification.</p>
+
+      <div class="code-wrapper">
+        <div class="code-block"><span class="cmd">/rune cook "add Stripe subscription billing with plan management"</span></div>
+      </div>
+
+      <div class="flow">
+        <div class="flow-step">Phase 0: Resume</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">Phase 0.5: Env Check</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">Phase 1: Understand</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">Phase 2: Plan</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step highlight">Phase 2.5: Adversary</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">Phase 3: Test</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">Phase 4: Implement</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">Phase 5: Quality</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">Phase 6: Verify</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">Phase 7: Commit</div>
+      </div>
+
+      <p>
+        <strong>Phase 2.5 (Adversary)</strong> is unique to Rune: before writing any code,
+        the adversary skill red-teams the plan across 5 dimensions — edge cases, security,
+        scalability, error propagation, and integration risk. It catches issues before they become bugs.
+      </p>
+
+      <div class="callout callout-warn">
+        <strong>Key gate:</strong> If adversary returns REVISE, the plan must be updated before proceeding.
+        This prevents "code first, fix later" patterns that waste time.
+      </div>
+
+      <!-- DEBUG -->
+      <h2 id="wf-debug">/rune debug — Root Cause Analysis</h2>
+
+      <div class="code-wrapper">
+        <div class="code-block"><span class="cmd">/rune debug "login returns 401 for valid credentials"</span>
+
+<span class="output">  [scout] Found: src/auth/middleware.ts, src/auth/jwt.ts, src/api/login.ts</span>
+<span class="output">  [debug] Tracing authentication flow...</span>
+<span class="output">  [debug] Root cause: JWT_SECRET rotated but old secret not in fallback array</span>
+<span class="output">  [debug] Confidence: HIGH (verified with test case)</span>
+<span class="output">  [debug] → Handing off to fix</span>
+<span class="output">  [fix] Patched: src/auth/jwt.ts — added secret rotation fallback</span>
+<span class="output">  [verification] ✓ 14/14 tests pass, 0 regressions</span></div>
+      </div>
+
+      <p>
+        Debug uses structured reasoning to trace code paths. If it can't find the cause after 3 attempts,
+        it escalates to <code>problem-solver</code> (5 Whys, Fishbone analysis).
+      </p>
+
+      <!-- RESCUE -->
+      <h2 id="wf-rescue">/rune rescue — Refactor Legacy Code</h2>
+
+      <div class="code-wrapper">
+        <div class="code-block"><span class="cmd">/rune rescue src/legacy/payment-processor.ts</span>
+
+<span class="output">  [autopsy] Health score: 34/100 (CRITICAL)</span>
+<span class="output">  [autopsy] Issues: 12 God classes, 8 circular deps, 0% test coverage</span>
+<span class="output">  [safeguard] Creating characterization tests...</span>
+<span class="output">  [surgeon] Refactoring 1 module per session (Strangler Fig pattern)</span></div>
+      </div>
+
+      <p>
+        Rescue takes the safe approach: autopsy first (health score), then characterization tests (safety net),
+        then one module at a time. Never rewrites everything at once.
+      </p>
+
+      <!-- TEAM -->
+      <h2 id="wf-team">/rune team — Parallel Execution</h2>
+
+      <div class="code-wrapper">
+        <div class="code-block"><span class="cmd">/rune team "refactor auth, add billing, update dashboard"</span>
+
+<span class="output">  [team] Decomposing into 3 parallel streams...</span>
+<span class="output">  [worktree] Created: auth-refactor, billing-feature, dashboard-update</span>
+<span class="output">  [team] Stream 1: cook → auth refactor (worktree: auth-refactor)</span>
+<span class="output">  [team] Stream 2: cook → billing (worktree: billing-feature)</span>
+<span class="output">  [team] Stream 3: cook → dashboard (worktree: dashboard-update)</span>
+<span class="output">  [team] All streams complete → merging...</span>
+<span class="output">  [completion-gate] ✓ All 3 streams verified</span></div>
+      </div>
+
+      <p>
+        Team decomposes large tasks into a DAG, creates isolated git worktrees for each stream,
+        runs parallel agents, then merges everything back. Use when a task spans 5+ files or 3+ modules.
+      </p>
+
+      <!-- ONBOARD -->
+      <h2 id="wf-onboard">/rune onboard — Project Setup</h2>
+
+      <div class="code-wrapper">
+        <div class="code-block"><span class="cmd">/rune onboard</span>
+
+<span class="output">  [scout] Scanning 247 files...</span>
+<span class="output">  [scout] Stack: Next.js 16 + Prisma 6 + TailwindCSS 4 + TypeScript 5.7</span>
+<span class="output">  [onboard] Created .rune/conventions.md (coding patterns detected)</span>
+<span class="output">  [onboard] Created .rune/decisions.md (architecture decisions)</span>
+<span class="output">  [onboard] Updated CLAUDE.md (project configuration for AI)</span></div>
+      </div>
+
+      <p>Run this once per project. After that, every Rune skill knows your stack, patterns, and conventions.</p>
+
+      <!-- ═══════════════════════════════════ -->
+      <!-- IDE & PLATFORMS -->
+      <!-- ═══════════════════════════════════ -->
+
+      <h2 id="ide-claude">Claude Code</h2>
+
+      <p>
+        Rune is a <strong>native Claude Code plugin</strong>. It uses the full plugin system:
+        subagents, hooks, commands, contexts, and skills. This is the richest experience.
+      </p>
+
+      <div class="code-wrapper">
+        <div class="code-block"><span class="comment"># Install</span>
+<span class="cmd">claude plugin install rune-kit/rune</span>
+
+<span class="comment"># Use any skill directly</span>
+<span class="cmd">/rune cook "add user authentication"</span>
+<span class="cmd">/rune debug "TypeError in dashboard"</span>
+<span class="cmd">/rune review</span></div>
+      </div>
+
+      <h2 id="ide-cursor">Cursor</h2>
+
+      <p>
+        Cursor uses <code>.mdc</code> (Markdown Config) rule files. The compiler converts each SKILL.md
+        into Cursor's native format with proper frontmatter.
+      </p>
+
+      <div class="code-wrapper">
+        <div class="code-block"><span class="cmd">npx --yes @rune-kit/rune init <span class="flag">--platform cursor</span></span>
+
+<span class="comment"># Skills appear in .cursor/rules/rune/</span>
+<span class="comment"># Cursor auto-loads them for every conversation</span></div>
+      </div>
+
+      <h2 id="ide-windsurf">Windsurf</h2>
+
+      <div class="code-wrapper">
+        <div class="code-block"><span class="cmd">npx --yes @rune-kit/rune init <span class="flag">--platform windsurf</span></span>
+
+<span class="comment"># Skills appear in .windsurf/rules/rune/</span></div>
+      </div>
+
+      <h2 id="ide-antigravity">Antigravity</h2>
+
+      <div class="code-wrapper">
+        <div class="code-block"><span class="cmd">npx --yes @rune-kit/rune init <span class="flag">--platform antigravity</span></span>
+
+<span class="comment"># Skills appear in .agent/rules/rune/</span></div>
+      </div>
+
+      <h2 id="ide-codex">OpenAI Codex</h2>
+
+      <p>
+        OpenAI Codex uses a <strong>directory-per-skill</strong> structure inside <code>.codex/skills/</code>.
+        Each skill gets its own folder with a <code>SKILL.md</code> file — similar to Rune's native format.
+      </p>
+
+      <div class="code-wrapper">
+        <div class="code-block"><span class="cmd">npx --yes @rune-kit/rune init <span class="flag">--platform codex</span></span>
+
+<span class="comment"># Output structure:</span>
+<span class="output">  .codex/skills/</span>
+<span class="output">  ├── rune-cook/SKILL.md</span>
+<span class="output">  ├── rune-debug/SKILL.md</span>
+<span class="output">  ├── rune-fix/SKILL.md</span>
+<span class="output">  ├── rune-plan/SKILL.md</span>
+<span class="output">  ├── rune-test/SKILL.md</span>
+<span class="output">  └── ... (58 skills total)</span></div>
+      </div>
+
+      <p>
+        Codex skills use <strong>YAML frontmatter</strong> with <code>name</code> and <code>description</code> fields,
+        matching Codex's native skill format. The compiler also maps tool names to
+        Codex-compatible descriptions (e.g., <code>Read</code> → <code>read the file</code>).
+      </p>
+
+      <div class="callout callout-info">
+        <strong>Codex project config:</strong> Codex uses <code>AGENTS.md</code> (equivalent to Claude's <code>CLAUDE.md</code>).
+        Rune skills work alongside your existing <code>AGENTS.md</code> without conflicts.
+      </div>
+
+      <h2 id="ide-opencode">OpenCode</h2>
+
+      <p>
+        OpenCode is an open-source AI coding agent with 120K+ GitHub stars. It supports
+        <strong>directory-per-skill</strong> <code>SKILL.md</code> format with native subagent support.
+      </p>
+
+      <div class="code-wrapper">
+        <div class="code-block"><span class="comment"># Build Rune skills for OpenCode</span>
+<span class="cmd">npx @rune-kit/rune build <span class="flag">--platform opencode</span> <span class="flag">--output .</span></span>
+
+<span class="comment"># Or initialize with auto-detection</span>
+<span class="cmd">npx @rune-kit/rune init</span>
+
+<span class="comment"># Output structure:</span>
+<span class="output">  .opencode/</span>
+<span class="output">  └── skills/</span>
+<span class="output">      ├── rune-cook/</span>
+<span class="output">      │   └── SKILL.md</span>
+<span class="output">      ├── rune-plan/</span>
+<span class="output">      │   └── SKILL.md</span>
+<span class="output">      └── ...</span></div>
+      </div>
+
+      <p>
+        OpenCode preserves <strong>native subagent support</strong> — parallel agents are kept as true
+        parallel invocations rather than collapsed to sequential steps. The compiler also generates
+        an <code>AGENTS.md</code> file for project-level context.
+      </p>
+
+      <div class="callout callout-info">
+        <strong>Note:</strong> OpenCode also searches <code>.claude/skills/</code> and
+        <code>.agents/skills/</code> — so Claude-compatible skill formats work too.
+      </div>
+
+      <div class="callout callout-info">
+        <strong>All platforms get the same 58 skills.</strong> The compiler handles format differences.
+        Cross-references, tool names, and model hints are adapted per platform.
+      </div>
+
+      <!-- ═══════════════════════════════════ -->
+      <!-- EXTENSION PACKS -->
+      <!-- ═══════════════════════════════════ -->
+
+      <h2 id="ext-using">Using Extension Packs</h2>
+
+      <p>
+        Extension packs are domain-specific skill bundles. They're included with Rune and auto-detected
+        when your project matches their domain.
+      </p>
+
+      <div class="code-wrapper">
+        <div class="code-block"><span class="comment"># Packs are auto-loaded by the mesh. No configuration needed.</span>
+<span class="comment"># When cook detects a SaaS project, @rune/saas patterns activate automatically.</span>
+
+<span class="comment"># To manually compile with specific packs only:</span>
+<span class="cmd">npx --yes @rune-kit/rune build <span class="flag">--extensions trading,saas</span></span></div>
+      </div>
+
+      <h2 id="ext-list">Available Packs</h2>
+
+      <div class="skill-grid">
+        <div class="skill-card"><strong>@rune/ui</strong><span>Frontend patterns, component architecture, responsive design</span></div>
+        <div class="skill-card"><strong>@rune/backend</strong><span>API design, database patterns, auth, caching</span></div>
+        <div class="skill-card"><strong>@rune/devops</strong><span>CI/CD, Docker, K8s, monitoring, chaos engineering</span></div>
+        <div class="skill-card"><strong>@rune/mobile</strong><span>React Native, Flutter, platform-specific patterns</span></div>
+        <div class="skill-card"><strong>@rune/security</strong><span>OWASP, threat modeling, penetration testing</span></div>
+        <div class="skill-card"><strong>@rune/trading</strong><span>Market data, backtesting, risk management, quant patterns</span></div>
+        <div class="skill-card"><strong>@rune/saas</strong><span>Multi-tenancy, billing, usage tracking, onboarding</span></div>
+        <div class="skill-card"><strong>@rune/ecommerce</strong><span>Cart, checkout, inventory, payment gateways</span></div>
+        <div class="skill-card"><strong>@rune/ai-ml</strong><span>ML pipelines, LLM integration, prompt patterns, evaluation</span></div>
+        <div class="skill-card"><strong>@rune/gamedev</strong><span>Game loops, ECS, physics, asset pipelines</span></div>
+        <div class="skill-card"><strong>@rune/content</strong><span>CMS patterns, markdown processing, SEO</span></div>
+        <div class="skill-card"><strong>@rune/analytics</strong><span>Tracking, dashboards, SQL patterns, data validation</span></div>
+        <div class="skill-card"><strong>@rune/chrome-ext</strong><span>Browser extensions, content scripts, popup UI</span></div>
+      </div>
+
+      <h2 id="ext-creating">Creating Your Own Pack</h2>
+
+      <div class="code-wrapper">
+        <div class="code-block"><span class="comment"># Use skill-forge to scaffold a new extension pack</span>
+<span class="cmd">/rune skill-forge "create extension pack @rune/my-domain"</span>
+
+<span class="comment"># Pack structure:</span>
+<span class="output">  extensions/my-domain/</span>
+<span class="output">  ├── PACK.md          ← Pack manifest (skills, patterns, conventions)</span>
+<span class="output">  └── README.md        ← Documentation</span></div>
+      </div>
+
+      <p>
+        See <code>docs/EXTENSION-TEMPLATE.md</code> for the full PACK.md format.
+        Community packs are welcome — submit a PR to add yours!
+      </p>
+
+      <!-- ═══════════════════════════════════ -->
+      <!-- CONFIGURATION -->
+      <!-- ═══════════════════════════════════ -->
+
+      <h2 id="config-file">rune.config.json</h2>
+
+      <p>Created by <code>rune init</code>. Only needed for non-Claude platforms.</p>
+
+      <div class="code-wrapper">
+        <div class="code-block">{
+  <span class="comment">"$schema"</span>: "https://rune-kit.github.io/rune/config-schema.json",
+  <span class="flag">"version"</span>: 1,
+  <span class="flag">"platform"</span>: "cursor",
+  <span class="flag">"skills"</span>: {
+    "disabled": ["video-creator", "marketing"]
+  },
+  <span class="flag">"extensions"</span>: {
+    "enabled": null  <span class="comment">// null = all, or ["trading", "saas"]</span>
+  },
+  <span class="flag">"output"</span>: {
+    "index": true
+  }
+}</div>
+      </div>
+
+      <h2 id="config-disable">Disabling Skills</h2>
+
+      <p>Don't need marketing or video skills? Disable them:</p>
+
+      <div class="code-wrapper">
+        <div class="code-block"><span class="comment"># Via CLI flag</span>
+<span class="cmd">npx --yes @rune-kit/rune build <span class="flag">--disable marketing,video-creator</span></span>
+
+<span class="comment"># Or in rune.config.json</span>
+"skills": { "disabled": ["marketing", "video-creator"] }</div>
+      </div>
+
+      <!-- ═══════════════════════════════════ -->
+      <!-- TROUBLESHOOTING -->
+      <!-- ═══════════════════════════════════ -->
+
+      <h2 id="troubleshooting">Common Issues</h2>
+
+      <h3>"Skills not loading" (Claude Code)</h3>
+      <div class="code-wrapper">
+        <div class="code-block"><span class="comment"># Reinstall the plugin</span>
+<span class="cmd">claude plugin uninstall rune</span>
+<span class="cmd">claude plugin install rune-kit/rune</span>
+
+<span class="comment"># Restart Claude Code to pick up changes</span></div>
+      </div>
+
+      <h3>"npx command not found" (Cursor/Windsurf)</h3>
+      <p>Make sure Node.js 18+ is installed. Or install globally:</p>
+      <div class="code-wrapper">
+        <div class="code-block"><span class="cmd">npm install -g @rune-kit/rune</span>
+<span class="cmd">rune init <span class="flag">--platform cursor</span></span></div>
+      </div>
+
+      <h3>"Skills compiled but AI doesn't use them"</h3>
+      <p>
+        Restart your IDE after running <code>rune init</code> or <code>rune build</code>.
+        Some IDEs cache rules and need a restart to pick up new files.
+      </p>
+
+      <h3>"How do I update Rune?"</h3>
+      <div class="code-wrapper">
+        <div class="code-block"><span class="comment"># Claude Code</span>
+<span class="cmd">claude plugin install rune-kit/rune</span>  <span class="comment"># reinstall gets latest</span>
+
+<span class="comment"># Other platforms</span>
+<span class="cmd">npx --yes @rune-kit/rune@latest build</span></div>
+      </div>
+
+      <!-- FAQ -->
+      <h2 id="faq">FAQ</h2>
+
+      <h3>Is Rune free?</h3>
+      <p>
+        Yes. The full 58-skill mesh + 13 extension packs are <strong>free forever, MIT license</strong>.
+        <a href="../#pricing">Rune Pro</a> ($49 lifetime) adds business department skills (Product, Sales, Data Science).
+      </p>
+
+      <h3>Does Rune work with my existing CLAUDE.md / .cursorrules?</h3>
+      <p>
+        Yes. Rune's skills are additive — they don't overwrite your existing configuration.
+        Your project-specific rules take precedence.
+      </p>
+
+      <h3>How much does it cost in API tokens?</h3>
+      <p>
+        A typical <code>/rune cook</code> feature: $0.05-0.15. Rune auto-routes to the cheapest model
+        (Haiku for scanning, Sonnet for code, Opus only for architecture decisions).
+      </p>
+
+      <h3>Can I create my own skills?</h3>
+      <p>
+        Yes! Use <code>/rune skill-forge</code> to scaffold a new skill. Skills are just Markdown files
+        with a specific format. See <code>docs/SKILL-TEMPLATE.md</code>.
+      </p>
+
+      <h3>Does it work offline?</h3>
+      <p>
+        Rune itself is offline (all skills are local Markdown files). But the AI model
+        you're using (Claude, GPT, etc.) needs internet access.
+      </p>
+
+      <!-- FOOTER -->
+      <div style="margin-top:80px;padding-top:32px;border-top:1px solid var(--border);text-align:center;">
+        <p style="color:var(--text-muted);font-size:13px;">
+          <span class="logo-rune">&#9670;</span> Rune — Less skills. Deeper connections.
+          <br>
+          <a href="https://github.com/rune-kit/rune" target="_blank" rel="noopener">GitHub</a> &bull;
+          <a href="https://www.npmjs.com/package/@rune-kit/rune" target="_blank" rel="noopener">npm</a> &bull;
+          <a href="https://github.com/rune-kit/rune/issues" target="_blank" rel="noopener">Issues</a>
+        </p>
+      </div>
+
+    </main>
+  </div>
+
+  <script>
+    // ─── Tab switching ───
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const group = btn.closest('.tab-group');
+        group.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        group.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    // ─── Scroll spy ───
+    const sections = document.querySelectorAll('h2[id], h3[id]');
+    const sidebarLinks = document.querySelectorAll('.sidebar-link');
+
+    function updateScrollSpy() {
+      let current = '';
+      sections.forEach(section => {
+        const top = section.getBoundingClientRect().top;
+        if (top < 120) current = section.id;
+      });
+      sidebarLinks.forEach(link => {
+        link.classList.toggle('active', link.getAttribute('href') === '#' + current);
+      });
+    }
+
+    let scrollTick = false;
+    window.addEventListener('scroll', () => {
+      if (!scrollTick) {
+        requestAnimationFrame(() => { updateScrollSpy(); scrollTick = false; });
+        scrollTick = true;
+      }
+    });
+
+    // ─── Copy buttons ───
+    document.querySelectorAll('.copy-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const text = btn.dataset.copy || btn.closest('.code-wrapper').querySelector('.code-block').textContent;
+        navigator.clipboard.writeText(text).then(() => {
+          btn.textContent = 'Copied!';
+          setTimeout(() => { btn.textContent = 'Copy'; }, 1500);
+        });
+      });
+    });
+
+    // ─── Sidebar search ───
+    document.getElementById('guide-search').addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase();
+      document.querySelectorAll('.sidebar-group').forEach(group => {
+        const links = group.querySelectorAll('.sidebar-link');
+        let hasVisible = false;
+        links.forEach(link => {
+          const matches = link.textContent.toLowerCase().includes(query);
+          link.style.display = matches ? '' : 'none';
+          if (matches) hasVisible = true;
+        });
+        group.style.display = (hasVisible || !query) ? '' : 'none';
+      });
+    });
+
+    // ─── Mobile sidebar toggle ───
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    const toggle = document.getElementById('sidebar-toggle');
+
+    toggle.addEventListener('click', () => {
+      sidebar.classList.toggle('open');
+      overlay.classList.toggle('visible');
+    });
+    overlay.addEventListener('click', () => {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('visible');
+    });
+    sidebarLinks.forEach(link => {
+      link.addEventListener('click', () => {
+        if (window.innerWidth <= 900) {
+          sidebar.classList.remove('open');
+          overlay.classList.remove('visible');
+        }
+      });
+    });
+
+    // Initial scroll spy
+    updateScrollSpy();
+  </script>
+
+  <!-- Theme toggle (shared with landing page) -->
+  <script>
+    (function initTheme() {
+      const toggle = document.getElementById('theme-toggle');
+      const stored = localStorage.getItem('rune-theme');
+      if (stored === 'light') {
+        document.documentElement.setAttribute('data-theme', 'light');
+        toggle.innerHTML = '&#9728;';
+      }
+      toggle.addEventListener('click', () => {
+        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+        if (isLight) {
+          document.documentElement.removeAttribute('data-theme');
+          toggle.innerHTML = '&#9790;';
+          localStorage.setItem('rune-theme', 'dark');
+        } else {
+          document.documentElement.setAttribute('data-theme', 'light');
+          toggle.innerHTML = '&#9728;';
+          localStorage.setItem('rune-theme', 'light');
+        }
+      });
+    })();
+  </script>
+
+  <!-- Google Translate (free, no API key) -->
+  <script>
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({
+        pageLanguage: 'en',
+        includedLanguages: 'vi,ja,ko,zh-CN,zh-TW,fr,de,es,pt,ru,ar,hi,th,id',
+        layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+        autoDisplay: false
+      }, 'google_translate_element');
+    }
+  </script>
+  <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+</body>
+</html>
