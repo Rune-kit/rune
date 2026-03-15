@@ -1,10 +1,16 @@
-# Rune
+<p align="center">
+  <img src="assets/banner.svg" alt="Rune — Skill Mesh for AI Coding Assistants" width="100%">
+</p>
 
-**Less skills. Deeper connections.**
+<p align="center">
+  <strong>Less skills. Deeper connections.</strong><br>
+  A lean, interconnected skill ecosystem for AI coding assistants.<br>
+  58 skills · 200+ mesh connections · 8 platforms · MIT
+</p>
 
-A lean, interconnected skill ecosystem for AI coding assistants. 58 skills, 200+ mesh connections, full project lifecycle — from idea to production.
-
-Works on **Claude Code** (native plugin) · **Cursor** · **Windsurf** · **Google Antigravity** · **OpenAI Codex** · **OpenCode** · any AI IDE
+<p align="center">
+  <strong>Claude Code</strong> (native plugin) · <strong>Cursor</strong> · <strong>Windsurf</strong> · <strong>Google Antigravity</strong> · <strong>OpenAI Codex</strong> · <strong>OpenCode</strong> · any AI IDE
+</p>
 
 ## Why Rune?
 
