@@ -51,11 +51,6 @@ function detectPlatform(projectRoot) {
   return null;
 }
 
-function discoverExtensions() {
-  const extDir = path.join(RUNE_ROOT, 'extensions');
-  if (!existsSync(extDir)) return [];
-  return [];
-}
 
 async function prompt(question) {
   const rl = createInterface({ input: process.stdin, output: process.stdout });
