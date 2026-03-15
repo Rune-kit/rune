@@ -3,7 +3,7 @@ name: review-intake
 description: Use when receiving code review feedback, PR comments, or external suggestions before implementing any changes. Prevents blind implementation, enforces verification-first discipline.
 metadata:
   author: runedev
-  version: "1.0.0"
+  version: "1.1.0"
   layer: L2
   model: sonnet
   group: quality
@@ -112,8 +112,24 @@ UNCLEAR:  "Need clarification on [specific aspect]."
 BANNED: "You're absolutely right!"
 BANNED: "Great point!" / "Great catch!"
 BANNED: "Thanks for catching that!"
+BANNED: "I agree with your suggestion"
+BANNED: "That's a good idea"
+BANNED: "I see what you mean"
+BANNED: Any sentence that adds no technical information
 BANNED: Any performative gratitude — actions speak, not words.
 ```
+
+<HARD-GATE>
+Every response to a review item MUST start with an ACTION VERB:
+- "Fixed — [description]"
+- "Reverted — [reason]"
+- "Deferred — [reason + ticket]"
+- "Pushed back — [technical evidence]"
+- "Clarifying — [question]"
+
+Responses starting with praise, agreement, or social pleasantries are BLOCKED.
+This is a professional code review, not a conversation — signal with actions, not words.
+</HARD-GATE>
 
 When replying to GitHub PR comments, reply in the thread:
 ```bash

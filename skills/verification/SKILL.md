@@ -3,7 +3,7 @@ name: verification
 description: "Universal verification runner. Runs lint, type-check, tests, and build. Use after any code change to verify nothing is broken."
 metadata:
   author: runedev
-  version: "0.2.0"
+  version: "0.3.0"
   layer: L3
   model: haiku
   group: validation
@@ -98,6 +98,44 @@ If build fails: record first 20 lines of build output, mark as FAIL.
 
 Compile all results into the structured report. Update all TodoWrite items to completed.
 
+### Artifact Verification
+
+> Inspired by CLI-Anything (HKUDS/CLI-Anything, 14.5k★): "Never trust exit 0."
+> Many tools exit 0 even when they fail silently. Always verify ACTUAL output.
+
+After each phase command, verify that the expected artifact or indicator is present:
+
+**Test output** — scan stdout for the pass/fail summary line:
+- Vitest/Jest: look for `X passed`, `X failed` — if neither appears, output is incomplete
+- Pytest: look for `X passed` or `X failed` — exit 0 with no summary = runner crashed silently
+- If only exit code available and no summary line found → mark as INCOMPLETE, not PASS
+
+**Build output** — after `npm run build` / `cargo build` / `go build`:
+- Verify the output file exists: `Glob("dist/**/*.js")` or equivalent
+- Verify file size > 0 bytes: a zero-byte output = silent truncation failure
+- If output directory is missing → FAIL even if command exited 0
+
+**Lint output** — parse stdout for counts, not just exit code:
+- ESLint: look for `X problems (Y errors, Z warnings)` — `0 problems` = PASS
+- Ruff/Flake8: zero output lines = PASS; any file:line output = FAIL
+- If linter exits 0 but output contains `error` keyword → log as suspicious, mark WARN
+
+**Generated files** — check magic bytes for binary outputs:
+- PDF: first bytes must be `%PDF` — use `Bash("head -c 4 file.pdf")`
+- ZIP/XLSX/DOCX: first bytes must be `PK` (ZIP magic) — use `Bash("head -c 2 file.zip")`
+- File size must exceed minimum threshold (PDF > 1KB, ZIP > 100 bytes)
+
+**Type check** — do not trust exit code alone:
+- TypeScript `tsc --noEmit`: look for `Found X errors` or absence of error lines
+- `Found 0 errors` = PASS; any other count = FAIL
+- Empty output from `tsc` = PASS (no errors emitted) — note explicitly
+
+<HARD-GATE name="artifact-verification">
+Verification MUST check actual command output for success indicators, not just exit codes.
+Exit 0 without a confirming output artifact or success string = UNVERIFIED.
+Report the specific line that confirmed success (e.g., "3 passed, 0 failed").
+</HARD-GATE>
+
 ## Error Recovery
 
 - If project type cannot be detected: report "Unknown project type" and skip all checks
@@ -187,6 +225,7 @@ Known failure modes for this skill. Check these before declaring done.
 | Marking check as PASS when the tool isn't installed | MEDIUM | Mark as SKIP (not PASS) — PASS means the tool ran and reported clean |
 | Stopping after first failure instead of running remaining checks | MEDIUM | Run all checks; aggregate all failures so developer can fix everything at once |
 | Reporting PASS when output has warnings but zero errors | LOW | PASS is correct but note warning count — caller decides if warnings matter |
+| Trusting exit code 0 without output verification | CRITICAL | Artifact Verification HARD-GATE: always confirm success indicator in stdout (pass count, "0 errors", output file exists) |
 
 ## Done When
 

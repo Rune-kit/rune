@@ -5,7 +5,7 @@ context: fork
 agent: general-purpose
 metadata:
   author: runedev
-  version: "0.3.0"
+  version: "0.4.0"
   layer: L1
   model: opus
   group: orchestrator
@@ -248,6 +248,29 @@ Error recovery:
     → BLOCK this stream from merge
     → Report: "Stream [id] blocked: CRITICAL issue in [file] — [details]"
     → Present to user for decision before continuing
+```
+
+**3c. Evaluate subagent status per stream.**
+
+Each cook instance MUST have returned one of four statuses. Team handles them as follows:
+
+| Cook Status | Team Action |
+|-------------|-------------|
+| `DONE` | Stream cleared for merge — proceed normally |
+| `DONE_WITH_CONCERNS` | Stream cleared for merge, BUT trigger **cross-workstream review**: check if the concern impacts any other stream's files or contracts before merging ALL streams. Log concern in Team Report. |
+| `NEEDS_CONTEXT` | Stream paused — present the specific question to user. Resume that stream after answer. Other independent streams may continue in parallel. |
+| `BLOCKED` | Stream blocked from merge. If stream has no dependents → continue with remaining streams and report partial completion. If stream has dependents → STOP all dependent streams, present to user with full blocker details. |
+
+**Cross-workstream review (triggered by any DONE_WITH_CONCERNS)**:
+
+```
+1. Read the concern from the cook report
+2. Check if the concern touches shared contracts, interfaces, or shared files
+   → Use Grep to find the concern's affected symbols/files across all worktrees
+3. If concern is isolated to stream's own files → proceed to merge (concern logged only)
+4. If concern crosses stream boundaries → resolve before merge:
+   → Present to user with: affected streams, concern details, two remediation options
+   → Do NOT merge any stream until user decides
 ```
 
 Mark todo[2] `completed`.

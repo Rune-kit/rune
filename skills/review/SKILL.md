@@ -3,7 +3,7 @@ name: review
 description: Code quality review — patterns, security, performance, correctness. Finds bugs, suggests improvements, triggers fix for issues found. Escalates to opus for security-critical code.
 metadata:
   author: runedev
-  version: "0.2.0"
+  version: "0.3.0"
   layer: L2
   model: sonnet
   group: development
@@ -165,6 +165,39 @@ Identify gaps in test coverage.
 - Read the test file and verify: are the new functions covered? are edge cases tested?
 - If untested code found: call `rune:test` with specific instructions on what to test
 - Flag as HIGH if business logic is untested, MEDIUM if utility code is untested
+
+### Step 5.5: Two-Stage Review Gate
+
+Separate spec compliance from code quality. Most reviews conflate both — this gate forces the distinction.
+
+**Stage 1 — Spec Compliance (check FIRST)**
+
+Before evaluating code quality, verify the implementation matches what was asked:
+
+- Load the originating plan, task, ticket, or `requirements.md` if available
+- Does the implementation cover every acceptance criterion? Check each one explicitly
+- Is there **under-engineering** — requirements stated but not implemented?
+- Is there **over-engineering** — abstractions, generalization, or features beyond scope?
+- Does the file/function structure match what the plan specified?
+
+Flag spec deviations as HIGH — clean code that misses requirements ships broken products.
+
+```
+# Spec Compliance Checklist
+[ ] All acceptance criteria from plan/ticket covered
+[ ] No stated requirements missing from implementation
+[ ] No unrequested features added (scope creep)
+[ ] API surface matches what was specified (signatures, endpoints, return types)
+[ ] File structure matches plan (no renamed or relocated files without justification)
+```
+
+If spec violations found: document them separately from code quality findings in the report. Label as `SPEC-MISS` or `SPEC-CREEP`.
+
+**Stage 2 — Code Quality**
+
+Proceed to Step 6 only after Stage 1 passes. Code quality findings (bugs, patterns, security, coverage) are the existing Steps 2–5 above.
+
+The review report MUST show both stages: spec compliance verdict first, then code quality findings.
 
 ### Step 6: Report
 
@@ -343,6 +376,7 @@ LOW       — style inconsistency, naming suggestion, minor refactor opportunity
 | Expanding review scope beyond the diff | MEDIUM | Limit to `git diff` scope — do not creep into adjacent unchanged files |
 | Security finding without sentinel escalation | HIGH | Any auth/crypto/payment code touched → MUST call rune:sentinel |
 | Skipping UI anti-pattern checks for frontend changes | MEDIUM | Any .tsx/.jsx/.svelte/.vue in diff → MUST run UI/UX Anti-Pattern Checks section |
+| Skipping spec compliance check (Step 5.5 Stage 1) | HIGH | Code quality without spec check ships clean code that does the wrong thing — always load the plan/ticket before reviewing quality |
 | Treating purple/indigo accent as "just a color choice" | MEDIUM | It is a documented AI-generated UI signature — always flag for domain justification |
 
 ## Done When

@@ -5,7 +5,7 @@ context: fork
 agent: general-purpose
 metadata:
   author: runedev
-  version: "0.6.0"
+  version: "0.7.0"
   layer: L1
   model: sonnet
   group: orchestrator
@@ -571,6 +571,26 @@ TIMEOUT_SIGNAL:    If context-watch reports ORANGE, wrap up current phase and ch
 **Escalation chain**: debug-fix (3x) → re-plan (1x) → **approach pivot via brainstorm rescue (1x)** → THEN escalate to user. Never surrender before exhausting the pivot.
 
 If any exit condition triggers without resolution → cook emits `BLOCKED` status with details and stops. Never spin indefinitely.
+
+### Subagent Status Protocol
+
+When cook completes (whether standalone or invoked by `team`), it MUST return one of four statuses. Sub-skills invoked by cook (fix, test, review, sentinel, etc.) MUST also return one of these statuses so cook can route accordingly.
+
+| Status | Meaning | Cook Action |
+|--------|---------|-------------|
+| `DONE` | Task complete, no issues | Proceed to next phase |
+| `DONE_WITH_CONCERNS` | Task complete but issues noted (e.g., "tests pass but a performance regression observed") | Proceed, but append concern to `.rune/progress.md` and surface in Cook Report; address in Phase 5 (QUALITY) or next review cycle |
+| `NEEDS_CONTEXT` | Cannot proceed without more information (missing requirement, ambiguous spec, unknown environment) | Pause execution. Ask user the specific question(s) blocking progress. Resume from the same phase after answer received. |
+| `BLOCKED` | Hard blocker — cannot continue regardless of context (broken dependency, fundamental incompatibility, exhausted escalation chain) | Trigger escalation chain: debug-fix (3x) → re-plan (1x) → brainstorm rescue (1x) → then escalate to user with full details |
+
+**DONE_WITH_CONCERNS logging format** (append to `.rune/progress.md`):
+```
+[CONCERN][phase][timestamp] <sub-skill>: <concern description>
+```
+
+**NEEDS_CONTEXT format**: State exactly what is unknown, why it blocks progress, and what the two most likely answers are (to help the user respond quickly).
+
+**BLOCKED format**: Include the phase, the sub-skill that emitted BLOCKED, the specific blocker, and what was already attempted.
 
 ## Error Recovery
 

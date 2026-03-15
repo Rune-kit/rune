@@ -3,7 +3,7 @@ name: mcp-builder
 description: Build Model Context Protocol servers from specifications. Generates tool definitions, resource handlers, and test suites for MCP servers in TypeScript or Python (FastMCP).
 metadata:
   author: runedev
-  version: "0.2.0"
+  version: "0.3.0"
   layer: L2
   model: sonnet
   group: creation
@@ -174,6 +174,52 @@ const envSchema = z.object({
 export const config = envSchema.parse(process.env);
 ```
 
+### Step 3.5 — Tool Safety Classification
+
+Before generating tests, classify every tool as `query` or `mutation`:
+
+| Category | Examples | Behavior |
+|---|---|---|
+| `query` | read, list, search, get, fetch | Auto-approve — no confirmation needed |
+| `mutation` | create, update, delete, send, write, publish | Require user confirmation before execution |
+
+**Implementation rules:**
+
+1. Add `safety` metadata to each tool definition:
+```typescript
+export const deleteTool = {
+  name: 'delete_user',
+  description: '...',
+  safety: 'mutation' as const,   // ← add this
+  inputSchema: z.object({ id: z.string() }),
+  async handler(input) { ... },
+};
+```
+
+2. For every `mutation` tool, generate a preview step that surfaces WHAT WILL HAPPEN before the action runs:
+```typescript
+// In the handler, before executing:
+if (tool.safety === 'mutation') {
+  return {
+    content: [{ type: 'text', text:
+      `⚠️ Will delete user "${user.name}" (ID: ${input.id}). This cannot be undone.\nConfirm? (yes/no)`
+    }],
+    requiresConfirmation: true,
+  };
+}
+// Proceed only after confirmation received
+```
+
+3. For Python (FastMCP), add a `@confirm_mutation` decorator or inline guard in the docstring:
+```python
+@mcp.tool()
+async def delete_user(id: str) -> str:
+    """[MUTATION] Delete a user by ID. Will prompt for confirmation before executing."""
+    ...
+```
+
+4. Document the safety classification in the README tool catalog (add a `🔒` badge on mutation tools).
+
 ### Step 4 — Generate Tests
 
 For each tool:
@@ -295,6 +341,7 @@ mcp-server-<name>/
 | Tests mock everything → no real integration coverage | MEDIUM | Generate both unit tests (mocked) and integration test template (real API) |
 | Generated server doesn't match MCP spec | HIGH | Use official SDK — don't hand-roll protocol handling |
 | Installation docs only for Claude Code | LOW | Include Cursor/Windsurf config examples too |
+| Mutation tool without confirmation gate | CRITICAL | Step 3.5: classify every tool — any write/delete/send without a preview+confirm step is a footgun |
 
 ## Done When
 
