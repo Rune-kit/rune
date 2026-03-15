@@ -618,10 +618,13 @@ def send_email(self, to: str, template: str, data: dict) -> dict:
 Calls → docs-seeker (L3): lookup API documentation and framework guides
 Calls → sentinel (L2): security audit on auth implementations
 Calls → watchdog (L3): monitor queue depth and cache hit ratios
+Calls → @rune/devops (L4): container and serverless deployment config for backend services
 Called By ← cook (L1): when backend task detected
 Called By ← review (L2): when API/backend code is being reviewed
 Called By ← audit (L2): backend health dimension
 Called By ← deploy (L2): pre-deploy readiness checks (health endpoints, graceful shutdown)
+Called By ← @rune/saas (L4): SaaS services use backend API, auth, and caching patterns
+Called By ← @rune/security (L4): security audits reference auth flows and middleware patterns
 ```
 
 ## Tech Stack Support

@@ -741,6 +741,7 @@ const detectDormantUsers = async () => {
 Calls → sentinel (L2): security audit on billing, tenant isolation, and RBAC
 Calls → docs-seeker (L3): lookup billing provider API documentation
 Calls → git (L3): emit semantic commits for schema migrations and billing changes
+Calls → @rune/backend (L4): API patterns, auth flows, caching strategies for SaaS services
 Called By ← cook (L1): when SaaS project patterns detected
 Called By ← review (L2): when subscription/billing/RBAC code under review
 Called By ← audit (L2): SaaS architecture health dimension

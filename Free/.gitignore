@@ -19,19 +19,9 @@ node_modules/
 # Compiler output
 dist/
 
+# Admin dashboard (local-only)
+docs/dashboard.html
+
 # Environment
 .env
 .env.local
-
-# Wrangler
-.wrangler/
-
-# Playwright
-.playwright-mcp/
-
-# Pro tier (separate private repo)
-Pro/
-
-# Claude worktrees
-.claude/worktrees/
-Free/.claude/worktrees/

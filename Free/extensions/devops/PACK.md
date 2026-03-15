@@ -1,9 +1,9 @@
 ---
 name: "@rune/devops"
-description: DevOps patterns — Docker, CI/CD pipelines, monitoring setup, server configuration, and SSL/domain management.
+description: DevOps patterns — Docker, CI/CD pipelines, monitoring setup, server configuration, SSL/domain management, edge/serverless deployment, and infrastructure-as-code.
 metadata:
   author: runedev
-  version: "0.2.0"
+  version: "0.3.0"
   layer: L4
   price: "$12"
   target: DevOps engineers
@@ -13,7 +13,7 @@ metadata:
 
 ## Purpose
 
-Infrastructure work done without patterns leads to snowflake configs: Dockerfiles that rebuild entire node_modules on every code change, CI pipelines that run 40 minutes because nothing is cached, servers with no monitoring until the first outage, and SSL certificates that expire silently. This pack provides battle-tested patterns for containerization, continuous delivery, production observability, and server hardening — each skill detects what you have, audits it against best practices, and emits the fixed config.
+Infrastructure work done without patterns leads to snowflake configs: Dockerfiles that rebuild entire node_modules on every code change, CI pipelines that run 40 minutes because nothing is cached, servers with no monitoring until the first outage, SSL certificates that expire silently, serverless functions that leak state across requests, and infrastructure provisioned by hand that can't be reproduced. This pack provides battle-tested patterns for containerization, continuous delivery, production observability, server hardening, edge/serverless deployment, and infrastructure-as-code — each skill detects what you have, audits it against best practices, and emits the fixed config.
 
 ## Triggers
 
@@ -23,6 +23,8 @@ Infrastructure work done without patterns leads to snowflake configs: Dockerfile
 - `/rune monitoring` — set up or audit production monitoring
 - `/rune server-setup` — audit server configuration
 - `/rune ssl-domain` — manage SSL certificates and domain config
+- `/rune edge-serverless` — audit and configure edge/serverless deployment
+- `/rune infra-as-code` — audit and structure Terraform/Pulumi/CDK infrastructure
 - Called by `deploy` (L2) when deployment infrastructure needs setup
 - Called by `launch` (L1) when preparing production environment
 
@@ -466,14 +468,330 @@ spec:
 
 ---
 
+### edge-serverless
+
+Edge and serverless deployment patterns — Cloudflare Workers, Vercel Edge Functions, AWS Lambda, Deno Deploy. Covers runtime constraints, cold starts, streaming, state management, binding patterns, and common anti-patterns that cause production failures in serverless environments.
+
+#### Workflow
+
+**Step 1 — Detect serverless platform**
+Read `package.json`, `wrangler.toml`/`wrangler.jsonc`, `vercel.json`, `netlify.toml`, `serverless.yml`, `sam-template.yaml`, `deno.json`. Identify: platform (Cloudflare/Vercel/AWS/Deno), runtime (Node.js/Deno/Bun), entry points, bindings/integrations, and environment configuration.
+
+**Step 2 — Audit against serverless anti-patterns**
+Check for patterns that work in traditional servers but fail in serverless:
+
+| Anti-Pattern | Why It Fails | Fix |
+|---|---|---|
+| `await response.text()` on unbounded data | Memory limit (128MB Workers, 1024MB Lambda) — OOM on large responses | Stream responses: pipe readable to writable without buffering |
+| Module-level mutable variables | Serverless instances are shared across requests — cross-request data leaks | Use request-scoped variables or platform state primitives (KV, DurableObjects) |
+| Floating promises (no await, no waitUntil) | Promise runs after response sent — errors swallowed, work may be killed | Every Promise must be `await`ed, `return`ed, or passed to `ctx.waitUntil()` |
+| `Math.random()` for security tokens | Not cryptographically secure — predictable in serverless edge environments | Use `crypto.randomUUID()` or `crypto.getRandomValues()` |
+| Direct database connections | Serverless creates a new connection per invocation — exhausts connection pool | Use connection pooling proxy (Hyperdrive, PgBouncer, Neon serverless driver) |
+| `setTimeout`/`setInterval` for background work | Execution stops after response — timers are killed | Use platform queues (Cloudflare Queues, SQS) or `waitUntil` for fire-and-forget |
+| Large `node_modules` bundled | Cold start penalty — 50ms per 1MB on Lambda, Workers have 10MB limit | Tree-shake, use ESM, consider edge-native alternatives to heavy packages |
+| REST API calls to own platform services | Unnecessary network hop from inside the platform | Use in-process bindings (KV, R2, D1) not HTTP endpoints |
+
+**Step 3 — Platform decision tree**
+When deploying a new project, select the right platform:
+
+```
+What are you deploying?
+├─ Static site + API routes → Vercel / Cloudflare Pages
+├─ API-only (REST/GraphQL) → Cloudflare Workers / AWS Lambda
+├─ Real-time (WebSocket) → Cloudflare Durable Objects / Fly.io
+├─ Background jobs/queues → AWS SQS+Lambda / Cloudflare Queues
+├─ Full-stack SSR → Vercel (Next.js) / Cloudflare Pages (any framework)
+├─ Scheduled tasks (cron) → Cloudflare Cron Triggers / AWS EventBridge
+├─ AI inference at edge → Cloudflare Workers AI / Vercel AI SDK
+└─ Container workloads → Fly.io / Railway / Cloud Run
+```
+
+```
+Where to store data?
+├─ Key-value (sessions, config, cache) → Cloudflare KV / Vercel KV / DynamoDB
+├─ Relational SQL → Cloudflare D1 / Neon / PlanetScale / Turso
+├─ Object/file storage → Cloudflare R2 / S3 / Vercel Blob
+├─ Vector embeddings → Cloudflare Vectorize / Pinecone / Turbopuffer
+├─ Message queue → Cloudflare Queues / SQS / Upstash QStash
+└─ Strongly consistent per-entity → Durable Objects / DynamoDB
+```
+
+**Step 4 — Emit deployment configuration**
+Based on detected platform, emit production-ready config:
+
+```toml
+# wrangler.jsonc — Cloudflare Workers production config
+{
+  "name": "api-production",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-03-15",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  },
+  "kv_namespaces": [
+    { "binding": "CACHE", "id": "abc123" }
+  ],
+  "d1_databases": [
+    { "binding": "DB", "database_name": "prod-db", "database_id": "def456" }
+  ]
+}
+```
+
+```json
+// vercel.json — Vercel Edge Functions config
+{
+  "functions": {
+    "api/**/*.ts": {
+      "runtime": "edge",
+      "maxDuration": 30
+    }
+  },
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "s-maxage=60, stale-while-revalidate=300" }
+      ]
+    }
+  ]
+}
+```
+
+**Step 5 — Streaming and response patterns**
+Emit correct streaming patterns for the detected platform:
+
+```typescript
+// Cloudflare Workers — streaming response (never buffer large data)
+export default {
+  async fetch(request: Request, env: Env): Promise<Response> {
+    const data = await env.R2_BUCKET.get('large-file.csv');
+    if (!data) return new Response('Not found', { status: 404 });
+
+    // CORRECT: stream the body directly — no buffering
+    return new Response(data.body, {
+      headers: { 'Content-Type': 'text/csv' },
+    });
+  },
+};
+
+// WRONG: buffering entire response in memory
+// const text = await data.text(); // OOM on large files
+// return new Response(text);
+```
+
+```typescript
+// Vercel Edge Function — streaming AI response
+import { OpenAI } from 'openai';
+
+export const runtime = 'edge';
+
+export async function POST(req: Request) {
+  const { prompt } = await req.json();
+  const openai = new OpenAI();
+
+  const stream = await openai.chat.completions.create({
+    model: 'gpt-4',
+    messages: [{ role: 'user', content: prompt }],
+    stream: true,
+  });
+
+  // Stream chunks as they arrive — no buffering
+  const encoder = new TextEncoder();
+  const readable = new ReadableStream({
+    async start(controller) {
+      for await (const chunk of stream) {
+        const text = chunk.choices[0]?.delta?.content || '';
+        controller.enqueue(encoder.encode(`data: ${text}\n\n`));
+      }
+      controller.close();
+    },
+  });
+
+  return new Response(readable, {
+    headers: { 'Content-Type': 'text/event-stream' },
+  });
+}
+```
+
+#### Sharp Edges
+
+| Failure Mode | Mitigation |
+|---|---|
+| Cold start exceeds timeout on first request | Pre-warm with scheduled pings; minimize bundle size; use edge runtime where possible |
+| Connection pool exhaustion from serverless fan-out | Use connection pooling proxy (Hyperdrive, PgBouncer); limit concurrency |
+| `ctx` destructuring loses `this` binding in Workers | Never destructure `ctx` — always call `ctx.waitUntil()` directly |
+| Environment variable vs binding confusion | Workers use `env.SECRET` (binding), not `process.env.SECRET` — detect platform and emit correct pattern |
+
+---
+
+### infra-as-code
+
+Infrastructure-as-Code patterns — Terraform, Pulumi, and CDK for managing cloud infrastructure declaratively. Covers state management, module organization, secret handling, drift detection, and CI/CD integration for infrastructure changes.
+
+#### Workflow
+
+**Step 1 — Detect IaC tooling**
+Use Glob to find `*.tf`, `terraform/`, `pulumi/`, `Pulumi.yaml`, `cdk.json`, `cdktf.json`, `*.tfvars`. Read configs to understand: provider (AWS/GCP/Cloudflare/Vercel), state backend (S3, Terraform Cloud, Pulumi Cloud), module structure, and variable management.
+
+**Step 2 — Audit IaC best practices**
+Check for:
+
+| Issue | Detection | Severity |
+|---|---|---|
+| Local state (no remote backend) | `terraform.tfstate` in repo, no `backend` block | CRITICAL — state lost on disk failure, no locking |
+| Secrets in `.tfvars` committed to git | Grep `.tfvars` for passwords, tokens, keys | CRITICAL — credential exposure |
+| No state locking | S3 backend without DynamoDB table, or no locking config | HIGH — concurrent applies corrupt state |
+| Hardcoded values instead of variables | Resource blocks with literal strings for env-specific values | MEDIUM — can't reuse across environments |
+| Missing `lifecycle` blocks | Resources without `prevent_destroy` on critical infra (databases, storage) | HIGH — accidental deletion |
+| No module structure | All resources in single `main.tf` | MEDIUM — unmaintainable at scale |
+| No output definitions | Missing `output` blocks for cross-module references | LOW — harder to compose modules |
+
+**Step 3 — Emit structured IaC project**
+Generate or restructure into a modular layout:
+
+```
+infrastructure/
+├── environments/
+│   ├── dev/
+│   │   ├── main.tf          # dev-specific overrides
+│   │   ├── terraform.tfvars  # dev variables (no secrets!)
+│   │   └── backend.tf       # dev state backend
+│   ├── staging/
+│   └── production/
+├── modules/
+│   ├── networking/           # VPC, subnets, security groups
+│   ├── compute/              # EC2, ECS, Lambda, Workers
+│   ├── database/             # RDS, D1, PlanetScale
+│   └── monitoring/           # CloudWatch, alerts, dashboards
+├── variables.tf              # shared variable definitions
+├── outputs.tf                # exported values
+└── versions.tf               # provider version constraints
+```
+
+**Step 4 — CI/CD for infrastructure**
+Emit GitHub Actions workflow for safe infrastructure changes:
+
+```yaml
+# .github/workflows/infrastructure.yml
+name: Infrastructure
+on:
+  pull_request:
+    paths: ['infrastructure/**']
+  push:
+    branches: [main]
+    paths: ['infrastructure/**']
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - run: terraform init
+        working-directory: infrastructure/environments/production
+      - run: terraform plan -out=tfplan -no-color
+        working-directory: infrastructure/environments/production
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tfplan
+          path: infrastructure/environments/production/tfplan
+
+  apply:
+    needs: plan
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production  # requires manual approval
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - uses: actions/download-artifact@v4
+        with: { name: tfplan }
+      - run: terraform init && terraform apply tfplan
+        working-directory: infrastructure/environments/production
+```
+
+#### Example — Terraform Module
+
+```hcl
+# modules/compute/workers/main.tf
+# Cloudflare Workers deployment via Terraform
+
+variable "name" {
+  type        = string
+  description = "Worker script name"
+}
+
+variable "account_id" {
+  type      = string
+  sensitive = true
+}
+
+variable "script_path" {
+  type        = string
+  description = "Path to compiled Worker script"
+}
+
+variable "kv_namespaces" {
+  type    = map(string)
+  default = {}
+}
+
+resource "cloudflare_workers_script" "worker" {
+  account_id = var.account_id
+  name       = var.name
+  content    = file(var.script_path)
+  module     = true
+
+  dynamic "kv_namespace_binding" {
+    for_each = var.kv_namespaces
+    content {
+      name         = kv_namespace_binding.key
+      namespace_id = kv_namespace_binding.value
+    }
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "cloudflare_workers_route" "route" {
+  zone_id     = var.zone_id
+  pattern     = "${var.domain}/*"
+  script_name = cloudflare_workers_script.worker.name
+}
+
+output "script_id" {
+  value = cloudflare_workers_script.worker.id
+}
+```
+
+#### Sharp Edges
+
+| Failure Mode | Mitigation |
+|---|---|
+| `terraform destroy` on production without confirmation | Always use `lifecycle { prevent_destroy = true }` on databases, storage, DNS |
+| State file contains secrets in plaintext | Use encrypted S3 backend or Terraform Cloud; never commit state to git |
+| Module version unpinned — breaking change on next init | Pin module versions: `source = "hashicorp/consul/aws"` with `version = "~> 0.12"` |
+| Drift between actual infra and state | Run `terraform plan` in CI on schedule (daily) to detect drift early |
+
+---
+
 ## Connections
 
 ```
 Calls → verification (L3): validate configs syntax and test infrastructure changes
 Calls → sentinel (L2): security audit on server and container configuration
+Calls → sentinel-env (L3): edge-serverless validates runtime prerequisites before deployment
 Called By ← deploy (L2): deployment infrastructure setup
 Called By ← launch (L1): production environment preparation
 Called By ← cook (L1): when DevOps task detected
+Called By ← scaffold (L1): infra-as-code generates infrastructure alongside project bootstrap
+edge-serverless → docker: containerized apps may deploy to serverless container platforms (Cloud Run, Fly.io)
+infra-as-code → ci-cd: IaC changes flow through CI/CD with plan-and-apply pipeline
+infra-as-code → monitoring: IaC provisions monitoring infrastructure (alerts, dashboards)
 ```
 
 ## Tech Stack Support
@@ -485,6 +803,9 @@ Called By ← cook (L1): when DevOps task detected
 | Vercel | Serverless | Built-in | Built-in |
 | DigitalOcean (Droplet/App Platform) | Docker | GitHub Actions | Nginx / Caddy |
 | VPS (any) | Docker | GitHub Actions (self-hosted) | Nginx / Caddy |
+| Cloudflare Workers | Wrangler | GitHub Actions / Wrangler deploy | Workers Routes |
+| Deno Deploy | Deno runtime | deployctl / GitHub Actions | Built-in |
+| Fly.io | Docker/Firecracker | flyctl / GitHub Actions | Fly Proxy |
 
 ## Constraints
 
@@ -512,9 +833,11 @@ Called By ← cook (L1): when DevOps task detected
 - Monitoring covers RED metrics, structured logging, and SLO-based alerting
 - Server hardened: key-only SSH, firewall, security headers, rate limiting
 - SSL automated with renewal verification
+- Edge/serverless config audited: no anti-patterns (floating promises, global state, unbounded buffering), correct platform bindings, streaming patterns applied
+- IaC structured: remote state with locking, modular layout, environment separation, CI/CD pipeline for plan/apply, `prevent_destroy` on critical resources
 - All emitted configs tested with syntax validation commands
 - Structured report emitted for each skill invoked
 
 ## Cost Profile
 
-~10,000–18,000 tokens per full pack run (all 5 skills). Individual skill: ~2,000–4,000 tokens. Sonnet default. Use haiku for config detection scans; escalate to sonnet for config generation and security audit.
+~16,000–28,000 tokens per full pack run (all 9 skills). Individual skill: ~2,000–4,500 tokens. Sonnet default. Use haiku for config detection scans; escalate to sonnet for config generation and security audit.

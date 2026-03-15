@@ -485,6 +485,7 @@ export default {
 ```
 Calls → scout (L2): scan codebase for security patterns before audit
 Calls → verification (L3): run security tooling (Semgrep, Trivy, npm audit, gitleaks)
+Calls → @rune/backend (L4): auth pattern overlap — security audits reference backend auth flows
 Called By ← review (L2): when security-critical code detected during review
 Called By ← cook (L1): when auth/input/payment/PII code is in scope
 Called By ← deploy (L2): pre-release security gate when security scope active

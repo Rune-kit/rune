@@ -1,9 +1,9 @@
 ---
 name: "@rune/ui"
-description: Frontend UI patterns — design systems, color palettes, typography, component architecture, landing page sections, accessibility audits, animation patterns, and design decision mapping.
+description: Frontend UI patterns — React health scoring, Core Web Vitals auditing, design systems, color palettes, typography, component architecture, landing page sections, accessibility audits, animation patterns, and design decision mapping.
 metadata:
   author: runedev
-  version: "0.2.0"
+  version: "0.3.0"
   layer: L4
   price: "$12"
   target: Frontend developers
@@ -13,7 +13,7 @@ metadata:
 
 ## Purpose
 
-Frontend development accumulates invisible debt: ad-hoc color variables, mismatched font pairings, prop-drilled components, untested accessibility, and janky animations — all before you even decide what the product should *look* like. This pack addresses all layers systematically. Eight skills cover the full UI lifecycle: token consistency, color palette selection, typography pairing, component composability, landing page structure, design-domain mapping, WCAG compliance, and motion polish. Run any skill independently or chain all eight as a comprehensive UI health check + design foundation generator.
+Frontend development accumulates invisible debt: ad-hoc color variables, mismatched font pairings, prop-drilled components, untested accessibility, janky animations, React anti-patterns, and slow page loads — all before you even decide what the product should *look* like. This pack addresses all layers systematically. Ten skills cover the full UI lifecycle: React codebase health scoring, Core Web Vitals performance auditing, token consistency, color palette selection, typography pairing, component composability, landing page structure, design-domain mapping, WCAG compliance, and motion polish. Run any skill independently or chain all ten as a comprehensive UI health check + design foundation generator.
 
 **Anti-AI Design Contract** (enforced by all skills in this pack):
 - NO gradient blob heroes (purple → pink → blue)
@@ -33,11 +33,246 @@ Frontend development accumulates invisible debt: ad-hoc color variables, mismatc
 - `/rune design-decision` — map product domain to full style recommendation
 - `/rune a11y-audit` — run accessibility audit
 - `/rune animation-patterns` — add or refine motion design
+- `/rune react-health` — score React codebase health (0-100)
+- `/rune web-vitals` — audit Core Web Vitals and performance
 - Called by `cook` (L1) when frontend task is detected
 - Called by `review` (L2) when UI code is under review
 - Called by `design` (L2) when visual design decisions needed
 
 ## Skills Included
+
+---
+
+### react-health
+
+React codebase health scoring — 0-100 health score across 6 dimensions: state management, effects hygiene, performance patterns, architecture, bundle efficiency, and accessibility. Detects anti-patterns that automated linters miss, quantifies technical debt, and produces a prioritized fix list.
+
+#### Workflow
+
+**Step 1 — Detect framework and React version**
+Read `package.json` to identify: React version (17/18/19), framework (Next.js, Vite, Remix, Astro), compiler status (`react-compiler` or `babel-plugin-react-compiler`), and styling approach (Tailwind, CSS Modules, styled-components). Framework context changes which rules apply — Next.js has App Router-specific patterns, Vite has different chunking strategies.
+
+**Step 2 — State and effects audit**
+Use Grep to scan for these anti-patterns across all `*.tsx`, `*.jsx` files:
+
+| Anti-Pattern | Grep Pattern | Why It's Bad |
+|---|---|---|
+| Derived state in useState | `useState.*=.*props\.` or `useEffect.*setState` that mirrors a prop | Causes sync bugs — compute during render instead |
+| Unnecessary effects for data transform | `useEffect.*setState.*filter\|map\|reduce` | Runs after render for no reason — move to useMemo or compute inline |
+| Missing cleanup in effects | `useEffect` without `return () =>` when subscribing | Memory leaks on unmount (WebSocket, intervals, event listeners) |
+| State for ref-appropriate values | `useState` tracking DOM measurements, timers, previous values | Causes unnecessary re-renders — use useRef |
+| Prop drilling > 3 levels | Component chains passing the same prop through 3+ files | Extract to Context or Zustand store |
+| God component > 300 lines | Component files exceeding 300 LOC | Split into composed smaller components |
+
+Score: count violations, weight by severity (critical=5, high=3, medium=1), calculate percentage against total component count.
+
+**Step 3 — Dead code detection**
+Scan for unused exports, orphaned files, and dead types:
+- **Unused exports**: Use Grep to find all `export` declarations, then cross-reference with import statements across the codebase. Any export not imported anywhere (excluding entry points and barrel files) is dead.
+- **Orphan files**: Use Glob to find all `.tsx`/`.ts` files, then check which are never imported. Exclude test files, config files, and entry points.
+- **Duplicate components**: Find components with similar names or identical prop interfaces that could be consolidated.
+- **Barrel file bloat**: Flag `index.ts` files that re-export everything — these break tree-shaking and increase bundle size.
+
+**Step 4 — Bundle efficiency audit**
+Check for common bundle bloat patterns:
+- **Wholesale imports**: `import _ from 'lodash'` instead of `import groupBy from 'lodash/groupBy'` — can add 70KB+ to bundle
+- **Moment.js usage**: Flag any `import moment` — suggest `date-fns` or `dayjs` (moment is 300KB with locales)
+- **Icon library imports**: `import { Icon } from 'react-icons'` importing the full set — use specific pack imports
+- **Missing dynamic imports**: Large components (charts, editors, modals) loaded eagerly — should use `React.lazy()` or Next.js `dynamic()`
+- **Polyfill sprawl**: Check `browserslist` or `@babel/preset-env` targets — modern-only targets can drop 20-50KB of polyfills
+- **CSS-in-JS runtime cost**: Flag `styled-components` or `@emotion/styled` in performance-critical paths — suggest extraction or Tailwind
+
+**Step 5 — Performance patterns check**
+Scan for React-specific performance issues:
+- `React.memo` wrapping components that receive new object/array literals as props (memo is useless with `style={{}}` or `data={[...]}}`)
+- Missing `key` prop on list items, or using array index as key on dynamic lists
+- Inline function creation in JSX (`onClick={() => fn(id)}`) inside large lists (>50 items) without `useCallback`
+- `useEffect` with missing dependencies (lint-suppressed with `// eslint-disable-next-line`)
+- Context providers wrapping the entire app when only a subtree needs them (causes full-app re-renders)
+- Unvirtualized lists rendering >50 items — flag for `@tanstack/react-virtual` or `react-window`
+
+**Step 6 — Generate health report**
+Produce a structured health report with scores:
+
+```
+React Health Report — [Project Name]
+═══════════════════════════════════════
+Overall Score: 72/100 (Needs work)
+
+Dimension          Score   Issues Found
+─────────────────────────────────────
+State/Effects      65/100  3 derived states, 2 missing cleanups
+Performance        78/100  1 unvirtualized list, barrel file bloat
+Architecture       80/100  1 god component (412 lines)
+Bundle Efficiency  60/100  lodash wholesale import, no dynamic imports
+Dead Code          85/100  4 unused exports, 1 orphan file
+Accessibility      70/100  6 icon buttons missing aria-label
+
+Score Tiers: 75+ Great │ 50-74 Needs Work │ <50 Critical
+
+Top 5 Fixes (by impact):
+1. [CRITICAL] Replace lodash wholesale import → save ~70KB
+2. [HIGH] Add React.lazy() to ChartPanel and RichEditor
+3. [HIGH] Extract derived state from useEffect in UserList
+4. [MEDIUM] Virtualize TransactionTable (renders 200+ rows)
+5. [MEDIUM] Remove 4 unused exports in utils/
+```
+
+#### Sharp Edges
+
+| Failure Mode | Mitigation |
+|---|---|
+| False positives on "unused exports" in library packages | Exclude files matching `package.json` `main`/`exports` entry points |
+| Barrel file detection flags intentional public API re-exports | Only flag barrel files in `src/` not in package root |
+| God component count includes generated files | Exclude files matching `*.generated.*`, `*.auto.*` patterns |
+
+---
+
+### web-vitals
+
+Core Web Vitals performance audit — measures LCP, CLS, FCP, TBT, INP, and Speed Index against Google thresholds. Identifies render-blocking resources, network dependency chains, layout shift culprits, missing preloads, caching gaps, and tree-shaking opportunities. Framework-aware analysis for Next.js, Vite, SvelteKit, and Astro.
+
+#### Workflow
+
+**Step 1 — Detect build tooling and framework**
+Read `package.json`, config files (`next.config.*`, `vite.config.*`, `svelte.config.*`, `astro.config.*`), and build scripts. Identify:
+- Bundler: Webpack, Vite, Rollup, esbuild, Turbopack
+- Framework: Next.js (App Router vs Pages), SvelteKit, Astro, Remix
+- CSS strategy: Tailwind (content config), CSS Modules, global CSS
+- Compression: gzip/brotli configuration
+- Source maps: enabled in production? (should be external or disabled)
+
+**Step 2 — Audit render-blocking resources**
+Use Grep to scan HTML entry points and framework layouts for:
+- `<link rel="stylesheet">` in `<head>` without `media` attribute — blocks first paint
+- `<script>` tags without `async` or `defer` — blocks HTML parsing
+- CSS `@import` chains — each import is a sequential network request
+- Large inline `<style>` blocks (>50KB) — delays first paint
+
+For each blocking resource, estimate impact: 0ms impact = note but don't prioritize. Focus on resources that delay FCP by >100ms.
+
+**Step 3 — Analyze layout shift sources (CLS)**
+Use Grep to find common CLS culprits:
+- `<img>` and `<video>` without explicit `width` and `height` attributes — causes layout shift when media loads
+- Dynamic content injection above the fold (`insertBefore`, `prepend`, or React `useState` toggling visibility)
+- Web fonts without `font-display: swap` or `font-display: optional` — FOIT causes text layout shift
+- Ads or embeds without reserved space (`aspect-ratio` or `min-height` on container)
+- CSS animations that trigger layout (`top`, `left`, `width`, `height`) instead of composited properties (`transform`, `opacity`)
+
+#### CLS Fix Patterns
+
+```html
+<!-- BEFORE: no dimensions → layout shift when image loads -->
+<img src="/hero.jpg" alt="Hero" />
+
+<!-- AFTER: explicit dimensions prevent CLS -->
+<img src="/hero.jpg" alt="Hero" width="1200" height="630"
+     class="w-full h-auto" loading="lazy" decoding="async" />
+```
+
+```css
+/* Font display — prevent FOIT layout shift */
+@font-face {
+  font-family: 'Space Grotesk';
+  src: url('/fonts/space-grotesk.woff2') format('woff2');
+  font-display: swap; /* show fallback immediately, swap when loaded */
+}
+
+/* Reserve space for dynamic content */
+.ad-container {
+  min-height: 250px; /* match ad unit height */
+  contain: layout;   /* prevent layout influence on siblings */
+}
+```
+
+**Step 4 — Network dependency chain analysis**
+Identify critical rendering path bottlenecks:
+- **Waterfall chains**: Resource A loads → discovers Resource B → discovers Resource C. Each link adds latency. Fix with `<link rel="preload">` for critical assets.
+- **Missing preconnects**: Third-party origins (fonts.googleapis.com, CDN, analytics) without `<link rel="preconnect">`. But verify the origin is actually used — unused preconnects waste connection resources.
+- **Large payloads without compression**: JS/CSS bundles >100KB served without gzip/brotli. Check server response headers for `Content-Encoding`.
+- **Duplicate requests**: Same resource fetched multiple times (common with CSS @import or uncoordinated dynamic imports).
+
+```html
+<!-- Preload critical resources discovered late in the waterfall -->
+<link rel="preload" href="/fonts/inter-var.woff2" as="font"
+      type="font/woff2" crossorigin />
+<link rel="preload" href="/hero-image.webp" as="image"
+      fetchpriority="high" />
+
+<!-- Preconnect to third-party origins ACTUALLY used -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+```
+
+**Step 5 — Tree-shaking and code splitting audit**
+Check bundler configuration and import patterns:
+
+| Issue | Detection | Fix |
+|---|---|---|
+| Barrel file re-exports break tree-shaking | `index.ts` with `export * from` or `export { A, B, C, ... }` importing everything | Import directly from source: `import { Button } from './Button'` not `from '.'` |
+| `sideEffects: false` missing in package.json | Check `package.json` `sideEffects` field | Add `"sideEffects": false` (or list files with side effects like CSS imports) |
+| No code splitting at route level | Framework routes without `React.lazy()` or `dynamic()` | Next.js does this automatically; Vite needs manual `React.lazy()` |
+| Vendor chunk too large (>250KB) | Check build output for single large chunk | Configure `splitChunks` (Webpack) or `manualChunks` (Vite/Rollup) |
+| CSS not purged | Tailwind without `content` config, or unused CSS classes shipping | Verify `tailwind.config.js` `content` paths cover all template files |
+
+**Step 6 — Image optimization audit**
+Scan for image-related performance issues:
+- Serving JPEG/PNG when WebP/AVIF would save 30-60% bandwidth — check `<img>` `src` extensions
+- Missing `loading="lazy"` on below-the-fold images
+- Missing `fetchpriority="high"` on LCP image (hero image, above-the-fold banner)
+- Images served at full resolution without responsive `srcset` — wastes bandwidth on mobile
+- No `<picture>` element for art direction (different crops for mobile/desktop)
+
+```html
+<!-- Optimized responsive image with modern formats -->
+<picture>
+  <source srcset="/hero.avif" type="image/avif" />
+  <source srcset="/hero.webp" type="image/webp" />
+  <img
+    src="/hero.jpg"
+    alt="Product dashboard showing real-time analytics"
+    width="1200" height="630"
+    class="w-full h-auto"
+    fetchpriority="high"
+    decoding="async"
+  />
+</picture>
+
+<!-- Below-the-fold: lazy load -->
+<img src="/feature.webp" alt="..." loading="lazy" decoding="async"
+     width="600" height="400" class="w-full h-auto" />
+```
+
+**Step 7 — Generate performance report**
+Produce a structured report with Core Web Vitals thresholds:
+
+```
+Web Vitals Audit — [Project Name]
+═══════════════════════════════════════
+Thresholds (Good / Needs Improvement / Poor):
+  LCP:  < 2.5s  / < 4.0s  / > 4.0s
+  FCP:  < 1.8s  / < 3.0s  / > 3.0s
+  CLS:  < 0.1   / < 0.25  / > 0.25
+  INP:  < 200ms / < 500ms / > 500ms
+  TBT:  < 200ms / < 600ms / > 600ms
+  TTFB: < 800ms / < 1.8s  / > 1.8s
+
+Top Issues (by estimated impact):
+1. [HIGH] Hero image served as 2.4MB PNG — convert to WebP, save ~1.5MB
+2. [HIGH] 3 render-blocking stylesheets in <head> — defer non-critical CSS
+3. [MEDIUM] 4 images missing width/height — causes CLS on load
+4. [MEDIUM] lodash imported wholesale — tree-shake or replace with lodash-es
+5. [LOW] Font preconnect to unused origin — remove to free connection slot
+```
+
+#### Sharp Edges
+
+| Failure Mode | Mitigation |
+|---|---|
+| Recommending image lazy-load on LCP element | Never lazy-load the LCP image — it must load eagerly with `fetchpriority="high"` |
+| Flagging render-blocking CSS that's actually critical | Distinguish critical (above-fold) CSS from non-critical before recommending defer |
+| Tree-shaking audit false positives on CSS-in-JS | CSS `import './styles.css'` is a side effect — don't flag as unused |
+| Preconnect removal breaks actual resource loading | Always verify zero requests went to the origin before recommending removal |
 
 ---
 
@@ -886,14 +1121,19 @@ function CardGrid({ items }: { items: Item[] }) {
 ```
 Calls → asset-creator (L3): generate design assets (icons, illustrations)
 Calls → design (L2): escalate when full design review is needed
+Calls → perf (L2): react-health and web-vitals feed findings to perf for deeper analysis
+Calls → verification (L3): react-health triggers verification after fix application
 Called By ← review (L2): when UI code is being reviewed
 Called By ← cook (L1): when frontend task detected
 Called By ← launch (L1): pre-launch UI quality gate
 Called By ← scaffold (L1): when bootstrapping a new frontend project
+Called By ← preflight (L2): react-health runs as pre-commit quality gate on React projects
 design-decision → palette-picker: feeds palette slug to token generation
 design-decision → type-system: feeds pairing name to font config generation
 landing-patterns → palette-picker: pulls palette for section styling
 landing-patterns → type-system: pulls font pairing for section copy
+react-health → web-vitals: health report feeds into vitals audit for bundle-to-load correlation
+web-vitals → react-health: slow LCP/TBT traces back to bundle bloat identified by react-health
 ```
 
 ## Tech Stack Support
@@ -933,6 +1173,8 @@ landing-patterns → type-system: pulls font pairing for section copy
 
 ## Done When
 
+- React health score generated (0-100) with per-dimension breakdown; top 5 fixes listed by impact; dead code inventory complete
+- Web Vitals report produced with all 6 metrics against thresholds; render-blocking resources identified; CLS culprits found; image optimization recommendations emitted
 - Token file generated with 3-layer structure; hardcoded values replaced or flagged with diffs; dark/light theme switcher emitted
 - Palette selected, CSS custom properties emitted, contrast ratios verified (≥ 4.5:1 body, ≥ 3:1 large text), colorblind alternatives noted
 - Font pairing selected, Google Fonts link emitted, Tailwind fontFamily config emitted, type scale CSS variables written
@@ -944,4 +1186,4 @@ landing-patterns → type-system: pulls font pairing for section copy
 
 ## Cost Profile
 
-~18,000–28,000 tokens per full pack run (all 8 skills). Individual skill: ~2,000–4,500 tokens. Sonnet default. Use haiku for detection scans (Step 1 of each skill); escalate to sonnet for generation, refactoring, and report writing. Use `design-decision` first when starting a new project — it reduces token cost of subsequent skills by pre-scoping palette and typography choices.
+~24,000–38,000 tokens per full pack run (all 10 skills). Individual skill: ~2,000–5,000 tokens. Sonnet default. Use haiku for detection scans (Step 1 of each skill); escalate to sonnet for generation, refactoring, and report writing. Use `design-decision` first when starting a new project — it reduces token cost of subsequent skills by pre-scoping palette and typography choices.

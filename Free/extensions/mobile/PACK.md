@@ -593,6 +593,7 @@ Calls → browser-pilot (L3): device testing and screenshot automation
 Calls → asset-creator (L3): generate app icons and splash screens
 Calls → sentinel (L2): audit push notification security, deep link validation
 Calls → verification (L3): run mobile-specific checks (build, lint, type-check)
+Calls → @rune/ui (L4): design system tokens, palette, typography for mobile UI consistency
 Called By ← cook (L1): when mobile task detected
 Called By ← team (L1): when porting web to mobile
 Called By ← launch (L1): app store submission flow

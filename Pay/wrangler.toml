@@ -1,0 +1,13 @@
+name = "rune-pay"
+main = "src/worker.js"
+compatibility_date = "2024-01-01"
+account_id = "8bd542ba3bc8ad37e24f676f07e048ef"
+workers_dev = true
+
+[[kv_namespaces]]
+binding = "ORDERS"
+id = "cfda1a8980704813ab56fc4b76b8fd30"
+
+[[routes]]
+pattern = "pay.theio.vn/*"
+zone_name = "theio.vn"

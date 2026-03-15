@@ -1483,6 +1483,7 @@ export function CodePlayground({ files, entry = '/App.tsx', template = 'react-ts
 ```
 Calls → research (L3): SEO data and competitor analysis
 Calls → marketing (L2): content promotion
+Calls → @rune/ui (L4): typography system, article layout patterns, palette for content sites
 Called By ← cook (L1): when content project detected
 Called By ← marketing (L2): when creating blog content
 ```
