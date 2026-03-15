@@ -29,8 +29,10 @@ dist/
 # Playwright
 .playwright-mcp/
 
-# Pro tier (separate private repo)
+# Paid tiers (separate private repos)
 Pro/
+Business/
+Pay/
 
 # Claude worktrees
 .claude/worktrees/
