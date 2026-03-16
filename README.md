@@ -322,7 +322,20 @@ Business department packs for product, sales, and data teams. Same PACK.md forma
 | @rune-pro/data-science | data-exploration, sql-advanced, visualization, statistical-testing, dashboards | Data Science |
 | @rune-pro/support | ticket-triage, response-drafting, knowledge-base, escalation, faq, metrics | Customer Support |
 
-**$49 lifetime** (Pro) · **$149 lifetime** (Business). See [docs/plans/RUNE-PRO-PLAN.md](docs/plans/RUNE-PRO-PLAN.md).
+**$49 lifetime** — [rune-kit/rune-pro](https://github.com/rune-kit/rune-pro)
+
+### Rune Business (Enterprise)
+
+Department packs for finance, legal, HR, and cross-system search. Requires Rune Free core.
+
+| Pack | Skills | For |
+|------|--------|-----|
+| @rune-pro/finance | budget-planning, expense-analysis, revenue-forecasting, financial-reporting, compliance, invoicing, cash-flow | Finance Ops |
+| @rune-pro/legal | contract-review, compliance-check, policy-generator, nda-triage, ip-protection, incident-legal | Legal & Compliance |
+| @rune-pro/hr | jd-writer, resume-screener, interview-planner, scorecard, onboarding, comp-benchmarker, policy-writer | HR & Recruiting |
+| @rune-pro/enterprise-search | query-planner, source-connector, result-merger, permission-guard, knowledge-graph, search-analytics | Knowledge Retrieval |
+
+**$149 lifetime** — [rune-kit/rune-business](https://github.com/rune-kit/rune-business)
 
 ## Multi-Platform Compiler
 
