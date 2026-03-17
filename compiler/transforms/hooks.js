@@ -8,12 +8,14 @@
 const HOOK_CONSTRAINTS = [
   {
     id: 'secrets-scan',
-    instruction: 'MUST NOT: Never run commands containing hardcoded secrets, API keys, or tokens. Scan all shell commands for secret patterns before execution.',
+    instruction:
+      'MUST NOT: Never run commands containing hardcoded secrets, API keys, or tokens. Scan all shell commands for secret patterns before execution.',
     relevantTools: ['Bash'],
   },
   {
     id: 'auto-format',
-    instruction: 'MUST: After editing JS/TS files, ensure code follows project formatting conventions (Prettier/ESLint).',
+    instruction:
+      'MUST: After editing JS/TS files, ensure code follows project formatting conventions (Prettier/ESLint).',
     relevantTools: ['Edit', 'Write'],
   },
   {
@@ -23,7 +25,8 @@ const HOOK_CONSTRAINTS = [
   },
   {
     id: 'context-watch',
-    instruction: 'SHOULD: Monitor your context usage. If working on a long task, summarize progress before context fills up.',
+    instruction:
+      'SHOULD: Monitor your context usage. If working on a long task, summarize progress before context fills up.',
     relevantTools: [],
   },
   {
@@ -33,7 +36,8 @@ const HOOK_CONSTRAINTS = [
   },
   {
     id: 'post-session',
-    instruction: 'SHOULD: Before ending, save architectural decisions and progress to .rune/ directory for future sessions.',
+    instruction:
+      'SHOULD: Before ending, save architectural decisions and progress to .rune/ directory for future sessions.',
     relevantTools: [],
   },
 ];
@@ -49,20 +53,14 @@ export function generateHookConstraints(parsedSkill, adapter) {
   if (adapter.name === 'claude') return '';
 
   // Filter to relevant constraints based on tool usage in this skill
-  const skillToolNames = parsedSkill.toolRefs.map(r => r.toolName);
-  const relevant = HOOK_CONSTRAINTS.filter(h =>
-    h.relevantTools.length === 0 || h.relevantTools.some(t => skillToolNames.includes(t))
+  const skillToolNames = parsedSkill.toolRefs.map((r) => r.toolName);
+  const relevant = HOOK_CONSTRAINTS.filter(
+    (h) => h.relevantTools.length === 0 || h.relevantTools.some((t) => skillToolNames.includes(t)),
   );
 
   if (relevant.length === 0) return '';
 
-  const lines = [
-    '',
-    '## Platform Constraints',
-    '',
-    ...relevant.map(h => `- ${h.instruction}`),
-    '',
-  ];
+  const lines = ['', '## Platform Constraints', '', ...relevant.map((h) => `- ${h.instruction}`), ''];
 
   return lines.join('\n');
 }

@@ -24,5 +24,5 @@ export function addBranding(body, adapter) {
   if (adapter.name === 'claude') return body;
 
   const footer = adapter.generateFooter ? adapter.generateFooter() : DEFAULT_FOOTER;
-  return body + '\n' + footer;
+  return `${body}\n${footer}`;
 }

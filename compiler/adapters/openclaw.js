@@ -58,9 +58,7 @@ export default {
   },
 
   postProcess(content) {
-    return content
-      .replace(/^context: fork\n/gm, '')
-      .replace(/^agent: general-purpose\n/gm, '');
+    return content.replace(/^context: fork\n/gm, '').replace(/^agent: general-purpose\n/gm, '');
   },
 
   /**
@@ -70,12 +68,13 @@ export default {
    * @param {object} pluginJson - Rune's .claude-plugin/plugin.json
    * @returns {object} manifest object
    */
-  generateManifest(skills, pluginJson) {
+  generateManifest(_skills, pluginJson) {
     return {
       id: 'rune',
       name: 'Rune',
       kind: 'skills',
-      description: '58-skill mesh for AI coding assistants. Routes all code tasks through specialized skills. 200+ connections, 14 extension packs.',
+      description:
+        '58-skill mesh for AI coding assistants. Routes all code tasks through specialized skills. 200+ connections, 14 extension packs.',
       version: pluginJson.version || '0.0.0',
       skills: ['./skills'],
       configSchema: {
@@ -109,16 +108,11 @@ export default {
    * @returns {string} TypeScript source
    */
   generateEntryPoint(skills, routerContent) {
-    const skillNames = skills.map(s => s.name);
-    const routingTable = skills
-      .map(s => `//   ${s.name} (${s.layer}) — ${s.description || s.group}`)
-      .join('\n');
+    const skillNames = skills.map((s) => s.name);
+    const routingTable = skills.map((s) => `//   ${s.name} (${s.layer}) — ${s.description || s.group}`).join('\n');
 
     // Escape backticks and backslashes in router content for template literal
-    const escapedRouter = (routerContent || '')
-      .replace(/\\/g, '\\\\')
-      .replace(/`/g, '\\`')
-      .replace(/\$/g, '\\$');
+    const escapedRouter = (routerContent || '').replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$/g, '\\$');
 
     return `/**
  * Rune — OpenClaw Plugin Entry Point

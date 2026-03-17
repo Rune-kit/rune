@@ -54,8 +54,6 @@ export default {
   },
 
   postProcess(content) {
-    return content
-      .replace(/^context: fork\n/gm, '')
-      .replace(/^agent: general-purpose\n/gm, '');
+    return content.replace(/^context: fork\n/gm, '').replace(/^agent: general-purpose\n/gm, '');
   },
 };

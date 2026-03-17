@@ -1,9 +1,9 @@
-import { parsePack, parseSkill } from '../parser.js';
-import { test } from 'node:test';
 import assert from 'node:assert';
-import { readFileSync, existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
+import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { parsePack } from '../parser.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const EXTENSIONS_DIR = path.resolve(__dirname, '../../extensions');

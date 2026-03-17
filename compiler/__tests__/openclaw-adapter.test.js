@@ -1,15 +1,24 @@
-import openclaw from '../adapters/openclaw.js';
-import { test } from 'node:test';
 import assert from 'node:assert';
+import { test } from 'node:test';
+import openclaw from '../adapters/openclaw.js';
 
 // --- Adapter shape ---
 
 test('openclaw adapter has all required properties', () => {
   const required = [
-    'name', 'outputDir', 'fileExtension', 'skillPrefix', 'skillSuffix',
-    'transformReference', 'transformToolName', 'generateHeader', 'generateFooter',
-    'transformSubagentInstruction', 'postProcess',
-    'generateManifest', 'generateEntryPoint',
+    'name',
+    'outputDir',
+    'fileExtension',
+    'skillPrefix',
+    'skillSuffix',
+    'transformReference',
+    'transformToolName',
+    'generateHeader',
+    'generateFooter',
+    'transformSubagentInstruction',
+    'postProcess',
+    'generateManifest',
+    'generateEntryPoint',
   ];
   for (const prop of required) {
     assert.ok(prop in openclaw, `missing property: ${prop}`);
@@ -117,7 +126,7 @@ test('generateEntryPoint returns valid TypeScript with register(api)', () => {
   const ts = openclaw.generateEntryPoint(skills, routerContent);
 
   assert.ok(ts.includes('register(api'));
-  assert.ok(ts.includes("before_agent_start"));
+  assert.ok(ts.includes('before_agent_start'));
   assert.ok(ts.includes('prependSystemContext'));
   assert.ok(ts.includes('export default plugin'));
   assert.ok(ts.includes('cook'));

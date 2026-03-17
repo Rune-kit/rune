@@ -10,6 +10,10 @@
     "build": "node compiler/bin/rune.js build",
     "doctor": "node compiler/bin/rune.js doctor && node scripts/version-sync-check.js",
     "test": "node --test compiler/__tests__/*.test.js",
+    "lint": "biome check .",
+    "lint:fix": "biome check --fix .",
+    "format": "biome format --write .",
+    "ci": "biome check . && node --test compiler/__tests__/*.test.js && node compiler/bin/rune.js doctor",
     "version-check": "node scripts/version-sync-check.js",
     "prepublishOnly": "node scripts/version-sync-check.js"
   },
@@ -51,5 +55,8 @@
   "homepage": "https://github.com/rune-kit/rune",
   "bugs": {
     "url": "https://github.com/rune-kit/rune/issues"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.7"
   }
 }

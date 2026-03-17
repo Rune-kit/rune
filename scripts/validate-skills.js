@@ -4,8 +4,8 @@
 // Usage: node scripts/validate-skills.js
 // Exit 0 = all pass, Exit 1 = issues found
 
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 
 const SKILLS_DIR = path.join(__dirname, '..', 'skills');
 
@@ -122,9 +122,10 @@ function validateSkill(skillPath, skillName) {
 }
 
 function validate() {
-  const dirs = fs.readdirSync(SKILLS_DIR, { withFileTypes: true })
-    .filter(d => d.isDirectory())
-    .map(d => d.name)
+  const dirs = fs
+    .readdirSync(SKILLS_DIR, { withFileTypes: true })
+    .filter((d) => d.isDirectory())
+    .map((d) => d.name)
     .sort();
 
   const allIssues = [];
@@ -139,8 +140,8 @@ function validate() {
     }
 
     const issues = validateSkill(skillPath, dir);
-    const hardIssues = issues.filter(i => !i.includes('WARN'));
-    const softIssues = issues.filter(i => i.includes('WARN'));
+    const hardIssues = issues.filter((i) => !i.includes('WARN'));
+    const softIssues = issues.filter((i) => i.includes('WARN'));
 
     allIssues.push(...hardIssues);
     warnings.push(...softIssues);
@@ -151,7 +152,7 @@ function validate() {
 
   if (warnings.length > 0) {
     console.log(`Warnings (${warnings.length}):`);
-    warnings.forEach(w => console.log(`  ⚠  ${w}`));
+    warnings.forEach((w) => console.log(`  ⚠  ${w}`));
     console.log('');
   }
 
@@ -159,7 +160,7 @@ function validate() {
     console.log('✓ All skills pass structural validation!');
   } else {
     console.log(`✗ Found ${allIssues.length} structural issue(s):\n`);
-    allIssues.forEach(issue => console.log(`  ✗  ${issue}`));
+    allIssues.forEach((issue) => console.log(`  ✗  ${issue}`));
   }
 
   process.exit(allIssues.length > 0 ? 1 : 0);

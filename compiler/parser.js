@@ -8,7 +8,7 @@
 const CROSS_REF_PATTERN = /`?rune:([a-z][\w-]*)`?/g;
 const TOOL_REF_PATTERN = /`(Read|Write|Edit|Glob|Grep|Bash|TodoWrite|Skill|Agent)`/g;
 const HARD_GATE_PATTERN = /<HARD-GATE>([\s\S]*?)<\/HARD-GATE>/g;
-const SECTION_PATTERN = /^## (.+)$/gm;
+const _SECTION_PATTERN = /^## (.+)$/gm;
 
 /**
  * Parse YAML-like frontmatter from SKILL.md
@@ -26,7 +26,7 @@ function parseFrontmatter(content) {
 
   let currentIndent = null;
   let nestedKey = null;
-  const nestedObj = {};
+  const _nestedObj = {};
 
   for (const line of raw.split('\n')) {
     const trimmed = line.trim();
@@ -43,7 +43,7 @@ function parseFrontmatter(content) {
     if (currentIndent === 'nested' && line.startsWith('  ')) {
       const kvMatch = trimmed.match(/^(\w+):\s*(.+)$/);
       if (kvMatch) {
-        let value = kvMatch[2].replace(/^["']|["']$/g, '');
+        const value = kvMatch[2].replace(/^["']|["']$/g, '');
         frontmatter[nestedKey][kvMatch[1]] = value;
       }
       continue;
@@ -54,7 +54,7 @@ function parseFrontmatter(content) {
     nestedKey = null;
     const kvMatch = trimmed.match(/^(\w[\w-]*):\s*(.+)$/);
     if (kvMatch) {
-      let value = kvMatch[2].replace(/^["']|["']$/g, '');
+      const value = kvMatch[2].replace(/^["']|["']$/g, '');
       frontmatter[kvMatch[1]] = value;
     }
   }
@@ -226,7 +226,7 @@ export function parsePack(content, filePath = '') {
 function parseSkillManifest(skills) {
   if (!Array.isArray(skills)) return [];
 
-  return skills.map(skill => {
+  return skills.map((skill) => {
     // Handle both string format ("skill-name") and object format ({name, file, model, description})
     if (typeof skill === 'string') {
       return {

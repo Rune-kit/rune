@@ -26,7 +26,7 @@ export function transformFrontmatter(content, adapter) {
   // Remove Claude Code-specific directives
   const cleaned = frontmatterBlock
     .split('\n')
-    .filter(line => {
+    .filter((line) => {
       const trimmed = line.trim();
       if (trimmed.startsWith('context:')) return false;
       if (trimmed.startsWith('agent:')) return false;

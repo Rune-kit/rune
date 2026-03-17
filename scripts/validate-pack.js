@@ -5,8 +5,8 @@
 // If no path given, validates all packs in .rune/community-packs/
 // Exit 0 = all pass, Exit 1 = issues found
 
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 
 // Required top-level sections in every PACK.md
 const REQUIRED_SECTIONS = [
@@ -91,19 +91,15 @@ if (targetPath) {
   if (fs.existsSync(communityDir)) {
     const entries = fs.readdirSync(communityDir, { withFileTypes: true });
     packDirs = entries
-      .filter(e => e.isDirectory() && e.name !== 'node_modules')
-      .map(e => path.join(communityDir, e.name));
+      .filter((e) => e.isDirectory() && e.name !== 'node_modules')
+      .map((e) => path.join(communityDir, e.name));
   }
 
   // Also validate core extension packs
   const extensionsDir = path.join(__dirname, '..', 'extensions');
   if (fs.existsSync(extensionsDir)) {
     const entries = fs.readdirSync(extensionsDir, { withFileTypes: true });
-    packDirs = packDirs.concat(
-      entries
-        .filter(e => e.isDirectory())
-        .map(e => path.join(extensionsDir, e.name))
-    );
+    packDirs = packDirs.concat(entries.filter((e) => e.isDirectory()).map((e) => path.join(extensionsDir, e.name)));
   }
 }
 

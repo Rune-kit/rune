@@ -4,14 +4,14 @@
  * Central registry for all platform adapters.
  */
 
-import claude from './claude.js';
-import cursor from './cursor.js';
-import windsurf from './windsurf.js';
 import antigravity from './antigravity.js';
+import claude from './claude.js';
+import codex from './codex.js';
+import cursor from './cursor.js';
 import generic from './generic.js';
 import openclaw from './openclaw.js';
-import codex from './codex.js';
 import opencode from './opencode.js';
+import windsurf from './windsurf.js';
 
 const adapters = {
   claude,

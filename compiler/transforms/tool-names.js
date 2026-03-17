@@ -41,7 +41,7 @@ export function transformToolNames(body, adapter) {
   let result = body.replace(TOOL_INSTRUCTION_TO_PATTERN, (match, toolName) => {
     const mapped = adapter.transformToolName(toolName);
     if (mapped === toolName) return match;
-    return mapped.charAt(0).toUpperCase() + mapped.slice(1) + ' to ';
+    return `${mapped.charAt(0).toUpperCase() + mapped.slice(1)} to `;
   });
 
   // Second: "Use `Tool`:" or "Use `Tool`." patterns

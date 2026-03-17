@@ -5,13 +5,11 @@
  * Pipeline: frontmatter → cross-refs → tool-names → subagents → compliance → hooks → branding
  */
 
-import { transformCrossReferences } from './transforms/cross-references.js';
-import { transformToolNames } from './transforms/tool-names.js';
-import { transformFrontmatter } from './transforms/frontmatter.js';
-import { transformSubagents } from './transforms/subagents.js';
-import { generateHookConstraints } from './transforms/hooks.js';
 import { transformCompliance } from './transforms/compliance.js';
-import { addBranding } from './transforms/branding.js';
+import { transformCrossReferences } from './transforms/cross-references.js';
+import { generateHookConstraints } from './transforms/hooks.js';
+import { transformSubagents } from './transforms/subagents.js';
+import { transformToolNames } from './transforms/tool-names.js';
 
 /**
  * Run the full transform pipeline on a parsed skill

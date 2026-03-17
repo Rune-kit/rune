@@ -30,7 +30,5 @@ export function transformSubagents(body, adapter) {
     result = result.replace(pattern, replace);
   }
 
-  return adapter.transformSubagentInstruction
-    ? adapter.transformSubagentInstruction(result)
-    : result;
+  return adapter.transformSubagentInstruction ? adapter.transformSubagentInstruction(result) : result;
 }

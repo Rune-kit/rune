@@ -3,8 +3,8 @@
 // validate-mesh.js — Validates bidirectional connections across all SKILL.md files
 // Usage: node scripts/validate-mesh.js
 
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 
 const SKILLS_DIR = path.join(__dirname, '..', 'skills');
 
@@ -18,21 +18,22 @@ function parseSkillMd(filePath) {
   const extractSkills = (text) => {
     if (!text) return [];
     const matches = text.matchAll(/`([a-z-]+)`\s*\(L[1-4]\)/g);
-    return [...matches].map(m => m[1]);
+    return [...matches].map((m) => m[1]);
   };
 
   return {
     name,
     calls: extractSkills(callsMatch ? callsMatch[1] : ''),
-    calledBy: extractSkills(calledByMatch ? calledByMatch[1] : '')
+    calledBy: extractSkills(calledByMatch ? calledByMatch[1] : ''),
   };
 }
 
 function validate() {
   const skills = {};
-  const dirs = fs.readdirSync(SKILLS_DIR, { withFileTypes: true })
-    .filter(d => d.isDirectory())
-    .map(d => d.name);
+  const dirs = fs
+    .readdirSync(SKILLS_DIR, { withFileTypes: true })
+    .filter((d) => d.isDirectory())
+    .map((d) => d.name);
 
   for (const dir of dirs) {
     const skillPath = path.join(SKILLS_DIR, dir, 'SKILL.md');
@@ -66,7 +67,7 @@ function validate() {
     console.log('All mesh connections are bidirectionally consistent!');
   } else {
     console.log(`\nFound ${issues.length} broken connections:\n`);
-    issues.forEach(issue => console.log(`  - ${issue}`));
+    issues.forEach((issue) => console.log(`  - ${issue}`));
   }
 
   process.exit(issues.length > 0 ? 1 : 0);

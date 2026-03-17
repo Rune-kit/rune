@@ -11,7 +11,7 @@ export default {
   skillPrefix: '',
   skillSuffix: '',
 
-  transformReference(skillName, raw) {
+  transformReference(_skillName, raw) {
     return raw;
   },
 

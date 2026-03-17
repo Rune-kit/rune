@@ -5,10 +5,10 @@
  * Handles file naming, directory creation, and index generation.
  */
 
-import { readdir, readFile, mkdir, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
+import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { parseSkill, parsePack, extractCrossRefs, extractToolRefs } from './parser.js';
+import { extractCrossRefs, extractToolRefs, parsePack, parseSkill } from './parser.js';
 import { transformSkill } from './transformer.js';
 
 /**
@@ -176,7 +176,7 @@ export async function buildAll({ runeRoot, outputRoot, adapter, disabledSkills =
           }
         }
         // Concatenate: index body + all skill bodies
-        parsed.body = parsed.body + '\n\n' + skillBodies.join('\n\n---\n\n');
+        parsed.body = `${parsed.body}\n\n${skillBodies.join('\n\n---\n\n')}`;
         // Re-extract refs from the full concatenated body
         parsed.crossRefs = extractCrossRefs(parsed.body);
         parsed.toolRefs = extractToolRefs(parsed.body);
@@ -232,7 +232,9 @@ export async function buildAll({ runeRoot, outputRoot, adapter, disabledSkills =
       try {
         const c = await readFile(sp, 'utf-8');
         parsedSkills.push(parseSkill(c, sp));
-      } catch { /* skip on error */ }
+      } catch {
+        /* skip on error */
+      }
     }
 
     // Read skill-router content for system prompt injection
@@ -245,11 +247,7 @@ export async function buildAll({ runeRoot, outputRoot, adapter, disabledSkills =
     // Write openclaw.plugin.json to parent of skills dir (.openclaw/rune/)
     const openclawRoot = path.resolve(outputDir, '..');
     const manifest = adapter.generateManifest(parsedSkills, pluginJson);
-    await writeFile(
-      path.join(openclawRoot, 'openclaw.plugin.json'),
-      JSON.stringify(manifest, null, 2) + '\n',
-      'utf-8',
-    );
+    await writeFile(path.join(openclawRoot, 'openclaw.plugin.json'), `${JSON.stringify(manifest, null, 2)}\n`, 'utf-8');
     stats.files.push('openclaw.plugin.json');
 
     // Write src/index.ts entry point
@@ -274,21 +272,16 @@ function generateIndex(stats, adapter) {
     '',
     '## Core Skills',
     '',
-    ...stats.files
-      .filter(f => !f.match(/[-/]ext-/) && !f.includes('index'))
-      .map(f => `- ${f}`),
+    ...stats.files.filter((f) => !f.match(/[-/]ext-/) && !f.includes('index')).map((f) => `- ${f}`),
     '',
   ];
 
-  const extFiles = stats.files.filter(f => f.match(/[-/]ext-/));
+  const extFiles = stats.files.filter((f) => f.match(/[-/]ext-/));
   if (extFiles.length > 0) {
-    lines.push('## Extension Packs', '', ...extFiles.map(f => `- ${f}`), '');
+    lines.push('## Extension Packs', '', ...extFiles.map((f) => `- ${f}`), '');
   }
 
-  lines.push(
-    '---',
-    '> Rune Skill Mesh — https://github.com/rune-kit/rune',
-  );
+  lines.push('---', '> Rune Skill Mesh — https://github.com/rune-kit/rune');
 
   return lines.join('\n');
 }

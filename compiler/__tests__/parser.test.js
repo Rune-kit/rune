@@ -1,9 +1,9 @@
-import { parseSkill } from '../parser.js';
-import { readFileSync } from 'node:fs';
-import { test } from 'node:test';
 import assert from 'node:assert';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { parseSkill } from '../parser.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SKILLS_DIR = path.resolve(__dirname, '../../skills');

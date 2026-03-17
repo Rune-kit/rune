@@ -9,14 +9,14 @@
  *   rune doctor  — Validate compiled output
  */
 
-import { readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
+import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { createInterface } from 'node:readline';
+import { fileURLToPath } from 'node:url';
 import { getAdapter, listPlatforms } from '../adapters/index.js';
+import { formatDoctorResults, runDoctor } from '../doctor.js';
 import { buildAll } from '../emitter.js';
-import { runDoctor, formatDoctorResults } from '../doctor.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -26,8 +26,12 @@ const CONFIG_FILE = 'rune.config.json';
 
 // ─── Helpers ───
 
-function log(msg) { console.log(msg); }
-function logStep(icon, msg) { console.log(`  ${icon} ${msg}`); }
+function log(msg) {
+  console.log(msg);
+}
+function logStep(icon, msg) {
+  console.log(`  ${icon} ${msg}`);
+}
 
 async function readConfig(projectRoot) {
   const configPath = path.join(projectRoot, CONFIG_FILE);
@@ -37,7 +41,7 @@ async function readConfig(projectRoot) {
 
 async function writeConfig(projectRoot, config) {
   const configPath = path.join(projectRoot, CONFIG_FILE);
-  await writeFile(configPath, JSON.stringify(config, null, 2) + '\n', 'utf-8');
+  await writeFile(configPath, `${JSON.stringify(config, null, 2)}\n`, 'utf-8');
 }
 
 function detectPlatform(projectRoot) {
@@ -51,11 +55,10 @@ function detectPlatform(projectRoot) {
   return null;
 }
 
-
 async function prompt(question) {
   const rl = createInterface({ input: process.stdin, output: process.stdout });
-  return new Promise(resolve => {
-    rl.question(question, answer => {
+  return new Promise((resolve) => {
+    rl.question(question, (answer) => {
       rl.close();
       resolve(answer.trim());
     });
@@ -77,7 +80,7 @@ async function cmdInit(projectRoot, args) {
   if (platform) {
     logStep('→', `Detected: ${platform}`);
   } else {
-    log('  Available platforms: ' + listPlatforms().join(', '));
+    log(`  Available platforms: ${listPlatforms().join(', ')}`);
     const answer = await prompt('  ? Select platform: ');
     platform = answer.toLowerCase();
     if (!listPlatforms().includes(platform)) {
@@ -93,9 +96,7 @@ async function cmdInit(projectRoot, args) {
   }
 
   // Extension pack selection
-  const extensions = args.extensions
-    ? args.extensions.split(',')
-    : null; // null = all
+  const extensions = args.extensions ? args.extensions.split(',') : null; // null = all
 
   // Build config
   const config = {
@@ -158,9 +159,7 @@ async function cmdBuild(projectRoot, args) {
   }
 
   const adapter = getAdapter(platform);
-  const runeRoot = (config?.source === '@rune-kit/rune')
-    ? RUNE_ROOT
-    : (config?.source || RUNE_ROOT);
+  const runeRoot = config?.source === '@rune-kit/rune' ? RUNE_ROOT : config?.source || RUNE_ROOT;
   const outputRoot = typeof args.output === 'string' ? args.output : projectRoot;
   const disabledSkills = config?.skills?.disabled || [];
   const enabledPacks = config?.extensions?.enabled || null;
@@ -206,9 +205,7 @@ async function cmdDoctor(projectRoot, args) {
 
   const platform = args.platform || config.platform;
   const adapter = getAdapter(platform);
-  const runeRoot = (config.source === '@rune-kit/rune')
-    ? RUNE_ROOT
-    : (config.source || RUNE_ROOT);
+  const runeRoot = config.source === '@rune-kit/rune' ? RUNE_ROOT : config.source || RUNE_ROOT;
 
   const results = await runDoctor({
     outputRoot: projectRoot,
@@ -295,7 +292,9 @@ async function main() {
       log('    doctor   Validate compiled output');
       log('');
       log('  Options:');
-      log('    --platform <name>   Override platform (cursor, windsurf, antigravity, codex, openclaw, opencode, generic)');
+      log(
+        '    --platform <name>   Override platform (cursor, windsurf, antigravity, codex, openclaw, opencode, generic)',
+      );
       log('    --output <dir>      Override output directory');
       log('    --disable <skills>  Comma-separated skills to disable');
       log('    --version, -v       Show version');
@@ -307,7 +306,7 @@ async function main() {
   }
 }
 
-main().catch(err => {
+main().catch((err) => {
   console.error('  ✗ Fatal:', err.message);
   process.exit(1);
 });

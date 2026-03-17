@@ -60,6 +60,10 @@ rune/
 - Build for Codex: `node compiler/bin/rune.js build --platform codex --output <project-dir>`
 - Build for OpenCode: `node compiler/bin/rune.js build --platform opencode --output <project-dir>`
 - Validate build: `node compiler/bin/rune.js doctor`
+- Run tests: `npm test` (84 tests — parser, adapters, transforms, transformer)
+- Lint: `npm run lint` (Biome)
+- Lint + fix: `npm run lint:fix`
+- Full CI check: `npm run ci` (lint + test + doctor)
 
 ## Current Wave
 
@@ -109,7 +113,7 @@ See `docs/ARCHITECTURE.md` for the 5-layer architecture reference.
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **Free** (545 symbols, 688 relationships, 16 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **Free** (549 symbols, 690 relationships, 16 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 

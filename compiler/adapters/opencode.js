@@ -53,14 +53,7 @@ export default {
 
   generateHeader(skill) {
     const desc = (skill.description || '').replace(/"/g, '\\"');
-    return [
-      '---',
-      `name: rune-${skill.name}`,
-      `description: "${desc}"`,
-      '---',
-      '',
-      '',
-    ].join('\n');
+    return ['---', `name: rune-${skill.name}`, `description: "${desc}"`, '---', '', ''].join('\n');
   },
 
   generateFooter() {
@@ -80,8 +73,6 @@ export default {
   },
 
   postProcess(content) {
-    return content
-      .replace(/^context: fork\n/gm, '')
-      .replace(/^agent: general-purpose\n/gm, '');
+    return content.replace(/^context: fork\n/gm, '').replace(/^agent: general-purpose\n/gm, '');
   },
 };

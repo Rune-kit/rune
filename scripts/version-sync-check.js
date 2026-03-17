@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+
 /**
  * version-sync-check.js — Prevents version mismatch across distribution channels.
  *
@@ -12,19 +13,27 @@
  * Hook: runs via doctor command or pre-publish
  */
 
-import { readFileSync, existsSync, readdirSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
-import { execSync } from 'child_process';
+import { execSync } from 'node:child_process';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
 let errors = 0;
 let warnings = 0;
 
-function fail(msg) { console.error(`  ✗ ${msg}`); errors++; }
-function warn(msg) { console.warn(`  ⚠ ${msg}`); warnings++; }
-function pass(msg) { console.log(`  ✓ ${msg}`); }
+function fail(msg) {
+  console.error(`  ✗ ${msg}`);
+  errors++;
+}
+function warn(msg) {
+  console.warn(`  ⚠ ${msg}`);
+  warnings++;
+}
+function pass(msg) {
+  console.log(`  ✓ ${msg}`);
+}
 
 console.log('\n  Version Sync Check\n  ──────────────────\n');
 
@@ -40,7 +49,10 @@ if (pkg.version === plugin.version) {
 
 // 2. npm registry check (non-blocking, just warn)
 try {
-  const npmVersion = execSync(`npm view ${pkg.name} version`, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }).trim();
+  const npmVersion = execSync(`npm view ${pkg.name} version`, {
+    encoding: 'utf8',
+    stdio: ['pipe', 'pipe', 'pipe'],
+  }).trim();
   if (npmVersion === pkg.version) {
     pass(`npm registry in sync: ${npmVersion}`);
   } else if (npmVersion) {
@@ -54,11 +66,11 @@ try {
 const extDir = join(ROOT, 'extensions');
 if (existsSync(extDir)) {
   const diskPacks = readdirSync(extDir, { withFileTypes: true })
-    .filter(d => d.isDirectory())
-    .map(d => d.name)
+    .filter((d) => d.isDirectory())
+    .map((d) => d.name)
     .sort();
 
-  const missingPack = diskPacks.filter(name => {
+  const missingPack = diskPacks.filter((name) => {
     const packFile = join(extDir, name, 'PACK.md');
     return !existsSync(packFile);
   });
@@ -84,7 +96,7 @@ if (existsSync(extDir)) {
       continue;
     }
 
-    const skillFiles = readdirSync(skillsDir).filter(f => f.endsWith('.md'));
+    const skillFiles = readdirSync(skillsDir).filter((f) => f.endsWith('.md'));
     if (skillFiles.length === 0) {
       fail(`Split pack "${packName}" has skills/ but no .md files`);
     } else {

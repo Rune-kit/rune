@@ -4,8 +4,8 @@
  * Checks: files exist, cross-references resolve, layer discipline, source freshness.
  */
 
-import { readdir, readFile, stat } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
+import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { parsePack } from './parser.js';
 
@@ -56,13 +56,17 @@ export async function runDoctor({ outputRoot, adapter, config, runeRoot }) {
 
   // Check 3: Count skill files
   const files = await readdir(outputDir);
-  const skillFiles = files.filter(f => f.startsWith('rune-') && f !== `rune-index${adapter.fileExtension}`);
+  const skillFiles = files.filter((f) => f.startsWith('rune-') && f !== `rune-index${adapter.fileExtension}`);
   const expectedSkillCount = 55 - (config.skills?.disabled?.length || 0);
 
   if (skillFiles.length >= expectedSkillCount) {
     results.checks.push({ name: 'Skill files', status: 'pass', detail: `${skillFiles.length}/${expectedSkillCount}` });
   } else {
-    results.checks.push({ name: 'Skill files', status: 'warn', detail: `${skillFiles.length}/${expectedSkillCount} present` });
+    results.checks.push({
+      name: 'Skill files',
+      status: 'warn',
+      detail: `${skillFiles.length}/${expectedSkillCount} present`,
+    });
     results.warnings.push(`Expected ${expectedSkillCount} skill files, found ${skillFiles.length}`);
   }
 
@@ -97,7 +101,11 @@ export async function runDoctor({ outputRoot, adapter, config, runeRoot }) {
     if (splitPackErrors.length === 0) {
       results.checks.push({ name: 'Split packs', status: 'pass' });
     } else {
-      results.checks.push({ name: 'Split packs', status: 'fail', detail: `${splitPackErrors.length} missing skill files` });
+      results.checks.push({
+        name: 'Split packs',
+        status: 'fail',
+        detail: `${splitPackErrors.length} missing skill files`,
+      });
       results.errors.push(...splitPackErrors);
     }
   }
