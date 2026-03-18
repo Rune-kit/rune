@@ -3,7 +3,7 @@ name: debug
 description: Root cause analysis for bugs and unexpected behavior. Traces errors through code, uses structured reasoning, and hands off to fix when cause is found. Core of the debug↔fix mesh.
 metadata:
   author: runedev
-  version: "0.5.0"
+  version: "0.6.0"
   layer: L2
   model: sonnet
   group: development
@@ -231,6 +231,30 @@ After Step 4 (Test Hypotheses): if NO hypothesis is confirmed after 3 cycles of 
 Within any single step: 5+ consecutive Read/Grep calls without forming or testing a hypothesis = stuck. Stop reading, form a hypothesis from what you have, and test it. Incomplete hypotheses that get tested are better than perfect hypotheses that never form.
 </HARD-GATE>
 
+### Hash-Based Evidence Loop Detection
+
+Beyond counting reads, detect when debug is **re-gathering the same evidence without progress** — the most common debug-specific stuck pattern.
+
+**Detection signals** (track mentally across hypothesis cycles):
+
+| Signal | Count | Meaning | Action |
+|--------|-------|---------|--------|
+| Reading the same file:line range in different cycles | 2x | Re-examining without new lens | Form hypothesis from existing evidence NOW |
+| Running the same test command with same failure output | 3x | No code changed between runs | STOP — hand off to fix with current diagnosis, even if incomplete |
+| Grepping the same error string after already finding all occurrences | 2x | Hoping for different results | Evidence is complete — move to Step 3 (hypothesize) |
+| Same hypothesis tested with same evidence across cycles | 2x | Circular reasoning | Mark hypothesis INCONCLUSIVE, try a DIFFERENT hypothesis category |
+
+**Hypothesis category diversity rule**: If H1 (cycle 1) was "wrong input data" and it was RULED OUT, H1 (cycle 2) MUST be from a DIFFERENT category:
+
+| Category | Examples |
+|----------|---------|
+| Data | Wrong value, missing field, type mismatch, encoding |
+| Control Flow | Wrong branch, missing guard, race condition, async ordering |
+| Environment | Wrong config, missing env var, version mismatch, path issue |
+| State | Stale cache, mutation side-effect, leaked reference, dangling connection |
+
+> Source: goclaw (832★) — content-aware loop detection adapted for debug hypothesis cycles.
+
 ## Red Flags — STOP and Return to Step 2
 
 If you catch yourself thinking any of these, you are GUESSING, not debugging:
@@ -301,6 +325,9 @@ ALL of these mean: STOP. Return to Step 2 (Gather Evidence).
 | Escalating to plan when the APPROACH is wrong (not the module) | HIGH | If all 3 fixes hit the same category of blocker (API limit, platform gap), the approach needs pivoting via brainstorm(rescue), not re-planning |
 | Not tracking fix attempt number for recurring bugs | HIGH | Debug Report MUST include Fix Attempt counter — enables escalation gate |
 | Adding instrumentation without region markers | MEDIUM | All debug logging MUST use `#region agent-debug` — unmarked code gets cleaned up prematurely by fix |
+| Re-reading same file:line in different hypothesis cycles | HIGH | Hash-based evidence loop: if same evidence gathered 2x, form hypothesis from existing data — don't re-gather |
+| Same hypothesis category across cycles after RULED OUT | HIGH | Hypothesis category diversity: if "data" ruled out in cycle 1, cycle 2 must try "control flow", "environment", or "state" |
+| Running same test 3x with same failure without code change | MEDIUM | True stuck loop — no progress possible. Hand off to fix with current incomplete diagnosis |
 
 ## Done When
 

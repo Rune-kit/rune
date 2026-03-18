@@ -5,7 +5,7 @@ context: fork
 agent: general-purpose
 metadata:
   author: runedev
-  version: "0.9.0"
+  version: "1.0.0"
   layer: L1
   model: sonnet
   group: orchestrator
@@ -583,6 +583,34 @@ When cook must pause mid-phase (context limit, user break, session end before ph
 
 This is more granular than Phase 0's plan-level resume — it resumes within a phase, not just between phases.
 
+### Mid-Run Signal Detection (Two-Stage Intent Classification)
+
+When user sends a message DURING cook execution (mid-phase), classify intent before acting:
+
+**Stage 1 — Keyword Fast-Path** (no LLM reasoning needed, <60 chars):
+
+| Pattern | Intent | Action |
+|---------|--------|--------|
+| "stop", "cancel", "dừng", "abort" | `Cancel` | Save progress → emit Cook Report with status BLOCKED → stop |
+| "status", "tiến độ", "progress", "where are you" | `StatusQuery` | Reply with current phase + task + % estimate → resume |
+| "wait", "pause", "đợi" | `Pause` | Create `.rune/.continue-here.md` → WIP commit → stop |
+| "skip this", "bỏ qua", "next" | `Steer` | Skip current task → proceed to next task/phase |
+
+**Stage 2 — Context Classification** (if no keyword match AND message >60 chars):
+
+| Intent | Signal | Action |
+|--------|--------|--------|
+| `Steer` | Modifies scope but keeps goal ("actually use Redis instead of Memcached") | Update plan inline, note deviation in Cook Report |
+| `NewTask` | Unrelated to current work ("also fix the login page") | Log to `.rune/backlog.md`, continue current task. Announce: "Noted for later — staying on current task." |
+| `Clarification` | Answers a question cook asked, or provides missing context | Absorb into current phase context, resume |
+
+> Source: goclaw (832★) — two-stage intent classification prevents expensive LLM calls for simple signals like "stop" or "status".
+
+<HARD-GATE>
+NEVER treat a Cancel/Pause signal as a Steer or NewTask. User safety signals take absolute priority.
+If ambiguous between Cancel and Steer → ask user: "Did you mean stop, or change approach?"
+</HARD-GATE>
+
 ### Exit Conditions (Mandatory for Autonomous Runs)
 
 Every cook invocation inside `team` or autonomous workflows MUST have exit conditions:
@@ -717,6 +745,38 @@ Stuck patterns (all banned):
 A wrong first attempt that produces feedback beats perfect understanding that never ships.
 </HARD-GATE>
 
+### Hash-Based Tool Loop Detection (Content-Aware)
+
+The 5-read counter above catches obvious paralysis. This catches **same-input-same-output loops** — where the agent keeps calling the same tool with the same arguments and getting the same result, making zero progress.
+
+**Detection logic** (conceptual — tracked mentally, not via actual SHA256):
+
+```
+For each tool call, track:
+  argsHash = fingerprint(tool_name + arguments)
+  resultHash = fingerprint(result content)
+
+IF same argsHash AND same resultHash seen before:
+  consecutive_identical += 1
+ELSE:
+  consecutive_identical = 0
+
+Thresholds:
+  3 identical calls → WARN: "Loop detected — same tool, same args, same result 3x. Change approach."
+  5 identical calls → FORCE STOP: "True stuck loop. Must try different tool or different arguments."
+```
+
+**Key distinction**: retry-with-different-result is NOT a loop (e.g., re-running tests after a fix). Only same-input-AND-same-output counts.
+
+> Source: goclaw (832★) — SHA256-based loop detection distinguishes true stuck loops from productive retries.
+
+**Common loop patterns to catch**:
+| Pattern | Looks Like | Actually |
+|---------|-----------|----------|
+| Re-reading same file after failed edit | `Read(file.ts)` → same content 3x | Agent forgot what it read — act on existing knowledge |
+| Re-running same failing test without code change | `Bash(npm test)` → same failure 3x | No code was changed between runs — fix first, then test |
+| Grepping same pattern across different paths | `Grep("pattern", src/)` → `Grep("pattern", lib/)` → same 0 results | Pattern doesn't exist — change search terms |
+
 ## Constraints
 
 1. MUST run scout before planning — no plan based on assumptions alone
@@ -791,6 +851,9 @@ Known failure modes for this skill. Check these before declaring done.
 | Fast mode on security-relevant code | HIGH | Fast mode auto-excludes auth/crypto/payments — never fast-track security code |
 | Loading all phase files at once into context | HIGH | Phase File Gate: load ONLY the active phase file — one phase per session |
 | Resuming without checking master plan | MEDIUM | Phase 0 (RESUME CHECK) runs before Phase 1 — detects existing plans |
+| Treating user "stop"/"cancel" as scope change | CRITICAL | Mid-Run Signal Detection: Cancel/Pause are safety signals with absolute priority — never reinterpret as Steer or NewTask |
+| Same tool+args+result called 3+ times without progress | HIGH | Hash-Based Loop Detection: 3x warn, 5x force stop. Only same-input-AND-same-output counts — retries with different results are fine |
+| Ignoring mid-run user messages during autonomous execution | HIGH | Two-stage intent classification: keyword fast-path for simple signals, context classification for longer messages. Never queue user messages — process immediately |
 
 ## Done When
 
