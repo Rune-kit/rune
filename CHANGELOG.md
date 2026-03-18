@@ -3,6 +3,15 @@
 All notable changes to Rune are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.2.6] - 2026-03-18
+
+### Improved
+- **cook v1.0.0** — Two-stage Mid-Run Signal Detection (keyword fast-path for Cancel/Pause/Status/Steer + context classification for longer messages), Hash-Based Tool Loop Detection (3x warn, 5x force stop, content-aware stuck detection)
+- **debug v0.6.0** — Hash-Based Evidence Loop Detection (re-read/re-test/re-grep detection), hypothesis category diversity rule (Data/Control Flow/Environment/State must rotate across cycles)
+
+### Sources
+- nextlevelbuilder/goclaw (832★) — two-stage intent classification, SHA256-based loop detection
+
 ## [2.2.5] - 2026-03-18
 
 ### Improved
