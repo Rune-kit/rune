@@ -227,7 +227,7 @@ function closePayment() {
 }
 
 function showPayStep(n) {
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 5; i++) {
     document.getElementById('pay-step-' + i).hidden = (i !== n);
   }
 }
@@ -235,6 +235,70 @@ function showPayStep(n) {
 function showVNPayment() {
   showPayStep(2);
   document.getElementById('pay-github').focus();
+}
+
+function showIntlPayment() {
+  const info = getProductPricing(payState.product);
+  document.getElementById('pay-title-5').textContent = info.title;
+  document.getElementById('pay-amount-5').textContent = info.priceIntl;
+  document.getElementById('pay-intl-github').value = '';
+  document.getElementById('pay-intl-email').value = '';
+  document.getElementById('pay-intl-error').hidden = true;
+
+  const btn = document.getElementById('pay-intl-submit');
+  btn.className = 'btn ' + info.btnClass;
+  btn.style.width = '100%';
+  btn.style.marginTop = '16px';
+
+  showPayStep(5);
+  document.getElementById('pay-intl-github').focus();
+}
+
+async function startPolarCheckout() {
+  const github = document.getElementById('pay-intl-github').value.trim();
+  const email = document.getElementById('pay-intl-email').value.trim();
+  const errorEl = document.getElementById('pay-intl-error');
+
+  if (!github) {
+    errorEl.textContent = 'Please enter your GitHub username';
+    errorEl.hidden = false;
+    return;
+  }
+
+  if (!/^[a-zA-Z0-9](?:[a-zA-Z0-9]|-(?=[a-zA-Z0-9])){0,38}$/.test(github)) {
+    errorEl.textContent = 'Invalid GitHub username format';
+    errorEl.hidden = false;
+    return;
+  }
+
+  errorEl.hidden = true;
+  const btn = document.getElementById('pay-intl-submit');
+  btn.disabled = true;
+  btn.textContent = 'Redirecting to checkout...';
+
+  try {
+    const res = await fetch(PAY_API + '/checkout/polar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        product: payState.product,
+        githubUsername: github,
+        email: email || undefined,
+      }),
+    });
+
+    const data = await res.json();
+    if (!data.success || !data.url) throw new Error(data.error || 'Failed to create checkout');
+
+    // Redirect to Polar checkout page
+    window.location.href = data.url;
+  } catch (err) {
+    errorEl.textContent = err.message;
+    errorEl.hidden = false;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Pay with Card / PayPal';
+  }
 }
 
 async function createOrder() {
@@ -382,4 +446,23 @@ function startPolling(github) {
   }
   tick();
   setInterval(tick, 1000);
+})();
+
+// ─── Polar Success Return ───
+(function checkPolarReturn() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('polar') === 'success') {
+    // Clean URL
+    window.history.replaceState({}, '', window.location.pathname);
+    // Show success message
+    const modal = document.getElementById('pay-modal');
+    if (modal) {
+      modal.hidden = false;
+      document.body.style.overflow = 'hidden';
+      document.getElementById('pay-success-user').textContent = 'you';
+      for (let i = 1; i <= 5; i++) {
+        document.getElementById('pay-step-' + i).hidden = (i !== 4);
+      }
+    }
+  }
 })();

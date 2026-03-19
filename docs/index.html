@@ -624,15 +624,15 @@ claude plugin install rune</code></pre>
             </div>
             <span class="pay-option-arrow">&rarr;</span>
           </button>
-          <a id="pay-sponsor-link" href="https://github.com/sponsors/rune-kit" target="_blank" rel="noopener" class="pay-option">
+          <button class="pay-option" onclick="showIntlPayment()">
             <span class="pay-option-flag">&#127760;</span>
             <div class="pay-option-info">
               <strong>International</strong>
-              <span>GitHub Sponsors (Stripe)</span>
+              <span>Card / PayPal (Polar)</span>
               <span class="pay-option-price" id="pay-price-intl">$49 USD</span>
             </div>
             <span class="pay-option-arrow">&rarr;</span>
-          </a>
+          </button>
         </div>
       </div>
 
@@ -677,6 +677,21 @@ claude plugin install rune</code></pre>
         <p class="pay-subtitle">A GitHub invitation has been sent to <strong id="pay-success-user"></strong></p>
         <p class="pay-hint">Check your email for the invitation to <code>rune-kit/rune-pro</code></p>
         <button class="btn btn-primary" style="width:100%;margin-top:20px" onclick="closePayment()">Done</button>
+      </div>
+
+      <!-- Step 5: International — GitHub username + Polar checkout -->
+      <div id="pay-step-5" class="pay-step" hidden>
+        <button class="pay-close" onclick="closePayment()" aria-label="Close">&times;</button>
+        <button class="pay-back" onclick="showPayStep(1)" aria-label="Back">&larr; Back</button>
+        <h3 id="pay-title-5">Get Rune Pro</h3>
+        <p class="pay-subtitle" id="pay-amount-5">$49 USD</p>
+        <label class="pay-label" for="pay-intl-github">GitHub Username</label>
+        <input type="text" id="pay-intl-github" class="pay-input" placeholder="your-github-username" autocomplete="off" spellcheck="false" />
+        <label class="pay-label" for="pay-intl-email">Email <span style="color:var(--text-muted)">(for receipt)</span></label>
+        <input type="email" id="pay-intl-email" class="pay-input" placeholder="you@example.com" />
+        <p id="pay-intl-error" class="pay-error" hidden></p>
+        <button id="pay-intl-submit" class="btn btn-pro" style="width:100%;margin-top:16px" onclick="startPolarCheckout()">Pay with Card / PayPal</button>
+        <p class="pay-hint" style="margin-top:12px">You'll be redirected to Polar's secure checkout page</p>
       </div>
     </div>
   </div>
