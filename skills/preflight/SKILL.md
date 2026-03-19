@@ -3,7 +3,7 @@ name: preflight
 description: Pre-commit quality gate that catches "almost right" code. Goes beyond linting — checks logic correctness, error handling, regressions, and completeness.
 metadata:
   author: runedev
-  version: "0.2.0"
+  version: "0.3.0"
   layer: L2
   model: sonnet
   group: quality
@@ -158,6 +158,52 @@ Verify that new code ships complete:
 
 If any completeness item is missing, flag as **WARN** with: what is missing, which file needs it.
 
+### Step 4.5 — Domain Quality Hooks
+
+Apply domain-specific quality checks based on detected file types in the diff. These extend the generic completeness checks in Step 4 with deeper domain validation.
+
+<HARD-GATE>
+Domain hooks are additive — they add checks, never remove generic ones from Steps 1-4.
+If a domain hook flags BLOCK, the overall preflight verdict is BLOCK regardless of other steps.
+</HARD-GATE>
+
+#### Hook Selection (auto-detect from diff)
+
+| Detected Pattern | Domain Hook | Key Checks |
+|-----------------|-------------|------------|
+| `migrations/*.sql`, `*.migration.*` | Database | Rollback script present, no bare DROP/DELETE, migration tested |
+| `openapi.*`, `*.graphql`, `*.proto` | API Contract | Breaking changes flagged, version bumped, deprecated fields documented |
+| `docs/policies/*`, `PRIVACY*`, `TERMS*` | Legal/Compliance | No placeholder text, review date current, practice matches policy |
+| `**/billing*`, `**/payment*`, `**/invoice*` | Financial | Decimal precision correct, currency locale-aware, no hardcoded rates |
+| `skills/*/SKILL.md`, `extensions/*/PACK.md` | Rune Skill | Frontmatter valid, all required sections present, word count within layer budget |
+| `*.test.*`, `*.spec.*`, `__tests__/*` | Test Quality | No `.skip`/`.only` left in, assertions present (not empty tests), no hardcoded timeouts |
+
+#### Domain Hook Execution
+
+For each detected domain, run its checks on the relevant files in the diff:
+
+1. **Identify** which domain hooks apply based on changed file patterns
+2. **Load** domain-specific check rules (inline above, or from pack reference files if a pack is installed)
+3. **Scan** each relevant file for domain violations
+4. **Classify** findings: BLOCK (data loss risk, breaking contract) or WARN (best practice, incomplete)
+5. **Append** to preflight report under `### Domain Quality` section
+
+#### Pack Integration
+
+When a domain pack is installed (e.g., `@rune-pro/finance`, `@rune-pro/legal`), preflight checks the pack's **Hard-Stop Thresholds** table and applies matching rules to staged files. This means:
+- Installing `@rune-pro/finance` automatically adds financial quality gates to preflight
+- Installing `@rune-pro/legal` automatically adds compliance checks to preflight
+- No manual configuration needed — pack presence = hooks active
+
+#### Output Section
+
+```
+### Domain Quality
+- **Domains detected**: [Database, Financial]
+- `migrations/003-add-billing.sql` — BLOCK: DROP TABLE without rollback script
+- `src/billing/invoice.ts:42` — WARN: price calculation uses `toFixed(2)` instead of `Intl.NumberFormat`
+```
+
 ### Step 5 — Security Sub-Check
 Invoke `rune:sentinel` on the changed files. Attach sentinel's output verbatim under the "Security" section of the preflight report. If sentinel returns BLOCK, preflight verdict is also BLOCK.
 
@@ -216,6 +262,9 @@ WARN — 3 issues found (0 blocking, 3 must-acknowledge). Resolve before commit 
 | Skipping sentinel sub-check because "this file doesn't look security-relevant" | HIGH | MUST invoke sentinel — security relevance is sentinel's job to determine, not preflight's |
 | Skipping Stage A (spec compliance) when plan is available | HIGH | If cook provides an approved plan, Stage A is mandatory — catches incomplete implementations |
 | Agent modified files not in plan without flagging | MEDIUM | Stage A flags unplanned file changes as WARN — scope creep detection |
+| Domain hooks not triggered when pack is installed | HIGH | Step 4.5 auto-detects file patterns — if pack is installed but hooks don't fire, check file pattern matching |
+| Domain hooks overriding generic checks | HIGH | HARD-GATE: domain hooks are ADDITIVE — they never replace Steps 1-4 |
+| Pack Hard-Stop Thresholds ignored in preflight | MEDIUM | Step 4.5 Pack Integration must read installed pack thresholds — test with each new pack |
 
 ## Done When
 
