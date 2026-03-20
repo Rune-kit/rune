@@ -11,7 +11,7 @@
       "name": "rune",
       "source": "./",
       "description": "58 skills wired into a self-aware 5-layer mesh — 200+ connections, adaptive routing, mesh analytics, logic preservation. Use rune:cook for any code task, rune:team for parallel work, rune:launch for deploy, rune:rescue for legacy code.",
-      "version": "2.2.0",
+      "version": "2.2.6",
       "author": {
         "name": "Rune Contributors"
       },

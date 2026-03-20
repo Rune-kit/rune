@@ -553,10 +553,14 @@ a:hover { opacity: 0.85; }
 .theme-toggle:hover, .lang-toggle:hover {
   border-color: var(--accent); color: var(--text-primary);
 }
-/* Google Translate — hide injected banner */
+/* Google Translate — hide ALL injected elements */
 .goog-te-banner-frame { display: none !important; }
-body { top: 0 !important; }
-.skiptranslate { display: none !important; }
+body { top: 0 !important; position: static !important; }
+.skiptranslate { display: none !important; height: 0 !important; overflow: hidden !important; }
+.goog-te-spinner-pos, .goog-te-balloon-frame, #goog-gt-tt, .goog-te-ftab-frame { display: none !important; }
+.goog-text-highlight { background: none !important; box-shadow: none !important; }
+font[style] > font { vertical-align: unset !important; }
+#_gt_dummy { display: none !important; visibility: hidden !important; height: 0 !important; overflow: hidden !important; }
 /* Language dropdown */
 .lang-dropdown { position: relative; }
 .lang-menu {
