@@ -26,6 +26,7 @@
         <a href="#architecture">Architecture</a>
         <a href="#workflows">Workflows</a>
         <a href="guides/">Guides</a>
+        <a href="#mesh">Mesh</a>
         <a href="#pricing">Pricing</a>
         <div class="nav-controls">
           <button class="theme-toggle" id="theme-toggle" aria-label="Toggle light/dark mode" title="Toggle theme">&#9790;</button>
@@ -318,6 +319,173 @@ claude plugin install rune</code></pre>
       </div>
       <div style="text-align:center;margin-top:24px">
         <a href="guides/" class="btn btn-ghost">View Full Guide &rarr;</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW THE MESH WORKS -->
+  <section class="section" id="mesh">
+    <div class="container">
+      <h2>How the Mesh Works</h2>
+      <p class="section-sub">Skills don't run in isolation. They call each other, forming resilient workflows that adapt when things go wrong.</p>
+
+      <!-- Mesh Diagram -->
+      <div class="mesh-diagram">
+        <div class="mesh-tier mesh-tier-free">
+          <div class="mesh-tier-header">
+            <span class="mesh-tier-badge mesh-badge-free">FREE</span>
+            <strong>Core Mesh</strong>
+            <span class="mesh-tier-stats">58 skills &bull; 200+ connections</span>
+          </div>
+          <div class="mesh-layers">
+            <div class="mesh-layer">
+              <span class="mesh-layer-label">L0</span>
+              <div class="mesh-nodes">
+                <span class="mesh-node mesh-node-router" title="Routes every action to the right skill">skill-router</span>
+              </div>
+            </div>
+            <div class="mesh-layer">
+              <span class="mesh-layer-label">L1</span>
+              <div class="mesh-nodes">
+                <span class="mesh-node" title="Feature orchestrator &mdash; 70% of tasks flow through cook">cook</span>
+                <span class="mesh-node">team</span>
+                <span class="mesh-node">scaffold</span>
+                <span class="mesh-node">launch</span>
+                <span class="mesh-node">rescue</span>
+              </div>
+            </div>
+            <div class="mesh-layer">
+              <span class="mesh-layer-label">L2</span>
+              <div class="mesh-nodes">
+                <span class="mesh-node">plan</span>
+                <span class="mesh-node">ba</span>
+                <span class="mesh-node">debug</span>
+                <span class="mesh-node">fix</span>
+                <span class="mesh-node">test</span>
+                <span class="mesh-node">review</span>
+                <span class="mesh-node">sentinel</span>
+                <span class="mesh-node">deploy</span>
+                <span class="mesh-node mesh-node-more">+19 more</span>
+              </div>
+            </div>
+            <div class="mesh-layer">
+              <span class="mesh-layer-label">L3</span>
+              <div class="mesh-nodes">
+                <span class="mesh-node">scout</span>
+                <span class="mesh-node">research</span>
+                <span class="mesh-node">verification</span>
+                <span class="mesh-node">git</span>
+                <span class="mesh-node">docs</span>
+                <span class="mesh-node mesh-node-more">+20 more</span>
+              </div>
+            </div>
+            <div class="mesh-layer">
+              <span class="mesh-layer-label">L4</span>
+              <div class="mesh-nodes">
+                <span class="mesh-node">@rune/ui</span>
+                <span class="mesh-node">@rune/backend</span>
+                <span class="mesh-node">@rune/saas</span>
+                <span class="mesh-node">@rune/mobile</span>
+                <span class="mesh-node mesh-node-more">+10 packs</span>
+              </div>
+            </div>
+          </div>
+          <div class="mesh-flow-example">
+            <span class="mesh-flow-label">Example flow:</span>
+            <code class="mesh-flow">cook &rarr; plan &rarr; test <span class="mesh-flow-fail">&#10007;</span> &rarr; debug &rarr; fix &rarr; test <span class="mesh-flow-pass">&#10003;</span> &rarr; review &rarr; sentinel &rarr; git</code>
+          </div>
+        </div>
+
+        <!-- Connection arrows -->
+        <div class="mesh-arrows">
+          <div class="mesh-arrow-line"></div>
+          <div class="mesh-arrow-labels">
+            <span class="mesh-arrow-label">+57 new connections</span>
+            <span class="mesh-arrow-desc">Pro skills plug into cook, team, ba, sentinel, git, research</span>
+          </div>
+        </div>
+
+        <div class="mesh-tier mesh-tier-pro">
+          <div class="mesh-tier-header">
+            <span class="mesh-tier-badge mesh-badge-pro">PRO $49</span>
+            <strong>Department Skills</strong>
+            <span class="mesh-tier-stats">+25 skills &bull; +57 connections into core</span>
+          </div>
+          <div class="mesh-nodes mesh-nodes-grid">
+            <div class="mesh-pack">
+              <strong>Product</strong>
+              <span>PRDs, roadmaps, KPIs, release comms</span>
+            </div>
+            <div class="mesh-pack">
+              <strong>Sales</strong>
+              <span>Pipeline, outreach, account research</span>
+            </div>
+            <div class="mesh-pack">
+              <strong>Data Science</strong>
+              <span>SQL exploration, dashboards, ML eval</span>
+            </div>
+            <div class="mesh-pack">
+              <strong>Support</strong>
+              <span>Ticket triage, KB, escalation</span>
+            </div>
+          </div>
+          <p class="mesh-tier-note">Pro packs register as <code>Called By &larr; cook</code> &mdash; activated by the same orchestrator as core skills. No configuration needed.</p>
+        </div>
+
+        <!-- Connection arrows -->
+        <div class="mesh-arrows">
+          <div class="mesh-arrow-line mesh-arrow-line-biz"></div>
+          <div class="mesh-arrow-labels">
+            <span class="mesh-arrow-label">+54 connections + 13 cross-tier</span>
+            <span class="mesh-arrow-desc">Business calls Pro data: finance uses sales pipeline, legal uses product specs</span>
+          </div>
+        </div>
+
+        <div class="mesh-tier mesh-tier-biz">
+          <div class="mesh-tier-header">
+            <span class="mesh-tier-badge mesh-badge-biz">BUSINESS $149</span>
+            <strong>Enterprise Skills</strong>
+            <span class="mesh-tier-stats">+26 skills &bull; includes all Pro skills</span>
+          </div>
+          <div class="mesh-nodes mesh-nodes-grid">
+            <div class="mesh-pack">
+              <strong>Finance</strong>
+              <span>Budget from <em>sales pipeline</em> + <em>product roadmap</em></span>
+            </div>
+            <div class="mesh-pack">
+              <strong>Legal</strong>
+              <span>Compliance via <em>product specs</em> + <em>support KB</em></span>
+            </div>
+            <div class="mesh-pack">
+              <strong>HR</strong>
+              <span>Recruiting, onboarding, role design</span>
+            </div>
+            <div class="mesh-pack">
+              <strong>Enterprise Search</strong>
+              <span>Cross-department knowledge from <em>support KB</em> + <em>product docs</em></span>
+            </div>
+          </div>
+          <p class="mesh-tier-note">Business includes Pro because it depends on Pro data. Finance can&rsquo;t forecast without sales pipeline. Legal can&rsquo;t audit without product specs. That&rsquo;s why they&rsquo;re bundled.</p>
+        </div>
+      </div>
+
+      <!-- Key Points -->
+      <div class="mesh-points">
+        <div class="mesh-point">
+          <div class="mesh-point-icon">&#9670;</div>
+          <h3>Free is complete</h3>
+          <p>The full development workflow &mdash; plan, build, test, review, deploy &mdash; runs entirely on Free. You never hit a paywall while coding.</p>
+        </div>
+        <div class="mesh-point">
+          <div class="mesh-point-icon">&#9726;</div>
+          <h3>Pro extends, not replaces</h3>
+          <p>Pro skills plug into the existing mesh via <code>cook</code> and <code>team</code>. Same orchestrator, same quality gates, new department capabilities.</p>
+        </div>
+        <div class="mesh-point">
+          <div class="mesh-point-icon">&#9726;</div>
+          <h3>Business needs Pro</h3>
+          <p>Finance pulls from sales pipeline. Legal checks product specs. Enterprise search indexes support KB. That&rsquo;s 13 cross-tier connections &mdash; and why Business includes Pro.</p>
+        </div>
       </div>
     </div>
   </section>

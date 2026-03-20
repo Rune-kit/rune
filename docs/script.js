@@ -98,7 +98,7 @@
     });
   }, { threshold: 0.1 });
 
-  document.querySelectorAll('.layer, .feature-card, .workflow-card, .compare-card, .ext-card, .install-card, .pricing-card, .stat').forEach(el => {
+  document.querySelectorAll('.layer, .feature-card, .workflow-card, .compare-card, .ext-card, .install-card, .pricing-card, .stat, .mesh-tier, .mesh-point').forEach(el => {
     el.style.animationPlayState = 'paused';
     observer.observe(el);
   });
