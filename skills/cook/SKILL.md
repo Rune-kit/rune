@@ -5,7 +5,7 @@ context: fork
 agent: general-purpose
 metadata:
   author: runedev
-  version: "1.4.0"
+  version: "1.5.0"
   layer: L1
   model: sonnet
   group: orchestrator
@@ -36,6 +36,7 @@ Cook supports predefined workflow chains for common task types. Use these as sho
 /rune cook refactor   → Understand → plan → implement → quality (Phase 1 → 2 → 4 → 5 → 6 → 7)
 /rune cook security   → Full pipeline + sentinel@opus + sast (all phases, security-escalated)
 /rune cook hotfix     → Minimal: fix → verify → commit (Phase 4 → 6 → 7, skip scout if user provides context)
+/rune cook nano       → Trivial: do → verify → done (no phases, ≤3 steps)
 ```
 
 **Chain selection**: If user invokes `/rune cook` without a chain type, auto-detect from the task description:
@@ -43,6 +44,7 @@ Cook supports predefined workflow chains for common task types. Use these as sho
 - Contains "refactor", "clean", "restructure" → `refactor`
 - Contains "security", "auth", "vulnerability", "CVE" → `security`
 - Contains "urgent", "hotfix", "production" → `hotfix`
+- Contains "quick", "just", "chỉ cần", "copy", "move", "rename", "bump" → `nano`
 - Default → `feature`
 
 ## Phase Skip Rules
@@ -50,6 +52,7 @@ Cook supports predefined workflow chains for common task types. Use these as sho
 Not every task needs every phase:
 
 ```
+Nano task:           DO → VERIFY → DONE (no phases, auto-detected)
 Simple bug fix:      Phase 1 → 4 → 6 → 7
 Small refactor:      Phase 1 → 4 → 5 → 6 → 7
 New feature:         Phase 1 → 1.5 → 2 → 3 → 4 → 5 → 6 → 7 → 8
@@ -60,6 +63,36 @@ Multi-session:       Phase 0 (resume) → 3 → 4 → 5 → 6 → 7 (one plan ph
 ```
 
 Determine complexity BEFORE starting. Create TodoWrite with applicable phases.
+
+## Nano Mode (Auto-Detect)
+
+For trivial tasks that don't need any pipeline at all:
+
+```
+IF all of these are true:
+  - Task is ≤3 discrete steps (e.g., run command, edit 1 file, commit)
+  - Task description < 60 chars OR user prefixes with "quick:", "just", "chỉ cần"
+  - No code logic changes (copy files, config edits, version bumps, git ops, run scripts)
+  - No new functions/classes/components created
+THEN: Nano Mode activated
+  - Execute directly: DO → VERIFY → DONE
+  - No phases. No plan. No test. No review.
+  - Still verify output (check exit codes, confirm file exists, etc.)
+  - Still use semantic commit message if committing
+```
+
+**Announce**: "Nano mode: trivial task, executing directly."
+**Override**: User can say "full pipeline" or "cook feature" to force phases.
+**Escape hatch**: If during execution the task turns out more complex than expected → announce upgrade: "Upgrading to Fast/Full mode — task is more complex than detected." Resume from Phase 1.
+
+<HARD-GATE>
+Nano mode MUST NOT be used for:
+- Any code that will be imported/called by other code
+- Security-relevant files (auth, crypto, payments, .env, secrets)
+- Database schema changes
+- Public API changes
+If any of these are detected mid-task, STOP and upgrade to Fast/Full mode.
+</HARD-GATE>
 
 ## Fast Mode (Auto-Detect)
 
