@@ -4,7 +4,7 @@ description: "Meta-enforcement layer that routes EVERY agent action through the 
 user-invocable: false
 metadata:
   author: runedev
-  version: "1.2.0"
+  version: "1.3.0"
   layer: L0
   model: haiku
   group: orchestrator
@@ -63,6 +63,15 @@ Before standard routing, check if adaptive routing rules exist:
 - When a model_hint is present, announce: "Adaptive routing: this skill previously required opus-level reasoning for [context]. Escalating model."
 - Model hints are written by cook Phase 8 when debug-fix loops hit max retries on the same error pattern
 - Model hints do NOT override explicit user model preferences
+
+### Context Efficiency (Trigger-Table Pattern)
+
+Skill-router's routing table above IS the trigger table — it maps keywords to skill paths without loading any skill content. Skills are loaded on-demand via the Skill tool only when routed. This keeps baseline context usage minimal.
+
+**Rules for context efficiency:**
+- NEVER read a SKILL.md to decide routing — use the routing table keywords
+- NEVER load multiple skills speculatively — route to ONE, let it chain if needed
+- Skill content is loaded by the Skill tool, not by skill-router reading files
 
 ### Step 0.25 — Request Classifier (Fast-Path Filter)
 
@@ -283,6 +292,27 @@ These DO NOT need skill routing:
 - Answering questions about Rune itself (meta-questions)
 - Single-line factual answers with no code impact
 - Resuming an already-active skill workflow
+
+## Proactive Skill Recommendations (One-Hop Max)
+
+At the end of a skill's workflow, skill-router MAY suggest a **complementary skill** — limited to ONE recommendation to prevent infinite referral chains.
+
+| After This Skill | Suggest | Rationale |
+|-----------------|---------|-----------|
+| `debug` | `review` | Root cause found — review the fix area for broader issues |
+| `fix` | `test` | Code changed — verify with tests |
+| `plan` | `adversary` | Plan created — stress-test before implementation |
+| `test` (GREEN) | `preflight` | Tests pass — check for edge cases and completeness |
+| `review` (issues found) | `fix` | Issues identified — apply fixes |
+| `sentinel` (findings) | `fix` | Security issues — remediate |
+
+**Rules:**
+- Hard limit: 1 hop. NEVER chain recommendations (fix→test→preflight→...). Suggest ONE, let the user decide.
+- Announcement format: "Suggested next: `rune:<skill>` — [1-line reason]. Run it? (skip to continue)"
+- User can disable with "no suggestions" or "just do what I asked"
+- Inside `cook` orchestration: skip recommendations — cook already manages transitions
+
+> Source: garrytan/gstack v0.9.1 (50.9k★) — one-hop skill chaining with proactive: false escape hatch.
 
 ## Output Format
 

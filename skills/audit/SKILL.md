@@ -72,8 +72,6 @@ For each critical module (entry points, auth, data layer, core business logic):
 
 **Why**: Without this phase, the auditor pattern-matches against known vulnerability lists and hallucinates findings that don't exist in THIS specific codebase. The invariants + assumptions ground all later analysis in reality.
 
-> Source: trailofbits/skills (3.7k★) — mandatory pure context phase before findings.
-
 ---
 
 ### Phase 1: Dependency Audit

@@ -86,8 +86,6 @@ Before decomposing, classify the task into a complexity tier. Each tier defines 
 
 **Merge queue**: When multiple streams complete at different times, use dependency order for merging. If a later stream's merge creates conflicts with an already-merged stream, provide the conflicting stream's cook report as **conflict context** to the resolution agent — never resolve blindly.
 
-> Source: affaan-m/everything-claude-code (91.9k★) — RFC-driven DAG orchestration with reviewer isolation.
-
 ## Calls (outbound)
 
 - `plan` (L2): high-level task decomposition into independent workstreams

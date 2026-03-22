@@ -90,8 +90,6 @@ Use Grep to count direct callers/importers of each modified symbol:
 Modifying a symbol with 50+ callers + HIGH severity change (logic, types, behavior) → adversarial analysis REQUIRED. Quick review is NOT sufficient for high-blast-radius changes.
 </HARD-GATE>
 
-> Source: trailofbits/skills (3.7k★) — quantitative blast radius as escalation threshold.
-
 ### Step 2: Logic Check (Production-Critical Focus)
 
 Read each changed file. Prioritize bugs that **pass CI but break production** — these are the highest-value findings because linters and type checkers already catch the rest.
@@ -193,8 +191,6 @@ For code that exposes APIs, shared utilities, or reusable interfaces, evaluate t
 Check: Does the API have sensible defaults? Does misuse fail loudly (not silently)? Is the happy path obvious from the signature?
 
 **Skip if**: Code is internal-only (no external consumers), single-use utility, or test-only.
-
-> Source: trailofbits/skills (3.7k★) — 3 adversary types for API review.
 
 ### Step 5: Test Coverage
 

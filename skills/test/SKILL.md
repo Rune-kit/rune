@@ -387,8 +387,6 @@ AC-3: "Expired tokens rejected" → test_expired_reset_token_rejected()
 
 **Skip if**: No plan exists (ad-hoc fix), or plan has no acceptance criteria section.
 
-> Source: Fission-AI/OpenSpec (32.8k★) — spec→test traceability validates intent, not just lines.
-
 ## Eval-Driven Development
 
 Define **capability evals** and **regression evals** BEFORE writing implementation code. Evals go beyond unit tests — they verify that the agent/system can handle the feature's intent, not just its mechanics.
@@ -436,8 +434,6 @@ Do NOT overfit evals to specific prompts or known examples. Evals should test th
 3. Implement feature (GREEN phase) → source files
 4. Run evals to verify capability achieved + no regressions
 5. Preflight checks eval results as part of quality gate
-
-> Source: affaan-m/everything-claude-code (91.9k★) — eval-driven development with pass@k/pass^k distinction.
 
 ## Red Flags — STOP and Start Over
 
@@ -528,8 +524,6 @@ Examples of test slop:
 - "route responds with 200" without checking response body (tests Express, not your handler)
 - Asserting a mock was called N times without checking the RESULT of those calls
 - Type existence tests (`typeof result === 'object'`) when you should test the actual value
-
-> Source: affaan-m/everything-claude-code (91.9k★) — de-sloppify pattern applied to test writing.
 
 **Red flags — any of these means STOP and rethink:**
 - Mock setup longer than test logic

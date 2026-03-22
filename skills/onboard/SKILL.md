@@ -118,8 +118,6 @@ Instincts with confidence <0.6 are still learning — mention count but don't li
 
 **Why**: Onboard is the first skill that runs in a new session. Surfacing instincts here ensures the agent starts with project-specific learned behaviors, not just static conventions.
 
-> Source: affaan-m/everything-claude-code (91.9k★) — instinct-based learning with project isolation.
-
 ### Step 6b — Generate DEVELOPER-GUIDE.md
 
 Use the data from Steps 2–3 to generate `.rune/DEVELOPER-GUIDE.md` — a human-readable onboarding guide for new team members joining the project. This is NOT AI context. This is plain English for humans.
@@ -221,8 +219,6 @@ Audit the project's baseline context cost from MCP servers and agent configurati
 ```
 
 **Skip if**: Total MCP tools ≤80 AND CLAUDE.md ≤150 lines (healthy baseline).
-
-> Source: affaan-m/everything-claude-code (91.9k★) — MCP token cost awareness.
 
 ### Step 7 — Commit
 Use `Bash` to stage and commit the generated files:

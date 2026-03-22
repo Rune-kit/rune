@@ -96,8 +96,6 @@ Before selecting a workflow chain or phase set, compute the task's **rigor level
 - If rigor upgrades mid-task (e.g., scout reveals cross-module impact not obvious from description), announce: "Rigor upgrade: [signal detected] — upgrading from Fast to Standard."
 - Announce chosen level: "Rigor: Fast (score 2 — single file, no security)"
 
-> Source: Fission-AI/OpenSpec (32.8k★) — progressive ceremony scaling by risk factors.
-
 ## Nano Mode (Auto-Detect)
 
 For trivial tasks that don't need any pipeline at all:
@@ -341,8 +339,6 @@ STAGE 2 (after Stage 1 passes):
   If any returns BLOCK → fix findings, re-run the blocking check only.
 ```
 
-> Source: obra/superpowers v5.0.2 (84k★) — spec compliance MUST pass before code quality review dispatched.
-
 ### 5a. Preflight (Spec Compliance + Logic) — STAGE 1
 **REQUIRED SUB-SKILL**: Use `rune:preflight`
 - Spec compliance: compare approved plan vs actual diff
@@ -389,8 +385,6 @@ Projects can define phase-specific rules in `.rune/phase-rules.md` that apply ON
 ```
 
 **Loading**: Cook reads `.rune/phase-rules.md` during Phase 0 (resume check). Rules for each phase are injected into the sub-skill's context when that phase starts. If file doesn't exist → skip silently.
-
-> Source: Fission-AI/OpenSpec (32.8k★) — fine-grained per-phase quality control.
 
 ## Checkpoint Protocol (Opt-In)
 
@@ -447,8 +441,6 @@ After Phase 4 completes (all tests green), run a **separate focused cleanup pass
 
 **Important**: This is NOT a quality gate — it's a cleanup pass. Don't block the pipeline for cosmetic issues. Fix what you find, move on.
 
-> Source: affaan-m/everything-claude-code (91.9k★) — separate de-sloppify agent pass after implementation.
-
 ### Continuous PR Loop (team orchestration only)
 
 ```
@@ -501,8 +493,6 @@ When invoking sub-skills (fix, debug, test, review, etc.), **craft exactly the c
 | Error/stack trace (for debug/fix) | Previous debug attempts from other bugs |
 
 **Why**: Sub-skills that inherit orchestrator context get polluted — they chase false connections, reference stale data, and consume tokens on irrelevant context. A focused sub-skill with 500 tokens of curated context outperforms one with 5000 tokens of inherited noise.
-
-> Source: obra/superpowers v5.0.2 (84k★) — first-class context isolation principle.
 
 ## Deviation Rules
 

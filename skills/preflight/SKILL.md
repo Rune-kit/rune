@@ -176,8 +176,6 @@ Verify that new code is **consistent with existing project patterns** — not ju
 
 **Skip if**: Project has no established patterns (greenfield, <5 files), or CLAUDE.md/conventions.md explicitly says "no conventions yet."
 
-> Source: Fission-AI/OpenSpec (32.8k★) — Coherence axis: "follows design.md? matches project patterns?"
-
 ### Step 4.3 — Eval Verification
 
 If `.rune/evals/` directory exists with eval definition files, verify eval results as part of the quality gate.
@@ -190,8 +188,6 @@ If `.rune/evals/` directory exists with eval definition files, verify eval resul
 | No eval file for new feature | New feature added (detected by new test files + new source files) but no `.rune/evals/` entry | INFO: "Consider defining capability evals for new feature" |
 
 **Skip if**: No `.rune/evals/` directory exists (project hasn't adopted eval-driven development).
-
-> Source: affaan-m/everything-claude-code (91.9k★) — eval-driven development as quality gate.
 
 ### Step 4.5 — Domain Quality Hooks
 

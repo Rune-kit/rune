@@ -4,7 +4,7 @@ description: "Context window management. Auto-triggered when context is filling 
 user-invocable: false
 metadata:
   author: runedev
-  version: "0.4.0"
+  version: "0.6.0"
   layer: L3
   model: haiku
   group: state
@@ -130,6 +130,21 @@ In addition to tool-call counting, monitor context window percentage when availa
 Debounce: emit advisory max once per 5 tool calls to avoid noise.
 Tool-call thresholds (Steps 1-2) remain the primary signal. Percentage advisory is supplementary — use when CLI status bar data is available.
 
+## Iterative Retrieval (Context-Loading Strategy)
+
+When loading context for a task (Phase 1 of cook, or onboard), use a 4-phase retrieval loop instead of loading everything at once:
+
+```
+1. DISPATCH (broad): Search with initial task keywords → get 5-10 candidate files
+2. EVALUATE: Score each file's relevance (0-1). Note codebase-specific terminology discovered
+3. REFINE: Use discovered terms to search again with better keywords
+4. LOOP: Repeat max 3 cycles. STOP when 3 high-relevance files found (not 10 mediocre ones)
+```
+
+**Why**: The first search cycle reveals codebase-specific terms (custom class names, project conventions, internal APIs) that produce much better results in cycle 2. Loading 3 deeply relevant files beats loading 10 surface-level matches.
+
+**Key rule**: Stop at 3 high-relevance files, not 10 mediocre ones. Quality > quantity for context loading.
+
 ## Context Health Levels
 
 ```
@@ -156,6 +171,67 @@ Note: These are tool call counts, NOT token percentages. Claude Code does not ex
 - Decisions: [count saved to .rune/]
 - Files touched: [list]
 - Blockers: [if any]
+```
+
+## Strategic Compact Decision Table
+
+When ORANGE or RED is reached, use this table to determine whether compaction is safe at the current boundary:
+
+| Transition | Compact? | Reason |
+|-----------|----------|--------|
+| Research → Planning | YES | Research findings summarize well; key decisions survive |
+| Planning → Implementation | YES | Plan is in files (.rune/plan-*.md); context can reload from artifacts |
+| Debug → Next feature | YES | Debug findings are in Debug Report; fix has the diagnosis |
+| Mid-implementation (Phase 4) | **NO** | Losing file paths, partial changes, and test state is catastrophic |
+| After failed approach → Pivot | YES | Failed approach should be discarded; fresh context helps |
+| Quality (Phase 5) → Verify | **NO** | Quality findings reference specific file:line in current context |
+| After commit (Phase 7) | YES | Work is persisted in git; safe boundary |
+
+**What survives compaction**: Task description, file paths mentioned, key decisions, plan reference, current phase.
+**What is lost**: Full file contents read, intermediate reasoning, exact error messages, tool output details.
+
+## Context Budget Audit (Baseline Cost Awareness)
+
+MCP tool schemas and agent descriptions consume significant baseline context before any work begins. This section helps identify and reduce invisible context waste.
+
+### Token Cost Reference
+
+| Source | Approx. Cost | Loaded When |
+|--------|-------------|-------------|
+| Each MCP tool schema | ~500 tokens | Session start (always) |
+| Each agent description | ~200-400 tokens | Every `Task()` invocation |
+| CLAUDE.md | ~100-2000 tokens | Session start (always) |
+| Skill SKILL.md (full load) | ~500-3000 tokens | When skill is invoked |
+
+### Budget Rules
+
+| Rule | Threshold | Action |
+|------|-----------|--------|
+| Max MCP servers | <10 active | Disable unused MCP servers in settings |
+| Max MCP tools | <80 total | Remove or consolidate bloated MCP servers |
+| Agent descriptions | Only load needed | Use specific `subagent_type` to avoid loading all descriptions |
+| CLAUDE.md size | <150 lines | Move detailed docs to `.rune/` files, keep CLAUDE.md as index |
+
+### Audit Procedure
+
+When context health is YELLOW or worse, or when onboard detects >80 MCP tools:
+
+1. Count total MCP tool schemas loaded (from session start messages)
+2. Count agent descriptions available
+3. Estimate baseline cost: `(tools × 500) + (agents × 300) + CLAUDE.md tokens`
+4. If baseline >15% of estimated context window → flag as **Context Budget Warning**
+5. Rank MCP servers by tool count — suggest disabling servers with most tools and least usage
+
+### Report Addition
+
+When Context Budget Warning fires, append to Context Health report:
+
+```
+### Context Budget
+- **Baseline cost**: ~[N]k tokens ([X]% of estimated window)
+- **MCP tools loaded**: [count] across [N] servers
+- **Top consumers**: [server1] ([N] tools), [server2] ([N] tools)
+- **Recommendation**: Disable [server] to save ~[N]k tokens
 ```
 
 ## Constraints

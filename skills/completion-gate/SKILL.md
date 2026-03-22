@@ -4,7 +4,7 @@ description: "Validates agent claims against evidence trail. Catches 'done' with
 user-invocable: false
 metadata:
   author: runedev
-  version: "1.5.0"
+  version: "1.6.0"
   layer: L3
   model: haiku
   group: validation
@@ -126,11 +126,22 @@ IF no evidence found:
   → UNCONFIRMED (agent may be right but didn't prove it)
 ```
 
+**3-Axis verification** — categorize each claim into one of three axes, then ensure all axes are covered:
+
+| Axis | Question | Example Claims |
+|------|----------|----------------|
+| **Completeness** | Were all planned tasks done? All specs implemented? | "implemented feature X", "all TODO items done", "migration created" |
+| **Correctness** | Does output match spec intent? Do tests verify real behavior? | "tests pass", "build succeeds", "lint clean", "fixed the bug" |
+| **Coherence** | Does it follow project patterns? Consistent with existing code? | "follows conventions", "uses existing patterns", "no new deps needed" |
+
+If an axis has ZERO claims → flag as gap: "No [Completeness/Correctness/Coherence] evidence found — agent may have skipped this dimension."
+
 **Adversarial validation checklist** (run AFTER initial verdicts):
 1. Re-read each CONFIRMED claim — is the evidence actually proving THIS claim, or a different one?
 2. Check for **partial completion** — did the agent do 80% but claim 100%? (e.g., "implemented feature" but only the happy path)
 3. Check for **scope mismatch** — does the evidence prove the SPECIFIC claim or a broader/narrower version?
 4. If all claims are CONFIRMED on first pass, apply **skeptic sweep**: re-examine the weakest 2 claims with heightened scrutiny
+5. Check **axis coverage** — are all 3 axes (Completeness/Correctness/Coherence) represented? Missing axis = investigation gap
 
 ### Step 4 — Report
 
@@ -241,6 +252,7 @@ Completion Gate Report with status (CONFIRMED/UNCONFIRMED/CONTRADICTED), claim v
 - All completion claims extracted from agent output
 - Each claim matched against tool output evidence
 - Verdict table emitted with claim/evidence/verdict for each item
+- All 3 verification axes (Completeness/Correctness/Coherence) have at least one claim checked
 - Overall verdict: CONFIRMED / UNCONFIRMED / CONTRADICTED
 - If not CONFIRMED: specific gaps listed with remediation steps
 
