@@ -1,9 +1,12 @@
 import assert from 'node:assert';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { afterEach, beforeEach, describe, test } from 'node:test';
+import { fileURLToPath } from 'node:url';
 import { parseSkillMd, validateMesh } from '../validate-mesh.js';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 describe('validate-mesh', () => {
   let tempDir;
@@ -233,7 +236,7 @@ None
 
   describe('integration: real skills directory', () => {
     test('validates actual Rune skills directory', () => {
-      const { skillCount, issues } = validateMesh(join(import.meta.dirname, '../../skills'));
+      const { skillCount, issues } = validateMesh(join(__dirname, '../../skills'));
       assert.ok(skillCount >= 50, `Expected 50+ skills, got ${skillCount}`);
       // Log but don't fail — mesh may have known issues
       if (issues.length > 0) {

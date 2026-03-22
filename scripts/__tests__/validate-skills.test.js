@@ -1,9 +1,12 @@
 import assert from 'node:assert';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { afterEach, beforeEach, describe, test } from 'node:test';
+import { fileURLToPath } from 'node:url';
 import { checkHardGateFormat, parseFrontmatter, validateAllSkills, validateSkill } from '../validate-skills.js';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const VALID_SKILL = `---
 name: test-skill
@@ -172,7 +175,7 @@ describe('validate-skills', () => {
 
   describe('integration: real skills', () => {
     test('validates actual Rune skills directory', () => {
-      const { scanned, allIssues, warnings } = validateAllSkills(join(import.meta.dirname, '../../skills'));
+      const { scanned, allIssues, warnings } = validateAllSkills(join(__dirname, '../../skills'));
       assert.ok(scanned >= 50, `Expected 50+ skills, got ${scanned}`);
       console.log(`  Scanned ${scanned} skills: ${allIssues.length} issues, ${warnings.length} warnings`);
     });

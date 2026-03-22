@@ -1,9 +1,12 @@
 import assert from 'node:assert';
 import { mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { afterEach, beforeEach, describe, test } from 'node:test';
+import { fileURLToPath } from 'node:url';
 import { parseFrontmatter, validatePack } from '../validate-pack.js';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const VALID_PACK = `---
 name: test-pack
@@ -148,7 +151,7 @@ describe('validate-pack', () => {
 
   describe('integration: real extensions', () => {
     test('validates actual extension packs', () => {
-      const extDir = join(import.meta.dirname, '../../extensions');
+      const extDir = join(__dirname, '../../extensions');
       const packs = readdirSync(extDir, { withFileTypes: true })
         .filter((d) => d.isDirectory())
         .map((d) => d.name);
