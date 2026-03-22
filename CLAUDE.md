@@ -60,7 +60,8 @@ rune/
 - Build for Codex: `node compiler/bin/rune.js build --platform codex --output <project-dir>`
 - Build for OpenCode: `node compiler/bin/rune.js build --platform opencode --output <project-dir>`
 - Validate build: `node compiler/bin/rune.js doctor`
-- Run tests: `npm test` (84 tests — parser, adapters, transforms, transformer)
+- Run tests: `npm test` (494 tests — compiler + scripts validation)
+- Run tests with coverage: `npm run test:coverage` (c8 + lcov)
 - Lint: `npm run lint` (Biome)
 - Lint + fix: `npm run lint:fix`
 - Full CI check: `npm run ci` (lint + test + doctor)

@@ -9,11 +9,12 @@
   "scripts": {
     "build": "node compiler/bin/rune.js build",
     "doctor": "node compiler/bin/rune.js doctor && node scripts/version-sync-check.js",
-    "test": "node --test compiler/__tests__/*.test.js",
+    "test": "node --test compiler/__tests__/*.test.js scripts/__tests__/*.test.js",
+    "test:coverage": "c8 --reporter=text --reporter=lcov node --test compiler/__tests__/*.test.js scripts/__tests__/*.test.js",
     "lint": "biome check .",
     "lint:fix": "biome check --fix .",
     "format": "biome format --write .",
-    "ci": "biome check . && node --test compiler/__tests__/*.test.js && node compiler/bin/rune.js doctor",
+    "ci": "biome check . && node --test compiler/__tests__/*.test.js scripts/__tests__/*.test.js && node compiler/bin/rune.js doctor",
     "version-check": "node scripts/version-sync-check.js",
     "prepublishOnly": "node scripts/version-sync-check.js"
   },
@@ -57,6 +58,7 @@
     "url": "https://github.com/rune-kit/rune/issues"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.7"
+    "@biomejs/biome": "^2.4.7",
+    "c8": "^10.1.3"
   }
 }

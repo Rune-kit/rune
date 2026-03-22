@@ -3,21 +3,23 @@
 // validate-mesh.js — Validates bidirectional connections across all SKILL.md files
 // Usage: node scripts/validate-mesh.js
 
-const fs = require('node:fs');
-const path = require('node:path');
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const SKILLS_DIR = path.join(__dirname, '..', 'skills');
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const SKILLS_DIR = join(__dirname, '..', 'skills');
 
-function parseSkillMd(filePath) {
-  const content = fs.readFileSync(filePath, 'utf-8');
-  const name = path.basename(path.dirname(filePath));
+export function parseSkillMd(filePath) {
+  const content = readFileSync(filePath, 'utf-8');
+  const name = filePath.split(/[/\\]/).at(-2);
 
   const callsMatch = content.match(/## Calls \(outbound[^)]*\)([\s\S]*?)(?=\n## )/);
   const calledByMatch = content.match(/## Called By \(inbound[^)]*\)([\s\S]*?)(?=\n## )/);
 
   const extractSkills = (text) => {
     if (!text) return [];
-    const matches = text.matchAll(/`([a-z-]+)`\s*\(L[1-4]\)/g);
+    const matches = text.matchAll(/`([a-z-]+)`\s*\(L[0-4]\)/g);
     return [...matches].map((m) => m[1]);
   };
 
@@ -28,16 +30,15 @@ function parseSkillMd(filePath) {
   };
 }
 
-function validate() {
+export function validateMesh(skillsDir) {
   const skills = {};
-  const dirs = fs
-    .readdirSync(SKILLS_DIR, { withFileTypes: true })
+  const dirs = readdirSync(skillsDir, { withFileTypes: true })
     .filter((d) => d.isDirectory())
     .map((d) => d.name);
 
   for (const dir of dirs) {
-    const skillPath = path.join(SKILLS_DIR, dir, 'SKILL.md');
-    if (fs.existsSync(skillPath)) {
+    const skillPath = join(skillsDir, dir, 'SKILL.md');
+    if (existsSync(skillPath)) {
       skills[dir] = parseSkillMd(skillPath);
     }
   }
@@ -61,7 +62,15 @@ function validate() {
     }
   }
 
-  console.log(`Scanned ${Object.keys(skills).length} skills`);
+  return { skillCount: Object.keys(skills).length, issues };
+}
+
+// CLI entry point
+const isMain =
+  process.argv[1] && fileURLToPath(import.meta.url).endsWith(process.argv[1].replace(/\\/g, '/').split('/').pop());
+if (isMain) {
+  const { skillCount, issues } = validateMesh(SKILLS_DIR);
+  console.log(`Scanned ${skillCount} skills`);
 
   if (issues.length === 0) {
     console.log('All mesh connections are bidirectionally consistent!');
@@ -72,5 +81,3 @@ function validate() {
 
   process.exit(issues.length > 0 ? 1 : 0);
 }
-
-validate();

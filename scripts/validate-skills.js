@@ -4,10 +4,12 @@
 // Usage: node scripts/validate-skills.js
 // Exit 0 = all pass, Exit 1 = issues found
 
-const fs = require('node:fs');
-const path = require('node:path');
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const SKILLS_DIR = path.join(__dirname, '..', 'skills');
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const SKILLS_DIR = join(__dirname, '..', 'skills');
 
 // Required top-level sections in every SKILL.md
 const REQUIRED_SECTIONS = [
@@ -28,13 +30,13 @@ const VALID_LAYERS = ['L0', 'L1', 'L2', 'L3'];
 // Valid model values
 const VALID_MODELS = ['haiku', 'sonnet', 'opus'];
 
-function parseFrontmatter(content) {
+export function parseFrontmatter(content) {
   const match = content.match(/^---\n([\s\S]*?)\n---/);
   if (!match) return null;
   return match[1];
 }
 
-function checkHardGateFormat(content, skillName) {
+export function checkHardGateFormat(content, skillName) {
   const issues = [];
   // HARD-GATE should use XML tags, not markdown code blocks
   const badPattern = /```\s*\nHARD-GATE|HARD.GATE.*```/g;
@@ -44,12 +46,12 @@ function checkHardGateFormat(content, skillName) {
   return issues;
 }
 
-function validateSkill(skillPath, skillName) {
+export function validateSkill(skillPath, skillName) {
   const issues = [];
   let content;
 
   try {
-    content = fs.readFileSync(skillPath, 'utf-8').replace(/\r\n/g, '\n');
+    content = readFileSync(skillPath, 'utf-8').replace(/\r\n/g, '\n');
   } catch (e) {
     return [`${skillName}: Cannot read SKILL.md — ${e.message}`];
   }
@@ -121,9 +123,8 @@ function validateSkill(skillPath, skillName) {
   return issues;
 }
 
-function validate() {
-  const dirs = fs
-    .readdirSync(SKILLS_DIR, { withFileTypes: true })
+export function validateAllSkills(skillsDir) {
+  const dirs = readdirSync(skillsDir, { withFileTypes: true })
     .filter((d) => d.isDirectory())
     .map((d) => d.name)
     .sort();
@@ -133,8 +134,8 @@ function validate() {
   let scanned = 0;
 
   for (const dir of dirs) {
-    const skillPath = path.join(SKILLS_DIR, dir, 'SKILL.md');
-    if (!fs.existsSync(skillPath)) {
+    const skillPath = join(skillsDir, dir, 'SKILL.md');
+    if (!existsSync(skillPath)) {
       allIssues.push(`${dir}: No SKILL.md found in skills/${dir}/`);
       continue;
     }
@@ -147,6 +148,15 @@ function validate() {
     warnings.push(...softIssues);
     scanned++;
   }
+
+  return { scanned, allIssues, warnings };
+}
+
+// CLI entry point
+const isMain =
+  process.argv[1] && fileURLToPath(import.meta.url).endsWith(process.argv[1].replace(/\\/g, '/').split('/').pop());
+if (isMain) {
+  const { scanned, allIssues, warnings } = validateAllSkills(SKILLS_DIR);
 
   console.log(`Scanned ${scanned} skills\n`);
 
@@ -165,5 +175,3 @@ function validate() {
 
   process.exit(allIssues.length > 0 ? 1 : 0);
 }
-
-validate();

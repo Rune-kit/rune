@@ -19,6 +19,9 @@ node_modules/
 # Compiler output
 dist/
 
+# Coverage
+coverage/
+
 # Admin dashboard (local-only)
 docs/dashboard.html
 
