@@ -247,6 +247,16 @@ Max 3 fix-verify loops. If still failing after 3 → report failures to user wit
 9. MUST respect user's existing project if scaffolding into non-empty directory — warn and ask before overwriting
 10. Generated files MUST be < 500 LOC each — split large files
 
+## Returns
+
+| Artifact | Format | Location |
+|----------|--------|----------|
+| Project directory structure | Directories + files | Project root (per plan) |
+| Source code | Source files | Per plan file list |
+| Test suite | Source files | Co-located or `tests/` per framework convention |
+| Documentation | Markdown | `README.md`, `ARCHITECTURE.md`, `docs/API.md` as applicable |
+| Scaffold Report | Markdown (inline) | Emitted at session end |
+
 ## Sharp Edges
 
 | Failure Mode | Severity | Mitigation |

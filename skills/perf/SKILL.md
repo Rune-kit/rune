@@ -292,6 +292,17 @@ Known failure modes for this skill. Check these before declaring done.
 - Benchmark scripts ran (if configured) or INFO: skipped
 - Perf Report emitted with PASS/WARN/BLOCK verdict
 
+## Returns
+
+| Artifact | Format | Location |
+|----------|--------|----------|
+| Perf Report with verdict | Markdown (PASS/WARN/BLOCK) | inline |
+| Per-finding details | Structured list (file:line + impact) | inline |
+| Lighthouse scores (if ran) | Score table | inline |
+| Framework-specific findings | Categorized list | inline |
+
 ## Cost Profile
 
 ~3000-8000 tokens input, ~500-1500 tokens output. Sonnet for pattern recognition.
+
+**Scope guardrail:** perf investigates and reports only — it does not fix code. All fixes are delegated to `fix` (L2) after the report is reviewed.

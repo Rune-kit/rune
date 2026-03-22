@@ -3,7 +3,7 @@ name: debug
 description: Root cause analysis for bugs and unexpected behavior. Traces errors through code, uses structured reasoning, and hands off to fix when cause is found. Core of the debug↔fix mesh.
 metadata:
   author: runedev
-  version: "0.7.0"
+  version: "0.8.0"
   layer: L2
   model: sonnet
   group: development
@@ -305,6 +305,7 @@ ALL of these mean: STOP. Return to Step 2 (Gather Evidence).
 ```
 ## Debug Report
 - **Error**: [error message]
+- **Status**: DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED
 - **Severity**: critical | high | medium | low
 - **Confidence**: high | medium | low
 - **Fix Attempt**: [1/2/3 — track recurring bugs]
@@ -323,6 +324,12 @@ ALL of these mean: STOP. Return to Step 2 (Gather Evidence).
 - Attempt 1: [what was tried] → [why it didn't hold]
 - Attempt 2: [what was tried] → [why it didn't hold]
 
+### Concerns (if DONE_WITH_CONCERNS)
+- [concern]: [impact assessment] — [suggested remediation]
+
+### Context Needed (if NEEDS_CONTEXT)
+- [what is unknown]: [why it blocks diagnosis] — [two most likely answers]
+
 ### Suggested Fix
 [Description of what needs to change — no code, just direction]
 [If attempt 3: "ESCALATION: 3-fix rule triggered. Recommending redesign via rune:plan."]
@@ -330,6 +337,26 @@ ALL of these mean: STOP. Return to Step 2 (Gather Evidence).
 ### Related Code
 - `path/to/related.ts` — [why it's relevant]
 ```
+
+### Status Protocol (Subagent Contract)
+
+Debug returns one of four statuses to its caller (cook, fix, test, surgeon). The caller uses this to route next actions.
+
+| Status | When | Example |
+|--------|------|---------|
+| `DONE` | Root cause identified with high confidence, ready for fix | Clear diagnosis with file:line evidence |
+| `DONE_WITH_CONCERNS` | Root cause found but diagnosis has caveats | "Likely race condition but cannot reproduce consistently — fix may need retry logic" |
+| `NEEDS_CONTEXT` | Cannot diagnose without more info — missing repro steps, env details, or access | "Error only occurs in production — need prod logs or env variables to continue" |
+| `BLOCKED` | Exhausted 3 hypothesis cycles, escalation triggered | "3 cycles completed, no confirmed root cause — escalating to problem-solver" |
+
+## Returns
+
+| Artifact | Format | Location |
+|----------|--------|----------|
+| Debug Report | Markdown (inline) | Emitted to calling skill (cook, fix, test, surgeon) |
+| Root cause + location | Inline (Debug Report) | Specific file:line with evidence |
+| Fix recommendation | Inline (Debug Report) | Direction only — no code changes |
+| Debug knowledge base entry | Markdown | `.rune/debug/knowledge-base.md` (appended on success) |
 
 ## Sharp Edges
 
@@ -354,9 +381,14 @@ ALL of these mean: STOP. Return to Step 2 (Gather Evidence).
 - Error reproduced (not assumed) with specific reproduction steps documented
 - 2-3 hypotheses formed, each marked CONFIRMED or RULED OUT with file:line evidence
 - Root cause identified at specific file:line
-- Structured Debug Report emitted
+- Structured Debug Report emitted with 4-state status
+- If `DONE_WITH_CONCERNS`: caveats documented with impact assessment
+- If `NEEDS_CONTEXT`: specific questions + two likely answers provided
+- If `BLOCKED`: all 3 hypothesis cycles documented + escalation target identified
 - No code changes made — rune:fix called with the report if fix is needed
 
 ## Cost Profile
 
 ~2000-5000 tokens input, ~500-1500 tokens output. Sonnet for code analysis quality. May escalate to opus for deeply complex bugs.
+
+**Scope guardrail**: Do not apply code changes or expand investigation beyond the locked scope directory unless explicitly delegated by the parent agent.

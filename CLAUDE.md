@@ -3,7 +3,7 @@
 ## Overview
 
 Rune is an interconnected skill ecosystem for AI coding assistants.
-58 core skills | 5-layer mesh architecture | 200+ connections | Multi-platform.
+59 core skills | 5-layer mesh architecture | 200+ connections | Multi-platform.
 Philosophy: "Less skills. Deeper connections."
 
 Works on: Claude Code (native plugin) · Cursor · Windsurf · Google Antigravity · OpenAI Codex · OpenCode · any AI IDE.
@@ -68,7 +68,7 @@ rune/
 
 ## Current Wave
 
-58 core skills built (v2.2.1 — "The Missing Pieces").
+59 core skills built (v2.2.1 — "The Missing Pieces").
 
 ### L0 Router (1)
 skill-router — meta-enforcement layer, routes every action through the correct skill
@@ -82,10 +82,10 @@ sentinel, preflight, onboard, deploy, marketing, perf,
 autopsy, safeguard, surgeon, audit, incident, review-intake, logic-guardian,
 ba, docs, mcp-builder, adversary, retro
 
-### L3 Utilities (25)
+### L3 Utilities (26)
 research, docs-seeker, trend-scout, problem-solver, sequential-thinking,
 verification, hallucination-guard, completion-gate, constraint-check, sast, integrity-check,
-context-engine, journal, session-bridge, neural-memory, worktree,
+context-engine, context-pack, journal, session-bridge, neural-memory, worktree,
 watchdog, scope-guard, browser-pilot, asset-creator, video-creator,
 dependency-doctor, git, doc-processor, sentinel-env
 

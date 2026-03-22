@@ -311,6 +311,15 @@ Saved to `.rune/features/<feature-name>/requirements.md`
 6. MUST ask ONE question at a time — don't overwhelm user with 5 questions at once
 7. MUST NOT skip BA for non-trivial tasks — "just build it" gets redirected to Question 1
 
+## Returns
+
+| Artifact | Format | Location |
+|----------|--------|----------|
+| Requirements document | Markdown | `.rune/features/<feature-name>/requirements.md` |
+| User stories with acceptance criteria | Markdown (GIVEN/WHEN/THEN) | inline + requirements.md |
+| Scope definition (in/out/assumptions) | Markdown sections | requirements.md |
+| Non-functional requirements table | Markdown table | requirements.md |
+
 ## Sharp Edges
 
 Known failure modes for this skill. Check these before declaring done.

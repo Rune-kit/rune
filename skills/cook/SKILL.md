@@ -618,6 +618,17 @@ Mentally track tool call fingerprints. 3 identical calls → WARN. 5 identical c
 Emit a Cook Report with: Status, Phases, Files Changed, Tests, Quality results, Commit hash.
 When invoked by `team` with a NEXUS Handoff, include the Deliverables table — MANDATORY.
 
+## Returns
+
+| Artifact | Format | Location |
+|----------|--------|----------|
+| Plan files (master + phase) | Markdown | `.rune/plan-<feature>.md`, `.rune/plan-<feature>-phase<N>.md` |
+| Implementation code | Source files | Per plan file paths |
+| Test files | Source files | Co-located or `__tests__/` per project convention |
+| Verification results | Inline stdout | Shown in Cook Report |
+| Cook Report | Markdown (inline) | Emitted at end of session |
+| Session state | Markdown | `.rune/decisions.md`, `.rune/progress.md`, `.rune/conventions.md` |
+
 ## Sharp Edges
 
 <MUST-READ path="references/sharp-edges.md" trigger="before declaring done — review all 18 failure modes"/>

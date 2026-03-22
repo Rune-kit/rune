@@ -294,6 +294,18 @@ Docs Update Report:
 5. MUST NOT generate docs for code that doesn't exist yet (unless explicitly creating spec docs)
 6. API docs MUST match actual route signatures — wrong API docs are worse than no docs
 
+## Returns
+
+| Artifact | Format | Location |
+|----------|--------|----------|
+| README.md | Markdown | project root |
+| ARCHITECTURE.md | Markdown | project root (if 10+ files) |
+| API reference | Markdown | `docs/API.md` |
+| Changelog entry | Markdown (Keep a Changelog) | `CHANGELOG.md` |
+| Docs update report | Markdown | inline (chat output) |
+
+**Scope guardrail:** Documents only what exists in the codebase — never invents features, endpoints, or APIs.
+
 ## Sharp Edges
 
 | Failure Mode | Severity | Mitigation |

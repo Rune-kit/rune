@@ -413,6 +413,16 @@ Rollback point: git tag rune-rescue-baseline (set in Phase 0)
 - **Rollback Tag**: [git tag name]
 ```
 
+## Returns
+
+| Artifact | Format | Location |
+|----------|--------|----------|
+| Rescue state | Markdown | `RESCUE-STATE.md` (updated each session) |
+| Characterization tests | Source files | Written by `rune:safeguard` per module |
+| Refactored modules | Source files | Modified in-place, committed per surgery session |
+| Health score comparison | Inline (Rescue Report) | Baseline vs final autopsy scores |
+| Rescue Report | Markdown (inline) | Emitted at session end (per module and final) |
+
 ## Sharp Edges
 
 Known failure modes for this skill. Check these before declaring done.

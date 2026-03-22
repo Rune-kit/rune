@@ -518,6 +518,18 @@ Techniques:
 - Mesh connections wired (ARCHITECTURE.md, CLAUDE.md, related skills)
 - Git committed with conventional commit message
 
+## Returns
+
+| Artifact | Format | Location |
+|----------|--------|----------|
+| New or updated skill file | Markdown (SKILL.md) | `skills/<name>/SKILL.md` |
+| Eval scenarios | Markdown | `skills/<name>/evals.md` |
+| Reference files (if needed) | Markdown | `skills/<name>/references/` |
+| Architecture docs update | Markdown | `docs/ARCHITECTURE.md` |
+| Skill Forge Report | Markdown | inline |
+
 ## Cost Profile
 
 ~3000-8000 tokens per skill creation (opus for Phase 2-5 reasoning, haiku for scout/verification). Most cost is in the iterative test-refine loop (Phase 4-5). Budget 2-4 test iterations per skill.
+
+**Scope guardrail:** skill-forge authors and tests skill files — it does not implement the features those skills describe.

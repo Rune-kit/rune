@@ -145,6 +145,17 @@ Known failure modes for this skill. Check these before declaring done.
 - Creep severity classified (IN_SCOPE / MINOR CREEP / SIGNIFICANT CREEP)
 - Scope Report emitted with recommendations
 
+## Returns
+
+| Artifact | Format | Location |
+|----------|--------|----------|
+| Scope Report | Markdown (IN_SCOPE / MINOR CREEP / SIGNIFICANT CREEP) | inline |
+| In-scope file list | Classified list | inline |
+| Out-of-scope drift report | File list with reasons | inline |
+| Recommendations | Actionable list | inline |
+
 ## Cost Profile
 
 ~200-500 tokens input, ~100-300 tokens output. Haiku. Lightweight monitor.
+
+**Scope guardrail:** scope-guard reports drift and advises — it does not revert files, block commits, or modify code. Override decisions belong to the calling orchestrator or the user.

@@ -233,6 +233,17 @@ How to push back:
 - Tests pass after each individual fix
 - Review Intake Report emitted
 
+## Returns
+
+| Artifact | Format | Location |
+|----------|--------|----------|
+| Review Intake Report | Markdown table | inline |
+| Categorized feedback (P0–P4) | Classified list | inline |
+| Verdict per item (CORRECT/PUSHBACK/YAGNI/DEFER) | Table | inline |
+| Action plan (changes applied) | File list with descriptions | inline |
+
 ## Cost Profile
 
 ~2000-5000 tokens depending on feedback volume. Sonnet for evaluation logic, haiku for scout/grep verification.
+
+**Scope guardrail:** review-intake processes the feedback items provided — it does not pull new reviews, open PRs, or change architectural decisions without owner confirmation.

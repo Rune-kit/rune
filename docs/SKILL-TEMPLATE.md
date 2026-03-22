@@ -54,6 +54,17 @@ Step-by-step execution flow.
 Structured output that calling skills can consume.
 ```
 
+## Returns
+
+Explicit output contract so calling skills know exactly what to expect.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `field_name` | type | What this field contains and when it's populated |
+| `status` | enum | e.g., `DONE` / `DONE_WITH_CONCERNS` / `BLOCKED` |
+
+Why: Without explicit return schemas, calling skills guess at output structure. This causes silent failures when output format changes. Every L1/L2 skill MUST have a Returns section.
+
 ## Constraints
 
 3-7 MUST/MUST NOT rules specific to this skill.
@@ -101,3 +112,7 @@ Why: Completion-gate validates claims generically. Self-Validation catches domai
 ## Cost Profile
 
 Estimated token usage per invocation.
+
+**Scope guardrail**: [Terminal boundary statement — what this skill must NOT do even if asked. Examples: "Do not write code — only produce plans.", "Do not modify files outside the target module.", "Do not execute fixes — only diagnose and hand off to fix."]
+
+Why: Without terminal guardrails, agents drift into adjacent responsibilities. A review skill starts fixing code, a plan skill starts implementing, a debug skill starts deploying. The guardrail is the last line in the skill file — a final reminder of scope boundaries before the agent acts.

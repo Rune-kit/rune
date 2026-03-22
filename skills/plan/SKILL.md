@@ -274,6 +274,16 @@ Every plan output — master plan, phase file, or inline plan — MUST end with 
 12. MUST include rejection criteria — explicit "DO NOT" anti-patterns to prevent common mistakes
 13. MUST include cross-phase context — what's assumed from prior phases, what's exported for future
 
+## Returns
+
+| Artifact | Format | Location |
+|----------|--------|----------|
+| Master plan | Markdown | `.rune/plan-<feature>.md` |
+| Phase files | Markdown | `.rune/plan-<feature>-phase<N>.md` (one per phase) |
+| Feature spec | Markdown | `.rune/features/<name>/spec.md` (Feature Spec Mode only) |
+| Roadmap | Markdown | `.rune/roadmap.md` (Roadmap Mode only) |
+| Inline plan | Markdown (inline) | Emitted directly for trivial tasks |
+
 ## Sharp Edges
 
 | Failure Mode | Severity | Mitigation |

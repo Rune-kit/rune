@@ -5,7 +5,7 @@ context: fork
 agent: general-purpose
 metadata:
   author: runedev
-  version: "0.5.0"
+  version: "0.6.0"
   layer: L1
   model: opus
   group: orchestrator
@@ -65,6 +65,28 @@ Lite Mode Phases:
 ### Full Mode
 
 Standard team workflow with worktree isolation (Phases 1-5 as documented below).
+
+### Complexity Tiers (DAG Stage Selection)
+
+Before decomposing, classify the task into a complexity tier. Each tier defines a different DAG (directed acyclic graph) of stages, ensuring the right amount of process for the task's complexity.
+
+| Tier | Signals | DAG Stages | Context Windows |
+|------|---------|------------|-----------------|
+| **Trivial** | ≤3 files, single module, no shared contracts | impl → test | 1 (single cook) |
+| **Medium** | 4-10 files, 2-3 modules, shared interfaces | research → plan → impl → test → review → fix | 3 (plan, impl+test, review+fix) |
+| **Large** | 10+ files, 3+ modules, breaking changes or RFC | research → plan → impl → test → review₁ → fix → review₂ → final merge | 4+ (plan, impl+test, review₁+fix, review₂+merge) |
+
+**Key principle — reviewer isolation**: The agent that writes code MUST NOT review its own code. Each review stage uses a **separate context window** (separate Task invocation) that has never seen the implementation reasoning. This prevents author bias from contaminating the review.
+
+**Stage → Context Window mapping**:
+- `research + plan` = Context Window 1 (opus — architectural reasoning)
+- `impl + test` = Context Window 2 (sonnet — code writing)
+- `review₁ + fix` = Context Window 3 (sonnet — fresh eyes, no impl context)
+- `review₂ + merge` = Context Window 4 (sonnet — final verification, Large tier only)
+
+**Merge queue**: When multiple streams complete at different times, use dependency order for merging. If a later stream's merge creates conflicts with an already-merged stream, provide the conflicting stream's cook report as **conflict context** to the resolution agent — never resolve blindly.
+
+> Source: affaan-m/everything-claude-code (91.9k★) — RFC-driven DAG orchestration with reviewer isolation.
 
 ## Calls (outbound)
 
@@ -433,6 +455,16 @@ Dependent streams    → SEQUENTIAL (respecting dependency order)
 All streams done     → MERGE sequentially (avoid conflicts)
 ```
 
+## Returns
+
+| Artifact | Format | Location |
+|----------|--------|----------|
+| Workstream assignments | Markdown (inline) | NEXUS Handoff Templates emitted per stream |
+| Cook Reports (per stream) | Markdown (inline) | Collected from each parallel cook instance |
+| Merged implementation | Source files | `main` branch after Phase 4 merge |
+| Integration test results | Inline stdout | Captured in Phase 5 verify |
+| Team Report | Markdown (inline) | Emitted at end of session |
+
 ## Sharp Edges
 
 Known failure modes for this skill. Check these before declaring done.
@@ -464,3 +496,5 @@ Known failure modes for this skill. Check these before declaring done.
 ## Cost Profile
 
 ~$0.20-0.50 per session. Opus for coordination. Most expensive orchestrator but handles largest tasks.
+
+**Scope guardrail**: Do not invoke launch, rescue, or scaffold autonomously unless explicitly delegated by the parent agent.

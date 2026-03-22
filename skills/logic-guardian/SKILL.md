@@ -235,6 +235,17 @@ Ensure the next session can pick up where this one left off:
 - Manifest summary saved to journal + neural memory for cross-session handoff
 - Tests pass after any logic edit
 
+## Returns
+
+| Artifact | Format | Location |
+|----------|--------|----------|
+| Logic manifest | JSON | `.rune/logic-manifest.json` |
+| Validation report (SYNCED / DRIFT) | Markdown | inline |
+| Pre-edit gate summary | Structured text | inline |
+| ADR entries for logic changes | Markdown | via `journal` L3 |
+
 ## Cost Profile
 
 ~1,000-2,000 tokens for manifest load + pre-edit gate. ~3,000-5,000 tokens for full project scan (Phase 3). Sonnet for code analysis; haiku for file scanning via scout.
+
+**Scope guardrail:** logic-guardian protects existing logic — it does not implement new features or refactor code.

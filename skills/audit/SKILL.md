@@ -3,7 +3,7 @@ name: audit
 description: Comprehensive project audit — security, dependencies, code quality, architecture, performance, infra, docs, and mesh analytics. Delegates to specialist skills and generates an 8-dimension health score.
 metadata:
   author: runedev
-  version: "0.2.0"
+  version: "0.3.0"
   layer: L2
   model: sonnet
   group: quality
@@ -55,6 +55,24 @@ Determine:
 - Monorepo setup (workspaces, turborepo, nx, etc.)
 
 **Output before proceeding:** Brief project profile, stack summary, and which Framework-Specific Checks will be applied.
+
+### Phase 0.5: Context-Building (Pure Understanding)
+
+<HARD-GATE>
+This phase is FORBIDDEN from producing findings. No BLOCKs, no WARNs, no issues. Context-building only.
+Rushed context = hallucinated vulnerabilities. Slow is fast.
+</HARD-GATE>
+
+For each critical module (entry points, auth, data layer, core business logic):
+1. Read line-by-line. Note at minimum:
+   - **3 invariants**: What MUST always be true for this code to work? (e.g., "user is authenticated before reaching this handler")
+   - **5 assumptions**: What does this code assume about its inputs, environment, and callers?
+   - **3 risks**: What could break if assumptions are violated?
+2. Record findings as context notes — these feed into Phases 1-7, NOT into the final report directly
+
+**Why**: Without this phase, the auditor pattern-matches against known vulnerability lists and hallucinates findings that don't exist in THIS specific codebase. The invariants + assumptions ground all later analysis in reality.
+
+> Source: trailofbits/skills (3.7k★) — mandatory pure context phase before findings.
 
 ---
 
@@ -477,6 +495,16 @@ Report saved to: AUDIT-REPORT.md
 | Security Gate | sentinel report received before assembling final report | Invoke rune:sentinel — do not skip |
 | Deps Gate | dependency-doctor report received before assembling final report | Invoke rune:dependency-doctor — do not skip |
 | Report Gate | All 8 phases completed before writing AUDIT-REPORT.md | Complete all phases, note skipped ones |
+
+## Returns
+
+| Artifact | Format | Location |
+|----------|--------|----------|
+| Audit report | Markdown | `AUDIT-REPORT.md` (project root) |
+| 8-dimension health score | Markdown table | `AUDIT-REPORT.md` + inline |
+| Weighted composite score + grade | Markdown | inline + `AUDIT-REPORT.md` |
+| Mesh analytics section | Markdown table | inline + `AUDIT-REPORT.md` |
+| Journal entry | Text | `.rune/adr/` (via `rune:journal`) |
 
 ## Sharp Edges
 

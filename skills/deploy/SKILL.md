@@ -193,6 +193,16 @@ Deploy Report with platform, status (success/failed/rollback), deployed URL, bui
 6. MUST complete release checklist for production deploys — version bump, changelog, rollback plan
 7. MUST create rollback plan artifact before first production deploy of a version
 
+## Returns
+
+| Artifact | Format | Location |
+|----------|--------|----------|
+| Deploy report | Markdown | inline (chat output) |
+| Deploy status (success/failed/rollback) | Text | inline |
+| Health check results (HTTP status, visual) | Markdown | inline |
+| Rollback plan document | Markdown | `.rune/deploy/rollback-<version>.md` |
+| Monitoring confirmation | Text | inline |
+
 ## Sharp Edges
 
 Known failure modes for this skill. Check these before declaring done.

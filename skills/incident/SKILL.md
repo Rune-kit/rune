@@ -214,6 +214,16 @@ File: src/middleware/auth.ts:47
 | Security Gate | sentinel ran before closing incident | Run sentinel — do not skip |
 | Postmortem Gate | All sections populated (Timeline, RCA, Prevention Actions) before status = Resolved | Complete or note as DRAFT |
 
+## Returns
+
+| Artifact | Format | Location |
+|----------|--------|----------|
+| Incident response report | Markdown | inline (chat output) |
+| Incident timeline | Text (HH:MM format) | inline + postmortem |
+| Postmortem document | Markdown | `.rune/incidents/INCIDENT-<date>-<slug>.md` |
+| Prevention actions table | Markdown table | postmortem |
+| Journal entry (incident ADR) | Text | `.rune/adr/` (via `rune:journal`) |
+
 ## Sharp Edges
 
 Known failure modes for this skill. Check these before declaring done.

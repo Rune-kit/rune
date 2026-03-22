@@ -3,7 +3,7 @@ name: preflight
 description: Pre-commit quality gate that catches "almost right" code. Goes beyond linting — checks logic correctness, error handling, regressions, and completeness.
 metadata:
   author: runedev
-  version: "0.4.0"
+  version: "0.6.0"
   layer: L2
   model: sonnet
   group: quality
@@ -158,6 +158,41 @@ Verify that new code ships complete:
 
 If any completeness item is missing, flag as **WARN** with: what is missing, which file needs it.
 
+### Step 4.2 — Coherence Check
+
+Verify that new code is **consistent with existing project patterns** — not just correct, but coherent with the codebase it lives in.
+
+| Check | What To Look For | Severity |
+|-------|------------------|----------|
+| Naming conventions | New functions/variables follow project's existing naming style (camelCase, snake_case, etc.) | WARN |
+| File organization | New files placed in correct directory per project structure (e.g., utils/ not lib/, components/ not ui/) | WARN |
+| Import patterns | Uses project's established import style (absolute vs relative, barrel exports vs direct) | WARN |
+| Error handling style | Matches project's existing pattern (Result type, try/catch, error codes) | WARN |
+| State management | Uses same state approach as rest of project (Zustand, context, stores) | BLOCK if different paradigm |
+| API patterns | Follows existing response format, middleware chain, auth pattern | BLOCK if diverges |
+| Design system usage | Uses existing design tokens/components, not inline overrides | WARN |
+
+**Detection**: Read 2-3 existing files in the same directory as the change. Compare patterns. Flag divergences.
+
+**Skip if**: Project has no established patterns (greenfield, <5 files), or CLAUDE.md/conventions.md explicitly says "no conventions yet."
+
+> Source: Fission-AI/OpenSpec (32.8k★) — Coherence axis: "follows design.md? matches project patterns?"
+
+### Step 4.3 — Eval Verification
+
+If `.rune/evals/` directory exists with eval definition files, verify eval results as part of the quality gate.
+
+| Check | Action | Severity |
+|-------|--------|----------|
+| Capability eval defined but not run | Feature has `.rune/evals/<feature>.md` with CAP-* entries but no results | WARN: "Capability evals defined but not executed" |
+| Regression eval failing | Any REG-* eval with status=fail | BLOCK: "Regression detected — existing behavior broken" |
+| Capability eval below threshold | CAP-* eval pass@k below defined threshold | WARN: "Capability eval below threshold (X% vs Y% required)" |
+| No eval file for new feature | New feature added (detected by new test files + new source files) but no `.rune/evals/` entry | INFO: "Consider defining capability evals for new feature" |
+
+**Skip if**: No `.rune/evals/` directory exists (project hasn't adopted eval-driven development).
+
+> Source: affaan-m/everything-claude-code (91.9k★) — eval-driven development as quality gate.
+
 ### Step 4.5 — Domain Quality Hooks
 
 Apply domain-specific quality checks based on detected file types in the diff. These extend the generic completeness checks in Step 4 with deeper domain validation.
@@ -211,8 +246,10 @@ After all domain hooks (Step 4.5) and completeness checks (Step 4) complete, com
 ### Formula
 
 ```
-Preflight Score = (Logic × 0.35) + (Error Handling × 0.25) + (Completeness × 0.25) + (Regression Risk × 0.15)
+Preflight Score = (Logic × 0.30) + (Error Handling × 0.20) + (Completeness × 0.20) + (Coherence × 0.15) + (Regression Risk × 0.15)
 ```
+
+**5 verification axes** (Completeness + Correctness via Logic + Coherence — 3D verification model):
 
 Each dimension is scored per staged files:
 - 0 BLOCK findings in dimension → 100
@@ -267,11 +304,15 @@ Report PASS, WARN, or BLOCK. For WARN, list each item the developer must acknowl
 - `api/users.ts` — new POST endpoint missing input validation schema
 - `components/Form.tsx` — no loading state during submission
 
+### Coherence
+- `api/users.ts` — uses `res.json()` but project convention is `sendResponse()` wrapper
+- `utils/newHelper.ts` — placed in utils/ but project uses helpers/ directory
+
 ### Security (from sentinel)
 - [sentinel findings if any]
 
 ### Composite Score
-- Logic: [score] | Error Handling: [score] | Completeness: [score] | Regression Risk: [score]
+- Logic: [score] | Error: [score] | Completeness: [score] | Coherence: [score] | Regression: [score]
 - **Preflight Score**: [weighted value] → Grade: [Excellent/Good/Fair/Poor/Critical]
 
 ### Verdict
@@ -285,6 +326,16 @@ WARN — 3 issues found (0 blocking, 3 must-acknowledge). Resolve before commit 
 3. MUST NOT skip edge case analysis — "happy path works" is insufficient
 4. MUST verify error messages are user-friendly and don't leak internal details
 5. MUST check that async operations have proper error handling and cleanup
+
+## Returns
+
+| Artifact | Format | Location |
+|----------|--------|----------|
+| Preflight report | Markdown | inline (chat output) |
+| Issue list (BLOCK/WARN by category) | Markdown list | inline |
+| Preflight health score | Markdown table | inline (footer of report) |
+| Spec compliance verdict | Markdown table | inline |
+| Domain quality findings | Markdown section | inline |
 
 ## Sharp Edges
 

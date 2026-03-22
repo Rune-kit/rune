@@ -266,6 +266,18 @@ Trigger: plan involves auth, crypto, payment, or user data handling.
 - Findings formatted for consumption by cook Phase 3 (if PROCEED) or plan (if REVISE)
 - Strength Notes section acknowledges well-designed aspects of the plan
 
+## Returns
+
+| Artifact | Format | Location |
+|----------|--------|----------|
+| Adversary Report | Markdown | inline (stdout) |
+| Threat findings | Structured list (CRITICAL/HIGH/MEDIUM) | inline |
+| Risk matrix per dimension | Table | inline |
+| Verdict + remediation list | Markdown | inline |
+| Hardened plan notes (if PROCEED) | Text | passed to cook Phase 3 |
+
 ## Cost Profile
 
 ~4000-8000 tokens input (plan + codebase context), ~2000-3000 tokens output. Opus model for adversarial depth. Runs once per feature plan — high cost justified by preventing wasted implementation cycles.
+
+**Scope guardrail:** adversary reviews THE PLAN only — never audits existing codebase quality or rewrites code.
