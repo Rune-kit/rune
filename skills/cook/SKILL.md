@@ -5,7 +5,7 @@ context: fork
 agent: general-purpose
 metadata:
   author: runedev
-  version: "1.5.0"
+  version: "1.7.0"
   layer: L1
   model: sonnet
   group: orchestrator
@@ -62,7 +62,41 @@ Fast mode:           Phase 1 → 4 → 6 → 7 (auto-detected, see below)
 Multi-session:       Phase 0 (resume) → 3 → 4 → 5 → 6 → 7 (one plan phase per session)
 ```
 
-Determine complexity BEFORE starting. Create TodoWrite with applicable phases.
+Determine complexity BEFORE starting using the Rigor Assessment below. Create TodoWrite with applicable phases.
+
+### Rigor Assessment (Progressive Scaling)
+
+Before selecting a workflow chain or phase set, compute the task's **rigor level** from risk signals. This prevents over-engineering trivial changes while ensuring full ceremony for critical ones.
+
+| Risk Signal | Weight | Detection |
+|-------------|--------|-----------|
+| Files affected: 1 | 0 | Estimate from task description + scout |
+| Files affected: 2-3 | +1 | |
+| Files affected: 4+ | +3 | |
+| Cross-module impact (changes span 2+ directories) | +2 | scout identifies touch points across boundaries |
+| Security-sensitive code (auth, crypto, payments, secrets) | +3 | Keyword match in file paths or task description |
+| Public API change (exports, routes, schema) | +2 | Task modifies interfaces consumed by external code |
+| Database schema change | +2 | Task mentions migration, schema, ALTER, column |
+| New dependency added | +1 | Task requires `npm install` or equivalent |
+| Code will be imported by other modules | +1 | New exports or modifications to shared utilities |
+
+**Rigor level mapping:**
+
+| Score | Level | Maps To | Phases |
+|-------|-------|---------|--------|
+| 0 | Nano | `nano` chain | DO → VERIFY → DONE |
+| 1-2 | Fast | `fast` mode | Phase 1 → 4 → 6 → 7 |
+| 3-5 | Standard | `bugfix` / `refactor` | Phase 1 → 2 → 4 → 5 → 6 → 7 |
+| 6-8 | Full | `feature` | Phase 1 → 1.5 → 2 → 3 → 4 → 5 → 6 → 7 → 8 |
+| 9+ | Critical | `security` / full + adversary | All phases + sentinel@opus + adversary |
+
+**Rules:**
+- Security signal (+3) automatically floors rigor at Standard — NEVER nano/fast for security code
+- User can override: "full pipeline" forces Full, "just do it" forces Nano
+- If rigor upgrades mid-task (e.g., scout reveals cross-module impact not obvious from description), announce: "Rigor upgrade: [signal detected] — upgrading from Fast to Standard."
+- Announce chosen level: "Rigor: Fast (score 2 — single file, no security)"
+
+> Source: Fission-AI/OpenSpec (32.8k★) — progressive ceremony scaling by risk factors.
 
 ## Nano Mode (Auto-Detect)
 
@@ -154,6 +188,27 @@ Skip if: bug fix with clear repro steps | user said "just do it" | fast mode + <
 
 After scout completes, check if the detected tech stack or task description matches any L4 extension pack. This phase is lightweight — a Read + pattern match. It does NOT replace Phase 1 (scout) or Phase 2 (plan). If 0 packs match: skip silently.
 
+## Phase 1.7: WORKFLOW ORCHESTRATION (Multi-Skill Sequences)
+
+**Goal**: If Phase 1.5 detected a pack AND the task maps to a named workflow, orchestrate the multi-skill sequence.
+
+**Trigger**: Only runs if Phase 1.5 found a pack match AND the pack's Workflows table has a matching command.
+
+<MUST-READ path="references/pack-detection.md" trigger="Phase 1.7 — workflow command detection section"/>
+
+1. Read the matched PACK.md's Workflows section
+2. Identify the workflow name and skill sequence
+3. For each skill in sequence:
+   a. Load the skill file from the pack's `skills/` directory
+   b. Execute the skill's workflow steps
+   c. Write output artifact to `.rune/<domain>/` (e.g., `.rune/hr/jd-[role]-[date].md`)
+   d. The next skill reads the previous artifact as input context
+4. After all skills complete: summarize the workflow results to the user
+
+**Threading state**: Each skill in the sequence produces an artifact file. The next skill's Step 1 reads existing artifacts from `.rune/<domain>/`. This is already built into each skill — no new plumbing needed.
+
+**Skip if**: No workflow match found in Phase 1.5. Single-skill tasks proceed directly to Phase 2 (PLAN) as normal.
+
 ## Phase 0: RESUME CHECK (Before Phase 1)
 
 **Goal**: Detect if a master plan already exists for this task. If so, skip Phase 1-2 and resume from the current phase.
@@ -228,10 +283,11 @@ If the coder model needs info from other phases, it's in the Cross-Phase Context
 **REQUIRED SUB-SKILL**: Use `rune:test`
 
 1. Mark Phase 3 as `in_progress`
-2. Write test files based on the plan — cover primary use case + edge cases; tests MUST be runnable
-3. **Python async pre-check** (if async-first Python flagged in Phase 1): verify `pytest-asyncio` is installed and `asyncio_mode = "auto"` is in `pyproject.toml` — if missing, warn user before writing async tests
-4. Run tests to verify they FAIL — expected: RED because implementation doesn't exist yet
-5. Mark Phase 3 as `completed`
+2. **Eval definitions** (Full/Critical rigor only): Before writing tests, define capability evals (pass@k) and regression evals (pass^k) in `.rune/evals/<feature>.md`. Capability evals test "can the system do this new thing?" — regression evals test "did we break existing behavior?" Skip for Fast/Standard rigor levels.
+3. Write test files based on the plan — cover primary use case + edge cases; tests MUST be runnable
+4. **Python async pre-check** (if async-first Python flagged in Phase 1): verify `pytest-asyncio` is installed and `asyncio_mode = "auto"` is in `pyproject.toml` — if missing, warn user before writing async tests
+5. Run tests to verify they FAIL — expected: RED because implementation doesn't exist yet
+6. Mark Phase 3 as `completed`
 
 **Gate**: Tests MUST exist and MUST fail. If tests pass without implementation → tests are wrong, rewrite them.
 
@@ -267,33 +323,43 @@ If the coder model needs info from other phases, it's in the Cross-Phase Context
 
 **Gate**: ALL tests from Phase 3 MUST pass. Do NOT proceed with failing tests.
 
-## Phase 5: QUALITY (Parallel)
+## Phase 5: QUALITY (Staged)
 
 **Goal**: Catch issues before they reach production.
 
-Run quality checks **in parallel** for speed. Any CRITICAL finding blocks the commit.
+Quality checks run in **two stages** — spec compliance gates code review. Reviewing code quality before verifying it matches the spec wastes effort on code that may need rewriting.
 
 ```
-PARALLEL EXECUTION:
-  Launch 5a + 5b + 5c simultaneously as independent Task agents.
-  Wait for ALL to complete before proceeding.
+STAGE 1 (parallel):
+  Launch 5a (preflight) + 5b (sentinel) simultaneously.
+  Wait for BOTH to complete.
+  If 5a returns BLOCK → fix spec gaps, re-run 5a. Code review CANNOT start on non-compliant code.
+  If 5b returns BLOCK → fix security issue, re-run 5b.
+
+STAGE 2 (after Stage 1 passes):
+  Launch 5c (review) + 5d (completion-gate) simultaneously.
   If any returns BLOCK → fix findings, re-run the blocking check only.
 ```
 
-### 5a. Preflight (Spec Compliance + Logic)
+> Source: obra/superpowers v5.0.2 (84k★) — spec compliance MUST pass before code quality review dispatched.
+
+### 5a. Preflight (Spec Compliance + Logic) — STAGE 1
 **REQUIRED SUB-SKILL**: Use `rune:preflight`
 - Spec compliance: compare approved plan vs actual diff
 - Logic review, error handling, completeness
+- **Must pass before 5c (review) can start** — no point reviewing code quality if it doesn't match the spec
 
-### 5b. Security
+### 5b. Security — STAGE 1
 **REQUIRED SUB-SKILL**: Use `rune:sentinel`
 - Secret scan, OWASP check (no injection/XSS/CSRF), dependency audit
 
-### 5c. Code Review
+### 5c. Code Review — STAGE 2
 **REQUIRED SUB-SKILL**: Use `rune:review`
 - Pattern compliance, code quality, performance bottlenecks
+- Reviewer reads code independently — does NOT rely on implementer's claims
+- **Reviewer isolation** (when invoked via `team`): The review agent MUST be a separate context window from the implementing agent. Author reasoning contaminates review — the reviewer should never have seen the implementation's reasoning chain. Sonnet implements, a fresh Sonnet reviews.
 
-### 5d. Completion Gate
+### 5d. Completion Gate — STAGE 2
 **REQUIRED SUB-SKILL**: Use `rune:completion-gate`
 - Validate agent claims match evidence trail (tests ran, files changed, build passed)
 - No truncated code files (`// ...`, `// rest of code`, bare ellipsis) — agent MUST complete all output
@@ -301,6 +367,30 @@ PARALLEL EXECUTION:
 
 **Gate**: If sentinel finds CRITICAL security issue → STOP, fix it, re-run. Non-negotiable.
 **Gate**: If completion-gate finds UNCONFIRMED claim → STOP, re-verify. Non-negotiable.
+
+## Per-Phase Rules (Project-Specific)
+
+Projects can define phase-specific rules in `.rune/phase-rules.md` that apply ONLY during specific cook phases. These are additive — they enhance skill guidance, not replace it.
+
+```markdown
+# .rune/phase-rules.md (example)
+
+## Phase 2: PLAN
+- All API endpoints must follow REST naming convention /api/v1/<resource>
+- Database changes require a rollback migration
+
+## Phase 3: TEST
+- Enforce TDD format: describe → it → arrange → act → assert
+- Minimum 3 edge cases per public function
+
+## Phase 5: QUALITY
+- Review must check for N+1 queries on any ORM code
+- Sentinel must verify CORS configuration on new routes
+```
+
+**Loading**: Cook reads `.rune/phase-rules.md` during Phase 0 (resume check). Rules for each phase are injected into the sub-skill's context when that phase starts. If file doesn't exist → skip silently.
+
+> Source: Fission-AI/OpenSpec (32.8k★) — fine-grained per-phase quality control.
 
 ## Checkpoint Protocol (Opt-In)
 
@@ -339,7 +429,25 @@ When cook runs inside `team` (L1) or autonomous workflows, these patterns apply.
 
 ### De-Sloppify Pass
 
-After Phase 4, if implementation touched 5+ files: re-read all modified files, check for leftover debug statements, inconsistent naming, duplicated logic, missing error handling. Fix issues found (still Phase 4).
+After Phase 4 completes (all tests green), run a **separate focused cleanup pass** on all modified files. Two focused passes outperform one constrained pass — let the implementer write freely in Phase 4, then clean up here.
+
+**Trigger**: Implementation touched 3+ files OR 100+ LOC changed. Skip for nano/fast rigor.
+
+**Slop targets** (check every modified file):
+
+| Slop Type | Detection | Fix |
+|-----------|-----------|-----|
+| Leftover debug | `console.log`, `print()`, `debugger`, `TODO: remove` | Delete |
+| Over-defensive checks | Null checks on values guaranteed non-null by TypeScript/framework | Remove redundant guard |
+| Type-test slop | `typeof x === 'string'` when x is already typed as string | Remove — trust the type system |
+| Duplicated logic | Same 3+ lines appear in multiple places | Extract utility |
+| Framework-behavior tests | Tests asserting that React renders, that Express routes exist, that mocks work | Delete — test YOUR code, not the framework |
+| Inconsistent naming | Mixed `camelCase`/`snake_case` in same file | Normalize to project convention |
+| Dead imports | Imports no longer used after edits | Remove |
+
+**Important**: This is NOT a quality gate — it's a cleanup pass. Don't block the pipeline for cosmetic issues. Fix what you find, move on.
+
+> Source: affaan-m/everything-claude-code (91.9k★) — separate de-sloppify agent pass after implementation.
 
 ### Continuous PR Loop (team orchestration only)
 
@@ -379,6 +487,22 @@ Escalation chain: debug-fix (3x) → re-plan (1x) → brainstorm rescue (1x) →
 <MUST-READ path="references/subagent-status.md" trigger="when cook or any sub-skill needs to return a status"/>
 
 Cook and all sub-skills return: `DONE` | `DONE_WITH_CONCERNS` | `NEEDS_CONTEXT` | `BLOCKED`.
+
+### Subagent Context Isolation
+
+When invoking sub-skills (fix, debug, test, review, etc.), **craft exactly the context they need** — never pass the full orchestrator session context.
+
+| Pass To Sub-Skill | DO NOT Pass |
+|-------------------|-------------|
+| Task description + specific goal | Full conversation history |
+| Relevant file paths from scout | Unrelated files from other phases |
+| Project conventions (naming, test framework) | Other sub-skill outputs |
+| Plan excerpt for THIS phase only | Full master plan |
+| Error/stack trace (for debug/fix) | Previous debug attempts from other bugs |
+
+**Why**: Sub-skills that inherit orchestrator context get polluted — they chase false connections, reference stale data, and consume tokens on irrelevant context. A focused sub-skill with 500 tokens of curated context outperforms one with 5000 tokens of inherited noise.
+
+> Source: obra/superpowers v5.0.2 (84k★) — first-class context isolation principle.
 
 ## Deviation Rules
 

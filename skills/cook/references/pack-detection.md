@@ -38,6 +38,9 @@ If no `format: split` in PACK.md frontmatter, read the full PACK.md and extract 
 | Support ticket, KB article, escalation, SLA, FAQ | `@rune-pro/support` | `extensions/pro-support/PACK.md` |
 | Budget, expense, revenue forecast, P&L, cash flow, runway | `@rune-pro/finance` | `extensions/pro-finance/PACK.md` |
 | Contract, NDA, compliance, GDPR, IP, legal incident | `@rune-pro/legal` | `extensions/pro-legal/PACK.md` |
+| JD, resume, interview, hiring, onboarding, compensation, HR policy | `@rune-pro/hr` | `extensions/pro-hr/PACK.md` |
+| Enterprise search, cross-system, knowledge graph, federated query | `@rune-pro/enterprise-search` | `extensions/pro-enterprise-search/PACK.md` |
+| Zalo Mini App, ZMP, `zalo-mini-app`, ZNS, Zalo OA | `@rune/zalo` | `extensions/zalo/PACK.md` |
 
 ## After Match Found
 
@@ -49,3 +52,31 @@ If ≥1 pack matches:
 - Announce: "Loaded @rune/[pack] → [skill-name] (split)" or "Loaded @rune/[pack] → [skill-name] (full)"
 
 If 0 packs match: skip silently, proceed to Phase 2.
+
+## Workflow Command Detection
+
+After a pack is matched, check if the user's request maps to a named workflow in the pack's Workflows table.
+
+**Detection rules:**
+1. Explicit command: user types `/rune <pack> <workflow>` (e.g., `/rune finance monthly-close`)
+2. Implicit match: task description contains workflow trigger keywords from the Workflows table
+3. Single-skill shortcut: `/rune <pack> <skill>` routes directly to one skill
+
+**If a workflow matches:**
+1. Read the Workflows section of the matched PACK.md
+2. Extract the skill sequence (e.g., `expense-analysis → financial-reporting → cash-flow-optimization`)
+3. Execute skills in order — each skill's output feeds the next as context
+4. Thread state via `.rune/<pack>/` artifacts (each skill reads previous skill's output file)
+
+**If no workflow matches:**
+- Fall back to single-skill detection (match task to best skill from the Skills table)
+- This is the current default behavior
+
+**Workflow examples:**
+| Command | Pack | Workflow | Skill Sequence |
+|---------|------|----------|----------------|
+| `/rune finance monthly-close` | finance | monthly-close | expense-analysis → financial-reporting → cash-flow |
+| `/rune hr full-cycle` | hr | full-cycle | jd-writer → resume-screener → interview-planner → scorecard |
+| `/rune search "query"` | enterprise-search | search | query-planner → source-connector → result-merger → permission-guard |
+| `/rune sales prep` | sales | prep | account-research → call-preparation → competitive-intel |
+| `/rune product feature` | product | feature | feature-spec → roadmap → metrics-tracking |
