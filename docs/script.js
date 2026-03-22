@@ -227,8 +227,9 @@ function closePayment() {
 }
 
 function showPayStep(n) {
-  for (let i = 1; i <= 5; i++) {
-    document.getElementById('pay-step-' + i).hidden = (i !== n);
+  for (let i = 1; i <= 6; i++) {
+    const el = document.getElementById('pay-step-' + i);
+    if (el) el.hidden = (i !== n);
   }
 }
 
@@ -290,7 +291,7 @@ async function startPolarCheckout() {
     const data = await res.json();
     if (!data.success || !data.url) throw new Error(data.error || 'Failed to create checkout');
 
-    // Redirect to Polar checkout page
+    // Redirect to Polar checkout page (context embedded in success_url by worker)
     window.location.href = data.url;
   } catch (err) {
     errorEl.textContent = err.message;
@@ -365,8 +366,14 @@ function startPolling(github) {
       if (data.status === 'delivered') {
         clearInterval(payState.pollTimer);
         payState.pollTimer = null;
-        document.getElementById('pay-success-user').textContent = github;
-        showPayStep(4);
+        // VN users → Vietnamese success (step 6)
+        const vnUser = document.getElementById('pay-success-user-vn');
+        if (vnUser) vnUser.textContent = github;
+        const vnInstall = document.getElementById('pay-success-install-vn');
+        if (vnInstall && (payState.product === 'rune-biz' || payState.product === 'RUNE-BIZ')) {
+          vnInstall.textContent = 'Bạn nhận cả Pro + Business packs — xem README trong repo';
+        }
+        showPayStep(6);
       } else if (data.status === 'underpaid') {
         document.getElementById('pay-status').innerHTML =
           '<span style="color:var(--loss)">&#9888; Amount too low. Please transfer the exact amount.</span>';
@@ -452,17 +459,37 @@ function startPolling(github) {
 (function checkPolarReturn() {
   const params = new URLSearchParams(window.location.search);
   if (params.get('polar') === 'success') {
+    // Read context from URL (embedded by worker in success_url)
+    const github = params.get('gh') || 'your GitHub account';
+    const product = params.get('pkg') || '';
+
     // Clean URL
     window.history.replaceState({}, '', window.location.pathname);
+
     // Show success message
     const modal = document.getElementById('pay-modal');
     if (modal) {
       modal.hidden = false;
       document.body.style.overflow = 'hidden';
-      document.getElementById('pay-success-user').textContent = 'you';
+      showSuccessForProduct(product, github);
       for (let i = 1; i <= 5; i++) {
         document.getElementById('pay-step-' + i).hidden = (i !== 4);
       }
     }
   }
 })();
+
+// Update success page based on product context
+function showSuccessForProduct(product, github) {
+  const el = document.getElementById('pay-success-user');
+  if (el) el.textContent = github || 'your GitHub account';
+
+  const installEl = document.getElementById('pay-success-install');
+  if (!installEl) return;
+
+  if (product === 'rune-biz' || product === 'RUNE-BIZ') {
+    installEl.textContent = 'You get Pro + Business packs — check the repo README for setup';
+  } else {
+    installEl.textContent = 'Follow the setup guide in the repo README';
+  }
+}

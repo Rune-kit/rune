@@ -62,7 +62,7 @@
       <canvas id="mesh-canvas"></canvas>
     </div>
     <div class="hero-content">
-      <p class="hero-badge">v2.2.2 &mdash; 58 skills &bull; 8 platforms &bull; MIT</p>
+      <p class="hero-badge">v2.2.6 &mdash; 58 skills &bull; 8 platforms &bull; MIT</p>
       <h1>Less skills.<br><span class="accent">Deeper connections.</span></h1>
       <p class="hero-sub">A mesh ecosystem for AI coding assistants. Skills call each other bidirectionally, forming resilient workflows that adapt when things go wrong.</p>
       <div class="hero-actions">
@@ -839,12 +839,42 @@ claude plugin install rune</code></pre>
       </div>
 
       <!-- Step 4: Success -->
-      <div id="pay-step-4" class="pay-step" hidden>
-        <div class="pay-success-icon">&#10003;</div>
-        <h3>Payment Received!</h3>
-        <p class="pay-subtitle">A GitHub invitation has been sent to <strong id="pay-success-user"></strong></p>
-        <p class="pay-hint">Check your email for the invitation to <code>rune-kit/rune-pro</code></p>
-        <button class="btn btn-primary" style="width:100%;margin-top:20px" onclick="closePayment()">Done</button>
+      <div id="pay-step-4" class="pay-step pay-success" hidden>
+        <div class="pay-success-badge">
+          <svg class="pay-success-check" viewBox="0 0 52 52" width="52" height="52">
+            <circle class="pay-success-circle" cx="26" cy="26" r="24" fill="none" stroke="currentColor" stroke-width="2.5"/>
+            <path class="pay-success-tick" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M15 27l7 7 15-15"/>
+          </svg>
+        </div>
+        <h3 class="pay-success-title">You're in!</h3>
+        <p class="pay-success-sub">A GitHub repo invitation is on its way to <strong id="pay-success-user"></strong></p>
+
+        <div class="pay-success-steps">
+          <div class="pay-success-step">
+            <span class="pay-success-num">1</span>
+            <div>
+              <strong>Check your GitHub email</strong>
+              <span>Look for an invite from <code>noreply@github.com</code> — usually within 1 minute</span>
+            </div>
+          </div>
+          <div class="pay-success-step">
+            <span class="pay-success-num">2</span>
+            <div>
+              <strong>Accept the invitation</strong>
+              <span>Click "View invitation" to join the private repo</span>
+            </div>
+          </div>
+          <div class="pay-success-step">
+            <span class="pay-success-num">3</span>
+            <div>
+              <strong>Install your packs</strong>
+              <span id="pay-success-install">Follow the setup guide in the repo README</span>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary pay-success-done" onclick="closePayment()">Got it</button>
+        <p class="pay-success-help">Didn't get the invite? Check spam, or email <a href="mailto:claude@theio.vn">claude@theio.vn</a></p>
       </div>
 
       <!-- Step 5: International — GitHub username + Polar checkout -->
@@ -860,6 +890,45 @@ claude plugin install rune</code></pre>
         <p id="pay-intl-error" class="pay-error" hidden></p>
         <button id="pay-intl-submit" class="btn btn-pro" style="width:100%;margin-top:16px" onclick="startPolarCheckout()">Pay with Card / PayPal</button>
         <p class="pay-hint" style="margin-top:12px">You'll be redirected to Polar's secure checkout page</p>
+      </div>
+
+      <!-- Step 6: Success (Vietnamese — for SePay flow) -->
+      <div id="pay-step-6" class="pay-step pay-success notranslate" translate="no" hidden>
+        <div class="pay-success-badge">
+          <svg class="pay-success-check" viewBox="0 0 52 52" width="52" height="52">
+            <circle class="pay-success-circle" cx="26" cy="26" r="24" fill="none" stroke="currentColor" stroke-width="2.5"/>
+            <path class="pay-success-tick" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M15 27l7 7 15-15"/>
+          </svg>
+        </div>
+        <h3 class="pay-success-title">Thanh toán thành công!</h3>
+        <p class="pay-success-sub">Lời mời truy cập repo đã được gửi đến <strong id="pay-success-user-vn"></strong></p>
+
+        <div class="pay-success-steps">
+          <div class="pay-success-step">
+            <span class="pay-success-num">1</span>
+            <div>
+              <strong>Kiểm tra email GitHub</strong>
+              <span>Tìm email mời từ <code>noreply@github.com</code> — thường trong vòng 1 phút</span>
+            </div>
+          </div>
+          <div class="pay-success-step">
+            <span class="pay-success-num">2</span>
+            <div>
+              <strong>Chấp nhận lời mời</strong>
+              <span>Nhấn "View invitation" để vào private repo</span>
+            </div>
+          </div>
+          <div class="pay-success-step">
+            <span class="pay-success-num">3</span>
+            <div>
+              <strong>Cài đặt skill packs</strong>
+              <span id="pay-success-install-vn">Làm theo hướng dẫn trong README của repo</span>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary pay-success-done" onclick="closePayment()">Xong</button>
+        <p class="pay-success-help">Chưa nhận được? Kiểm tra spam, hoặc email <a href="mailto:claude@theio.vn">claude@theio.vn</a></p>
       </div>
     </div>
   </div>

@@ -653,6 +653,68 @@ font[style] > font { vertical-align: unset !important; }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 .pay-hint { font-size: 12px; color: var(--text-muted); text-align: center; margin-top: 12px; line-height: 1.5; }
+/* Success page */
+.pay-success { text-align: center; }
+
+.pay-success-badge {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: var(--accent-dim); color: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 20px;
+  animation: successPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.pay-success-circle {
+  stroke-dasharray: 151; stroke-dashoffset: 151;
+  animation: successCircle 0.6s 0.2s ease-out forwards;
+}
+.pay-success-tick {
+  stroke-dasharray: 40; stroke-dashoffset: 40;
+  animation: successTick 0.4s 0.6s ease-out forwards;
+}
+
+@keyframes successPop { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+@keyframes successCircle { to { stroke-dashoffset: 0; } }
+@keyframes successTick { to { stroke-dashoffset: 0; } }
+
+.pay-success-title {
+  font-family: var(--font-display); font-size: 26px; font-weight: 700;
+  margin-bottom: 6px; color: var(--text-primary);
+}
+.pay-success-sub {
+  font-size: 14px; color: var(--text-secondary); margin-bottom: 24px;
+}
+
+.pay-success-steps {
+  text-align: left; display: flex; flex-direction: column; gap: 14px;
+  background: var(--accent-dim); border-radius: var(--radius-md);
+  padding: 20px; margin-bottom: 24px;
+}
+.pay-success-step {
+  display: flex; align-items: flex-start; gap: 12px;
+}
+.pay-success-num {
+  flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
+  background: var(--accent); color: #fff; font-size: 13px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  margin-top: 1px;
+}
+.pay-success-step strong {
+  display: block; font-size: 14px; color: var(--text-primary); margin-bottom: 2px;
+}
+.pay-success-step span {
+  font-size: 13px; color: var(--text-secondary); line-height: 1.4;
+}
+
+.pay-success-done {
+  width: 100%; margin-bottom: 12px;
+}
+.pay-success-help {
+  font-size: 12px; color: var(--text-secondary); opacity: 0.7;
+}
+.pay-success-help a { color: var(--accent); }
+
+/* Legacy (keep for backwards compat) */
 .pay-success-icon {
   width: 64px; height: 64px; border-radius: 50%; background: var(--accent);
   color: #fff; font-size: 32px; display: flex; align-items: center; justify-content: center;
