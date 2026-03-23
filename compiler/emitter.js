@@ -143,7 +143,14 @@ function outputFileName(skillName, adapter) {
  * @param {Object<string, string>} [options.tierSources] - tier extension dirs { pro: "path", business: "path" }
  * @returns {Promise<object>} build result stats
  */
-export async function buildAll({ runeRoot, outputRoot, adapter, disabledSkills = [], enabledPacks = null, tierSources = {} }) {
+export async function buildAll({
+  runeRoot,
+  outputRoot,
+  adapter,
+  disabledSkills = [],
+  enabledPacks = null,
+  tierSources = {},
+}) {
   // Claude Code = passthrough, no build needed
   if (adapter.name === 'claude') {
     return {
@@ -168,7 +175,11 @@ export async function buildAll({ runeRoot, outputRoot, adapter, disabledSkills =
   const hasTiers = tierSources && (tierSources.pro || tierSources.business);
   const packEntries = hasTiers
     ? await discoverTieredPacks(extensionsDir, tierSources, enabledPacks)
-    : (await discoverPacks(extensionsDir, enabledPacks)).map((p) => ({ path: p, tier: 'free', dirName: path.basename(path.dirname(p)) }));
+    : (await discoverPacks(extensionsDir, enabledPacks)).map((p) => ({
+        path: p,
+        tier: 'free',
+        dirName: path.basename(path.dirname(p)),
+      }));
 
   const stats = {
     platform: adapter.name,
