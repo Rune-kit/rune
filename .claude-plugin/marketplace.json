@@ -4,18 +4,19 @@
     "name": "Rune Contributors"
   },
   "metadata": {
-    "description": "Less skills. Deeper connections. A lean, interconnected skill ecosystem for Claude Code."
+    "description": "Less skills. Deeper connections. A lean, interconnected skill ecosystem for Claude Code.",
+    "website": "https://rune-kit.github.io/rune"
   },
   "plugins": [
     {
       "name": "rune",
       "source": "./",
-      "description": "58 skills wired into a self-aware 5-layer mesh — 200+ connections, adaptive routing, mesh analytics, logic preservation. Use rune:cook for any code task, rune:team for parallel work, rune:launch for deploy, rune:rescue for legacy code.",
-      "version": "2.2.6",
+      "description": "59 skills wired into a self-aware 5-layer mesh — 200+ connections, adaptive routing, mesh analytics, logic preservation. Use rune:cook for any code task, rune:team for parallel work, rune:launch for deploy, rune:rescue for legacy code.",
+      "version": "2.3.0",
       "author": {
         "name": "Rune Contributors"
       },
-      "homepage": "https://github.com/rune-kit/rune",
+      "homepage": "https://rune-kit.github.io/rune",
       "repository": "https://github.com/rune-kit/rune",
       "license": "MIT",
       "category": "workflow"
@@ -97,6 +98,20 @@
       "source": "./extensions/chrome-ext",
       "description": "Chrome Extension — manifest v3, service workers, content scripts, popup UI",
       "category": "domain"
+    },
+    {
+      "name": "@rune-pro",
+      "description": "Rune Pro — Product Management, Sales, Data Science, Support. 4 premium packs with deep business workflows. $49 lifetime.",
+      "homepage": "https://rune-kit.github.io/rune#pricing",
+      "repository": "https://github.com/rune-kit/rune-pro",
+      "category": "premium"
+    },
+    {
+      "name": "@rune-business",
+      "description": "Rune Business — Finance, Legal, HR, Enterprise Search. 4 enterprise packs + all Pro packs included. $149 lifetime.",
+      "homepage": "https://rune-kit.github.io/rune#pricing",
+      "repository": "https://github.com/rune-kit/rune-business",
+      "category": "premium"
     }
   ]
 }

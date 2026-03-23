@@ -65,6 +65,28 @@ async function prompt(question) {
   });
 }
 
+/**
+ * Resolve tier source paths from config.
+ * Paths can be absolute or relative to projectRoot.
+ *
+ * Config format:
+ *   "tiers": { "pro": "../Pro/extensions", "business": "../Business/extensions" }
+ *
+ * @param {Object} tiers - tier config object
+ * @param {string} projectRoot - base for relative paths
+ * @returns {Object} resolved { pro?: string, business?: string }
+ */
+function resolveTierSources(tiers, projectRoot) {
+  if (!tiers) return {};
+  const resolved = {};
+  for (const tier of ['pro', 'business']) {
+    if (tiers[tier]) {
+      resolved[tier] = path.resolve(projectRoot, tiers[tier]);
+    }
+  }
+  return resolved;
+}
+
 // ─── Commands ───
 
 async function cmdInit(projectRoot, args) {
@@ -120,12 +142,14 @@ async function cmdInit(projectRoot, args) {
 
   // Auto-build
   const adapter = getAdapter(platform);
+  const tierSources = resolveTierSources(config.tiers, projectRoot);
   const stats = await buildAll({
     runeRoot: RUNE_ROOT,
     outputRoot: projectRoot,
     adapter,
     disabledSkills: config.skills.disabled,
     enabledPacks: config.extensions.enabled,
+    tierSources,
   });
 
   logStep('✓', `Built ${stats.skillCount} skills + ${stats.packCount} extensions to ${adapter.outputDir}/`);
@@ -163,6 +187,7 @@ async function cmdBuild(projectRoot, args) {
   const outputRoot = typeof args.output === 'string' ? args.output : projectRoot;
   const disabledSkills = config?.skills?.disabled || [];
   const enabledPacks = config?.extensions?.enabled || null;
+  const tierSources = resolveTierSources(config?.tiers, projectRoot);
 
   log('');
   log(`  [parse]     Discovering skills...`);
@@ -173,12 +198,20 @@ async function cmdBuild(projectRoot, args) {
     adapter,
     disabledSkills,
     enabledPacks,
+    tierSources,
   });
 
   log(`  [transform] Platform: ${stats.platform}`);
   log(`  [transform] Resolved ${stats.crossRefsResolved} cross-references`);
   log(`  [transform] Resolved ${stats.toolRefsResolved} tool-name references`);
   log(`  [emit]      ${stats.skillCount} skills + ${stats.packCount} extensions`);
+
+  if (stats.tierOverrides?.length > 0) {
+    log(`  [tier]      ${stats.tierOverrides.length} pack(s) resolved from higher tiers:`);
+    for (const override of stats.tierOverrides) {
+      log(`              → ${override.pack} (${override.tier})`);
+    }
+  }
 
   if (stats.skipped.length > 0) {
     log(`  [skip]      ${stats.skipped.length} disabled: ${stats.skipped.join(', ')}`);

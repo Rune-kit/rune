@@ -6,7 +6,22 @@
     "name": "Rune Contributors"
   },
   "repository": "https://github.com/rune-kit/rune",
-  "homepage": "https://github.com/rune-kit/rune",
+  "homepage": "https://rune-kit.github.io/rune",
   "license": "MIT",
-  "keywords": ["skills", "mesh", "tdd", "multi-platform", "coding-agent"]
+  "keywords": ["skills", "mesh", "tdd", "multi-platform", "coding-agent"],
+  "premium": {
+    "pro": {
+      "name": "Rune Pro",
+      "price": "$49 lifetime",
+      "packs": ["product", "sales", "data-science", "support"],
+      "url": "https://rune-kit.github.io/rune#pricing"
+    },
+    "business": {
+      "name": "Rune Business",
+      "price": "$149 lifetime",
+      "packs": ["finance", "legal", "hr", "enterprise-search"],
+      "includes": "pro",
+      "url": "https://rune-kit.github.io/rune#pricing"
+    }
+  }
 }

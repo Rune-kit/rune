@@ -60,6 +60,71 @@ async function discoverPacks(extensionsDir, enabledPacks = null) {
 }
 
 /**
+ * Tier priority: higher number = higher priority (wins override)
+ */
+const TIER_PRIORITY = { free: 0, pro: 1, business: 2 };
+
+/**
+ * Normalize pack name for tier comparison.
+ * Strips tier prefixes (pro-, business-) so packs can be compared across tiers.
+ * e.g. "pro-product" → "product", "saas" → "saas"
+ */
+function normalizePackName(dirName) {
+  return dirName.replace(/^(pro|business)-/, '');
+}
+
+/**
+ * Discover packs across multiple tier sources and resolve overrides.
+ * Business > Pro > Free: if the same normalized pack name exists in multiple tiers,
+ * the highest-priority tier wins.
+ *
+ * @param {string} freeExtDir - path to free extensions/ directory
+ * @param {Object<string, string>} [tierSources] - { pro: "/path/to/pro/extensions", business: "/path/to/business/extensions" }
+ * @param {string[]} [enabledPacks] - list of enabled pack names (null = all)
+ * @returns {Promise<Array<{path: string, tier: string, dirName: string}>>} resolved pack entries
+ */
+export async function discoverTieredPacks(freeExtDir, tierSources = {}, enabledPacks = null) {
+  // Collect all packs with their tier info: Map<normalizedName, {path, tier, priority, dirName}>
+  const packMap = new Map();
+
+  // Helper: scan one extensions directory for packs
+  async function scanDir(extDir, tier) {
+    if (!existsSync(extDir)) return;
+    const entries = await readdir(extDir, { withFileTypes: true });
+
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      if (enabledPacks && !enabledPacks.includes(entry.name) && !enabledPacks.includes(`@rune/${entry.name}`)) {
+        continue;
+      }
+      const packFile = path.join(extDir, entry.name, 'PACK.md');
+      if (!existsSync(packFile)) continue;
+
+      const normalized = normalizePackName(entry.name);
+      const priority = TIER_PRIORITY[tier] ?? 0;
+      const existing = packMap.get(normalized);
+
+      // Higher priority tier wins
+      if (!existing || priority > existing.priority) {
+        packMap.set(normalized, { path: packFile, tier, priority, dirName: entry.name });
+      }
+    }
+  }
+
+  // Scan free first (lowest priority), then pro, then business
+  await scanDir(freeExtDir, 'free');
+  if (tierSources.pro) {
+    await scanDir(tierSources.pro, 'pro');
+  }
+  if (tierSources.business) {
+    await scanDir(tierSources.business, 'business');
+  }
+
+  // Return sorted by dirName for deterministic output
+  return [...packMap.values()].sort((a, b) => a.dirName.localeCompare(b.dirName));
+}
+
+/**
  * Generate output filename for a skill
  */
 function outputFileName(skillName, adapter) {
@@ -75,9 +140,10 @@ function outputFileName(skillName, adapter) {
  * @param {object} options.adapter - platform adapter
  * @param {string[]} [options.disabledSkills] - skills to skip
  * @param {string[]} [options.enabledPacks] - extension packs to include (null = all)
+ * @param {Object<string, string>} [options.tierSources] - tier extension dirs { pro: "path", business: "path" }
  * @returns {Promise<object>} build result stats
  */
-export async function buildAll({ runeRoot, outputRoot, adapter, disabledSkills = [], enabledPacks = null }) {
+export async function buildAll({ runeRoot, outputRoot, adapter, disabledSkills = [], enabledPacks = null, tierSources = {} }) {
   // Claude Code = passthrough, no build needed
   if (adapter.name === 'claude') {
     return {
@@ -97,7 +163,12 @@ export async function buildAll({ runeRoot, outputRoot, adapter, disabledSkills =
   await mkdir(outputDir, { recursive: true });
 
   const skillPaths = await discoverSkills(skillsDir);
-  const packPaths = await discoverPacks(extensionsDir, enabledPacks);
+
+  // Tier-aware pack discovery: if tierSources provided, resolve overrides
+  const hasTiers = tierSources && (tierSources.pro || tierSources.business);
+  const packEntries = hasTiers
+    ? await discoverTieredPacks(extensionsDir, tierSources, enabledPacks)
+    : (await discoverPacks(extensionsDir, enabledPacks)).map((p) => ({ path: p, tier: 'free', dirName: path.basename(path.dirname(p)) }));
 
   const stats = {
     platform: adapter.name,
@@ -108,6 +179,7 @@ export async function buildAll({ runeRoot, outputRoot, adapter, disabledSkills =
     files: [],
     skipped: [],
     errors: [],
+    tierOverrides: [],
   };
 
   // Build skills
@@ -152,13 +224,19 @@ export async function buildAll({ runeRoot, outputRoot, adapter, disabledSkills =
     }
   }
 
-  // Build extension packs
-  for (const packPath of packPaths) {
+  // Build extension packs (tier-aware)
+  for (const packEntry of packEntries) {
     try {
+      const packPath = packEntry.path;
       const content = await readFile(packPath, 'utf-8');
       const parsed = parsePack(content, packPath);
-      const packName = path.basename(path.dirname(packPath));
+      const packName = packEntry.dirName;
       const packDir = path.dirname(packPath);
+
+      // Track tier overrides for reporting
+      if (packEntry.tier !== 'free') {
+        stats.tierOverrides.push({ pack: packName, tier: packEntry.tier });
+      }
 
       // For split packs, load individual skill files and concatenate into body
       if (parsed.isSplit && parsed.skillManifest.length > 0) {
