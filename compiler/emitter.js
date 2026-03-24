@@ -6,10 +6,11 @@
  */
 
 import { existsSync } from 'node:fs';
-import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
+import { cp, mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { extractCrossRefs, extractToolRefs, parsePack, parseSkill } from './parser.js';
 import { transformSkill } from './transformer.js';
+import { resolveScriptsPath } from './transforms/scripts-path.js';
 
 /**
  * Discover all SKILL.md files in the skills directory
@@ -57,6 +58,29 @@ async function discoverPacks(extensionsDir, enabledPacks = null) {
   }
 
   return paths.sort();
+}
+
+/**
+ * Copy scripts directory from skill source to output.
+ *
+ * @param {string} sourceScriptsDir - e.g. skills/slides/scripts/
+ * @param {string} outputScriptsDir - e.g. .cursor/rules/rune-slides-scripts/
+ * @returns {Promise<string[]>} list of copied file paths
+ */
+async function copyScriptsDir(sourceScriptsDir, outputScriptsDir) {
+  if (!existsSync(sourceScriptsDir)) return [];
+
+  const entries = await readdir(sourceScriptsDir, { recursive: true, withFileTypes: true });
+  const files = entries.filter((e) => e.isFile());
+  if (entries.length === 0) return [];
+
+  await cp(sourceScriptsDir, outputScriptsDir, { recursive: true });
+
+  // Return relative paths within the scripts dir (same structure as source after recursive cp)
+  return files.map((e) => {
+    const parent = e.parentPath || e.path;
+    return path.relative(sourceScriptsDir, path.join(parent, e.name));
+  });
 }
 
 /**
@@ -190,6 +214,7 @@ export async function buildAll({
     packCount: 0,
     crossRefsResolved: 0,
     toolRefsResolved: 0,
+    scriptsCopied: 0,
     files: [],
     skipped: [],
     errors: [],
@@ -208,7 +233,25 @@ export async function buildAll({
         continue;
       }
 
-      const { header, body, footer } = transformSkill(parsed, adapter);
+      const { header, body: rawBody, footer } = transformSkill(parsed, adapter);
+
+      // Resolve {scripts_dir} placeholder if adapter supports scripts
+      const skillSourceDir = path.dirname(skillPath);
+      const scriptsSource = path.join(skillSourceDir, 'scripts');
+      const hasScripts = existsSync(scriptsSource) && adapter.scriptsDir;
+      const scriptsRelPath = hasScripts
+        ? path.join(adapter.outputDir, adapter.scriptsDir(parsed.name)).replaceAll('\\', '/')
+        : null;
+      const body = hasScripts ? resolveScriptsPath(rawBody, scriptsRelPath) : rawBody;
+
+      // Warn if {scripts_dir} placeholder exists but no scripts/ folder to resolve it
+      if (!hasScripts && rawBody.includes('{scripts_dir}')) {
+        stats.errors.push({
+          file: skillPath,
+          error: `{scripts_dir} placeholder found but no scripts/ directory exists for skill "${parsed.name}"`,
+        });
+      }
+
       const output = [header, body, footer].filter(Boolean).join('\n');
 
       let outputPath;
@@ -228,6 +271,13 @@ export async function buildAll({
       }
 
       await writeFile(outputPath, output, 'utf-8');
+
+      // Copy scripts/ directory if present
+      if (hasScripts) {
+        const scriptsOutput = path.join(outputDir, adapter.scriptsDir(parsed.name));
+        const copied = await copyScriptsDir(scriptsSource, scriptsOutput);
+        stats.scriptsCopied += copied.length;
+      }
 
       stats.skillCount++;
       stats.crossRefsResolved += parsed.crossRefs.length;

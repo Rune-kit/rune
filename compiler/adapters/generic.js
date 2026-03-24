@@ -48,6 +48,10 @@ export default {
     return text;
   },
 
+  scriptsDir(skillName) {
+    return `rune-${skillName}-scripts`;
+  },
+
   postProcess(content) {
     return content.replace(/^context: fork\n/gm, '').replace(/^agent: general-purpose\n/gm, '');
   },
