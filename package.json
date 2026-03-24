@@ -1,6 +1,6 @@
 {
   "name": "@rune-kit/rune",
-  "version": "2.3.2",
+  "version": "2.3.3",
   "description": "59-skill mesh for AI coding assistants — 5-layer architecture, 200+ connections, 8 platforms (Claude Code, Cursor, Windsurf, Antigravity, Codex, OpenCode, OpenClaw, Generic)",
   "type": "module",
   "bin": {
