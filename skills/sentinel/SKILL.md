@@ -3,7 +3,7 @@ name: sentinel
 description: Automated security gatekeeper. Blocks unsafe code before commit — secret scanning, OWASP top 10, dependency audit, permission checks. A GATE, not a suggestion.
 metadata:
   author: runedev
-  version: "0.7.0"
+  version: "0.8.0"
   layer: L2
   model: sonnet
   group: quality
@@ -96,6 +96,7 @@ Use `Grep` on all changed files for core patterns: `sk-`, `AKIA`, `ghp_`, `ghs_`
 Any match = **BLOCK**. Do not proceed to later steps if BLOCK findings exist — report immediately.
 
 ### Step 2 — Dependency Audit
+<MUST-READ path="references/supply-chain.md" trigger="When dependency changes detected (package.json, package-lock.json, requirements.txt, Cargo.toml modified) — load typosquatting prevention, lock file rules, SRI, npm hardening"/>
 
 Use `Bash` to run the appropriate audit command for the detected package manager:
 - npm/pnpm/yarn: `npm audit --json` (parse JSON, extract critical + high severity)
@@ -122,6 +123,7 @@ If 3+ signals fire for a single dependency → **BLOCK** with recommendation: "C
 
 ### Step 3 — OWASP Check
 <MUST-READ path="references/owasp-patterns.md" trigger="Before scanning for OWASP issues — load code examples and detection signals for SQL injection, XSS, CSRF, input validation"/>
+<MUST-READ path="references/auth-crypto-reference.md" trigger="When authentication, password hashing, encryption, or token management patterns detected — load Argon2id params, JWT best practices, OAuth2 PKCE, AES-256-GCM, fail-closed principle"/>
 
 Scan changed files for SQL injection (string concat/interpolation in SQL) → **BLOCK**, XSS (`innerHTML`, `dangerouslySetInnerHTML` without sanitization) → **BLOCK**, CSRF (forms without token, cookies without SameSite) → **WARN**, and missing input validation (raw `req.body` → DB) → **WARN**. Load reference for code examples and precise detection signals.
 
@@ -140,6 +142,7 @@ When invoked on `SKILL.md`, `extensions/*/PACK.md`, `.rune/*.md`, or agent files
 
 ### Step 4.5 — Framework-Specific Security Patterns
 <MUST-READ path="references/framework-patterns.md" trigger="When framework files are detected in the changed set — load patterns for the specific framework(s) found"/>
+<MUST-READ path="references/desktop-security.md" trigger="When Electron or Tauri project detected (package.json contains electron, @tauri-apps/cli, or tauri.conf.json exists) — load BrowserWindow config, IPC validation, scope restrictions, code signing"/>
 
 Apply only when the framework is detected in changed files. Covers Django (DEBUG=True, missing permissions, CSRF removal), React/Next.js (localStorage JWT, dangerouslySetInnerHTML), Node.js/Express/Fastify (wildcard CORS, missing helmet), Python (pickle.loads, yaml.load unsafe). Load reference for the complete check table per framework.
 

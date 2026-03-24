@@ -104,9 +104,12 @@ export async function discoverTieredPacks(freeExtDir, tierSources = {}, enabledP
       const priority = TIER_PRIORITY[tier] ?? 0;
       const existing = packMap.get(normalized);
 
-      // Higher priority tier wins
+      // Higher priority tier wins — track overridden lower-tier entries for skill-level merging
       if (!existing || priority > existing.priority) {
-        packMap.set(normalized, { path: packFile, tier, priority, dirName: entry.name });
+        const overrides = existing
+          ? [...(existing.overrides || []), { path: existing.path, tier: existing.tier, dirName: existing.dirName }]
+          : [];
+        packMap.set(normalized, { path: packFile, tier, priority, dirName: entry.name, overrides });
       }
     }
   }
@@ -249,11 +252,38 @@ export async function buildAll({
         stats.tierOverrides.push({ pack: packName, tier: packEntry.tier });
       }
 
+      // Tier Override: merge skill manifests from lower tiers
+      // If a Pro/Business pack overrides a Free pack, inherit skills the higher tier doesn't provide
+      if (packEntry.overrides?.length > 0 && parsed.isSplit && parsed.skillManifest.length > 0) {
+        const winnerSkillNames = new Set(parsed.skillManifest.map((s) => s.name));
+        for (const lower of packEntry.overrides) {
+          try {
+            const lowerContent = await readFile(lower.path, 'utf-8');
+            const lowerParsed = parsePack(lowerContent, lower.path);
+            if (lowerParsed.isSplit) {
+              const lowerPackDir = path.dirname(lower.path);
+              for (const lowerSkill of lowerParsed.skillManifest) {
+                if (!winnerSkillNames.has(lowerSkill.name)) {
+                  // Inherit skill from lower tier — track source directory for file resolution
+                  parsed.skillManifest.push({ ...lowerSkill, _sourceDir: lowerPackDir });
+                  winnerSkillNames.add(lowerSkill.name);
+                  stats.tierOverrides.push({ pack: packName, skill: lowerSkill.name, inherited: lower.tier });
+                }
+              }
+            }
+          } catch {
+            // Lower-tier pack unreadable — skip gracefully
+          }
+        }
+      }
+
       // For split packs, load individual skill files and concatenate into body
       if (parsed.isSplit && parsed.skillManifest.length > 0) {
         const skillBodies = [];
         for (const skill of parsed.skillManifest) {
-          const skillPath = path.join(packDir, skill.file);
+          // Resolve skill file path — use _sourceDir for inherited lower-tier skills
+          const sourceDir = skill._sourceDir || packDir;
+          const skillPath = path.join(sourceDir, skill.file);
           if (existsSync(skillPath)) {
             const skillContent = await readFile(skillPath, 'utf-8');
             // Strip frontmatter from skill file — we only need the body

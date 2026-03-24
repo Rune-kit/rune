@@ -155,4 +155,45 @@ describe('discoverTieredPacks', () => {
       rmSync(root, { recursive: true, force: true });
     }
   });
+
+  test('pro override tracks free pack in overrides array', async () => {
+    const { freePacks, proPacks, root } = createTierFixture();
+    try {
+      const packs = await discoverTieredPacks(freePacks, { pro: proPacks });
+      const saasPack = packs.find((p) => p.dirName === 'pro-saas');
+      assert.ok(saasPack, 'pro-saas should exist');
+      assert.strictEqual(saasPack.overrides.length, 1);
+      assert.strictEqual(saasPack.overrides[0].tier, 'free');
+      assert.strictEqual(saasPack.overrides[0].dirName, 'saas');
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test('business override tracks both pro and free in overrides array', async () => {
+    const { freePacks, proPacks, bizPacks, root } = createTierFixture();
+    try {
+      const packs = await discoverTieredPacks(freePacks, { pro: proPacks, business: bizPacks });
+      const saasPack = packs.find((p) => p.dirName === 'business-saas');
+      assert.ok(saasPack, 'business-saas should exist');
+      // Should have both free and pro overrides (free was overridden by pro, then pro by business)
+      assert.strictEqual(saasPack.overrides.length, 2);
+      const overrideTiers = saasPack.overrides.map((o) => o.tier).sort();
+      assert.deepStrictEqual(overrideTiers, ['free', 'pro']);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test('free-only packs have empty overrides array', async () => {
+    const { freePacks, proPacks, root } = createTierFixture();
+    try {
+      const packs = await discoverTieredPacks(freePacks, { pro: proPacks });
+      const tradingPack = packs.find((p) => p.dirName === 'trading');
+      assert.ok(tradingPack, 'trading should exist');
+      assert.deepStrictEqual(tradingPack.overrides, []);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
 });
