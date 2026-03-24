@@ -82,7 +82,7 @@ _Methodology: Claude Code CLI headless mode (`claude -p --output-format json`), 
 
 ---
 
-## What's New (v2.3.3)
+## What's New (v2.4.0)
 
 - **UI/UX Pro Max Integration** — 161 palettes, 84 styles, 73 font pairings, 161 reasoning rules from [UI/UX Pro Max](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) (MIT, 42.8k★) meshed into `design` skill + `@rune/ui` pack
 - **11 Core Skill Enrichments** — deviation rules, repair operators, evidence quality gate, decision classification, debug knowledge base, CSO discipline, YAGNI pushback, formal pause/resume
