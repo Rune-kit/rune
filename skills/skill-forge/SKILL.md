@@ -3,7 +3,7 @@ name: skill-forge
 description: Use when creating new Rune skills, editing existing skills, or verifying skill quality before deployment. Applies TDD discipline to skill authoring — test before write, verify before ship.
 metadata:
   author: runedev
-  version: "1.5.0"
+  version: "1.6.0"
   layer: L2
   model: opus
   group: creation
@@ -33,6 +33,10 @@ The skill that builds skills. Applies Test-Driven Development to skill authoring
 ## Called By (inbound)
 
 - `cook` (L1): when the feature being built IS a new skill
+
+## References
+
+- `references/claude-skill-reference.md` — Claude Code skill system: frontmatter fields, variables, shell injection, invocation control matrix, skill type patterns (task/research/knowledge/dynamic), file structure, and quality checklist. Load when creating or editing any skill.
 
 ## Workflow
 

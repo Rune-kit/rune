@@ -3,7 +3,7 @@ name: db
 description: Database workflow specialist. Generates migration files with rollback scripts, detects breaking schema changes, and validates query parameterization.
 metadata:
   author: runedev
-  version: "0.1.0"
+  version: "0.2.0"
   layer: L2
   model: sonnet
   group: development
@@ -34,6 +34,10 @@ Database workflow specialist. Handles the parts of database work that cause prod
 - `cook` (L1): schema change detected in diff
 - `deploy` (L2): pre-deploy migration safety check
 - `audit` (L2): database health dimension
+
+## References
+
+- `references/scaling-reference.md` — Index strategies, query optimization, N+1 prevention, connection pooling, read replicas, partitioning, sharding, denormalization. Load when scaling, performance, or indexing context detected.
 
 ## Executable Steps
 
