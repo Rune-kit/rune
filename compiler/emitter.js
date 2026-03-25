@@ -327,6 +327,17 @@ export async function buildAll({
         }
       }
 
+      // For split packs: auto-discover skill files from skills/ subdir when manifest is empty
+      if (parsed.isSplit && parsed.skillManifest.length === 0) {
+        const skillsSubdir = path.join(packDir, 'skills');
+        if (existsSync(skillsSubdir)) {
+          const skillFiles = (await readdir(skillsSubdir)).filter((f) => f.endsWith('.md')).sort();
+          for (const sf of skillFiles) {
+            parsed.skillManifest.push({ name: sf.replace(/\.md$/, ''), file: `skills/${sf}` });
+          }
+        }
+      }
+
       // For split packs, load individual skill files and concatenate into body
       if (parsed.isSplit && parsed.skillManifest.length > 0) {
         const skillBodies = [];

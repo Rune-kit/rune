@@ -13,7 +13,7 @@
  * Hook: runs via doctor command or pre-publish
  */
 
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -70,7 +70,7 @@ for (const { path, pattern } of versionFiles) {
 
 // 2. npm registry check (non-blocking, just warn)
 try {
-  const npmVersion = execSync(`npm view ${pkg.name} version`, {
+  const npmVersion = execFileSync('npm', ['view', pkg.name, 'version'], {
     encoding: 'utf8',
     stdio: ['pipe', 'pipe', 'pipe'],
   }).trim();

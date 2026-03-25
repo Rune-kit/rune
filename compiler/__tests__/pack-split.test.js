@@ -1,8 +1,12 @@
 import assert from 'node:assert';
 import { existsSync, readFileSync } from 'node:fs';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { test } from 'node:test';
+import { describe, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { getAdapter } from '../adapters/index.js';
+import { buildAll } from '../emitter.js';
 import { parsePack } from '../parser.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -142,4 +146,140 @@ test('parsePack: real backend PACK.md parses as split (post-split)', () => {
   assert.strictEqual(parsed.isSplit, true);
   assert.strictEqual(parsed.layer, 'L4');
   assert.ok(parsed.sections.size > 0);
+});
+
+// --- Integration: buildAll auto-discovers split pack skill files ---
+
+describe('buildAll split pack auto-discovery', () => {
+  async function createTempWithSplitPack() {
+    const tmp = path.join(tmpdir(), `rune-split-test-${Date.now()}`);
+    const skillsDir = path.join(tmp, 'skills', 'test-skill');
+    const extDir = path.join(tmp, 'extensions', 'test-pack');
+    const extSkillsDir = path.join(extDir, 'skills');
+
+    await mkdir(skillsDir, { recursive: true });
+    await mkdir(extSkillsDir, { recursive: true });
+
+    // Minimal core skill (required for build)
+    await writeFile(
+      path.join(skillsDir, 'SKILL.md'),
+      [
+        '---',
+        'name: test-skill',
+        'description: "A test skill"',
+        'layer: L3',
+        'group: utility',
+        'connections: []',
+        'tags: [test]',
+        '---',
+        '',
+        '# test-skill',
+        '',
+        'Hello.',
+      ].join('\n'),
+      'utf-8',
+    );
+
+    // Split pack WITHOUT skills: array in frontmatter
+    await writeFile(
+      path.join(extDir, 'PACK.md'),
+      [
+        '---',
+        'name: "@rune/test-pack"',
+        'description: "Test pack"',
+        'metadata:',
+        '  version: "0.1.0"',
+        '  format: split',
+        '---',
+        '',
+        '# @rune/test-pack',
+        '',
+        'Pack index body.',
+      ].join('\n'),
+      'utf-8',
+    );
+
+    // Two skill files in skills/ subdir
+    await writeFile(
+      path.join(extSkillsDir, 'alpha.md'),
+      [
+        '---',
+        'name: "alpha"',
+        'description: "Alpha skill"',
+        'model: sonnet',
+        '---',
+        '',
+        '# alpha',
+        '',
+        'Alpha body content here.',
+      ].join('\n'),
+      'utf-8',
+    );
+    await writeFile(
+      path.join(extSkillsDir, 'beta.md'),
+      [
+        '---',
+        'name: "beta"',
+        'description: "Beta skill"',
+        'model: sonnet',
+        '---',
+        '',
+        '# beta',
+        '',
+        'Beta body content here.',
+      ].join('\n'),
+      'utf-8',
+    );
+
+    return tmp;
+  }
+
+  test('auto-discovers skill files from skills/ subdir when manifest is empty', async () => {
+    const tmp = await createTempWithSplitPack();
+    try {
+      const outputRoot = path.join(tmp, 'out');
+      const adapter = getAdapter('cursor');
+      const stats = await buildAll({ runeRoot: tmp, outputRoot, adapter });
+
+      assert.strictEqual(stats.packCount, 1, 'should build 1 pack');
+
+      // Read the compiled pack output
+      const packOutput = await readFile(path.join(outputRoot, adapter.outputDir, 'rune-ext-test-pack.mdc'), 'utf-8');
+
+      // Should contain the pack index body
+      assert.ok(packOutput.includes('Pack index body'), 'missing pack index body');
+
+      // Should contain BOTH auto-discovered skill bodies
+      assert.ok(packOutput.includes('Alpha body content here'), 'missing alpha skill body');
+      assert.ok(packOutput.includes('Beta body content here'), 'missing beta skill body');
+    } finally {
+      await rm(tmp, { recursive: true, force: true });
+    }
+  });
+
+  test('real ai-ml pack includes skill content after build', async () => {
+    const aimlPath = path.join(EXTENSIONS_DIR, 'ai-ml', 'PACK.md');
+    if (!existsSync(aimlPath)) {
+      console.log('  skip: ai-ml PACK.md not found');
+      return;
+    }
+
+    const tmp = path.join(tmpdir(), `rune-aiml-test-${Date.now()}`);
+    const runeRoot = path.resolve(__dirname, '../..');
+    const adapter = getAdapter('cursor');
+    await buildAll({ runeRoot, outputRoot: tmp, adapter });
+
+    try {
+      const packOutput = await readFile(path.join(tmp, adapter.outputDir, 'rune-ext-ai-ml.mdc'), 'utf-8');
+
+      // Should be significantly longer than just the index body (~99 lines without skills)
+      const lineCount = packOutput.split('\n').length;
+      assert.ok(lineCount > 200, `ai-ml pack output too short (${lineCount} lines) — skills likely not included`);
+
+      // Should contain content from individual skill files
+      assert.ok(packOutput.includes('ai-agents') || packOutput.includes('AI agent'), 'missing ai-agents skill content');
+    } finally {
+      await rm(tmp, { recursive: true, force: true });
+    }
+  });
 });
