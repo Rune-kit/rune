@@ -138,11 +138,7 @@ describe('buildAll with scripts', () => {
 
     // Minimal .claude-plugin for openclaw
     await mkdir(path.join(tmp, '.claude-plugin'), { recursive: true });
-    await writeFile(
-      path.join(tmp, '.claude-plugin', 'plugin.json'),
-      JSON.stringify({ version: '0.0.1' }),
-      'utf-8',
-    );
+    await writeFile(path.join(tmp, '.claude-plugin', 'plugin.json'), JSON.stringify({ version: '0.0.1' }), 'utf-8');
 
     return tmp;
   }
@@ -168,7 +164,10 @@ describe('buildAll with scripts', () => {
       assert.ok(mdc.includes('.cursor/rules/rune-test-slide-scripts/build-deck.js'), 'resolved path missing');
 
       // Plain skill: no scripts dir created
-      assert.ok(!existsSync(path.join(outputRoot, adapter.outputDir, 'rune-test-plain-scripts')), 'plain skill should not have scripts dir');
+      assert.ok(
+        !existsSync(path.join(outputRoot, adapter.outputDir, 'rune-test-plain-scripts')),
+        'plain skill should not have scripts dir',
+      );
     } finally {
       await rm(tmp, { recursive: true, force: true });
     }
@@ -189,10 +188,7 @@ describe('buildAll with scripts', () => {
       assert.ok(existsSync(path.join(scriptsOut, 'helper.py')), 'helper.py missing');
 
       // Placeholder resolved
-      const md = await readFile(
-        path.join(outputRoot, adapter.outputDir, 'rune-test-slide', 'SKILL.md'),
-        'utf-8',
-      );
+      const md = await readFile(path.join(outputRoot, adapter.outputDir, 'rune-test-slide', 'SKILL.md'), 'utf-8');
       assert.ok(!md.includes('{scripts_dir}'), 'placeholder should be resolved');
       assert.ok(md.includes('.codex/skills/rune-test-slide/scripts/build-deck.js'), 'resolved path missing');
     } finally {
@@ -254,7 +250,10 @@ describe('buildAll with scripts', () => {
       await buildAll({ runeRoot: tmp, outputRoot, adapter });
 
       const original = await readFile(path.join(tmp, 'skills', 'test-slide', 'scripts', 'build-deck.js'), 'utf-8');
-      const copied = await readFile(path.join(outputRoot, adapter.outputDir, 'rune-test-slide-scripts', 'build-deck.js'), 'utf-8');
+      const copied = await readFile(
+        path.join(outputRoot, adapter.outputDir, 'rune-test-slide-scripts', 'build-deck.js'),
+        'utf-8',
+      );
       assert.strictEqual(copied, original, 'script content should be identical');
     } finally {
       await rm(tmp, { recursive: true, force: true });
