@@ -221,7 +221,9 @@ export async function buildAll({
     tierOverrides: [],
   };
 
-  // Build skills
+  // Build skills — collect parsed data for skill-index + openclaw reuse
+  const parsedSkills = [];
+
   for (const skillPath of skillPaths) {
     try {
       const content = await readFile(skillPath, 'utf-8');
@@ -279,6 +281,7 @@ export async function buildAll({
         stats.scriptsCopied += copied.length;
       }
 
+      parsedSkills.push(parsed);
       stats.skillCount++;
       stats.crossRefsResolved += parsed.crossRefs.length;
       stats.toolRefsResolved += parsed.toolRefs.length;
@@ -398,23 +401,17 @@ export async function buildAll({
   await writeFile(path.join(outputDir, indexFileName), indexContent, 'utf-8');
   stats.files.push(indexFileName);
 
+  // Generate skill-index.json — compiled intent mesh for auto-trigger hooks
+  const skillIndex = generateSkillIndex(parsedSkills);
+  await writeFile(path.join(outputDir, 'skill-index.json'), `${JSON.stringify(skillIndex, null, 2)}\n`, 'utf-8');
+  stats.files.push('skill-index.json');
+
   // OpenClaw adapter: generate manifest + TypeScript entry point
   if (adapter.name === 'openclaw' && adapter.generateManifest && adapter.generateEntryPoint) {
     const pluginJsonPath = path.join(runeRoot, '.claude-plugin', 'plugin.json');
     let pluginJson = { version: '0.0.0' };
     if (existsSync(pluginJsonPath)) {
       pluginJson = JSON.parse(await readFile(pluginJsonPath, 'utf-8'));
-    }
-
-    // Collect parsed skills for manifest/entry generation
-    const parsedSkills = [];
-    for (const sp of skillPaths) {
-      try {
-        const c = await readFile(sp, 'utf-8');
-        parsedSkills.push(parseSkill(c, sp));
-      } catch {
-        /* skip on error */
-      }
     }
 
     // Read skill-router content for system prompt injection
@@ -474,4 +471,94 @@ function generateIndex(stats, adapter) {
   lines.push('---', '> Rune Skill Mesh — https://github.com/rune-kit/rune');
 
   return lines.join('\n');
+}
+
+/**
+ * Intent keyword patterns for each skill — extracted from description + Triggers section
+ * Maps common user intent words to the skill that handles them
+ */
+const INTENT_KEYWORDS = {
+  cook: ['implement', 'build', 'create', 'add', 'feature', 'fix', 'code', 'write', 'make', 'develop'],
+  team: ['parallel', 'split', 'multiple', 'large', 'many files', 'multi-module'],
+  launch: ['deploy', 'launch', 'release', 'ship', 'publish', 'production'],
+  rescue: ['legacy', 'refactor', 'modernize', 'rescue', 'clean up', 'old code', 'messy'],
+  scaffold: ['new project', 'bootstrap', 'scaffold', 'init', 'greenfield', 'starter'],
+  plan: ['plan', 'architect', 'design system', 'roadmap', 'strategy'],
+  brainstorm: ['brainstorm', 'explore', 'ideas', 'alternatives', 'approaches'],
+  debug: ['debug', 'error', 'bug', 'broken', 'trace', 'diagnose', 'crash', 'fail'],
+  fix: ['fix', 'patch', 'hotfix', 'resolve', 'repair'],
+  test: ['test', 'tdd', 'coverage', 'unit test', 'e2e', 'spec'],
+  review: ['review', 'code review', 'check quality', 'audit code'],
+  sentinel: ['security', 'vulnerability', 'owasp', 'secret', 'audit security'],
+  preflight: ['pre-commit', 'quality gate', 'check before'],
+  deploy: ['deploy', 'ci/cd', 'pipeline', 'kubernetes', 'docker'],
+  design: ['ui', 'ux', 'design', 'layout', 'component design', 'wireframe'],
+  perf: ['performance', 'slow', 'optimize', 'n+1', 'memory leak', 'bundle size'],
+  db: ['database', 'migration', 'schema', 'sql', 'query', 'index'],
+  audit: ['audit', 'health check', 'project assessment', 'codebase review'],
+  onboard: ['onboard', 'setup', 'configure project', 'get started'],
+  docs: ['document', 'readme', 'api docs', 'changelog'],
+  ba: ['requirements', 'business analysis', 'user stories', 'stakeholder'],
+  adversary: ['red team', 'challenge', 'stress test', 'edge case'],
+  incident: ['incident', 'outage', 'downtime', 'postmortem'],
+  surgeon: ['refactor', 'extract', 'strangler', 'decompose'],
+  'mcp-builder': ['mcp', 'mcp server', 'tool server', 'model context'],
+  'skill-forge': ['new skill', 'create skill', 'edit skill'],
+  'review-intake': ['pr feedback', 'review comments', 'received review'],
+  'logic-guardian': ['business logic', 'protect logic', 'critical path'],
+  marketing: ['marketing', 'landing page', 'seo', 'social media', 'copy'],
+  retro: ['retrospective', 'sprint review', 'velocity', 'team health'],
+};
+
+/**
+ * Generate skill-index.json — compiled intent mesh for runtime auto-trigger
+ *
+ * Extracts from parsed skills: name, description, layer, model, group,
+ * cross-references (connections), and maps intent keywords to skill chains.
+ *
+ * @param {Array} parsedSkills - array of parsed skill objects
+ * @returns {object} skill index with graph + intents
+ */
+function generateSkillIndex(parsedSkills) {
+  // Build adjacency graph from cross-references
+  const graph = {};
+  const skills = {};
+
+  for (const skill of parsedSkills) {
+    const outbound = [...new Set(skill.crossRefs.map((r) => r.skillName))];
+    graph[skill.name] = outbound;
+    skills[skill.name] = {
+      layer: skill.layer,
+      model: skill.model,
+      group: skill.group,
+      description: skill.description.slice(0, 200),
+      connections: outbound,
+    };
+  }
+
+  // Build intent patterns from INTENT_KEYWORDS + skill descriptions
+  const intents = {};
+  for (const [skillName, keywords] of Object.entries(INTENT_KEYWORDS)) {
+    if (!skills[skillName]) continue;
+    const skill = skills[skillName];
+
+    // Build chain: primary skill + its direct connections (1-hop)
+    const chain = [skillName, ...graph[skillName].filter((c) => skills[c]).slice(0, 5)];
+
+    intents[skillName] = {
+      keywords,
+      layer: skill.layer,
+      model: skill.model,
+      chain,
+    };
+  }
+
+  return {
+    version: 1,
+    generated: new Date().toISOString(),
+    skillCount: parsedSkills.length,
+    skills,
+    graph,
+    intents,
+  };
 }
