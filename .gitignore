@@ -38,6 +38,9 @@ AGENTS.md
 .openclaw/
 .cursor/
 
+# Audit reports
+AUDIT-REPORT.md
+
 # Internal docs (competitive analysis, audits, video production)
 docs/ANTIGRAVITY-GAP-ANALYSIS.md
 docs/CROSS-IDE-ANALYSIS.md
