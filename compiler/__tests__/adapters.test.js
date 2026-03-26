@@ -4,19 +4,9 @@ import { getAdapter, listPlatforms } from '../adapters/index.js';
 
 // --- Adapter registry ---
 
-test('listPlatforms returns all 9 platform adapters', () => {
+test('listPlatforms returns all 8 platform adapters', () => {
   const adapters = listPlatforms();
-  const expected = [
-    'agents',
-    'claude',
-    'cursor',
-    'windsurf',
-    'antigravity',
-    'codex',
-    'opencode',
-    'openclaw',
-    'generic',
-  ];
+  const expected = ['claude', 'cursor', 'windsurf', 'antigravity', 'codex', 'opencode', 'openclaw', 'generic'];
   for (const name of expected) {
     assert.ok(adapters.includes(name), `missing adapter: ${name}`);
   }
@@ -45,7 +35,7 @@ const REQUIRED_METHODS = [
 
 const REQUIRED_PROPS = ['name', 'outputDir', 'fileExtension', 'skillPrefix', 'skillSuffix'];
 
-const ADAPTER_NAMES = ['agents', 'cursor', 'windsurf', 'antigravity', 'codex', 'opencode', 'generic'];
+const ADAPTER_NAMES = ['cursor', 'windsurf', 'antigravity', 'codex', 'opencode', 'generic'];
 
 for (const adapterName of ADAPTER_NAMES) {
   describe(`${adapterName} adapter contract`, () => {

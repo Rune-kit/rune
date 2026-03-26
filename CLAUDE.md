@@ -31,7 +31,7 @@ rune/
 │   ├── parser.js       # SKILL.md → IR
 │   ├── transformer.js  # Transform pipeline
 │   ├── emitter.js      # IR → platform files
-│   ├── adapters/       # Platform adapters (claude, cursor, windsurf, antigravity, codex, agents, openclaw, opencode, generic)
+│   ├── adapters/       # Platform adapters (claude, cursor, windsurf, antigravity, codex, openclaw, opencode, generic)
 │   └── transforms/     # Cross-refs, tool-names, frontmatter, subagents, hooks, branding
 ├── commands/           # Slash command definitions
 ├── agents/             # Subagent definitions
@@ -58,7 +58,6 @@ rune/
 - Build for Cursor: `node compiler/bin/rune.js build --platform cursor --output <project-dir>`
 - Build for Windsurf: `node compiler/bin/rune.js build --platform windsurf --output <project-dir>`
 - Build for Codex: `node compiler/bin/rune.js build --platform codex --output <project-dir>`
-- Build for .agents: `node compiler/bin/rune.js build --platform agents --output <project-dir>`
 - Build for OpenCode: `node compiler/bin/rune.js build --platform opencode --output <project-dir>`
 - Validate build: `node compiler/bin/rune.js doctor`
 - Run tests: `npm test` (84 tests — parser, adapters, transforms, transformer)

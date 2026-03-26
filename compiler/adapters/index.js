@@ -4,7 +4,6 @@
  * Central registry for all platform adapters.
  */
 
-import agents from './agents.js';
 import antigravity from './antigravity.js';
 import claude from './claude.js';
 import codex from './codex.js';
@@ -15,7 +14,6 @@ import opencode from './opencode.js';
 import windsurf from './windsurf.js';
 
 const adapters = {
-  agents,
   claude,
   cursor,
   windsurf,
