@@ -61,18 +61,20 @@ async function discoverPacks(extensionsDir, enabledPacks = null) {
 }
 
 /**
- * Copy all extra directories from skill source to output
- * Copies everything except SKILL.md (which is already processed)
+ * Copy extra directories from skill source to output
+ * Copies directories except SKILL.md (already processed) and denylisted dirs
  *
  * @param {string} sourceSkillDir - e.g. skills/cook/
  * @param {string} outputSkillDir - e.g. .codex/skills/rune-cook/
  * @returns {Promise<string[]>} list of copied directory names
  */
+const COPY_DENYLIST = new Set(['.git', 'node_modules', '__pycache__', '.DS_Store', '.venv', '.env']);
+
 async function copySkillExtraDirs(sourceSkillDir, outputSkillDir) {
   if (!existsSync(sourceSkillDir)) return [];
 
   const entries = await readdir(sourceSkillDir, { withFileTypes: true });
-  const dirs = entries.filter((e) => e.isDirectory());
+  const dirs = entries.filter((e) => e.isDirectory() && !COPY_DENYLIST.has(e.name));
 
   const copied = [];
   for (const dir of dirs) {
@@ -437,9 +439,9 @@ export async function buildAll({
   await writeFile(path.join(outputDir, 'skill-index.json'), `${JSON.stringify(skillIndex, null, 2)}\n`, 'utf-8');
   stats.files.push('skill-index.json');
 
-  // Generate AGENTS.md for non-Claude platforms
-  if (adapter.name !== 'claude') {
-    const agentsMdContent = await generateAgentsMd(runeRoot, stats, adapter);
+  // Generate AGENTS.md for Codex (OpenAI convention — not used by other platforms)
+  if (adapter.name === 'codex') {
+    const agentsMdContent = generateAgentsMd(stats, adapter);
     await writeFile(path.join(outputRoot, 'AGENTS.md'), agentsMdContent, 'utf-8');
     stats.files.push('AGENTS.md');
   }
@@ -512,18 +514,17 @@ function generateIndex(stats, adapter) {
 }
 
 /**
-<<<<<<< HEAD
- * Generate AGENTS.md for non-Claude platforms
- * This file provides project context for AI agents
+ * Generate AGENTS.md for Codex (OpenAI convention)
+ * Uses dynamic counts from build stats — no hardcoded skill lists
  */
-async function generateAgentsMd(runeRoot, stats, adapter) {
+function generateAgentsMd(stats, adapter) {
   const lines = [
     '# Rune — Project Configuration',
     '',
     '## Overview',
     '',
     'Rune is an interconnected skill ecosystem for AI coding assistants.',
-    `58 core skills | 5-layer mesh architecture | ${stats.crossRefsResolved} connections | Multi-platform.`,
+    `${stats.skillCount} core skills | 5-layer mesh architecture | ${stats.crossRefsResolved} connections | Multi-platform.`,
     'Philosophy: "Less skills. Deeper connections."',
     '',
     `Platform: ${adapter.name}`,
@@ -532,31 +533,9 @@ async function generateAgentsMd(runeRoot, stats, adapter) {
     '',
     `**${stats.skillCount} core skills** + **${stats.packCount} extension packs**`,
     '',
-    '### L1 Orchestrators (5)',
-    'cook, team, launch, rescue, scaffold',
-    '',
-    '### L2 Workflow Hubs (27)',
-    'plan, scout, brainstorm, design, skill-forge, debug, fix, test, review, db,',
-    'sentinel, preflight, onboard, deploy, marketing, perf,',
-    'autopsy, safeguard, surgeon, audit, incident, review-intake, logic-guardian,',
-    'ba, docs, mcp-builder, adversary',
-    '',
-    '### L3 Utilities (25)',
-    'research, docs-seeker, trend-scout, problem-solver, sequential-thinking,',
-    'verification, hallucination-guard, completion-gate, constraint-check, sast, integrity-check,',
-    'context-engine, journal, session-bridge, neural-memory, worktree,',
-    'watchdog, scope-guard, browser-pilot, asset-creator, video-creator,',
-    'dependency-doctor, git, doc-processor, sentinel-env',
-    '',
     '## Usage',
     '',
-    'Reference skills using the `Skill` tool:',
-    '',
-    '```',
-    `Skill: skill-forge`,
-    '```',
-    '',
-    'Or delegate to subagents using the `Agent` tool.',
+    'Reference skills using the `Skill` tool or delegate to subagents using the `Agent` tool.',
     '',
     '## Skills Directory',
     '',
