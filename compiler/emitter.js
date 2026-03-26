@@ -2,7 +2,7 @@
  * Emitter
  *
  * Writes transformed skill files to the platform's output directory.
- * Handles file naming, directory creation, and index generation.
+ * Handles file naming, directory creation, index generation, and AGENTS.md creation.
  */
 
 import { existsSync } from 'node:fs';
@@ -218,6 +218,13 @@ export async function buildAll({ runeRoot, outputRoot, adapter, disabledSkills =
   await writeFile(path.join(outputDir, indexFileName), indexContent, 'utf-8');
   stats.files.push(indexFileName);
 
+  // Generate AGENTS.md for non-Claude platforms
+  if (adapter.name !== 'claude') {
+    const agentsMdContent = generateAgentsMd(runeRoot, stats, adapter);
+    await writeFile(path.join(outputRoot, 'AGENTS.md'), agentsMdContent, 'utf-8');
+    stats.files.push('AGENTS.md');
+  }
+
   // OpenClaw adapter: generate manifest + TypeScript entry point
   if (adapter.name === 'openclaw' && adapter.generateManifest && adapter.generateEntryPoint) {
     const pluginJsonPath = path.join(runeRoot, '.claude-plugin', 'plugin.json');
@@ -282,6 +289,64 @@ function generateIndex(stats, adapter) {
   }
 
   lines.push('---', '> Rune Skill Mesh — https://github.com/rune-kit/rune');
+
+  return lines.join('\n');
+}
+
+/**
+ * Generate AGENTS.md for non-Claude platforms
+ * This file provides project context for AI agents
+ */
+async function generateAgentsMd(runeRoot, stats, adapter) {
+  const lines = [
+    '# Rune — Project Configuration',
+    '',
+    '## Overview',
+    '',
+    'Rune is an interconnected skill ecosystem for AI coding assistants.',
+    `58 core skills | 5-layer mesh architecture | ${stats.crossRefsResolved} connections | Multi-platform.`,
+    'Philosophy: "Less skills. Deeper connections."',
+    '',
+    `Platform: ${adapter.name}`,
+    '',
+    '## Skills',
+    '',
+    `**${stats.skillCount} core skills** + **${stats.packCount} extension packs**`,
+    '',
+    '### L1 Orchestrators (5)',
+    'cook, team, launch, rescue, scaffold',
+    '',
+    '### L2 Workflow Hubs (27)',
+    'plan, scout, brainstorm, design, skill-forge, debug, fix, test, review, db,',
+    'sentinel, preflight, onboard, deploy, marketing, perf,',
+    'autopsy, safeguard, surgeon, audit, incident, review-intake, logic-guardian,',
+    'ba, docs, mcp-builder, adversary',
+    '',
+    '### L3 Utilities (25)',
+    'research, docs-seeker, trend-scout, problem-solver, sequential-thinking,',
+    'verification, hallucination-guard, completion-gate, constraint-check, sast, integrity-check,',
+    'context-engine, journal, session-bridge, neural-memory, worktree,',
+    'watchdog, scope-guard, browser-pilot, asset-creator, video-creator,',
+    'dependency-doctor, git, doc-processor, sentinel-env',
+    '',
+    '## Usage',
+    '',
+    'Reference skills using the `Skill` tool:',
+    '',
+    '```',
+    `Skill: skill-forge`,
+    '```',
+    '',
+    'Or delegate to subagents using the `Agent` tool.',
+    '',
+    '## Skills Directory',
+    '',
+    `Skills are located in: ${adapter.outputDir}/`,
+    '',
+    '---',
+    '> Rune Skill Mesh — https://github.com/rune-kit/rune',
+    '',
+  ];
 
   return lines.join('\n');
 }
