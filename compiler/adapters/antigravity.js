@@ -1,7 +1,13 @@
 /**
  * Google Antigravity (Jules) Adapter
  *
- * Emits .md rule files for .agent/rules/ directory.
+ * Emits SKILL.md files into .agents/skills/{name}/ directories.
+ * Uses the same SKILL.md frontmatter format (name, description)
+ * with markdown body — identical to Codex pattern.
+ *
+ * Antigravity project context: AGENTS.md (+ CLAUDE.md fallback)
+ * Antigravity skills dir: .agents/skills/
+ * Antigravity skill format: .agents/skills/{name}/SKILL.md
  */
 
 const TOOL_MAP = {
@@ -18,14 +24,17 @@ const TOOL_MAP = {
 
 export default {
   name: 'antigravity',
-  outputDir: '.agent/rules',
+  outputDir: '.agents/skills',
   fileExtension: '.md',
   skillPrefix: 'rune-',
   skillSuffix: '',
 
+  useSkillDirectories: true,
+  skillFileName: 'SKILL.md',
+
   transformReference(skillName, raw) {
     const isBackticked = raw.startsWith('`') && raw.endsWith('`');
-    const ref = `the rune-${skillName} rule`;
+    const ref = `the rune-${skillName} skill`;
     return isBackticked ? `\`${ref}\`` : ref;
   },
 
@@ -34,7 +43,8 @@ export default {
   },
 
   generateHeader(skill) {
-    return `# rune-${skill.name}\n\n> Rune ${skill.layer} Skill | ${skill.group}\n\n`;
+    const desc = (skill.description || '').replace(/"/g, '\\"');
+    return ['---', `name: rune-${skill.name}`, `description: "${desc}"`, '---', '', ''].join('\n');
   },
 
   generateFooter() {

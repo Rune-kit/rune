@@ -48,10 +48,9 @@ function detectPlatform(projectRoot) {
   if (existsSync(path.join(projectRoot, '.claude-plugin'))) return 'claude';
   if (existsSync(path.join(projectRoot, '.cursor'))) return 'cursor';
   if (existsSync(path.join(projectRoot, '.windsurf'))) return 'windsurf';
-  if (existsSync(path.join(projectRoot, '.agent'))) return 'antigravity';
+  if (existsSync(path.join(projectRoot, '.agents'))) return 'antigravity';
   if (existsSync(path.join(projectRoot, '.openclaw'))) return 'openclaw';
   if (existsSync(path.join(projectRoot, '.codex'))) return 'codex';
-  if (existsSync(path.join(projectRoot, '.agents'))) return 'agents';
   if (existsSync(path.join(projectRoot, '.opencode'))) return 'opencode';
   return null;
 }
