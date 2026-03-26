@@ -10,6 +10,8 @@
  * Antigravity skill format: .agents/skills/{name}/SKILL.md
  */
 
+import { BRANDING_FOOTER } from '../transforms/branding.js';
+
 const TOOL_MAP = {
   Read: 'read the file',
   Write: 'write/create the file',
@@ -48,18 +50,15 @@ export default {
   },
 
   generateFooter() {
-    return [
-      '',
-      '---',
-      '> **Rune Skill Mesh** — 58 skills, 200+ connections, 14 extension packs',
-      '> Source: https://github.com/rune-kit/rune (MIT)',
-      '> **Rune Pro** ($49 lifetime) — product, sales, data-science, support packs → [rune-kit/rune-pro](https://github.com/rune-kit/rune-pro)',
-      '> **Rune Business** ($149 lifetime) — finance, legal, HR, enterprise-search packs → [rune-kit/rune-business](https://github.com/rune-kit/rune-business)',
-    ].join('\n');
+    return BRANDING_FOOTER;
   },
 
   transformSubagentInstruction(text) {
     return text;
+  },
+
+  scriptsDir(skillName) {
+    return `rune-${skillName}-scripts`;
   },
 
   postProcess(content) {

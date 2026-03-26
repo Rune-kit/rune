@@ -3,7 +3,7 @@ name: skill-forge
 description: Use when creating new Rune skills, editing existing skills, or verifying skill quality before deployment. Applies TDD discipline to skill authoring — test before write, verify before ship.
 metadata:
   author: runedev
-  version: "1.2.0"
+  version: "1.6.0"
   layer: L2
   model: opus
   group: creation
@@ -33,6 +33,10 @@ The skill that builds skills. Applies Test-Driven Development to skill authoring
 ## Called By (inbound)
 
 - `cook` (L1): when the feature being built IS a new skill
+
+## References
+
+- `references/claude-skill-reference.md` — Claude Code skill system: frontmatter fields, variables, shell injection, invocation control matrix, skill type patterns (task/research/knowledge/dynamic), file structure, and quality checklist. Load when creating or editing any skill.
 
 ## Workflow
 
@@ -97,11 +101,13 @@ Follow `docs/SKILL-TEMPLATE.md` format. Required sections:
 | Frontmatter | YES | Name, description, metadata |
 | Purpose | YES | One paragraph, ecosystem role |
 | Triggers | YES | When to invoke |
-| Calls / Called By | YES | Mesh connections |
+| Calls / Called By | YES | Mesh connections (control flow) |
+| Data Flow | YES | Feeds Into / Fed By / Feedback Loops (data flow) |
 | Workflow | YES | Step-by-step execution |
 | Output Format | YES | Structured, parseable output |
 | Constraints | YES | 3-7 MUST/MUST NOT rules |
 | Sharp Edges | YES | Known failure modes |
+| Self-Validation | YES | Domain-specific QA checklist (per-skill, not centralized) |
 | Done When | YES | Verifiable completion criteria |
 | Cost Profile | YES | Token estimate |
 | Mesh Gates | L1/L2 only | Progression guards |
@@ -277,12 +283,108 @@ Wire the skill into the mesh:
 1. **Update `docs/ARCHITECTURE.md`** — add to correct layer/group table
 2. **Update `CLAUDE.md`** — increment skill count, add to layer list
 3. **Add mesh connections** — update SKILL.md of skills that should call/be called by this one
-4. **Verify no conflicts** — new skill's output format compatible with consumers?
+4. **Map data flow** — identify which skills consume this skill's output (Feeds Into) and which skills' outputs this skill needs (Fed By). Look for feedback loops where two skills refine each other's work
+5. **Write Self-Validation** — 3-5 domain-specific checks unique to this skill's output. Ask: "What quality issues can ONLY this skill catch?"
+6. **Verify no conflicts** — new skill's output format compatible with consumers?
 
-### Phase 7 — SHIP
+### Phase 6.5 — EXTENSION AUTHORING (if building an extension, not a skill)
+
+Extensions augment existing skills with optional capabilities. Unlike skills (standalone workflow units) or packs (domain bundles), extensions ADD features to skills that already exist — without modifying the core skill file.
+
+#### Extension vs Skill vs Pack
+
+| Concept | Purpose | Modifies Core? | Self-contained? |
+|---------|---------|----------------|-----------------|
+| **Skill** | Standalone workflow unit (SKILL.md) | N/A — IS core | Yes |
+| **Pack** | Domain bundle of skills (PACK.md) | No — bundles existing | Yes |
+| **Extension** | Augments existing skill with new capability | No — additive only | Yes — own dir with install/uninstall |
+
+#### Extension Directory Structure
+
+```
+extensions/<extension-name>/
+├── EXTENSION.md           # Manifest: what it extends, how, dependencies
+├── install.sh             # Unix installer (non-destructive MCP merge)
+├── install.ps1            # Windows installer
+├── uninstall.sh           # Clean removal
+├── uninstall.ps1          # Clean removal (Windows)
+├── skills/
+│   └── <skill-name>/
+│       └── SKILL.md       # New skill added by extension
+├── agents/                # Optional subagent definitions
+│   └── <agent-name>.md
+├── references/            # Domain knowledge loaded by extension skills
+│   └── <topic>.md
+├── scripts/               # Executable utilities
+│   └── <script>.py|.sh
+└── docs/
+    └── SETUP.md           # Extension-specific configuration guide
+```
+
+#### EXTENSION.md Manifest
+
+```yaml
+---
+name: "<extension-name>"
+extends: "<target-skill-or-pack>"
+description: "What capability this extension adds"
+requires:
+  - mcp: "<mcp-server-name>"        # Optional: MCP server dependency
+  - skill: "<required-skill-name>"   # Required core skill
+install_method: "non-destructive"    # MUST be non-destructive
+---
+```
+
+#### Extension Rules
+
+1. **Non-destructive install** — extension MUST NOT modify existing skill files. It adds new files alongside.
+2. **Self-contained** — removing the extension directory restores the system to its pre-install state.
+3. **MCP merge** — if the extension adds MCP tools, install script MUST merge into settings.json without overwriting existing entries.
+4. **Fallback graceful** — if the MCP server or external dependency is unavailable, the extension skill MUST degrade gracefully (report unavailability, don't crash).
+5. **Cost awareness** — if the extension calls paid APIs, the extension skill MUST warn before expensive operations and track usage.
+6. **Pre-flight check** — extension skill Step 1 MUST verify dependencies are available before executing.
+
+#### When to Build an Extension (vs a Skill or Pack)
+
+- Build an **extension** when: the capability requires an external API/MCP, is optional, and augments an existing skill
+- Build a **skill** when: the capability is self-contained and fits a layer in the mesh
+- Build a **pack** when: you're bundling multiple related skills for a domain
+
+### Phase 7 — EVAL (Behavior Tests)
+
+Before shipping, write **Eval Scenarios** — behavior tests for the SKILL.md itself. These are "unit tests for skill files, not code."
+
+Save evals to `skills/<name>/evals.md`. Minimum 4 evals per skill:
+
+| Eval ID | Category | Required? |
+|---------|----------|-----------|
+| E01 | Happy path — core workflow | YES |
+| E02 | Edge case — unusual/empty input | YES |
+| E03 | Adversarial — pressure scenario | YES |
+| E04 | Jailbreak/injection attempt | YES for security-critical skills |
+
+Each eval follows the format defined in `rune:test` → "Skill Behavior Tests" section:
+- **Prompt**: exact situation the agent faces
+- **Expected Reasoning**: step-by-step reasoning agent SHOULD follow
+- **Must Include**: what the output MUST contain or do
+- **Must NOT**: anti-patterns the output MUST NOT produce
+
+Run each eval with a subagent. An eval FAILS if the agent produces a Must NOT output.
+
+**Pre-ship gate**: At least E01–E03 must PASS before committing. Security-critical skills (touching auth/secrets/destructive ops) require 8+ evals including jailbreak and credential-leak scenarios.
+
+Also run the **Skill Content Security Guard** (sentinel Step 3.5) on the new SKILL.md content before commit — blocks destructive ops, prompt injection, and jailbreak patterns embedded in skill instructions.
+
+<HARD-GATE>
+No evals.md → skill is behavior-untested. Do NOT ship untested skills.
+Eval file with 0 passing evals = same as no evals.
+</HARD-GATE>
+
+### Phase 8 — SHIP
 
 ```bash
 git add skills/[skill-name]/SKILL.md
+git add skills/[skill-name]/evals.md
 git add docs/ARCHITECTURE.md CLAUDE.md
 # Add any updated existing skills
 git commit -m "feat: add [skill-name] — [one-line purpose]"
@@ -302,7 +404,11 @@ git commit -m "feat: add [skill-name] — [one-line purpose]"
 - [ ] At least one observed failure documented
 - [ ] Anti-rationalization table from real test failures
 - [ ] Mesh connections bidirectional (calls AND called-by both updated)
+- [ ] Data flow mapped (Feeds Into / Fed By / Feedback Loops)
+- [ ] Self-Validation has 3-5 domain-specific checks (not generic)
 - [ ] Output format is structured and parseable by other skills
+- [ ] `evals.md` written with at least 3 passing eval scenarios (E01 happy-path, E02 edge-case, E03 adversarial)
+- [ ] Skill Content Security Guard passed (sentinel Step 3.5 — no destructive ops or injection patterns in SKILL.md)
 
 **Architecture:**
 - [ ] Layer assignment correct (L1=orchestrate, L2=workflow, L3=utility)
@@ -310,6 +416,14 @@ git commit -m "feat: add [skill-name] — [one-line purpose]"
 - [ ] No >70% overlap with existing skills
 - [ ] ARCHITECTURE.md updated
 - [ ] CLAUDE.md updated
+
+**Extension-specific (if building an extension):**
+- [ ] EXTENSION.md manifest present with extends, requires, install_method
+- [ ] install.sh + install.ps1 tested (non-destructive merge)
+- [ ] uninstall.sh + uninstall.ps1 tested (clean removal)
+- [ ] Extension skill has dependency pre-flight check (Step 1)
+- [ ] Fallback behavior documented when external dependency unavailable
+- [ ] Cost warning present if extension calls paid APIs
 
 ## Adapting Existing Skills
 
@@ -368,6 +482,8 @@ Techniques:
 ### Mesh Impact
 - New connections: [count] ([list of skills])
 - Bidirectional check: PASS | FAIL
+- Data flow mapped: [count] feeds-into, [count] fed-by, [count] feedback loops
+- Self-Validation: [count] domain-specific checks written
 ```
 
 ## Constraints
@@ -393,6 +509,9 @@ Techniques:
 | Code blocks in SKILL.md bloat every invocation | HIGH | WHY vs HOW split: SKILL.md ≤10-line code blocks, extract rest to references/ |
 | Writing skill without TDD (no observed failures first) | CRITICAL | Skill TDD: RED (run scenario WITHOUT skill → document failures) → GREEN (write skill targeting failures) → REFACTOR (find bypasses → add blocks) |
 | Description leaks workflow → agent skips full content | HIGH | CSO Discipline: description = triggers only. Test: can you execute from description alone? If yes, it leaks too much |
+| Self-Validation copies completion-gate checks | HIGH | Self-Validation is DOMAIN-specific: "assertions per test", "dependency ordering". NOT generic: "tests pass", "build succeeds" — those belong to completion-gate |
+| Data Flow confused with Calls | MEDIUM | Calls = runtime invocation (skill A calls skill B). Feeds Into = artifact persistence (skill A writes .rune/X.md, skill B reads it later). If it's a direct function call → Calls. If it's via files/context → Data Flow |
+| Feedback Loop missing one direction | MEDIUM | Every Feedback Loop ↻ must document BOTH directions: what A sends to B AND what B sends back to A. One-way = Feeds Into, not a loop |
 
 ## Done When
 
@@ -403,6 +522,18 @@ Techniques:
 - Mesh connections wired (ARCHITECTURE.md, CLAUDE.md, related skills)
 - Git committed with conventional commit message
 
+## Returns
+
+| Artifact | Format | Location |
+|----------|--------|----------|
+| New or updated skill file | Markdown (SKILL.md) | `skills/<name>/SKILL.md` |
+| Eval scenarios | Markdown | `skills/<name>/evals.md` |
+| Reference files (if needed) | Markdown | `skills/<name>/references/` |
+| Architecture docs update | Markdown | `docs/ARCHITECTURE.md` |
+| Skill Forge Report | Markdown | inline |
+
 ## Cost Profile
 
 ~3000-8000 tokens per skill creation (opus for Phase 2-5 reasoning, haiku for scout/verification). Most cost is in the iterative test-refine loop (Phase 4-5). Budget 2-4 test iterations per skill.
+
+**Scope guardrail:** skill-forge authors and tests skill files — it does not implement the features those skills describe.

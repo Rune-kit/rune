@@ -3,7 +3,7 @@ name: debug
 description: Root cause analysis for bugs and unexpected behavior. Traces errors through code, uses structured reasoning, and hands off to fix when cause is found. Core of the debug↔fix mesh.
 metadata:
   author: runedev
-  version: "0.5.0"
+  version: "0.8.0"
   layer: L2
   model: sonnet
   group: development
@@ -66,6 +66,23 @@ Understand and confirm the error described in the request.
 - Identify which environment it occurs in (dev/prod, browser/server)
 - Confirm the error is consistent and reproducible before proceeding
 - If no reproduction steps provided, ask for them or attempt the most likely path
+
+### Step 1.5: Scope Lock (Edit Boundary)
+
+After reproducing the error, **lock edits to the narrowest affected directory** to prevent debug-driven scope creep — the #1 source of "while I'm here, let me also fix..." violations.
+
+1. Identify the narrowest directory containing the affected files (from stack trace or error location)
+2. Announce to user: "Debug scope locked to `<dir>/`. Changes will be restricted to this area."
+3. Any fix recommendation in the Debug Report MUST reference only files within this boundary
+4. If root cause traces outside the boundary → expand scope with user confirmation first
+
+**Skip conditions** (do NOT lock):
+- Bug spans the entire repo (3+ unrelated directories in stack trace)
+- Cannot determine affected area from initial evidence
+- User explicitly says "investigate everything"
+
+**Why:** Debugging naturally expands scope as you trace root causes. Without a boundary, rune:fix receives recommendations touching 10+ files across unrelated modules. The scope lock forces discipline: fix at the source, not at every symptom site.
+
 
 ### Step 2: Gather Evidence
 
@@ -231,6 +248,29 @@ After Step 4 (Test Hypotheses): if NO hypothesis is confirmed after 3 cycles of 
 Within any single step: 5+ consecutive Read/Grep calls without forming or testing a hypothesis = stuck. Stop reading, form a hypothesis from what you have, and test it. Incomplete hypotheses that get tested are better than perfect hypotheses that never form.
 </HARD-GATE>
 
+### Hash-Based Evidence Loop Detection
+
+Beyond counting reads, detect when debug is **re-gathering the same evidence without progress** — the most common debug-specific stuck pattern.
+
+**Detection signals** (track mentally across hypothesis cycles):
+
+| Signal | Count | Meaning | Action |
+|--------|-------|---------|--------|
+| Reading the same file:line range in different cycles | 2x | Re-examining without new lens | Form hypothesis from existing evidence NOW |
+| Running the same test command with same failure output | 3x | No code changed between runs | STOP — hand off to fix with current diagnosis, even if incomplete |
+| Grepping the same error string after already finding all occurrences | 2x | Hoping for different results | Evidence is complete — move to Step 3 (hypothesize) |
+| Same hypothesis tested with same evidence across cycles | 2x | Circular reasoning | Mark hypothesis INCONCLUSIVE, try a DIFFERENT hypothesis category |
+
+**Hypothesis category diversity rule**: If H1 (cycle 1) was "wrong input data" and it was RULED OUT, H1 (cycle 2) MUST be from a DIFFERENT category:
+
+| Category | Examples |
+|----------|---------|
+| Data | Wrong value, missing field, type mismatch, encoding |
+| Control Flow | Wrong branch, missing guard, race condition, async ordering |
+| Environment | Wrong config, missing env var, version mismatch, path issue |
+| State | Stale cache, mutation side-effect, leaked reference, dangling connection |
+
+
 ## Red Flags — STOP and Return to Step 2
 
 If you catch yourself thinking any of these, you are GUESSING, not debugging:
@@ -263,6 +303,7 @@ ALL of these mean: STOP. Return to Step 2 (Gather Evidence).
 ```
 ## Debug Report
 - **Error**: [error message]
+- **Status**: DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED
 - **Severity**: critical | high | medium | low
 - **Confidence**: high | medium | low
 - **Fix Attempt**: [1/2/3 — track recurring bugs]
@@ -281,6 +322,12 @@ ALL of these mean: STOP. Return to Step 2 (Gather Evidence).
 - Attempt 1: [what was tried] → [why it didn't hold]
 - Attempt 2: [what was tried] → [why it didn't hold]
 
+### Concerns (if DONE_WITH_CONCERNS)
+- [concern]: [impact assessment] — [suggested remediation]
+
+### Context Needed (if NEEDS_CONTEXT)
+- [what is unknown]: [why it blocks diagnosis] — [two most likely answers]
+
 ### Suggested Fix
 [Description of what needs to change — no code, just direction]
 [If attempt 3: "ESCALATION: 3-fix rule triggered. Recommending redesign via rune:plan."]
@@ -288,6 +335,26 @@ ALL of these mean: STOP. Return to Step 2 (Gather Evidence).
 ### Related Code
 - `path/to/related.ts` — [why it's relevant]
 ```
+
+### Status Protocol (Subagent Contract)
+
+Debug returns one of four statuses to its caller (cook, fix, test, surgeon). The caller uses this to route next actions.
+
+| Status | When | Example |
+|--------|------|---------|
+| `DONE` | Root cause identified with high confidence, ready for fix | Clear diagnosis with file:line evidence |
+| `DONE_WITH_CONCERNS` | Root cause found but diagnosis has caveats | "Likely race condition but cannot reproduce consistently — fix may need retry logic" |
+| `NEEDS_CONTEXT` | Cannot diagnose without more info — missing repro steps, env details, or access | "Error only occurs in production — need prod logs or env variables to continue" |
+| `BLOCKED` | Exhausted 3 hypothesis cycles, escalation triggered | "3 cycles completed, no confirmed root cause — escalating to problem-solver" |
+
+## Returns
+
+| Artifact | Format | Location |
+|----------|--------|----------|
+| Debug Report | Markdown (inline) | Emitted to calling skill (cook, fix, test, surgeon) |
+| Root cause + location | Inline (Debug Report) | Specific file:line with evidence |
+| Fix recommendation | Inline (Debug Report) | Direction only — no code changes |
+| Debug knowledge base entry | Markdown | `.rune/debug/knowledge-base.md` (appended on success) |
 
 ## Sharp Edges
 
@@ -301,15 +368,25 @@ ALL of these mean: STOP. Return to Step 2 (Gather Evidence).
 | Escalating to plan when the APPROACH is wrong (not the module) | HIGH | If all 3 fixes hit the same category of blocker (API limit, platform gap), the approach needs pivoting via brainstorm(rescue), not re-planning |
 | Not tracking fix attempt number for recurring bugs | HIGH | Debug Report MUST include Fix Attempt counter — enables escalation gate |
 | Adding instrumentation without region markers | MEDIUM | All debug logging MUST use `#region agent-debug` — unmarked code gets cleaned up prematurely by fix |
+| Re-reading same file:line in different hypothesis cycles | HIGH | Hash-based evidence loop: if same evidence gathered 2x, form hypothesis from existing data — don't re-gather |
+| Same hypothesis category across cycles after RULED OUT | HIGH | Hypothesis category diversity: if "data" ruled out in cycle 1, cycle 2 must try "control flow", "environment", or "state" |
+| Running same test 3x with same failure without code change | MEDIUM | True stuck loop — no progress possible. Hand off to fix with current incomplete diagnosis |
+| Scope creep via debug — "while investigating, also fix X" | HIGH | Step 1.5 Scope Lock: lock edits to narrowest affected directory. Fix recommendations MUST stay within boundary. Expand only with user confirmation |
+| Debug report recommends touching 5+ unrelated files | HIGH | Symptom of fixing at crash sites instead of source. Backward trace (Step 2) to find origin. If truly 5+ files → likely architectural issue → escalate via 3-Fix Rule |
 
 ## Done When
 
 - Error reproduced (not assumed) with specific reproduction steps documented
 - 2-3 hypotheses formed, each marked CONFIRMED or RULED OUT with file:line evidence
 - Root cause identified at specific file:line
-- Structured Debug Report emitted
+- Structured Debug Report emitted with 4-state status
+- If `DONE_WITH_CONCERNS`: caveats documented with impact assessment
+- If `NEEDS_CONTEXT`: specific questions + two likely answers provided
+- If `BLOCKED`: all 3 hypothesis cycles documented + escalation target identified
 - No code changes made — rune:fix called with the report if fix is needed
 
 ## Cost Profile
 
 ~2000-5000 tokens input, ~500-1500 tokens output. Sonnet for code analysis quality. May escalate to opus for deeply complex bugs.
+
+**Scope guardrail**: Do not apply code changes or expand investigation beyond the locked scope directory unless explicitly delegated by the parent agent.

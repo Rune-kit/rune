@@ -1,16 +1,16 @@
 ---
 name: "billing-integration"
 pack: "@rune/saas"
-description: "Billing integration — Stripe and LemonSqueezy (Stripe alternative for Vietnam/non-US sellers). Subscription lifecycle, webhook handling, usage-based billing, dunning management, and tax handling."
+description: "Billing integration — Stripe, LemonSqueezy, and Polar. Subscription lifecycle, one-time checkout, webhook handling, Standard Webhooks verification, usage-based billing, dunning management, digital product delivery, and tax handling."
 model: sonnet
 tools: [Read, Edit, Write, Grep, Glob, Bash]
 ---
 
 # billing-integration
 
-Billing integration — Stripe and LemonSqueezy (Stripe alternative for Vietnam/non-US sellers). Subscription lifecycle, webhook handling, usage-based billing, dunning management, and tax handling.
+Billing integration — Stripe, LemonSqueezy, and Polar. Subscription lifecycle, one-time payment checkout, webhook handling, Standard Webhooks signature verification, usage-based billing, dunning management, digital product delivery, and tax handling.
 
-> **Vietnam note**: Stripe requires a US/EU entity and is unavailable for direct signup from Vietnam. LemonSqueezy acts as Merchant of Record — handles VAT, tax compliance, and payouts globally. Prefer LemonSqueezy for solo founders and small teams in Vietnam/Southeast Asia.
+> **Provider selection**: Stripe requires a US/EU entity. LemonSqueezy and Polar act as Merchant of Record — handle VAT, tax compliance, and payouts globally. Prefer LemonSqueezy or Polar for solo founders in Vietnam/Southeast Asia. Polar is optimized for developer tools and digital products (open source monetization, one-time purchases, CLI tools).
 
 #### Workflow
 
@@ -28,6 +28,15 @@ For products where billing scales with usage (API calls, seats, storage): create
 
 **Step 5 — Dunning management flow**
 When `invoice.payment_failed` fires: Day 0 — notify customer, retry in 3 days. Day 3 — retry + second email. Day 7 — retry + urgent email + in-app warning banner. Day 14 — suspend account (read-only mode), email with payment link. Day 21 — cancel subscription, archive data with 30-day recovery window. Never hard-delete on cancellation.
+
+**Step 6 — Hosted checkout flow (one-time + subscription)**
+For products sold as one-time purchases (lifetime deals, digital products, CLI tools): create a checkout session server-side with product ID + metadata (user identifier, tier), redirect user to provider's hosted checkout page, listen for `order.paid` webhook to fulfill. This pattern works across all providers — only the API shape differs. Always pass fulfillment context (user ID, GitHub username, email) in checkout metadata so the webhook handler can deliver without a second lookup.
+
+**Step 7 — Standard Webhooks signature verification**
+Polar (and any provider using the Standard Webhooks spec via Svix) sends three headers: `webhook-id`, `webhook-timestamp`, `webhook-signature`. Verify with HMAC-SHA256: `sign(base64decode(secret), "{webhook-id}.{timestamp}.{rawBody}")`. Compare against all signatures in the header (space-separated `v1,{base64}`). Also check timestamp is within 5 minutes to prevent replay attacks. This is different from Stripe's `constructEvent` or LemonSqueezy's `x-signature` — detect which spec the provider uses.
+
+**Step 8 — Digital product delivery**
+After payment confirmation, deliver the product automatically. Three common patterns: (a) **Repo access** — call GitHub/GitLab API to add user as collaborator with `pull` permission. Pass username in checkout metadata. Handle 201 (invited) and 204 (already collaborator). (b) **License key** — generate unique key, store in DB with expiry + tier + features, email to customer. Provide public verification endpoint for the product to call at startup. (c) **Download link** — generate signed URL with expiry (S3 presigned, R2 signed). Email link + store for re-download. For all patterns: store delivery result alongside order, implement retry for partial failures, sync to central dashboard for tracking.
 
 #### Example
 
@@ -93,6 +102,76 @@ app.post('/billing/webhook/lemonsqueezy', express.raw({ type: 'application/json'
 
   res.json({ received: true });
 });
+
+// Polar — hosted checkout for one-time purchases (developer tools, digital products)
+// Create checkout session server-side, redirect client to checkout.url
+app.post('/checkout/create', async (req, res) => {
+  const { productId, githubUsername, email } = req.body;
+
+  const checkout = await fetch('https://api.polar.sh/v1/checkouts/', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${process.env.POLAR_ACCESS_TOKEN}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      products: [productId],
+      success_url: `${process.env.APP_URL}/checkout/success?checkout_id={CHECKOUT_ID}`,
+      ...(email ? { customer_email: email } : {}),
+      metadata: { github_username: githubUsername, tier: 'pro' }, // fulfillment context
+    }),
+  }).then(r => r.json());
+
+  res.json({ url: checkout.url }); // redirect client to this URL
+});
+
+// Polar webhook — Standard Webhooks spec (also used by Svix, Resend, Clerk)
+app.post('/billing/webhook/polar', express.raw({ type: 'application/json' }), async (req, res) => {
+  const webhookId = req.headers['webhook-id'] as string;
+  const timestamp = req.headers['webhook-timestamp'] as string;
+  const signature = req.headers['webhook-signature'] as string;
+
+  // Verify: HMAC-SHA256(base64decode(secret), "{id}.{timestamp}.{body}")
+  const secret = Buffer.from(process.env.POLAR_WEBHOOK_SECRET!.replace(/^whsec_/, ''), 'base64');
+  const content = `${webhookId}.${timestamp}.${req.body.toString()}`;
+  const expected = crypto.createHmac('sha256', secret).update(content).digest('base64');
+
+  const valid = signature.split(' ').some(s => {
+    const parts = s.split(',');
+    return parts.length === 2 && parts[1] === expected;
+  });
+  if (!valid) return res.status(403).json({ error: 'Invalid signature' });
+
+  // Replay protection: reject timestamps older than 5 minutes
+  if (Math.abs(Date.now() / 1000 - Number(timestamp)) > 300) {
+    return res.status(403).json({ error: 'Timestamp too old' });
+  }
+
+  const event = JSON.parse(req.body.toString());
+  if (event.type !== 'order.paid') return res.json({ received: true });
+
+  const { metadata } = event.data;
+  // Deliver based on product type using metadata set during checkout
+  if (metadata.github_username) {
+    await inviteToRepo(metadata.github_username, 'org/private-repo', 'pull');
+  }
+
+  res.json({ received: true });
+});
+
+// Digital product delivery — GitHub repo invite
+const inviteToRepo = async (username: string, repo: string, permission: string) => {
+  const res = await fetch(`https://api.github.com/repos/${repo}/collaborators/${username}`, {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+      Accept: 'application/vnd.github+json',
+    },
+    body: JSON.stringify({ permission }),
+  });
+  // 201 = invited, 204 = already collaborator — both are success
+  return { success: res.status === 201 || res.status === 204, status: res.status };
+};
 
 // Usage-based billing — report metered usage to Stripe
 const reportUsage = async (tenantId: string, quantity: number) => {

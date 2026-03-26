@@ -3,7 +3,7 @@ name: research
 description: Web search and external knowledge lookup. Gathers data on technologies, libraries, best practices, and competitor solutions.
 metadata:
   author: runedev
-  version: "0.2.0"
+  version: "0.3.0"
   layer: L3
   model: haiku
   group: knowledge
@@ -44,25 +44,50 @@ Generate 2-3 targeted search queries from the research question. Vary phrasing t
 - Secondary: "[topic] best practices 2026" or "[topic] vs alternatives"
 - Tertiary: "[topic] example" or "[topic] tutorial" if implementation detail needed
 
-### Step 2 — Search
+### Step 2 — Search (Minimum 3 Complementary Sources)
 
-Call `WebSearch` for each query. Collect result titles, URLs, and snippets. Identify the top 3-5 most relevant URLs based on:
-- Source authority (official docs, major blogs, GitHub repos)
+<HARD-GATE>
+Every research conclusion MUST be backed by at minimum 3 complementary sources from DIFFERENT source types.
+Single-source conclusions are flagged as `low` confidence regardless of source authority.
+</HARD-GATE>
+
+Call `WebSearch` for each query. Collect result titles, URLs, and snippets. Identify the top 3-5 most relevant URLs prioritizing **source diversity**:
+
+| Source Type | Examples | Why |
+|-------------|----------|-----|
+| **Official docs** | Framework docs, API reference, RFC | Authoritative but may lag behind reality |
+| **Community** | Stack Overflow, GitHub Issues, Reddit | Real-world pain points, edge cases |
+| **Technical blogs** | Dev.to, Medium engineering blogs, personal blogs | Practical experience, tutorials |
+| **Repositories** | GitHub repos, npm packages, example code | Working implementations |
+
+**Selection rules:**
+- Source authority (official docs > major blogs > personal blogs)
 - Recency (prefer 2025-2026)
 - Relevance to the query
+- **Diversity: never select 3+ URLs from the same domain** — spread across source types
+
 
 ### Step 3 — Deep Dive
 
 Call `WebFetch` on the top 3-5 URLs identified in Step 2. Hard limit: **max 5 WebFetch calls** per research invocation. For each fetched page:
 - Extract key facts, API signatures, code examples
 - Note the source URL and publication date if visible
+- Tag the source type (official/community/blog/repo) for Step 4 triangulation
 
-### Step 4 — Synthesize
+### Step 4 — Synthesize (Triangulation)
 
-Across all fetched content:
-- Identify points of consensus across sources
+Across all fetched content, **triangulate** — don't just aggregate:
+- Identify points of consensus across sources (≥3 sources = strong signal)
 - Flag any conflicting information explicitly (e.g., "Source A says X, Source B says Y")
-- Assign confidence: `high` (3+ sources agree), `medium` (1-2 sources), `low` (single source or unclear)
+- Check if conflicts are temporal (old vs new info) or genuine disagreement
+- Assign confidence using source diversity:
+
+| Confidence | Criteria |
+|------------|----------|
+| `high` | 3+ sources from different types agree |
+| `medium` | 2 sources agree, or 3+ from same type |
+| `low` | Single source, or sources conflict without resolution |
+| `unverified` | No sources found — report this explicitly, NEVER fabricate |
 
 ### Step 5 — Report
 
@@ -108,6 +133,8 @@ Known failure modes for this skill. Check these before declaring done.
 | Reporting conflicting sources without flagging the conflict | HIGH | Constraint: flag conflicting information explicitly, never silently pick one side |
 | Assigning "high" confidence from a single source | MEDIUM | High = 3+ sources agree; 1-2 sources = medium confidence |
 | Exceeding 5 WebFetch calls per invocation | MEDIUM | Hard limit: prioritize top 3-5 URLs from search, fetch only the most relevant |
+| Single-source conclusions presented as fact | HIGH | HARD-GATE: minimum 3 complementary sources from different source types. Single source = `low` confidence |
+| All sources from same domain (e.g., 3 Stack Overflow links) | MEDIUM | Source diversity rule: never 3+ URLs from the same domain. Spread across official/community/blog/repo |
 
 ## Done When
 

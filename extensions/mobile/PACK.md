@@ -35,15 +35,15 @@ Mobile development has platform-specific pitfalls that web developers hit repeat
 
 | Skill | Model | Description |
 |-------|-------|-------------|
-| react-native | sonnet | New Architecture migration, navigation, state management, performance optimization |
-| flutter | sonnet | Widget composition, Riverpod/BLoC state, platform channels, adaptive layouts |
-| deep-linking | sonnet | Universal Links (iOS), App Links (Android), auth + deep link race condition |
-| push-notifications | sonnet | FCM v1, APNs, Expo Notifications, permission handling, delivery debugging |
-| ota-updates | sonnet | EAS Update, runtime version management, rollback, bytecode compatibility |
-| app-store-prep | sonnet | Screenshots, metadata, privacy manifests, submission checklist |
-| native-bridge | sonnet | Expo Modules API, TurboModules, Swift/Kotlin interop, background tasks |
-| ios-build-pipeline | sonnet | Certificate generation, provisioning, Xcode archive, IPA export, TestFlight upload |
-| app-store-connect | sonnet | Version management, localization, screenshot upload, IAP, review submission |
+| [react-native](skills/react-native.md) | sonnet | New Architecture migration, navigation, state management, performance optimization |
+| [flutter](skills/flutter.md) | sonnet | Widget composition, Riverpod/BLoC state, platform channels, adaptive layouts |
+| [deep-linking](skills/deep-linking.md) | sonnet | Universal Links (iOS), App Links (Android), auth + deep link race condition |
+| [push-notifications](skills/push-notifications.md) | sonnet | FCM v1, APNs, Expo Notifications, permission handling, delivery debugging |
+| [ota-updates](skills/ota-updates.md) | sonnet | EAS Update, runtime version management, rollback, bytecode compatibility |
+| [app-store-prep](skills/app-store-prep.md) | sonnet | Screenshots, metadata, privacy manifests, submission checklist |
+| [native-bridge](skills/native-bridge.md) | sonnet | Expo Modules API, TurboModules, Swift/Kotlin interop, background tasks |
+| [ios-build-pipeline](skills/ios-build-pipeline.md) | sonnet | Certificate generation, provisioning, Xcode archive, IPA export, TestFlight upload |
+| [app-store-connect](skills/app-store-connect.md) | sonnet | Version management, localization, screenshot upload, IAP, review submission |
 
 Skill files: `skills/<skill-name>.md`
 

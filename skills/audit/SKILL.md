@@ -3,7 +3,7 @@ name: audit
 description: Comprehensive project audit — security, dependencies, code quality, architecture, performance, infra, docs, and mesh analytics. Delegates to specialist skills and generates an 8-dimension health score.
 metadata:
   author: runedev
-  version: "0.1.0"
+  version: "0.3.0"
   layer: L2
   model: sonnet
   group: quality
@@ -32,6 +32,7 @@ Comprehensive project health audit across 8 dimensions (7 project + 1 mesh analy
 - `journal` (L3): record audit date, overall score, and verdict
 - `constraint-check` (L3): audit HARD-GATE compliance across project skills
 - `sast` (L3): Phase 2 — deep static analysis (Semgrep, Bandit, ESLint security rules)
+- `retro` (L2): Phase 6 — engineering velocity and health dimension (rune:retro)
 
 ## Called By (inbound)
 
@@ -54,6 +55,22 @@ Determine:
 - Monorepo setup (workspaces, turborepo, nx, etc.)
 
 **Output before proceeding:** Brief project profile, stack summary, and which Framework-Specific Checks will be applied.
+
+### Phase 0.5: Context-Building (Pure Understanding)
+
+<HARD-GATE>
+This phase is FORBIDDEN from producing findings. No BLOCKs, no WARNs, no issues. Context-building only.
+Rushed context = hallucinated vulnerabilities. Slow is fast.
+</HARD-GATE>
+
+For each critical module (entry points, auth, data layer, core business logic):
+1. Read line-by-line. Note at minimum:
+   - **3 invariants**: What MUST always be true for this code to work? (e.g., "user is authenticated before reaching this handler")
+   - **5 assumptions**: What does this code assume about its inputs, environment, and callers?
+   - **3 risks**: What could break if assumptions are violated?
+2. Record findings as context notes — these feed into Phases 1-7, NOT into the final report directly
+
+**Why**: Without this phase, the auditor pattern-matches against known vulnerability lists and hallucinates findings that don't exist in THIS specific codebase. The invariants + assumptions ground all later analysis in reality.
 
 ---
 
@@ -363,6 +380,35 @@ Use `Write` to save `AUDIT-REPORT.md` to the project root with the full findings
 
 Call `rune:journal` to record: audit date, overall health score, verdict, and CRITICAL count.
 
+## Weighted Composite Scoring
+
+Each dimension score feeds into a weighted composite formula that produces a single comparable health score. Use this formula to compute **Overall Health** — not a simple average.
+
+### Scoring Formula
+
+```
+Overall = (Security × 0.25) + (Code Quality × 0.20) + (Architecture × 0.15)
+        + (Dependencies × 0.15) + (Performance × 0.10) + (Infrastructure × 0.08)
+        + (Documentation × 0.07)
+```
+
+Mesh Analytics (Phase 8) is advisory — it contributes 0 to the weighted score but informs the verdict narrative.
+
+### Grade Thresholds
+
+| Score Range | Grade | Verdict | Action |
+|-------------|-------|---------|--------|
+| 90–100 | Excellent | PASS | Routine audit in 3 months |
+| 75–89 | Good | PASS | Address MEDIUM items next sprint |
+| 60–74 | Fair | WARNING | Fix HIGH items within 2 weeks |
+| 40–59 | Poor | FAIL | Fix CRITICAL + HIGH within 1 week |
+| 0–39 | Critical | FAIL | Emergency response — CRITICAL items block all new work |
+
+### Why Weighted (not average)
+
+Security issues cause exponential blast — a 3/10 security score with all other dimensions at 9/10 = overall 72 (Fair), not 8.1 (Good). The formula ensures security and code quality dominate the verdict. Comparable across runs: if Overall moves from 68 → 74 after fixes, the project measurably improved.
+
+
 ## Severity Levels
 
 ```
@@ -410,6 +456,10 @@ Apply confidence filtering: only report findings with >80% confidence. Consolida
 | Documentation  | [n]    |
 | Mesh Analytics | [n]    |
 
+### Composite Score
+- **Formula**: (Security×0.25) + (Code Quality×0.20) + (Architecture×0.15) + (Dependencies×0.15) + (Performance×0.10) + (Infrastructure×0.08) + (Documentation×0.07)
+- **Weighted Score**: [computed value] → Grade: [Excellent/Good/Fair/Poor/Critical]
+
 ### Top Priority Actions
 1. [action] — [file:line] — [why it matters]
 
@@ -442,6 +492,16 @@ Report saved to: AUDIT-REPORT.md
 | Security Gate | sentinel report received before assembling final report | Invoke rune:sentinel — do not skip |
 | Deps Gate | dependency-doctor report received before assembling final report | Invoke rune:dependency-doctor — do not skip |
 | Report Gate | All 8 phases completed before writing AUDIT-REPORT.md | Complete all phases, note skipped ones |
+
+## Returns
+
+| Artifact | Format | Location |
+|----------|--------|----------|
+| Audit report | Markdown | `AUDIT-REPORT.md` (project root) |
+| 8-dimension health score | Markdown table | `AUDIT-REPORT.md` + inline |
+| Weighted composite score + grade | Markdown | inline + `AUDIT-REPORT.md` |
+| Mesh analytics section | Markdown table | inline + `AUDIT-REPORT.md` |
+| Journal entry | Text | `.rune/adr/` (via `rune:journal`) |
 
 ## Sharp Edges
 

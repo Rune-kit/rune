@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Rune — Less skills. Deeper connections.</title>
-  <meta name="description" content="58-skill mesh ecosystem for AI coding assistants. Works on Claude Code, Cursor, Windsurf, and any AI IDE.">
+  <meta name="description" content="59-skill mesh ecosystem for AI coding assistants. Works on Claude Code, Cursor, Windsurf, and any AI IDE.">
   <meta property="og:title" content="Rune — AI Skill Mesh">
-  <meta property="og:description" content="58 skills, 200+ mesh connections, 8 platforms. From idea to production.">
+  <meta property="og:description" content="59 skills, 200+ mesh connections, 8 platforms. From idea to production.">
   <meta property="og:image" content="https://raw.githubusercontent.com/rune-kit/rune/master/assets/banner.svg">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://rune-kit.github.io/rune">
@@ -23,17 +23,19 @@
         <span class="logo-rune">&#9670;</span> Rune
       </a>
       <div class="nav-links">
+        <a href="#benchmark">Benchmark</a>
         <a href="#architecture">Architecture</a>
         <a href="#workflows">Workflows</a>
         <a href="guides/">Guides</a>
+        <a href="#mesh">Mesh</a>
         <a href="#pricing">Pricing</a>
-        <div class="nav-controls">
+        <div class="nav-controls notranslate" translate="no">
           <button class="theme-toggle" id="theme-toggle" aria-label="Toggle light/dark mode" title="Toggle theme">&#9790;</button>
           <div class="lang-dropdown" id="lang-dropdown">
             <button class="lang-toggle" id="lang-btn" aria-label="Translate page" title="Translate page">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10A15.3 15.3 0 0 1 12 2z"/></svg>
             </button>
-            <div class="lang-menu" id="lang-menu" hidden>
+            <div class="lang-menu notranslate" id="lang-menu" translate="no" hidden>
               <button data-lang="">English</button>
               <button data-lang="vi">Tiếng Việt</button>
               <button data-lang="ja">日本語</button>
@@ -61,7 +63,7 @@
       <canvas id="mesh-canvas"></canvas>
     </div>
     <div class="hero-content">
-      <p class="hero-badge">v2.2.2 &mdash; 58 skills &bull; 8 platforms &bull; MIT</p>
+      <p class="hero-badge">v2.5.0 &mdash; 61 skills &bull; 8 platforms &bull; MIT</p>
       <h1>Less skills.<br><span class="accent">Deeper connections.</span></h1>
       <p class="hero-sub">A mesh ecosystem for AI coding assistants. Skills call each other bidirectionally, forming resilient workflows that adapt when things go wrong.</p>
       <div class="hero-actions">
@@ -98,6 +100,88 @@ D &harr; E &harr; F
           <p>Resilient. Skills route around failures automatically.</p>
         </div>
       </div>
+    </div>
+  </section>
+
+  <!-- BENCHMARK -->
+  <section class="section section-dark" id="benchmark">
+    <div class="container">
+      <h2>Measured, Not Claimed</h2>
+      <p class="section-sub">10 coding tasks. Claude Code with Rune vs without. Same model, same prompts, real metrics.</p>
+
+      <div class="bench-headline">
+        <div class="bench-stat">
+          <span class="bench-delta bench-good">&darr; 16%</span>
+          <span class="bench-label">Tokens</span>
+        </div>
+        <div class="bench-stat">
+          <span class="bench-delta bench-good">&darr; 6%</span>
+          <span class="bench-label">Cost</span>
+        </div>
+        <div class="bench-stat">
+          <span class="bench-delta bench-good">&darr; 9%</span>
+          <span class="bench-label">Duration</span>
+        </div>
+        <div class="bench-stat">
+          <span class="bench-delta bench-neutral">9/10 = 9/10</span>
+          <span class="bench-label">Correctness</span>
+        </div>
+      </div>
+
+      <h3 style="margin-top:2.5rem;margin-bottom:1rem;text-align:center;color:var(--text-secondary);">Where discipline matters most</h3>
+      <div class="bench-table-wrap">
+        <table class="bench-table">
+          <thead>
+            <tr>
+              <th>Task</th>
+              <th>Difficulty</th>
+              <th>Tokens</th>
+              <th>Cost</th>
+              <th>Duration</th>
+              <th>Tools</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Refactor 450-line component</td>
+              <td><span class="diff-badge diff-med">Medium</span></td>
+              <td class="bench-good">-62%</td>
+              <td class="bench-good">-17%</td>
+              <td class="bench-good">-32%</td>
+              <td class="bench-good">-27%</td>
+            </tr>
+            <tr>
+              <td>Full feature (auth + API + tests)</td>
+              <td><span class="diff-badge diff-complex">Complex</span></td>
+              <td class="bench-good">-36%</td>
+              <td class="bench-good">-29%</td>
+              <td class="bench-good">-31%</td>
+              <td class="bench-good">-27%</td>
+            </tr>
+            <tr>
+              <td>Add Zod validation</td>
+              <td><span class="diff-badge diff-easy">Easy</span></td>
+              <td class="bench-good">-9%</td>
+              <td class="bench-good">-28%</td>
+              <td class="bench-good">-32%</td>
+              <td class="bench-neutral">0%</td>
+            </tr>
+            <tr>
+              <td>Dark mode across 6 components</td>
+              <td><span class="diff-badge diff-hard">Hard</span></td>
+              <td class="bench-neutral">~0%</td>
+              <td class="bench-bad">+10%</td>
+              <td class="bench-good">-7%</td>
+              <td class="bench-good">-6%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p style="text-align:center;margin-top:1.5rem;color:var(--text-muted);font-size:0.85rem;">
+        Rune doesn't make Claude smarter &mdash; Claude already knows how to code.<br>
+        Rune makes Claude <strong style="color:var(--accent);">disciplined</strong>. The more complex the task, the more discipline matters.
+      </p>
     </div>
   </section>
 
@@ -230,7 +314,7 @@ D &harr; E &harr; F
         <div class="feature-card">
           <div class="feature-icon">&#127760;</div>
           <h3>Multi-Platform</h3>
-          <p>Same 58 skills compile to Claude Code, Cursor, Windsurf, Antigravity, OpenAI Codex, OpenClaw, and generic. Zero knowledge loss across IDEs.</p>
+          <p>Same 59 skills compile to Claude Code, Cursor, Windsurf, Antigravity, OpenAI Codex, OpenClaw, and generic. Zero knowledge loss across IDEs.</p>
         </div>
       </div>
     </div>
@@ -255,13 +339,13 @@ claude plugin install rune</code></pre>
           <h3>Cursor / Windsurf / Any IDE</h3>
           <p class="install-badge">Compiled Rules</p>
           <pre class="code-block"><code>npx @rune-kit/rune init</code></pre>
-          <p>Auto-detects platform. Compiles all 58 skills to native rule format.</p>
+          <p>Auto-detects platform. Compiles all 59 skills to native rule format.</p>
         </div>
         <div class="install-card">
           <h3>OpenClaw</h3>
           <p class="install-badge">ClawHub Registry</p>
           <pre class="code-block"><code>clawhub install rune-kit</code></pre>
-          <p>58 skills as unified mesh package. Works with any OpenClaw agent.</p>
+          <p>59 skills as unified mesh package. Works with any OpenClaw agent.</p>
         </div>
       </div>
     </div>
@@ -318,6 +402,173 @@ claude plugin install rune</code></pre>
       </div>
       <div style="text-align:center;margin-top:24px">
         <a href="guides/" class="btn btn-ghost">View Full Guide &rarr;</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW THE MESH WORKS -->
+  <section class="section" id="mesh">
+    <div class="container">
+      <h2>How the Mesh Works</h2>
+      <p class="section-sub">Skills don't run in isolation. They call each other, forming resilient workflows that adapt when things go wrong.</p>
+
+      <!-- Mesh Diagram -->
+      <div class="mesh-diagram">
+        <div class="mesh-tier mesh-tier-free">
+          <div class="mesh-tier-header">
+            <span class="mesh-tier-badge mesh-badge-free">FREE</span>
+            <strong>Core Mesh</strong>
+            <span class="mesh-tier-stats">59 skills &bull; 200+ connections</span>
+          </div>
+          <div class="mesh-layers">
+            <div class="mesh-layer">
+              <span class="mesh-layer-label">L0</span>
+              <div class="mesh-nodes">
+                <span class="mesh-node mesh-node-router" title="Routes every action to the right skill">skill-router</span>
+              </div>
+            </div>
+            <div class="mesh-layer">
+              <span class="mesh-layer-label">L1</span>
+              <div class="mesh-nodes">
+                <span class="mesh-node" title="Feature orchestrator &mdash; 70% of tasks flow through cook">cook</span>
+                <span class="mesh-node">team</span>
+                <span class="mesh-node">scaffold</span>
+                <span class="mesh-node">launch</span>
+                <span class="mesh-node">rescue</span>
+              </div>
+            </div>
+            <div class="mesh-layer">
+              <span class="mesh-layer-label">L2</span>
+              <div class="mesh-nodes">
+                <span class="mesh-node">plan</span>
+                <span class="mesh-node">ba</span>
+                <span class="mesh-node">debug</span>
+                <span class="mesh-node">fix</span>
+                <span class="mesh-node">test</span>
+                <span class="mesh-node">review</span>
+                <span class="mesh-node">sentinel</span>
+                <span class="mesh-node">deploy</span>
+                <span class="mesh-node mesh-node-more">+19 more</span>
+              </div>
+            </div>
+            <div class="mesh-layer">
+              <span class="mesh-layer-label">L3</span>
+              <div class="mesh-nodes">
+                <span class="mesh-node">scout</span>
+                <span class="mesh-node">research</span>
+                <span class="mesh-node">verification</span>
+                <span class="mesh-node">git</span>
+                <span class="mesh-node">docs</span>
+                <span class="mesh-node mesh-node-more">+20 more</span>
+              </div>
+            </div>
+            <div class="mesh-layer">
+              <span class="mesh-layer-label">L4</span>
+              <div class="mesh-nodes">
+                <span class="mesh-node">@rune/ui</span>
+                <span class="mesh-node">@rune/backend</span>
+                <span class="mesh-node">@rune/saas</span>
+                <span class="mesh-node">@rune/mobile</span>
+                <span class="mesh-node mesh-node-more">+10 packs</span>
+              </div>
+            </div>
+          </div>
+          <div class="mesh-flow-example">
+            <span class="mesh-flow-label">Example flow:</span>
+            <code class="mesh-flow">cook &rarr; plan &rarr; test <span class="mesh-flow-fail">&#10007;</span> &rarr; debug &rarr; fix &rarr; test <span class="mesh-flow-pass">&#10003;</span> &rarr; review &rarr; sentinel &rarr; git</code>
+          </div>
+        </div>
+
+        <!-- Connection arrows -->
+        <div class="mesh-arrows">
+          <div class="mesh-arrow-line"></div>
+          <div class="mesh-arrow-labels">
+            <span class="mesh-arrow-label">+57 new connections</span>
+            <span class="mesh-arrow-desc">Pro skills plug into cook, team, ba, sentinel, git, research</span>
+          </div>
+        </div>
+
+        <div class="mesh-tier mesh-tier-pro">
+          <div class="mesh-tier-header">
+            <span class="mesh-tier-badge mesh-badge-pro">PRO $49</span>
+            <strong>Department Skills</strong>
+            <span class="mesh-tier-stats">+25 skills &bull; +57 connections into core</span>
+          </div>
+          <div class="mesh-nodes mesh-nodes-grid">
+            <div class="mesh-pack">
+              <strong>Product</strong>
+              <span>PRDs, roadmaps, KPIs, release comms</span>
+            </div>
+            <div class="mesh-pack">
+              <strong>Sales</strong>
+              <span>Pipeline, outreach, account research</span>
+            </div>
+            <div class="mesh-pack">
+              <strong>Data Science</strong>
+              <span>SQL exploration, dashboards, ML eval</span>
+            </div>
+            <div class="mesh-pack">
+              <strong>Support</strong>
+              <span>Ticket triage, KB, escalation</span>
+            </div>
+          </div>
+          <p class="mesh-tier-note">Pro packs register as <code>Called By &larr; cook</code> &mdash; activated by the same orchestrator as core skills. No configuration needed.</p>
+        </div>
+
+        <!-- Connection arrows -->
+        <div class="mesh-arrows">
+          <div class="mesh-arrow-line mesh-arrow-line-biz"></div>
+          <div class="mesh-arrow-labels">
+            <span class="mesh-arrow-label">+54 connections + 13 cross-tier</span>
+            <span class="mesh-arrow-desc">Business calls Pro data: finance uses sales pipeline, legal uses product specs</span>
+          </div>
+        </div>
+
+        <div class="mesh-tier mesh-tier-biz">
+          <div class="mesh-tier-header">
+            <span class="mesh-tier-badge mesh-badge-biz">BUSINESS $149</span>
+            <strong>Enterprise Skills</strong>
+            <span class="mesh-tier-stats">+26 skills &bull; includes all Pro skills</span>
+          </div>
+          <div class="mesh-nodes mesh-nodes-grid">
+            <div class="mesh-pack">
+              <strong>Finance</strong>
+              <span>Budget from <em>sales pipeline</em> + <em>product roadmap</em></span>
+            </div>
+            <div class="mesh-pack">
+              <strong>Legal</strong>
+              <span>Compliance via <em>product specs</em> + <em>support KB</em></span>
+            </div>
+            <div class="mesh-pack">
+              <strong>HR</strong>
+              <span>Recruiting, onboarding, role design</span>
+            </div>
+            <div class="mesh-pack">
+              <strong>Enterprise Search</strong>
+              <span>Cross-department knowledge from <em>support KB</em> + <em>product docs</em></span>
+            </div>
+          </div>
+          <p class="mesh-tier-note">Business includes Pro because it depends on Pro data. Finance can&rsquo;t forecast without sales pipeline. Legal can&rsquo;t audit without product specs. That&rsquo;s why they&rsquo;re bundled.</p>
+        </div>
+      </div>
+
+      <!-- Key Points -->
+      <div class="mesh-points">
+        <div class="mesh-point">
+          <div class="mesh-point-icon">&#9670;</div>
+          <h3>Free is complete</h3>
+          <p>The full development workflow &mdash; plan, build, test, review, deploy &mdash; runs entirely on Free. You never hit a paywall while coding.</p>
+        </div>
+        <div class="mesh-point">
+          <div class="mesh-point-icon">&#9726;</div>
+          <h3>Pro extends, not replaces</h3>
+          <p>Pro skills plug into the existing mesh via <code>cook</code> and <code>team</code>. Same orchestrator, same quality gates, new department capabilities.</p>
+        </div>
+        <div class="mesh-point">
+          <div class="mesh-point-icon">&#9726;</div>
+          <h3>Business needs Pro</h3>
+          <p>Finance pulls from sales pipeline. Legal checks product specs. Enterprise search indexes support KB. That&rsquo;s 13 cross-tier connections &mdash; and why Business includes Pro.</p>
+        </div>
       </div>
     </div>
   </section>
@@ -390,30 +641,43 @@ claude plugin install rune</code></pre>
             <li>All future Pro packs included</li>
           </ul>
           <button class="btn btn-pro" style="width:100%" onclick="openPayment('rune-pro')">Get Rune Pro &mdash; $49</button>
-          <p class="pricing-note">Pay once, use forever. No subscriptions.</p>
+          <p class="pricing-note pricing-guarantee">&#128176; 14-Day Money-Back Guarantee &mdash; no questions asked</p>
         </div>
 
         <!-- BUSINESS -->
         <div class="pricing-card pricing-biz">
           <div class="pricing-tier">
-            <span class="pricing-badge pricing-badge-biz">Enterprise</span>
+            <span class="pricing-badge pricing-badge-best">&#9733; BEST VALUE</span>
             <h3>Rune Business</h3>
             <div class="pricing-price">$149<span class="pricing-period"> lifetime</span></div>
           </div>
-          <p class="pricing-desc">Full department coverage for companies that need AI assistance across every business function.</p>
-          <p class="pricing-who">Best for: scaling companies, agencies, enterprises with cross-department AI workflows.</p>
+          <p class="pricing-desc">Full department coverage &mdash; every business function, one purchase.</p>
+
+          <!-- What's Included breakdown -->
+          <div class="includes-breakdown">
+            <p class="includes-label">What&rsquo;s Included:</p>
+            <div class="includes-box includes-box-pro">
+              <strong>Rune Pro</strong> <span class="includes-value">$49 value</span>
+              <ul>
+                <li>Product Management, Sales, Data Science, Support</li>
+                <li>Business memory layer + MCP connectors</li>
+              </ul>
+            </div>
+            <div class="includes-box includes-box-biz">
+              <strong>Rune Business</strong> <span class="includes-value">$100 value</span>
+              <ul>
+                <li>Finance Ops, Legal &amp; Compliance, HR &amp; Recruiting</li>
+                <li>Enterprise Search + Priority support</li>
+              </ul>
+            </div>
+          </div>
+
           <ul class="pricing-features">
-            <li><strong>Everything in Pro, plus:</strong></li>
-            <li>Finance Ops &mdash; invoicing, expense tracking, financial reporting</li>
-            <li>Legal &amp; Compliance &mdash; contract review, policy drafting, audit prep</li>
-            <li>HR &amp; Recruiting &mdash; job descriptions, candidate screening, onboarding</li>
-            <li>Enterprise Search &mdash; cross-system knowledge retrieval</li>
-            <li>Skill Forge included &mdash; build private skills (free in core, enhanced for teams)</li>
-            <li>Priority support &mdash; direct access to maintainers</li>
-            <li>All future Business packs included</li>
+            <li>All future Pro + Business packs included</li>
+            <li>Lifetime access &mdash; no subscriptions ever</li>
           </ul>
           <button class="btn btn-biz" style="width:100%" onclick="openPayment('rune-biz')">Get Rune Business &mdash; $149</button>
-          <p class="pricing-note">Pay once, use forever. No subscriptions.</p>
+          <p class="pricing-note pricing-guarantee">&#128176; 14-Day Money-Back Guarantee &mdash; no questions asked</p>
         </div>
       </div>
 
@@ -603,7 +867,7 @@ claude plugin install rune</code></pre>
         <p class="pay-subtitle">Choose your payment method</p>
         <div class="pay-options">
           <button class="pay-option" onclick="showVNPayment()">
-            <span class="pay-option-flag">&#127483;&#127475;</span>
+            <img src="https://flagcdn.com/w40/vn.png" width="32" height="21" alt="VN" style="border-radius:3px" />
             <div class="pay-option-info">
               <strong>Vietnam</strong>
               <span>Bank Transfer (VietQR)</span>
@@ -611,15 +875,15 @@ claude plugin install rune</code></pre>
             </div>
             <span class="pay-option-arrow">&rarr;</span>
           </button>
-          <a id="pay-sponsor-link" href="https://github.com/sponsors/rune-kit" target="_blank" rel="noopener" class="pay-option">
+          <button class="pay-option" onclick="showIntlPayment()">
             <span class="pay-option-flag">&#127760;</span>
             <div class="pay-option-info">
               <strong>International</strong>
-              <span>GitHub Sponsors (Stripe)</span>
+              <span>Card / PayPal (Polar)</span>
               <span class="pay-option-price" id="pay-price-intl">$49 USD</span>
             </div>
             <span class="pay-option-arrow">&rarr;</span>
-          </a>
+          </button>
         </div>
       </div>
 
@@ -646,7 +910,7 @@ claude plugin install rune</code></pre>
           <img id="pay-qr-img" alt="VietQR Payment" />
         </div>
         <div class="pay-details">
-          <div class="pay-detail-row"><span>Bank</span><strong>VPBank</strong></div>
+          <div class="pay-detail-row"><span>Bank</span><strong>TPBank</strong></div>
           <div class="pay-detail-row"><span>Account</span><strong class="pay-mono">04162263666</strong></div>
           <div class="pay-detail-row"><span>Amount</span><strong class="pay-mono" id="pay-detail-amount"></strong></div>
           <div class="pay-detail-row"><span>Content</span><strong class="pay-mono" id="pay-detail-code"></strong></div>
@@ -658,12 +922,96 @@ claude plugin install rune</code></pre>
       </div>
 
       <!-- Step 4: Success -->
-      <div id="pay-step-4" class="pay-step" hidden>
-        <div class="pay-success-icon">&#10003;</div>
-        <h3>Payment Received!</h3>
-        <p class="pay-subtitle">A GitHub invitation has been sent to <strong id="pay-success-user"></strong></p>
-        <p class="pay-hint">Check your email for the invitation to <code>rune-kit/rune-pro</code></p>
-        <button class="btn btn-primary" style="width:100%;margin-top:20px" onclick="closePayment()">Done</button>
+      <div id="pay-step-4" class="pay-step pay-success" hidden>
+        <div class="pay-success-badge">
+          <svg class="pay-success-check" viewBox="0 0 52 52" width="52" height="52">
+            <circle class="pay-success-circle" cx="26" cy="26" r="24" fill="none" stroke="currentColor" stroke-width="2.5"/>
+            <path class="pay-success-tick" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M15 27l7 7 15-15"/>
+          </svg>
+        </div>
+        <h3 class="pay-success-title">You're in!</h3>
+        <p class="pay-success-sub">A GitHub repo invitation is on its way to <strong id="pay-success-user"></strong></p>
+
+        <div class="pay-success-steps">
+          <div class="pay-success-step">
+            <span class="pay-success-num">1</span>
+            <div>
+              <strong>Check your GitHub email</strong>
+              <span>Look for an invite from <code>noreply@github.com</code> — usually within 1 minute</span>
+            </div>
+          </div>
+          <div class="pay-success-step">
+            <span class="pay-success-num">2</span>
+            <div>
+              <strong>Accept the invitation</strong>
+              <span>Click "View invitation" to join the private repo</span>
+            </div>
+          </div>
+          <div class="pay-success-step">
+            <span class="pay-success-num">3</span>
+            <div>
+              <strong>Install your packs</strong>
+              <span id="pay-success-install">Follow the setup guide in the repo README</span>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary pay-success-done" onclick="closePayment()">Got it</button>
+        <p class="pay-success-help">Didn't get the invite? Check spam, or email <a href="mailto:claude@theio.vn">claude@theio.vn</a></p>
+      </div>
+
+      <!-- Step 5: International — GitHub username + Polar checkout -->
+      <div id="pay-step-5" class="pay-step" hidden>
+        <button class="pay-close" onclick="closePayment()" aria-label="Close">&times;</button>
+        <button class="pay-back" onclick="showPayStep(1)" aria-label="Back">&larr; Back</button>
+        <h3 id="pay-title-5">Get Rune Pro</h3>
+        <p class="pay-subtitle" id="pay-amount-5">$49 USD</p>
+        <label class="pay-label" for="pay-intl-github">GitHub Username</label>
+        <input type="text" id="pay-intl-github" class="pay-input" placeholder="your-github-username" autocomplete="off" spellcheck="false" />
+        <label class="pay-label" for="pay-intl-email">Email <span style="color:var(--text-muted)">(for receipt)</span></label>
+        <input type="email" id="pay-intl-email" class="pay-input" placeholder="you@example.com" />
+        <p id="pay-intl-error" class="pay-error" hidden></p>
+        <button id="pay-intl-submit" class="btn btn-pro" style="width:100%;margin-top:16px" onclick="startPolarCheckout()">Pay with Card / PayPal</button>
+        <p class="pay-hint" style="margin-top:12px">You'll be redirected to Polar's secure checkout page</p>
+      </div>
+
+      <!-- Step 6: Success (Vietnamese — for SePay flow) -->
+      <div id="pay-step-6" class="pay-step pay-success notranslate" translate="no" hidden>
+        <div class="pay-success-badge">
+          <svg class="pay-success-check" viewBox="0 0 52 52" width="52" height="52">
+            <circle class="pay-success-circle" cx="26" cy="26" r="24" fill="none" stroke="currentColor" stroke-width="2.5"/>
+            <path class="pay-success-tick" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M15 27l7 7 15-15"/>
+          </svg>
+        </div>
+        <h3 class="pay-success-title">Thanh toán thành công!</h3>
+        <p class="pay-success-sub">Lời mời truy cập repo đã được gửi đến <strong id="pay-success-user-vn"></strong></p>
+
+        <div class="pay-success-steps">
+          <div class="pay-success-step">
+            <span class="pay-success-num">1</span>
+            <div>
+              <strong>Kiểm tra email GitHub</strong>
+              <span>Tìm email mời từ <code>noreply@github.com</code> — thường trong vòng 1 phút</span>
+            </div>
+          </div>
+          <div class="pay-success-step">
+            <span class="pay-success-num">2</span>
+            <div>
+              <strong>Chấp nhận lời mời</strong>
+              <span>Nhấn "View invitation" để vào private repo</span>
+            </div>
+          </div>
+          <div class="pay-success-step">
+            <span class="pay-success-num">3</span>
+            <div>
+              <strong>Cài đặt skill packs</strong>
+              <span id="pay-success-install-vn">Làm theo hướng dẫn trong README của repo</span>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary pay-success-done" onclick="closePayment()">Xong</button>
+        <p class="pay-success-help">Chưa nhận được? Kiểm tra spam, hoặc email <a href="mailto:claude@theio.vn">claude@theio.vn</a></p>
       </div>
     </div>
   </div>
@@ -675,24 +1023,25 @@ claude plugin install rune</code></pre>
     (function initTheme() {
       const toggle = document.getElementById('theme-toggle');
       const stored = localStorage.getItem('rune-theme');
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const theme = stored || (prefersDark ? 'dark' : 'dark'); // default dark
+      const theme = stored || 'light'; // default light (warm cream)
 
-      if (theme === 'light') {
-        document.documentElement.setAttribute('data-theme', 'light');
+      if (theme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        toggle.innerHTML = '&#9790;'; // moon
+      } else {
         toggle.innerHTML = '&#9728;'; // sun
       }
 
       toggle.addEventListener('click', () => {
-        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-        if (isLight) {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        if (isDark) {
           document.documentElement.removeAttribute('data-theme');
-          toggle.innerHTML = '&#9790;'; // moon
-          localStorage.setItem('rune-theme', 'dark');
-        } else {
-          document.documentElement.setAttribute('data-theme', 'light');
           toggle.innerHTML = '&#9728;'; // sun
           localStorage.setItem('rune-theme', 'light');
+        } else {
+          document.documentElement.setAttribute('data-theme', 'dark');
+          toggle.innerHTML = '&#9790;'; // moon
+          localStorage.setItem('rune-theme', 'dark');
         }
       });
     })();

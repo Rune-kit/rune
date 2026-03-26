@@ -3,7 +3,7 @@ name: verification
 description: "Universal verification runner. Runs lint, type-check, tests, and build. Use after any code change to verify nothing is broken."
 metadata:
   author: runedev
-  version: "0.4.0"
+  version: "0.5.0"
   layer: L3
   model: haiku
   group: validation
@@ -233,6 +233,33 @@ Overall:   [PASS/FAIL]
 - Unwired: [files that failed Level 3 with 0 consumers]
 ```
 
+## Output Completion Enforcement
+
+> From taste-skill (Leonxlnx/taste-skill, 3.4k★): Truncated code is worse than no code — it passes reviews but breaks at runtime.
+
+When verifying code files (Level 2 SUBSTANTIVE check), also scan for **truncation patterns** — signs that the agent generated partial output and stopped:
+
+| Banned Pattern | Language | What It Means |
+|---|---|---|
+| `// ...` or `/* ... */` as a statement | JS/TS | Agent truncated remaining code |
+| `# ...` as a statement (not comment) | Python | Agent truncated |
+| `// rest of code` / `// remaining implementation` | Any | Explicit truncation admission |
+| `// TODO: implement` as sole function body | Any | Placeholder, not implementation |
+| `{ /* same as above */ }` | JS/TS | Copy-paste truncation |
+| `...` (bare ellipsis, not spread operator) | JS/TS/Python | Truncation marker |
+| `[PAUSED]` / `[CONTINUED]` in source | Any | Agent session marker leaked into code |
+
+**Action on detection:**
+- Mark file as TRUNCATED (distinct from STUB) in Verification Report
+- TRUNCATED files are Level 2 FAIL — they CANNOT pass verification
+- Report the specific line number and pattern detected
+- If agent claims "done" with truncated files → REJECTED by Evidence-Before-Claims gate
+
+**Continuation protocol** — if the agent hit output limits mid-file:
+- Agent MUST log: `[PAUSED — X of Y functions complete]` in its response (NOT in the code file)
+- Agent MUST resume and complete the file in the next turn
+- Verification re-runs after completion to clear the TRUNCATED flag
+
 ## Evidence-Before-Claims Gate
 
 <HARD-GATE>
@@ -284,6 +311,7 @@ Known failure modes for this skill. Check these before declaring done.
 | Trusting exit code 0 without output verification | CRITICAL | Artifact Verification HARD-GATE: always confirm success indicator in stdout (pass count, "0 errors", output file exists) |
 | Existence Theater — file exists but is a stub | HIGH | 3-Level check: Level 2 scans for stub patterns (`<div>Placeholder</div>`, `return null`, `NotImplementedError`) |
 | Dead code — file created but never imported/used | MEDIUM | 3-Level check: Level 3 greps for consumers. 0 importers = UNWIRED |
+| Truncated code — agent hit output limit mid-file | HIGH | Output Completion Enforcement: scan for `// ...`, `// rest of code`, bare ellipsis patterns. TRUNCATED = Level 2 FAIL |
 
 ## Done When
 

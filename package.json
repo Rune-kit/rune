@@ -1,7 +1,7 @@
 {
   "name": "@rune-kit/rune",
-  "version": "2.2.3",
-  "description": "58-skill mesh for AI coding assistants — 5-layer architecture, 200+ connections, 8 platforms (Claude Code, Cursor, Windsurf, Antigravity, Codex, OpenCode, OpenClaw, Generic)",
+  "version": "2.5.0",
+  "description": "61-skill mesh for AI coding assistants — 5-layer architecture, 200+ connections, 8 platforms (Claude Code, Cursor, Windsurf, Antigravity, Codex, OpenCode, OpenClaw, Generic)",
   "type": "module",
   "bin": {
     "rune": "./compiler/bin/rune.js"
@@ -9,11 +9,12 @@
   "scripts": {
     "build": "node compiler/bin/rune.js build",
     "doctor": "node compiler/bin/rune.js doctor && node scripts/version-sync-check.js",
-    "test": "node --test compiler/__tests__/*.test.js",
+    "test": "node --test compiler/__tests__/*.test.js scripts/__tests__/*.test.js",
+    "test:coverage": "c8 --reporter=text --reporter=lcov node --test compiler/__tests__/*.test.js scripts/__tests__/*.test.js",
     "lint": "biome check .",
     "lint:fix": "biome check --fix .",
     "format": "biome format --write .",
-    "ci": "biome check . && node --test compiler/__tests__/*.test.js && node compiler/bin/rune.js doctor",
+    "ci": "biome check . && node --test compiler/__tests__/*.test.js scripts/__tests__/*.test.js && node compiler/bin/rune.js doctor",
     "version-check": "node scripts/version-sync-check.js",
     "prepublishOnly": "node scripts/version-sync-check.js"
   },
@@ -49,14 +50,14 @@
     "commands/",
     "agents/",
     "hooks/",
-    "docs/",
     "references/"
   ],
-  "homepage": "https://github.com/rune-kit/rune",
+  "homepage": "https://rune-kit.github.io/rune",
   "bugs": {
     "url": "https://github.com/rune-kit/rune/issues"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.7"
+    "@biomejs/biome": "^2.4.7",
+    "c8": "^10.1.3"
   }
 }

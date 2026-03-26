@@ -3,7 +3,7 @@ name: ba
 description: Business Analyst agent. Deeply understands user requirements before any planning or coding begins. Asks probing questions, identifies hidden requirements, maps stakeholders, defines scope boundaries, and produces a structured Requirements Document that plan and cook consume.
 metadata:
   author: runedev
-  version: "0.2.0"
+  version: "0.4.0"
   layer: L2
   model: opus
   group: creation
@@ -85,6 +85,31 @@ Each question must be asked separately, wait for answer before next.
 Exception: if user provides a detailed spec/PRD → extract answers from it, confirm with user.
 </HARD-GATE>
 
+#### Structured Elicitation Frameworks
+
+Choose the framework that fits the requirement type. Use it to STRUCTURE the 5 Questions above, not replace them.
+
+| Framework | When to Use | Structure |
+|-----------|------------|-----------|
+| **PICO** | Clinical, research, data-driven, or A/B testing features | **P**opulation (who), **I**ntervention (what change), **C**omparison (vs what), **O**utcome (measurable result) |
+| **INVEST** | User stories for sprint-sized features | **I**ndependent, **N**egotiable, **V**aluable, **E**stimable, **S**mall, **T**estable |
+| **Jobs-to-be-Done** | Product features, user workflows | "When [situation], I want to [motivation] so I can [expected outcome]" |
+
+
+**PICO Example (data feature):**
+```
+P: Dashboard users monitoring real-time metrics
+I: Add anomaly detection alerts
+C: vs. current manual threshold setting
+O: 30% faster incident detection (measurable KPI)
+```
+
+**When to apply which:**
+- Feature Request → INVEST (ensures stories are sprint-ready)
+- Data/Analytics/Research feature → PICO (forces measurable outcome definition)
+- Product/UX feature → Jobs-to-be-Done (keeps focus on user motivation)
+- Integration → 5 Questions only (frameworks add noise for plumbing tasks)
+
 ### Step 3 — Hidden Requirement Discovery
 
 After the 5 questions, analyze for requirements the user DIDN'T mention:
@@ -107,6 +132,31 @@ After the 5 questions, analyze for requirements the user DIDN'T mention:
 - Regulatory/compliance needs? (GDPR, PCI, HIPAA)
 
 Present discovered hidden requirements to user: "I found N additional requirements you may not have considered: [list]. Which are relevant?"
+
+### Step 3.5 — Completeness Scoring (Options & Alternatives)
+
+When presenting options, alternatives, or scope decisions to the user, rate each with a **Completeness score (X/10)**:
+
+| Score | Meaning | Guidance |
+|-------|---------|----------|
+| 9-10 | Complete — all edge cases, full coverage, production-ready | Always recommend |
+| 7-8 | Covers happy path, skips some edges | Acceptable for MVP |
+| 4-6 | Shortcut — defers significant work to later | Flag trade-off explicitly |
+| 1-3 | Minimal viable, technical debt guaranteed | Only for time-critical emergencies |
+
+**Always recommend the higher-completeness option** unless the delta is truly expensive. With AI-assisted coding, the marginal cost of completeness is near-zero:
+
+| Task Type | Human Team | AI-Assisted | Compression |
+|-----------|-----------|-------------|-------------|
+| Boilerplate / scaffolding | 2 days | 15 min | ~100x |
+| Test writing | 1 day | 15 min | ~50x |
+| Feature implementation | 1 week | 30 min | ~30x |
+| Bug fix + regression test | 4 hours | 15 min | ~20x |
+
+**When showing effort estimates**, always show both scales: `(human: ~X / AI: ~Y)`. The compression ratio reframes "too expensive" into "15 minutes more."
+
+**Anti-pattern**: "Choose B — it covers 90% of the value with less code." → If A is only 70 lines more, choose A. The last 10% is where production bugs hide.
+
 
 ### Step 4 — Scope Definition
 
@@ -259,6 +309,15 @@ Saved to `.rune/features/<feature-name>/requirements.md`
 6. MUST ask ONE question at a time — don't overwhelm user with 5 questions at once
 7. MUST NOT skip BA for non-trivial tasks — "just build it" gets redirected to Question 1
 
+## Returns
+
+| Artifact | Format | Location |
+|----------|--------|----------|
+| Requirements document | Markdown | `.rune/features/<feature-name>/requirements.md` |
+| User stories with acceptance criteria | Markdown (GIVEN/WHEN/THEN) | inline + requirements.md |
+| Scope definition (in/out/assumptions) | Markdown sections | requirements.md |
+| Non-functional requirements table | Markdown table | requirements.md |
+
 ## Sharp Edges
 
 Known failure modes for this skill. Check these before declaring done.
@@ -272,6 +331,7 @@ Known failure modes for this skill. Check these before declaring done.
 | Missing hidden requirements (auth, error handling, edge cases) | HIGH | Step 3 checklist is mandatory scan |
 | Requirements doc too verbose (>500 lines) | MEDIUM | Max 200 lines — concise, actionable, testable |
 | Skipping BA for "simple" features that turn out complex | HIGH | Let cook's complexity detection trigger BA, not user judgment |
+| Recommending shortcuts without Completeness Score | MEDIUM | Step 3.5: every option needs X/10 score + dual effort estimate (human vs AI). "90% coverage" is a red flag when 100% costs 15 min more |
 
 ## Done When
 

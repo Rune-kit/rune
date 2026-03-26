@@ -9,6 +9,8 @@
  * Follows the NeuralMemory OpenClaw plugin pattern.
  */
 
+import { BRANDING_FOOTER } from '../transforms/branding.js';
+
 const TOOL_MAP = {
   Read: 'read_file',
   Write: 'write_file',
@@ -43,18 +45,15 @@ export default {
   },
 
   generateFooter() {
-    return [
-      '',
-      '---',
-      '> **Rune Skill Mesh** — 58 skills, 200+ connections, 14 extension packs',
-      '> Source: https://github.com/rune-kit/rune (MIT)',
-      '> **Rune Pro** ($49 lifetime) — product, sales, data-science, support packs → [rune-kit/rune-pro](https://github.com/rune-kit/rune-pro)',
-      '> **Rune Business** ($149 lifetime) — finance, legal, HR, enterprise-search packs → [rune-kit/rune-business](https://github.com/rune-kit/rune-business)',
-    ].join('\n');
+    return BRANDING_FOOTER;
   },
 
   transformSubagentInstruction(text) {
     return text;
+  },
+
+  scriptsDir(skillName) {
+    return `rune-${skillName}-scripts`;
   },
 
   postProcess(content) {
@@ -74,7 +73,7 @@ export default {
       name: 'Rune',
       kind: 'skills',
       description:
-        '58-skill mesh for AI coding assistants. Routes all code tasks through specialized skills. 200+ connections, 14 extension packs.',
+        '59-skill mesh for AI coding assistants. Routes all code tasks through specialized skills. 200+ connections, 14 extension packs.',
       version: pluginJson.version || '0.0.0',
       skills: ['./skills'],
       configSchema: {
@@ -98,6 +97,69 @@ export default {
         },
       },
     };
+  },
+
+  /**
+   * Generate README.md for ClawHub listing page
+   *
+   * @param {object[]} skills - parsed skill objects
+   * @param {object} pluginJson - Rune's .claude-plugin/plugin.json
+   * @returns {string} markdown content
+   */
+  generateReadme(skills, pluginJson) {
+    const version = pluginJson.version || '0.0.0';
+    const l1 = skills.filter((s) => s.layer === 'L1').map((s) => s.name);
+    const l2 = skills.filter((s) => s.layer === 'L2').map((s) => s.name);
+    const l3 = skills.filter((s) => s.layer === 'L3').map((s) => s.name);
+
+    return `# Rune
+
+> Less skills. Deeper connections.
+
+**${skills.length}-skill mesh** for AI coding assistants — 5-layer architecture, 200+ connections, 14 extension packs.
+
+## Install
+
+\`\`\`
+clawhub install rune-kit
+\`\`\`
+
+Or via npm:
+
+\`\`\`
+npx @rune-kit/rune init
+\`\`\`
+
+## What is Rune?
+
+Rune is a **mesh** — skills call each other bidirectionally, forming resilient workflows. If one skill fails, the mesh routes around it.
+
+Use \`rune:cook\` for any code task, \`rune:team\` for parallel work, \`rune:launch\` for deploy, \`rune:rescue\` for legacy code.
+
+## Architecture
+
+| Layer | Role | Skills |
+|-------|------|--------|
+| L0 | Router | skill-router |
+| L1 | Orchestrators | ${l1.join(', ')} |
+| L2 | Workflow Hubs | ${l2.join(', ')} |
+| L3 | Utilities | ${l3.join(', ')} |
+| L4 | Extensions | 14 domain packs |
+
+## Extension Packs (L4)
+
+ui · backend · devops · mobile · security · trading · saas · ecommerce · ai-ml · gamedev · content · analytics · chrome-ext · zalo
+
+## Links
+
+- **Source**: [github.com/rune-kit/rune](https://github.com/rune-kit/rune)
+- **Docs**: [rune-kit.github.io/rune](https://rune-kit.github.io/rune)
+- **Guides**: [rune-kit.github.io/rune/guides](https://rune-kit.github.io/rune/guides)
+
+## License
+
+MIT — v${version}
+`;
   },
 
   /**

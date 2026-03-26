@@ -5,7 +5,7 @@ context: fork
 agent: general-purpose
 metadata:
   author: runedev
-  version: "0.7.0"
+  version: "1.7.0"
   layer: L1
   model: sonnet
   group: orchestrator
@@ -36,6 +36,7 @@ Cook supports predefined workflow chains for common task types. Use these as sho
 /rune cook refactor   → Understand → plan → implement → quality (Phase 1 → 2 → 4 → 5 → 6 → 7)
 /rune cook security   → Full pipeline + sentinel@opus + sast (all phases, security-escalated)
 /rune cook hotfix     → Minimal: fix → verify → commit (Phase 4 → 6 → 7, skip scout if user provides context)
+/rune cook nano       → Trivial: do → verify → done (no phases, ≤3 steps)
 ```
 
 **Chain selection**: If user invokes `/rune cook` without a chain type, auto-detect from the task description:
@@ -43,6 +44,7 @@ Cook supports predefined workflow chains for common task types. Use these as sho
 - Contains "refactor", "clean", "restructure" → `refactor`
 - Contains "security", "auth", "vulnerability", "CVE" → `security`
 - Contains "urgent", "hotfix", "production" → `hotfix`
+- Contains "quick", "just", "chỉ cần", "copy", "move", "rename", "bump" → `nano`
 - Default → `feature`
 
 ## Phase Skip Rules
@@ -50,6 +52,7 @@ Cook supports predefined workflow chains for common task types. Use these as sho
 Not every task needs every phase:
 
 ```
+Nano task:           DO → VERIFY → DONE (no phases, auto-detected)
 Simple bug fix:      Phase 1 → 4 → 6 → 7
 Small refactor:      Phase 1 → 4 → 5 → 6 → 7
 New feature:         Phase 1 → 1.5 → 2 → 3 → 4 → 5 → 6 → 7 → 8
@@ -59,7 +62,69 @@ Fast mode:           Phase 1 → 4 → 6 → 7 (auto-detected, see below)
 Multi-session:       Phase 0 (resume) → 3 → 4 → 5 → 6 → 7 (one plan phase per session)
 ```
 
-Determine complexity BEFORE starting. Create TodoWrite with applicable phases.
+Determine complexity BEFORE starting using the Rigor Assessment below. Create TodoWrite with applicable phases.
+
+### Rigor Assessment (Progressive Scaling)
+
+Before selecting a workflow chain or phase set, compute the task's **rigor level** from risk signals. This prevents over-engineering trivial changes while ensuring full ceremony for critical ones.
+
+| Risk Signal | Weight | Detection |
+|-------------|--------|-----------|
+| Files affected: 1 | 0 | Estimate from task description + scout |
+| Files affected: 2-3 | +1 | |
+| Files affected: 4+ | +3 | |
+| Cross-module impact (changes span 2+ directories) | +2 | scout identifies touch points across boundaries |
+| Security-sensitive code (auth, crypto, payments, secrets) | +3 | Keyword match in file paths or task description |
+| Public API change (exports, routes, schema) | +2 | Task modifies interfaces consumed by external code |
+| Database schema change | +2 | Task mentions migration, schema, ALTER, column |
+| New dependency added | +1 | Task requires `npm install` or equivalent |
+| Code will be imported by other modules | +1 | New exports or modifications to shared utilities |
+
+**Rigor level mapping:**
+
+| Score | Level | Maps To | Phases |
+|-------|-------|---------|--------|
+| 0 | Nano | `nano` chain | DO → VERIFY → DONE |
+| 1-2 | Fast | `fast` mode | Phase 1 → 4 → 6 → 7 |
+| 3-5 | Standard | `bugfix` / `refactor` | Phase 1 → 2 → 4 → 5 → 6 → 7 |
+| 6-8 | Full | `feature` | Phase 1 → 1.5 → 2 → 3 → 4 → 5 → 6 → 7 → 8 |
+| 9+ | Critical | `security` / full + adversary | All phases + sentinel@opus + adversary |
+
+**Rules:**
+- Security signal (+3) automatically floors rigor at Standard — NEVER nano/fast for security code
+- User can override: "full pipeline" forces Full, "just do it" forces Nano
+- If rigor upgrades mid-task (e.g., scout reveals cross-module impact not obvious from description), announce: "Rigor upgrade: [signal detected] — upgrading from Fast to Standard."
+- Announce chosen level: "Rigor: Fast (score 2 — single file, no security)"
+
+## Nano Mode (Auto-Detect)
+
+For trivial tasks that don't need any pipeline at all:
+
+```
+IF all of these are true:
+  - Task is ≤3 discrete steps (e.g., run command, edit 1 file, commit)
+  - Task description < 60 chars OR user prefixes with "quick:", "just", "chỉ cần"
+  - No code logic changes (copy files, config edits, version bumps, git ops, run scripts)
+  - No new functions/classes/components created
+THEN: Nano Mode activated
+  - Execute directly: DO → VERIFY → DONE
+  - No phases. No plan. No test. No review.
+  - Still verify output (check exit codes, confirm file exists, etc.)
+  - Still use semantic commit message if committing
+```
+
+**Announce**: "Nano mode: trivial task, executing directly."
+**Override**: User can say "full pipeline" or "cook feature" to force phases.
+**Escape hatch**: If during execution the task turns out more complex than expected → announce upgrade: "Upgrading to Fast/Full mode — task is more complex than detected." Resume from Phase 1.
+
+<HARD-GATE>
+Nano mode MUST NOT be used for:
+- Any code that will be imported/called by other code
+- Security-relevant files (auth, crypto, payments, .env, secrets)
+- Database schema changes
+- Public API changes
+If any of these are detected mid-task, STOP and upgrade to Fast/Full mode.
+</HARD-GATE>
 
 ## Fast Mode (Auto-Detect)
 
@@ -85,16 +150,9 @@ THEN: Fast Mode activated
 
 ## Phase 0.5: ENVIRONMENT CHECK (First Run Only)
 
-**Goal**: Verify the developer's environment can run this project before wasting time on planning.
+**SUB-SKILL**: Use `rune:sentinel-env` — verify the environment can run the project before planning.
 
-**SUB-SKILL**: Use `rune:sentinel-env`
-
-**Auto-trigger conditions** (ALL must be true):
-- No `.rune/` directory exists (first cook run in this project)
-- OR `npm install` / `pip install` / build just failed with environment-looking errors
-- AND NOT fast mode
-
-Skip silently on subsequent runs. User can force with `/rune env-check`.
+Auto-trigger: no `.rune/` dir (first run) OR build just failed with env-looking errors AND NOT fast mode. Skip silently on subsequent runs. Force with `/rune env-check`.
 
 ## Phase 1: UNDERSTAND
 
@@ -104,48 +162,20 @@ Skip silently on subsequent runs. User can force with `/rune env-check`.
 
 1. Create TodoWrite with all applicable phases for this task
 2. Mark Phase 1 as `in_progress`
-3. **BA gate** — determine if Business Analyst elicitation is needed:
-   - If task is a Feature Request, Integration, or Greenfield → invoke `rune:ba` for requirement elicitation
-   - If task description is > 50 words or contains business terms (users, revenue, workflow, integration) → invoke `rune:ba`
-   - If Bug Fix or simple Refactor → skip BA, proceed with scout
-   - BA produces a Requirements Document at `.rune/features/<name>/requirements.md` that feeds into Phase 2 (PLAN)
-4. **Decision enforcement** — load prior decisions:
-   - Use `Glob` to check for `.rune/decisions.md`
-   - If exists, use `Read` to load it
-   - Extract decisions relevant to the current task domain (match by keywords: module names, tech choices, patterns)
-   - These become **constraints for Phase 2 (PLAN)** — the plan MUST NOT contradict active decisions without explicit user override
-   - If no `.rune/decisions.md` exists, skip silently
-### Phase 1 Step 3.5 — Clarification Gate (Lightweight Socratic Check)
+3. **BA gate**: Feature Request / Integration / Greenfield → invoke `rune:ba`. Task > 50 words or business terms (users, revenue, workflow) → invoke `rune:ba`. Bug Fix / simple Refactor → skip. BA produces `.rune/features/<name>/requirements.md` for Phase 2.
+4. **Decision enforcement**: `Glob` for `.rune/decisions.md`; if exists, `Read` + extract constraints for Phase 2. Plan MUST NOT contradict active decisions without explicit user override.
+4b. **Contract enforcement**: If `.rune/contract.md` was loaded in Phase 0.6, list applicable contract sections for this task (e.g., `contract.security` for auth work, `contract.data` for database changes). These rules constrain Phase 2 planning and Phase 4 implementation.
 
-Before planning, ask the user at minimum **2 clarifying questions**:
+### Phase 1 Step 3.5 — Clarification Gate
 
-1. **"What does success look like?"** — defines acceptance criteria (how we know we're done)
-2. **"What should NOT change?"** — defines blast radius constraints (what's off-limits)
+Ask **2 questions** before planning: (1) "What does success look like?" (2) "What should NOT change?"
 
-**Skip conditions** (ALL must be true to skip):
-- Bug fix with clear reproduction steps already provided by user
-- User explicitly said "just do it", "no questions", or "skip questions"
-- Fast mode active AND estimated change < 10 LOC
-- Hotfix chain active (production emergency)
+Skip if: bug fix with clear repro steps | user said "just do it" | fast mode + <10 LOC | hotfix chain active. Complexity revealed → escalate to `rune:ba`.
 
-This is NOT the full BA elicitation (5 questions). It's a lightweight 2-question gate that prevents the most common failure: implementing the wrong thing. If the answers reveal complexity → escalate to `rune:ba` for deep requirement analysis.
-
-**Question format**: Use brainstorm's dynamic questioning format when possible (Priority level, Decision Point, Why This Matters, Options table, Default).
-
-4. Invoke scout to scan the codebase:
-   - Use `Glob` to find files matching the feature domain (e.g., `**/*auth*`, `**/*user*`)
-   - Use `Grep` to search for related patterns, imports, existing implementations
-   - Use `Read` to examine key files identified
-5. Summarize findings:
-   - What exists already
-   - What patterns/conventions the project uses
-   - What files will likely need to change
-   - **Active decisions that constrain this task** (from step 3)
-6. **Python async detection**: If Python project detected (`pyproject.toml` or `setup.py`), use `Grep` for async indicators:
-   - Search for: `async def`, `await`, `aiosqlite`, `aiohttp`, `httpx.AsyncClient`, `asyncio.run`, `trio`
-   - If ≥3 matches across source files → flag project as **"async-first Python"**
-   - Note for later phases: new code should default to `async def`, avoid blocking calls (`requests.get`, `time.sleep`, `open()`)
-7. Mark Phase 1 as `completed`
+5. Invoke scout to scan the codebase (Glob + Grep + Read on relevant files)
+6. Summarize: what exists, project conventions, files likely to change, active decision constraints
+7. **Python async detection**: if Python project detected, `Grep` for async indicators (`async def`, `await`, `aiosqlite`, `aiohttp`, `asyncio.run`). If ≥3 matches → flag as **"async-first Python"** — new code defaults to `async def`
+8. Mark Phase 1 as `completed`
 
 **Gate**: If scout finds the feature already exists → STOP and inform user.
 
@@ -153,67 +183,50 @@ This is NOT the full BA elicitation (5 questions). It's a lightweight 2-question
 
 **Goal**: Detect if domain-specific L4 extension packs apply to this task.
 
-After scout completes (Phase 1), check if the detected tech stack or task description matches any L4 extension pack. If a match is found, load the relevant domain-specific patterns, constraints, and sharp edges into the current workflow.
+<MUST-READ path="references/pack-detection.md" trigger="Phase 1.5 — before checking L4 pack mapping"/>
 
-**Split pack protocol** (context-efficient):
-- `Read` the matching PACK.md index (~60-80 lines) — this contains triggers, skill table, connections, and workflows
-- Match the task to the specific skill name in the index's Skills Included table
-- `Read` only the matching skill file(s) from `skills/` subdirectory (e.g., `extensions/backend/skills/auth.md`)
-- Load max 2-3 skill files per invocation — not all skills in the pack
-- Pack-level constraints (from index's Connections and Sharp Edges sections) always apply
+After scout completes, check if the detected tech stack or task description matches any L4 extension pack. This phase is lightweight — a Read + pattern match. It does NOT replace Phase 1 (scout) or Phase 2 (plan). If 0 packs match: skip silently.
 
-**Monolith pack protocol** (legacy): If no `format: split` in PACK.md frontmatter, read the full PACK.md and extract the matching `### skill-name` section as before.
+## Phase 1.7: WORKFLOW ORCHESTRATION (Multi-Skill Sequences)
 
-1. Check the project's detected stack against the L4 pack mapping:
+**Goal**: If Phase 1.5 detected a pack AND the task maps to a named workflow, orchestrate the multi-skill sequence.
 
-| Signal in Codebase or Task | Pack | File |
-|---|---|---|
-| `*.tsx`, `*.svelte`, `*.vue`, Tailwind, CSS modules | `@rune/ui` | `extensions/ui/PACK.md` |
-| Express/Fastify/NestJS routes, API endpoints | `@rune/backend` | `extensions/backend/PACK.md` |
-| Dockerfile, `.github/workflows/`, Terraform | `@rune/devops` | `extensions/devops/PACK.md` |
-| `react-native`, `expo`, `flutter`, `ios/`, `android/` | `@rune/mobile` | `extensions/mobile/PACK.md` |
-| Auth, OWASP, secrets, PCI/HIPAA markers | `@rune/security` | `extensions/security/PACK.md` |
-| Trading, charts, market data, `decimal.js` | `@rune/trading` | `extensions/trading/PACK.md` |
-| Multi-tenant, billing, `stripe`, subscription | `@rune/saas` | `extensions/saas/PACK.md` |
-| Cart, checkout, inventory, Shopify | `@rune/ecommerce` | `extensions/ecommerce/PACK.md` |
-| `openai`, `anthropic`, embeddings, RAG, LLM | `@rune/ai-ml` | `extensions/ai-ml/PACK.md` |
-| `three`, `pixi`, `phaser`, `*.glsl`, game loop | `@rune/gamedev` | `extensions/gamedev/PACK.md` |
-| CMS, blog, MDX, `i18next`, SEO | `@rune/content` | `extensions/content/PACK.md` |
-| Analytics, tracking, A/B test, funnel | `@rune/analytics` | `extensions/analytics/PACK.md` |
-| Chrome extension, `manifest.json`, service worker, content script | `@rune/chrome-ext` | `extensions/chrome-ext/PACK.md` |
-| PRD, roadmap, KPI, release notes, `.rune/business/` | `@rune-pro/product` | `extensions/pro-product/PACK.md` |
-| Sales outreach, pipeline, call prep, competitive intel | `@rune-pro/sales` | `extensions/pro-sales/PACK.md` |
-| Data science, SQL, dashboard, statistical testing, ETL | `@rune-pro/data-science` | `extensions/pro-data-science/PACK.md` |
-| Support ticket, KB article, escalation, SLA, FAQ | `@rune-pro/support` | `extensions/pro-support/PACK.md` |
-| Budget, expense, revenue forecast, P&L, cash flow, runway | `@rune-pro/finance` | `extensions/pro-finance/PACK.md` |
-| Contract, NDA, compliance, GDPR, IP, legal incident | `@rune-pro/legal` | `extensions/pro-legal/PACK.md` |
+**Trigger**: Only runs if Phase 1.5 found a pack match AND the pack's Workflows table has a matching command.
 
-2. If ≥1 pack matches:
-   - Use `Read` to load the matching PACK.md (index if split, full if monolith)
-   - For split packs: identify the relevant skill from the index table, then `Read` only that skill file from `skills/` subdirectory
-   - For monolith packs: extract the relevant `### skill-name` section from the PACK.md body
-   - Apply pack constraints alongside cook's own constraints for the rest of the workflow
-   - Announce: "Loaded @rune/[pack] → [skill-name] (split)" or "Loaded @rune/[pack] → [skill-name] (full)"
+<MUST-READ path="references/pack-detection.md" trigger="Phase 1.7 — workflow command detection section"/>
 
-3. If 0 packs match: skip silently, proceed to Phase 2
+1. Read the matched PACK.md's Workflows section
+2. Identify the workflow name and skill sequence
+3. For each skill in sequence:
+   a. Load the skill file from the pack's `skills/` directory
+   b. Execute the skill's workflow steps
+   c. Write output artifact to `.rune/<domain>/` (e.g., `.rune/hr/jd-[role]-[date].md`)
+   d. The next skill reads the previous artifact as input context
+4. After all skills complete: summarize the workflow results to the user
 
-This phase is lightweight — a Read + pattern match, not a full scan. It does NOT replace Phase 1 (scout) or Phase 2 (plan). It augments them with domain expertise.
+**Threading state**: Each skill in the sequence produces an artifact file. The next skill's Step 1 reads existing artifacts from `.rune/<domain>/`. This is already built into each skill — no new plumbing needed.
+
+**Skip if**: No workflow match found in Phase 1.5. Single-skill tasks proceed directly to Phase 2 (PLAN) as normal.
 
 ## Phase 0: RESUME CHECK (Before Phase 1)
 
 **Goal**: Detect if a master plan already exists for this task. If so, skip Phase 1-2 and resume from the current phase.
 
-**Step 0.5 — Cross-Project Recall**: Call `neural-memory` (Recall Mode) with 3-5 topics relevant to the current task. Load applicable patterns, past decisions, and error history from neural memory. Always prefix queries with the project name to avoid cross-project noise (e.g., `"ProjectName auth pattern"` not just `"auth pattern"`). This activates neurons from past sessions and surfaces context that may not be in the local `.rune/` files.
+**Step 0.5 — Cross-Project Recall**: Call `neural-memory` (Recall Mode) with 3-5 topics relevant to the current task. Always prefix queries with the project name (e.g., `"ProjectName auth pattern"` not `"auth pattern"`).
 
 1. Use `Glob` to check for `.rune/plan-*.md` files
-2. If a master plan exists that matches the current task:
-   - Read the master plan file
-   - Find the first phase with status `⬚ Pending` or `🔄 Active`
-   - Read ONLY that phase's file (e.g., `.rune/plan-<feature>-phase<N>.md`)
-   - Announce: "Resuming from Phase N: <name>. Loading phase file."
-   - Skip to Phase 4 (IMPLEMENT) with the phase file as context
-   - Mark the phase as `🔄 Active` in the master plan
+2. If a master plan exists matching the current task: Read it → find first `⬚ Pending` or `🔄 Active` phase → load ONLY that phase file → announce "Resuming from Phase N" → skip to Phase 4
 3. If no master plan exists → proceed to Phase 1 as normal
+
+**Step 0.6 — Contract Load**: Use `Glob` to check for `.rune/contract.md`. If it exists:
+1. `Read` the contract file and parse each `## section` as a named rule set
+2. Hold contract rules in context — they apply as **hard gates** throughout all phases
+3. Any code change that violates a contract rule → STOP and inform user before proceeding
+4. If no contract exists → proceed normally (contract is optional)
+
+<HARD-GATE>
+Contract violations are NON-NEGOTIABLE. If `.rune/contract.md` exists and a planned or implemented change violates any rule, cook MUST stop and report the violation. The user must explicitly override ("ignore contract rule X") to proceed.
+</HARD-GATE>
 
 **This enables multi-session workflows**: Opus plans once → each session picks up the next phase.
 
@@ -224,72 +237,53 @@ This phase is lightweight — a Read + pattern match, not a full scan. It does N
 **REQUIRED SUB-SKILL**: Use `rune:plan`
 
 1. Mark Phase 2 as `in_progress`
-2. **Feature workspace** (opt-in) — for non-trivial features (3+ phases), suggest creating a feature workspace:
-   ```
-   .rune/features/<feature-name>/
-   ├── spec.md       — what we're building and why (user's original request + context)
-   ├── plan.md       — implementation plan (output of plan skill)
-   ├── decisions.md  — feature-specific decisions (subset of .rune/decisions.md)
-   └── status.md     — progress tracking (completed/pending phases)
-   ```
-   - Ask user: "Create feature workspace for `<feature-name>`?" — if yes, create the directory + spec.md with the user's request
-   - plan.md is written after Step 4 (plan approval)
-   - Skip for simple bug fixes, small refactors, or fast mode
-   - Session-bridge (Phase 8) auto-updates status.md if workspace exists
-3. Based on scout findings, create an implementation plan:
-   - List exact files to create/modify
-   - Define the order of changes
-   - Identify dependencies between steps
-   - **Include active decisions from Phase 1 step 3 as constraints** — plan must respect prior decisions or explicitly flag overrides
+2. **Feature workspace** (opt-in) — for non-trivial features (3+ phases), suggest creating `.rune/features/<feature-name>/` with `spec.md`, `plan.md`, `decisions.md`, `status.md`. Skip for simple bug fixes, fast mode.
+3. Create implementation plan: exact files to create/modify, change order, dependencies, active decision constraints
 4. If multiple valid approaches exist → invoke `rune:brainstorm` for trade-off analysis
 5. Present plan to user for approval
-6. If feature workspace was created (step 2), write approved plan to `.rune/features/<name>/plan.md`
+6. If feature workspace was created, write approved plan to `.rune/features/<name>/plan.md`
 7. Mark Phase 2 as `completed`
 
 **Gate**: User MUST approve the plan before proceeding. Do NOT skip this.
 
-## Phase 2.5: ADVERSARY (Red-Team Challenge)
+### Phase 2.5: RFC GATE (Breaking Changes Only)
+
+**Goal**: Formal change management for breaking changes. Prevents unreviewed breaking changes from reaching production.
+
+<MUST-READ path="references/rfc-template.md" trigger="Phase 2.5 — any time a breaking change is detected in the plan"/>
+
+<HARD-GATE>
+Breaking change without RFC = BLOCKED. No exceptions.
+"It's just a small change" is the #1 excuse for production incidents from unreviewed breaking changes.
+</HARD-GATE>
+
+### Phase 2.5: ADVERSARY (Red-Team Challenge)
 
 **Goal**: Stress-test the approved plan BEFORE writing code — catch flaws at plan time, not implementation time.
 
 **REQUIRED SUB-SKILL**: Use `rune:adversary`
 
-1. **Skip conditions** (do NOT run adversary for):
-   - Bug fixes or hotfixes (plan is "fix the bug", nothing to challenge)
-   - Simple refactors (< 3 files, no new logic)
-   - Fast mode (user explicitly opted for speed)
-2. **Run adversary** on the approved plan:
-   - Full Red-Team mode for new features, architectural changes, security-sensitive plans
-   - Quick Challenge mode for smaller plans (< 3 files, no auth/payment)
+1. **Skip conditions**: bug fixes, hotfixes, simple refactors (< 3 files, no new logic), fast mode
+2. **Run adversary** — Full Red-Team mode for new features/architectural changes; Quick Challenge mode for smaller plans
 3. **Handle verdict**:
-   - **REVISE** → return to Phase 2 (PLAN) with adversary findings as constraints. User must re-approve.
-   - **HARDEN** → present remediations to user, update plan inline, then proceed to Phase 3
+   - **REVISE** → return to Phase 2 with adversary findings as constraints; user must re-approve
+   - **HARDEN** → present remediations, update plan inline, then proceed to Phase 3
    - **PROCEED** → pass findings as implementation notes to Phase 3
-4. **Max 1 REVISE loop** per cook session — if the revised plan also gets REVISE, ask user to decide
+4. **Max 1 REVISE loop** per cook session — if revised plan also gets REVISE, ask user to decide
 
 ### Phase-Aware Execution (Master Plan + Phase Files)
 
 When `rune:plan` produces a **master plan + phase files** (non-trivial tasks):
 
-1. **After plan approval**: Read the master plan to identify Phase 1
-2. **Load ONLY Phase 1's file** — do NOT load all phase files into context
-3. **Execute Phase 1** through cook Phase 3-6 (test → implement → quality → verify)
-4. **After Phase 1 complete**:
-   - Mark tasks done in the phase file
-   - Update master plan: Phase 1 status `⬚ → ✅`
-   - Announce: "Phase 1 complete. Phase 2 ready for next session."
-5. **Next session**: Phase 0 (RESUME CHECK) detects the master plan → loads Phase 2 → executes
-6. **Repeat** until all phases are ✅
+1. After plan approval: load ONLY Phase 1's file — do NOT load all phase files
+2. Execute through cook Phase 3-6 (test → implement → quality → verify)
+3. After phase complete: mark tasks done, update master plan status `⬚ → ✅`, announce "Phase N complete. Phase N+1 ready for next session."
+4. Next session: Phase 0 detects master plan → loads next phase → executes
 
 <HARD-GATE>
 NEVER load multiple phase files at once. One phase per session = small context = better code.
 If the coder model needs info from other phases, it's in the Cross-Phase Context section of the current phase file.
 </HARD-GATE>
-
-**Why one phase per session?**
-- Big context = even Opus misses details and makes mistakes
-- Small context = Sonnet handles correctly, Opus has zero mistakes
-- Phase files are self-contained via Amateur-Proof Template — no other context needed
 
 ## Phase 3: TEST (TDD Red)
 
@@ -298,18 +292,11 @@ If the coder model needs info from other phases, it's in the Cross-Phase Context
 **REQUIRED SUB-SKILL**: Use `rune:test`
 
 1. Mark Phase 3 as `in_progress`
-2. Write test files based on the plan:
-   - Use `Write` to create test files
-   - Cover the primary use case + edge cases
-   - Tests MUST be runnable
-3. **Python async pre-check** (if async-first Python flagged in Phase 1):
-   - Verify `pytest-asyncio` is in project dependencies (`pyproject.toml` or `requirements*.txt`)
-   - Check `pyproject.toml` for `[tool.pytest.ini_options]` → `asyncio_mode = "auto"` — if missing, warn user and suggest adding it before writing async tests
-   - If pytest-asyncio not installed: warn that async tests will silently pass without executing async code
-4. Run the tests to verify they FAIL:
-   - Use `Bash` to execute the test command (e.g., `pytest`, `npm test`, `cargo test`)
-   - Expected: tests FAIL (red) because implementation doesn't exist yet
-4. Mark Phase 3 as `completed`
+2. **Eval definitions** (Full/Critical rigor only): Before writing tests, define capability evals (pass@k) and regression evals (pass^k) in `.rune/evals/<feature>.md`. Capability evals test "can the system do this new thing?" — regression evals test "did we break existing behavior?" Skip for Fast/Standard rigor levels.
+3. Write test files based on the plan — cover primary use case + edge cases; tests MUST be runnable
+4. **Python async pre-check** (if async-first Python flagged in Phase 1): verify `pytest-asyncio` is installed and `asyncio_mode = "auto"` is in `pyproject.toml` — if missing, warn user before writing async tests
+5. Run tests to verify they FAIL — expected: RED because implementation doesn't exist yet
+6. Mark Phase 3 as `completed`
 
 **Gate**: Tests MUST exist and MUST fail. If tests pass without implementation → tests are wrong, rewrite them.
 
@@ -321,40 +308,16 @@ If the coder model needs info from other phases, it's in the Cross-Phase Context
 
 1. Mark Phase 4 as `in_progress`
 2. **Phase-file execution** — if working from a master plan + phase file:
-   - Execute tasks listed in the phase file (the `## Tasks` section)
-   - Follow code contracts from `## Code Contracts` section
-   - Respect rejection criteria from `## Rejection Criteria` section
-   - Handle failure scenarios from `## Failure Scenarios` section
-   - Use `## Cross-Phase Context` for imports/exports from other phases
-   - Mark each task `[x]` in the phase file as completed
-3. Implement the feature following the plan:
-   - Use `Write` for new files
-   - Use `Edit` for modifying existing files
-   - Follow project conventions found in Phase 1
-3. Run tests after each significant change:
-   - Use `Bash` to run tests
-   - If tests pass → continue to next step in plan
-   - If tests fail → debug and fix
-   - **Python async checklist** (if async-first Python flagged in Phase 1):
-     - No blocking calls in async functions: `time.sleep()` → `asyncio.sleep()`, `open()` → `aiofiles.open()`, `requests.get()` → `httpx.AsyncClient.get()`
-     - Use `async with` for async context managers (DB connections, HTTP sessions)
-     - Prefer `asyncio.gather()` for parallel I/O operations
-     - Use `asyncio.TaskGroup` (Python 3.11+) for structured concurrency
-4. If stuck on unexpected errors → invoke `rune:debug` (max 3 debug↔fix loops)
-5. **Re-plan check** — before proceeding to Phase 5, evaluate:
-   - Did debug-fix loops hit max (3) for any area? → trigger re-plan
-   - Were files modified outside the approved plan scope? → trigger re-plan
-   - Was a new dependency added that changes the approach? → trigger re-plan
-   - Did the user request a scope change during implementation? → trigger re-plan
-   - If any trigger fires: invoke `rune:plan` with delta context:
-     ```
-     Delta: { original_plan: "Phase 2 plan or .rune/features/<name>/plan.md",
-              trigger: "max_debug | scope_expansion | new_dependency | user_scope_change",
-              failed_area: "description of what went wrong",
-              discovered: "new facts found during implementation" }
-     ```
-     Plan outputs revised phases. Get user approval before resuming.
-6. **Approach Pivot Gate** — if re-plan ALSO fails (implementation still blocked after revised plan):
+   - Execute tasks from `## Tasks` section wave-by-wave
+   - Wave N only starts after ALL Wave N-1 tasks complete
+   - Follow Code Contracts, Rejection Criteria, Failure Scenarios from the phase file
+   - Mark each task `[x]` as completed
+3. Implement the feature following the plan (Write for new files, Edit for existing)
+4. Run tests after each significant change — if fail → debug and fix
+   - **Python async** (if async-first flagged): no blocking calls in async functions — `time.sleep` → `asyncio.sleep`, `requests` → `httpx.AsyncClient`, use `asyncio.gather()` for parallel I/O
+5. If stuck → invoke `rune:debug` (max 3 debug↔fix loops). Fixes outside plan scope require user approval (R4).
+6. **Re-plan check** — evaluate before Phase 5: max debug loops hit? out-of-scope files changed? new dep changes approach? user scope change? If any fire → invoke `rune:plan` with delta context, get user approval before resuming.
+7. **Approach Pivot Gate** — if re-plan ALSO fails:
 
    <HARD-GATE>
    Do NOT surrender. Do NOT tell user "no solution exists."
@@ -362,151 +325,95 @@ If the coder model needs info from other phases, it's in the Cross-Phase Context
    MUST invoke brainstorm(mode="rescue") before giving up.
    </HARD-GATE>
 
-   **Trigger conditions** (ANY of these):
-   - Re-plan produced a revised plan, but implementation hits the SAME category of blocker
-   - 3 debug-fix loops exhausted AND re-plan exhausted (total 6+ failed attempts in same approach)
-   - Agent catches itself about to say "this approach doesn't seem feasible" or "no solution found"
+   Invoke `rune:brainstorm(mode="rescue")` with `failed_approach`, `failure_evidence[]`, `original_goal`. Returns 3-5 alternatives → user picks → **restart from Phase 2**.
 
-   **Action**:
-   ```
-   Invoke rune:brainstorm with:
-     mode: "rescue"
-     failed_approach: "[name of approach from Phase 2]"
-     failure_evidence: ["blocker 1", "blocker 2", "blocker 3"]
-     original_goal: "[what we're still trying to achieve]"
-   ```
-
-   brainstorm(rescue) returns 3-5 category-diverse alternatives → present to user → user picks → **restart from Phase 2** with the new approach. Previous work is sunk cost — do not try to salvage.
-
-7. All tests MUST pass before proceeding
-8. Mark Phase 4 as `completed`
+8. All tests MUST pass before proceeding
+9. Mark Phase 4 as `completed`
 
 **Gate**: ALL tests from Phase 3 MUST pass. Do NOT proceed with failing tests.
 
-## Phase 5: QUALITY (Parallel)
+## Phase 5: QUALITY (Staged)
 
 **Goal**: Catch issues before they reach production.
 
-Run quality checks **in parallel** for speed. Any CRITICAL finding blocks the commit.
+Quality checks run in **two stages** — spec compliance gates code review. Reviewing code quality before verifying it matches the spec wastes effort on code that may need rewriting.
 
 ```
-PARALLEL EXECUTION:
-  Launch 5a + 5b + 5c simultaneously as independent Task agents.
-  Wait for ALL to complete before proceeding.
+STAGE 1 (parallel):
+  Launch 5a (preflight) + 5b (sentinel) simultaneously.
+  Wait for BOTH to complete.
+  If 5a returns BLOCK → fix spec gaps, re-run 5a. Code review CANNOT start on non-compliant code.
+  If 5b returns BLOCK → fix security issue, re-run 5b.
+
+STAGE 2 (after Stage 1 passes):
+  Launch 5c (review) + 5d (completion-gate) simultaneously.
   If any returns BLOCK → fix findings, re-run the blocking check only.
 ```
 
-### 5a. Preflight (Spec Compliance + Logic)
+### 5a. Preflight (Spec Compliance + Logic) — STAGE 1
 **REQUIRED SUB-SKILL**: Use `rune:preflight`
-- **Spec compliance**: Compare approved plan (Phase 2) vs actual diff — did we build what we planned?
-- Logic review: Are there obvious bugs?
-- Error handling: Are errors caught properly?
-- Completeness: Does it cover edge cases?
+- Spec compliance: compare approved plan vs actual diff
+- Logic review, error handling, completeness
+- **Must pass before 5c (review) can start** — no point reviewing code quality if it doesn't match the spec
 
-### 5b. Security
+### 5b. Security — STAGE 1
 **REQUIRED SUB-SKILL**: Use `rune:sentinel`
-- Secret scan: No hardcoded keys/tokens
-- OWASP check: No injection, XSS, CSRF vulnerabilities
-- Dependency audit: No known vulnerable packages
+- Secret scan, OWASP check (no injection/XSS/CSRF), dependency audit
 
-### 5c. Code Review
+### 5c. Code Review — STAGE 2
 **REQUIRED SUB-SKILL**: Use `rune:review`
-- Pattern compliance: Follows project conventions
-- Code quality: Clean, readable, maintainable
-- Performance: No obvious bottlenecks
+- Pattern compliance, code quality, performance bottlenecks
+- Reviewer reads code independently — does NOT rely on implementer's claims
+- **Reviewer isolation** (when invoked via `team`): The review agent MUST be a separate context window from the implementing agent. Author reasoning contaminates review — the reviewer should never have seen the implementation's reasoning chain. Sonnet implements, a fresh Sonnet reviews.
 
-### 5d. Completion Gate
+### 5d. Completion Gate — STAGE 2
 **REQUIRED SUB-SKILL**: Use `rune:completion-gate`
-- Validate that agent claims match evidence trail
-- Check: tests actually ran (stdout captured), files actually changed (git diff), build actually passed
-- Any UNCONFIRMED claim → BLOCK with specific gap identified
+- Validate agent claims match evidence trail (tests ran, files changed, build passed)
+- No truncated code files (`// ...`, `// rest of code`, bare ellipsis) — agent MUST complete all output
+- Any UNCONFIRMED claim → BLOCK
 
 **Gate**: If sentinel finds CRITICAL security issue → STOP, fix it, re-run. Non-negotiable.
 **Gate**: If completion-gate finds UNCONFIRMED claim → STOP, re-verify. Non-negotiable.
 
+## Per-Phase Rules (Project-Specific)
+
+Projects can define phase-specific rules in `.rune/phase-rules.md` that apply ONLY during specific cook phases. These are additive — they enhance skill guidance, not replace it.
+
+```markdown
+# .rune/phase-rules.md (example)
+
+## Phase 2: PLAN
+- All API endpoints must follow REST naming convention /api/v1/<resource>
+- Database changes require a rollback migration
+
+## Phase 3: TEST
+- Enforce TDD format: describe → it → arrange → act → assert
+- Minimum 3 edge cases per public function
+
+## Phase 5: QUALITY
+- Review must check for N+1 queries on any ORM code
+- Sentinel must verify CORS configuration on new routes
+```
+
+**Loading**: Cook reads `.rune/phase-rules.md` during Phase 0 (resume check). Rules for each phase are injected into the sub-skill's context when that phase starts. If file doesn't exist → skip silently.
+
 ## Checkpoint Protocol (Opt-In)
 
-For long-running cook sessions, save intermediate state at phase boundaries:
-
-```
-After Phase 2 (PLAN approved):    session-bridge saves plan + decisions
-After Phase 4 (IMPLEMENT done):   session-bridge saves progress + modified files
-After Phase 5 (QUALITY passed):   session-bridge saves quality results
-
-Trigger: Invoke rune:session-bridge at each boundary.
-This is OPT-IN — only activate if:
-  - Task spans 3+ phases
-  - Context-watch has triggered a warning
-  - User explicitly requests checkpoints
-```
+Invoke `rune:session-bridge` after Phase 2, 4, and 5 to save intermediate state. OPT-IN — activate only if task spans 3+ phases, context-watch is ORANGE, or user explicitly requests checkpoints. Before spawning subagents, invoke `rune:context-pack` to create structured handoff briefings.
 
 ## Phase Transition Protocol (MANDATORY)
 
-Before entering ANY Phase N+1, assert ALL of the following:
+Before entering ANY Phase N+1, assert: Phase N `completed` in TodoWrite | gate condition met | no BLOCK from sub-skills | no unresolved CRITICAL findings. If any fails → STOP, log "BLOCKED at Phase N→N+1: [assertion]", fix, re-check.
 
-```
-ASSERT Phase N status == completed (in TodoWrite)
-ASSERT Phase N gate condition met (see Mesh Gates table below)
-ASSERT No BLOCK status from any sub-skill in Phase N
-ASSERT No unresolved CRITICAL findings from quality checks
-
-IF any assertion fails:
-  → STOP. Do NOT proceed to Phase N+1.
-  → Log: "BLOCKED at Phase N→N+1 transition: [specific assertion that failed]"
-  → Fix the blocking issue, then re-check assertions.
-```
-
-**Key transitions to enforce:**
-| Transition | Gate | Common Violation |
-|---|---|---|
-| Phase 1 → 2 | Scout Gate (codebase scanned) | Skipping scout "to save time" |
-| Phase 2 → 3 | Plan Gate (user approved plan) | Starting code without approval |
-| Phase 3 → 4 | Test-First Gate (failing tests exist) | Writing code before tests |
-| Phase 4 → 5 | All tests pass | Moving to quality with failing tests |
-| Phase 5 → 6 | Quality gate (no CRITICAL findings) | Ignoring sentinel CRITICAL |
-| Phase 6 → 7 | Verification green (lint + types + build) | Committing broken build |
+**Key transitions:** 1→2: scout done | 2→3: plan approved | 3→4: failing tests exist | 4→5: all tests pass | 5→6: no CRITICAL findings | 6→7: lint+types+build green.
 
 ## Phase 6: VERIFY
 
-**Goal**: Final automated verification before commit.
-
-**REQUIRED SUB-SKILL**: Use `rune:verification`
-
-1. Mark Phase 6 as `in_progress`
-2. Run full verification suite:
-   - Lint check (e.g., `eslint`, `ruff`, `clippy`)
-   - Type check (e.g., `tsc --noEmit`, `mypy`, `cargo check`)
-   - Full test suite (not just new tests)
-   - Build (e.g., `npm run build`, `cargo build`)
-3. Use `rune:hallucination-guard` to verify:
-   - All imports reference real modules
-   - API calls use correct signatures
-   - No phantom dependencies
-4. Mark Phase 6 as `completed`
-
-**Gate**: ALL checks MUST pass. If any fail → fix and re-run. Do NOT commit broken code.
+**REQUIRED SUB-SKILL**: Use `rune:verification` — run lint, type check, full test suite, build. Then `rune:hallucination-guard` to verify imports and API signatures. ALL checks MUST pass before commit.
 
 ## Phase 7: COMMIT
 
-**Goal**: Create a clean, semantic commit.
-
-**RECOMMENDED SUB-SKILL**: Use `rune:git` for semantic commit generation.
-
-1. Mark Phase 7 as `in_progress`
-2. Stage changed files:
-   - Use `Bash` to run `git add <specific files>` (NOT `git add .`)
-   - Verify staged files with `git status`
-3. Invoke `rune:git commit` to generate semantic commit message from staged diff:
-   - Analyzes diff to classify change type (feat/fix/refactor/test/docs/chore)
-   - Extracts scope from file paths
-   - Detects breaking changes
-   - Formats as conventional commit: `<type>(<scope>): <description>`
-   - Fallback: if git skill unavailable, use format `<type>: <description>` manually
-4. **Master plan update** — if working from a master plan + phase files:
-   - Update the master plan file: current phase status `🔄 → ✅`
-   - If next phase exists: announce "Phase N complete. Phase N+1 ready for next session."
-   - If all phases ✅: announce "All phases complete. Feature done."
-5. Mark Phase 7 as `completed`
+**RECOMMENDED SUB-SKILL**: Use `rune:git` — stage specific files (`git add <files>`, NOT `git add .`), generate semantic commit message from diff. If working from master plan: update phase status `🔄 → ✅`, announce next phase or "All phases complete."
 
 ## Phase 8: BRIDGE
 
@@ -515,40 +422,38 @@ IF any assertion fails:
 **REQUIRED SUB-SKILL**: Use `rune:session-bridge`
 
 1. Mark Phase 8 as `in_progress`
-2. Save decisions to `.rune/decisions.md`:
-   - What approach was chosen and why
-   - Any trade-offs made
-3. Update `.rune/progress.md` with completed task
-4. Update `.rune/conventions.md` if new patterns were established
-5. **Write skill-sourced metrics** to `.rune/metrics/skills.json`:
-   - Read the existing file (or create `{ "version": 1, "updated": "<now>", "skills": {} }`)
-   - Under the `cook` key, update:
-     - `phases`: increment `run` or `skip` count for each phase that was run/skipped this session
-     - `quality_gate_results`: increment `preflight_pass`/`preflight_fail`, `sentinel_pass`/`sentinel_block`, `review_pass`/`review_issues` based on Phase 5 outcomes
-     - `debug_loops`: increment `total` by number of debug-fix loops in Phase 4, update `max_per_session` if this session exceeded it
-   - Write the updated file back
-6. **Adaptive error recovery** (H3 Intelligence):
-   - If Phase 4 had 3 debug-fix loops (max) for a specific error pattern, write a routing override to `.rune/metrics/routing-overrides.json`:
-     - Format: `{ "id": "r-<timestamp>", "condition": "<error pattern>", "action": "route to problem-solver before debug", "source": "auto", "active": true }`
-   - Max 10 active rules — if exceeded, remove oldest inactive rule
-7. **Step 8.5 — Capture Learnings**: Call `neural-memory` (Capture Mode). Save 2-5 memories covering: architecture decisions made this session, patterns introduced or validated, errors encountered and their root-cause fixes, and any trade-offs chosen. Use rich cognitive language (causal, decisional, comparative — not flat facts). Tag each memory with `[project-name, technology, topic]`. Priority: 5 for routine patterns, 7-8 for key decisions, 9-10 for critical errors. Do NOT batch — save each memory immediately. Do NOT wait for the user to ask.
-8. Mark Phase 8 as `completed`
+2. Save to `.rune/decisions.md` (approach + trade-offs), `.rune/progress.md` (task complete), `.rune/conventions.md` (new patterns)
+3. **Skill metrics** → `.rune/metrics/skills.json`: increment phase run/skip counts, quality gate results, debug loop counts under `cook` key
+4. **Routing overrides** (H3): if Phase 4 hit max loops for an error pattern → write rule to `.rune/metrics/routing-overrides.json`. Max 10 active rules.
+5. **Step 8.5 — Capture Learnings**: `neural-memory` (Capture Mode) — 2-5 memories: architecture decisions, patterns, error root-causes, trade-offs. Cognitive language (causal/decisional/comparative). Tags: `[project, tech, topic]`. Priority 5 routine / 7-8 decisions / 9-10 critical errors.
+6. Mark Phase 8 as `completed`
 
 ## Autonomous Loop Patterns
 
-When cook runs inside `team` (L1) or autonomous workflows, these patterns apply:
+When cook runs inside `team` (L1) or autonomous workflows, these patterns apply.
 
 ### De-Sloppify Pass
 
-After Phase 4 (IMPLEMENT), if the implementation touched 5+ files, run a focused cleanup pass:
-1. Re-read all modified files
-2. Check for: leftover debug statements, inconsistent naming, duplicated logic, missing error handling
-3. Fix issues found (this is still Phase 4 — not a new phase)
-4. This pass catches "almost right" code that slips through when focused on making tests pass
+After Phase 4 completes (all tests green), run a **separate focused cleanup pass** on all modified files. Two focused passes outperform one constrained pass — let the implementer write freely in Phase 4, then clean up here.
+
+**Trigger**: Implementation touched 3+ files OR 100+ LOC changed. Skip for nano/fast rigor.
+
+**Slop targets** (check every modified file):
+
+| Slop Type | Detection | Fix |
+|-----------|-----------|-----|
+| Leftover debug | `console.log`, `print()`, `debugger`, `TODO: remove` | Delete |
+| Over-defensive checks | Null checks on values guaranteed non-null by TypeScript/framework | Remove redundant guard |
+| Type-test slop | `typeof x === 'string'` when x is already typed as string | Remove — trust the type system |
+| Duplicated logic | Same 3+ lines appear in multiple places | Extract utility |
+| Framework-behavior tests | Tests asserting that React renders, that Express routes exist, that mocks work | Delete — test YOUR code, not the framework |
+| Inconsistent naming | Mixed `camelCase`/`snake_case` in same file | Normalize to project convention |
+| Dead imports | Imports no longer used after edits | Remove |
+
+**Important**: This is NOT a quality gate — it's a cleanup pass. Don't block the pipeline for cosmetic issues. Fix what you find, move on.
 
 ### Continuous PR Loop (team orchestration only)
 
-When `team` runs multiple cook instances in parallel:
 ```
 cook instance → commit → push → create PR → wait CI
   IF CI passes → mark workstream complete
@@ -558,140 +463,59 @@ cook instance → commit → push → create PR → wait CI
 
 ### Formal Pause/Resume (`.continue-here.md`)
 
-When cook must pause mid-phase (context limit, user break, session end before phase completes):
+<MUST-READ path="references/pause-resume-template.md" trigger="when cook must pause mid-phase (context limit, user break, session end)"/>
 
-1. Create `.rune/.continue-here.md` with structured handoff:
-```markdown
-## Continue Here
-- **Phase**: [current phase number and name]
-- **Task**: [current task within phase — e.g., "Task 3 of 5"]
-- **Completed**: [list of tasks done this session]
-- **Remaining**: [list of tasks not yet started]
-- **Decisions**: [any decisions made this session]
-- **Blockers**: [if any — what's stuck and why]
-- **WIP Files**: [files modified but not yet committed]
-```
-2. Create a WIP commit: `wip: cook phase N paused at task M`
-3. Phase 0 (RESUME CHECK) detects `.continue-here.md` → resumes from exact task position
-4. After successful resume and phase completion → delete `.continue-here.md`
+When cook must pause mid-phase, create `.rune/.continue-here.md` with structured handoff, then WIP commit. Phase 0 detects it on resume. More granular than plan-level resume — resumes within a phase.
 
-This is more granular than Phase 0's plan-level resume — it resumes within a phase, not just between phases.
+### Mid-Run Signal Detection
+
+<MUST-READ path="references/mid-run-signals.md" trigger="when user sends a message DURING cook execution"/>
+
+Two-stage intent classification: keyword fast-path for short messages (<60 chars), context classification for longer ones. Never queue user messages — process immediately.
+
+<HARD-GATE>
+NEVER treat a Cancel/Pause signal as a Steer or NewTask. User safety signals take absolute priority.
+If ambiguous between Cancel and Steer → ask user: "Did you mean stop, or change approach?"
+</HARD-GATE>
 
 ### Exit Conditions (Mandatory for Autonomous Runs)
 
-Every cook invocation inside `team` or autonomous workflows MUST have exit conditions:
+<MUST-READ path="references/exit-conditions.md" trigger="cook running inside team or any autonomous workflow"/>
 
-```
-MAX_DEBUG_LOOPS:   3 per error area (already enforced)
-MAX_QUALITY_LOOPS: 2 re-runs of Phase 5 (fix→recheck cycle)
-MAX_REPLAN:        1 re-plan per cook session (Phase 4 re-plan check)
-MAX_PIVOT:         1 approach pivot per cook session (Approach Pivot Gate)
-TIMEOUT_SIGNAL:    If context-watch reports ORANGE, wrap up current phase and checkpoint
-```
-
-**Escalation chain**: debug-fix (3x) → re-plan (1x) → **approach pivot via brainstorm rescue (1x)** → THEN escalate to user. Never surrender before exhausting the pivot.
-
-If any exit condition triggers without resolution → cook emits `BLOCKED` status with details and stops. Never spin indefinitely.
+Hard caps: MAX_DEBUG_LOOPS=3, MAX_QUALITY_LOOPS=2, MAX_REPLAN=1, MAX_PIVOT=1, MAX_FIXES=30, WTF_THRESHOLD=20%.
+Escalation chain: debug-fix (3x) → re-plan (1x) → brainstorm rescue (1x) → THEN escalate to user.
 
 ### Subagent Status Protocol
 
-When cook completes (whether standalone or invoked by `team`), it MUST return one of four statuses. Sub-skills invoked by cook (fix, test, review, sentinel, etc.) MUST also return one of these statuses so cook can route accordingly.
+<MUST-READ path="references/subagent-status.md" trigger="when cook or any sub-skill needs to return a status"/>
 
-| Status | Meaning | Cook Action |
-|--------|---------|-------------|
-| `DONE` | Task complete, no issues | Proceed to next phase |
-| `DONE_WITH_CONCERNS` | Task complete but issues noted (e.g., "tests pass but a performance regression observed") | Proceed, but append concern to `.rune/progress.md` and surface in Cook Report; address in Phase 5 (QUALITY) or next review cycle |
-| `NEEDS_CONTEXT` | Cannot proceed without more information (missing requirement, ambiguous spec, unknown environment) | Pause execution. Ask user the specific question(s) blocking progress. Resume from the same phase after answer received. |
-| `BLOCKED` | Hard blocker — cannot continue regardless of context (broken dependency, fundamental incompatibility, exhausted escalation chain) | Trigger escalation chain: debug-fix (3x) → re-plan (1x) → brainstorm rescue (1x) → then escalate to user with full details |
+Cook and all sub-skills return: `DONE` | `DONE_WITH_CONCERNS` | `NEEDS_CONTEXT` | `BLOCKED`.
 
-**DONE_WITH_CONCERNS logging format** (append to `.rune/progress.md`):
-```
-[CONCERN][phase][timestamp] <sub-skill>: <concern description>
-```
+### Subagent Context Isolation
 
-**NEEDS_CONTEXT format**: State exactly what is unknown, why it blocks progress, and what the two most likely answers are (to help the user respond quickly).
+When invoking sub-skills (fix, debug, test, review, etc.), **craft exactly the context they need** — never pass the full orchestrator session context.
 
-**BLOCKED format**: Include the phase, the sub-skill that emitted BLOCKED, the specific blocker, and what was already attempted.
+| Pass To Sub-Skill | DO NOT Pass |
+|-------------------|-------------|
+| Task description + specific goal | Full conversation history |
+| Relevant file paths from scout | Unrelated files from other phases |
+| Project conventions (naming, test framework) | Other sub-skill outputs |
+| Plan excerpt for THIS phase only | Full master plan |
+| Error/stack trace (for debug/fix) | Previous debug attempts from other bugs |
+
+**Why**: Sub-skills that inherit orchestrator context get polluted — they chase false connections, reference stale data, and consume tokens on irrelevant context. A focused sub-skill with 500 tokens of curated context outperforms one with 5000 tokens of inherited noise.
 
 ## Deviation Rules
 
-When implementation diverges from plan:
+<MUST-READ path="references/deviation-rules.md" trigger="when implementation diverges from the approved plan"/>
 
-| Rule | Scope | Action | Example |
-|------|-------|--------|---------|
-| R1: Bug fix | Code doesn't work as planned | Auto-fix, continue | Test fails due to typo, missing import |
-| R2: Security fix | Vulnerability discovered | Auto-fix, continue | SQL injection, XSS, hardcoded secret |
-| R3: Blocking fix | Can't proceed without change | Auto-fix, continue | Missing dependency, wrong API signature |
-| R4: Architectural change | Different approach than planned | **ASK user first** | New database table, changed API contract, different library |
-
-R1-R3: security primitives and correctness fixes are NOT features — fix silently.
-R4: if you catch yourself thinking "this is a better way" — STOP and ask. The plan was approved for a reason.
+R1-R3 (bug/security/blocking fix): auto-fix, continue. R4 (architectural change): ASK user first.
 
 ## Error Recovery
 
-| Phase | If this fails... | Do this... |
-|-------|-----------------|------------|
-| 1 UNDERSTAND | scout finds nothing relevant | Proceed with plan, note limited context |
-| 2 PLAN | Task too complex | Break into smaller tasks, consider `rune:team` |
-| 3 TEST | Can't write tests (no test framework) | Skip TDD, write tests after implementation |
-| 4 IMPLEMENT | Fix hits repeated bugs | `rune:debug` (max 3 loops) → re-plan → if still blocked → **Approach Pivot Gate** → `rune:brainstorm(rescue)` |
-| 5a PREFLIGHT | Logic issues found | Fix → re-run preflight |
-| 5b SENTINEL | Security CRITICAL found | Fix immediately → re-run (mandatory) |
-| 5c REVIEW | Code quality issues | Fix CRITICAL/HIGH → re-review (max 2 loops) |
-| 6 VERIFY | Build/lint/type fails | Fix → re-run verification |
+<MUST-READ path="references/error-recovery.md" trigger="when any phase fails or a task hits repeated errors"/>
 
-### Repair Operators (before escalation)
-
-When a task fails during Phase 4 (IMPLEMENT):
-
-| Operator | When | Action |
-|----------|------|--------|
-| **RETRY** | Transient failure (network, timeout, flaky test) | Re-run same approach, max 2 attempts |
-| **DECOMPOSE** | Task too complex, partial progress | Split into 2-3 smaller tasks, continue |
-| **PRUNE** | Approach fundamentally wrong | Remove failed code, try different approach from plan |
-
-**Budget**: 2 repair attempts per task. After 2 failures → escalate:
-- Same error both times → `debug` for root cause
-- Different errors → `plan` to redesign the task
-- All approaches exhausted → `brainstorm(rescue)` for alternative category
-
-Do NOT ask user until repair budget is spent.
-
-## Called By (inbound)
-
-- User: `/rune cook` direct invocation — primary entry point
-- `team` (L1): parallel workstream execution (meta-orchestration)
-
-## Calls (outbound)
-
-- `neural-memory` (external): Phase 0 (resume) + Phase 8 (complete) — Recall project context at start, capture learnings at end
-- `sentinel-env` (L3): Phase 0.5 — environment pre-flight (first run only)
-- `scout` (L2): Phase 1 — scan codebase before planning
-- `onboard` (L2): Phase 1 — if no CLAUDE.md exists, initialize project context first
-- `plan` (L2): Phase 2 — create implementation plan
-- `brainstorm` (L2): Phase 2 — trade-off analysis when multiple approaches exist
-- `design` (L2): Phase 2 — UI/design phase when building frontend features
-- `adversary` (L2): Phase 2.5 — red-team challenge on approved plan before implementation
-- `test` (L2): Phase 3 — write failing tests (RED phase)
-- `fix` (L2): Phase 4 — implement code changes (GREEN phase)
-- `debug` (L2): Phase 4 — when implementation hits unexpected errors (max 3 loops)
-- `db` (L2): Phase 4 — when schema changes are detected in the diff
-- `preflight` (L2): Phase 5a — logic and completeness review
-- `sentinel` (L2): Phase 5b — security scan
-- `review` (L2): Phase 5c — code quality review
-- `perf` (L2): Phase 5 — performance regression check before PR (optional)
-- `completion-gate` (L3): Phase 5d — validate agent claims against evidence trail
-- `constraint-check` (L3): Phase 5 — audit HARD-GATE compliance across workflow
-- `verification` (L3): Phase 6 — automated checks (lint, types, tests, build)
-- `hallucination-guard` (L3): Phase 6 — verify imports and API calls are real
-- `journal` (L3): Phase 7 — record architectural decisions made during feature
-- `session-bridge` (L3): Phase 8 — save context for future sessions
-- `audit` (L2): Phase 5 — project health audit when scope warrants it
-- `review-intake` (L2): Phase 5 — structured review intake for complex PRs
-- `sast` (L3): Phase 5 — static analysis security testing
-- `skill-forge` (L2): when new skill creation detected during cook flow
-- `worktree` (L3): Phase 4 — worktree isolation for parallel implementation
-- L4 extension packs: Phase 1.5 — domain-specific patterns when stack matches (see Phase 1.5 mapping table)
+Includes phase-by-phase failure handling and repair operators (RETRY → DECOMPOSE → PRUNE) with a 2-attempt budget before escalation.
 
 ## Analysis Paralysis Guard
 
@@ -711,79 +535,124 @@ Stuck patterns (all banned):
 A wrong first attempt that produces feedback beats perfect understanding that never ships.
 </HARD-GATE>
 
+### Hash-Based Tool Loop Detection
+
+<MUST-READ path="references/loop-detection.md" trigger="when same tool+args+result appears to be repeating"/>
+
+Mentally track tool call fingerprints. 3 identical calls → WARN. 5 identical calls → FORCE STOP. Only same-input-AND-same-output counts as a loop.
+
+## Called By (inbound)
+
+- User: `/rune cook` direct invocation — primary entry point
+- `team` (L1): parallel workstream execution (meta-orchestration)
+
+## Calls (outbound)
+
+| Phase | Sub-skill | Layer | Purpose |
+|-------|-----------|-------|---------|
+| 0 / 8 | `neural-memory` | ext | Recall context at start; capture learnings at end |
+| 0.5 | `sentinel-env` | L3 | Environment pre-flight (first run only) |
+| 1 | `scout` | L2 | Scan codebase before planning |
+| 1 | `onboard` | L2 | Initialize project context if no CLAUDE.md |
+| 1 | `ba` | L2 | Requirement elicitation for features |
+| 2 | `plan` | L2 | Create implementation plan |
+| 2 | `brainstorm` | L2 | Trade-off analysis / rescue mode |
+| 2 | `design` | L2 | UI/design phase for frontend features |
+| 2.5 | `adversary` | L2 | Red-team challenge on approved plan |
+| 3 | `test` | L2 | Write failing tests (RED phase) |
+| 4 | `fix` | L2 | Implement code changes (GREEN phase) |
+| 4 | `debug` | L2 | Unexpected errors (max 3 loops) |
+| 4 | `db` | L2 | Schema changes detected in diff |
+| 4 | `worktree` | L3 | Worktree isolation for parallel implementation |
+| 5a | `preflight` | L2 | Spec compliance + logic review |
+| 5b | `sentinel` | L2 | Security scan |
+| 5c | `review` | L2 | Code quality review |
+| 5 | `perf` | L2 | Performance regression check (optional) |
+| 5 | `audit` | L2 | Project health audit when scope warrants |
+| 5 | `review-intake` | L2 | Structured review intake for complex PRs |
+| 5 | `sast` | L3 | Static analysis security testing |
+| 5d | `completion-gate` | L3 | Validate agent claims against evidence trail |
+| 5 | `constraint-check` | L3 | Audit HARD-GATE compliance across workflow |
+| 6 | `verification` | L3 | Lint + types + tests + build |
+| 6 | `hallucination-guard` | L3 | Verify imports and API calls are real |
+| 7 | `journal` | L3 | Record architectural decisions |
+| 8 | `session-bridge` | L3 | Save context for future sessions |
+| any | `context-pack` | L3 | create structured handoff briefings before spawning subagents |
+| any | `skill-forge` | L2 | When new skill creation detected during cook |
+| 1.5 | L4 extension packs | L4 | Domain-specific patterns when stack matches |
+
+## Data Flow
+
+**Feeds Into →** `journal` (decisions → ADRs) | `session-bridge` (context → .rune/ state) | `neural-memory` (learnings → cross-session)
+
+**Fed By ←** `ba` (requirements → Phase 1) | `plan` (master plan → Phase 2-4) | `session-bridge` (.continue-here.md → Phase 0 resume) | `neural-memory` (past decisions → Phase 0 recall)
+
+**Feedback Loops ↻** cook↔debug (Phase 4 bug → debug → fix → resume; if plan wrong → Approach Pivot) | cook↔test (RED → GREEN → failures loop back)
+
 ## Constraints
 
-1. MUST run scout before planning — no plan based on assumptions alone
-2. MUST present plan to user and get approval before writing code
-3. MUST write failing tests before implementation (TDD) unless explicitly skipped by user
-4. MUST NOT commit with failing tests — fix or revert first
-5. MUST NOT modify files outside the approved plan scope without user confirmation
-6. MUST run verification (lint + type-check + tests + build) before commit — not optional
-7. MUST NOT say "all tests pass" without showing the actual test output
-8. MUST NOT contradict active decisions from `.rune/decisions.md` without explicit user override — if the plan conflicts with a prior decision, flag it and ask user before proceeding
+1. MUST run scout before planning
+2. MUST get user plan approval before writing code
+3. MUST write failing tests before implementation (TDD) unless explicitly skipped
+4. MUST NOT commit with failing tests
+5. MUST NOT modify files outside approved plan scope without user confirmation
+6. MUST run verification (lint + type-check + tests + build) before commit
+7. MUST NOT say "all tests pass" without showing actual test output
+8. MUST NOT contradict `.rune/decisions.md` without explicit user override
 
 ## Mesh Gates
 
 | Gate | Requires | If Missing |
 |------|----------|------------|
-| Resume Gate | Phase 0 checks for existing master plan before starting | Proceed to Phase 1 if no plan exists |
-| Scout Gate | scout output (files examined, patterns found) before Phase 2 | Invoke rune:scout first |
-| Plan Gate | User-approved plan with file paths before Phase 3 | Cannot proceed to TEST |
-| Adversary Gate | adversary verdict (PROCEED/HARDEN) before Phase 3 for features | Skip for bugfix/hotfix/refactor/fast-mode |
-| Phase File Gate | Current phase file loaded (not full plan) for multi-session | Load only the active phase file |
-| Test-First Gate | Failing tests exist before Phase 4 IMPLEMENT | Write tests first or get explicit skip from user |
-| Quality Gate | preflight + sentinel + review passed before Phase 7 COMMIT | Fix findings, re-run |
-| Verification Gate | lint + types + tests + build all green before commit | Fix failures, re-run |
+| Resume Gate | Phase 0 checks for master plan before starting | Proceed to Phase 1 |
+| Scout Gate | scout output before Phase 2 | Invoke rune:scout first |
+| Plan Gate | User-approved plan before Phase 3 | Cannot proceed |
+| Adversary Gate | adversary verdict before Phase 3 for features | Skip for bugfix/hotfix/refactor |
+| Phase File Gate | Active phase file only (multi-session) | Load only active phase |
+| Test-First Gate | Failing tests before Phase 4 | Write tests or get explicit skip |
+| Quality Gate | preflight + sentinel + review before Phase 7 | Fix findings, re-run |
+| Verification Gate | lint + types + tests + build green before commit | Fix, re-run |
 
 ## Output Format
 
-```
-## Cook Report: [Task Name]
-- **Status**: complete | partial | blocked
-- **Phases**: [list of completed phases]
-- **Files Changed**: [count] ([list])
-- **Tests**: [passed]/[total] ([coverage]%)
-- **Quality**: preflight [PASS/WARN] | sentinel [PASS/WARN] | review [PASS/WARN]
-- **Commit**: [hash] — [message]
+<MUST-READ path="references/output-format.md" trigger="before emitting the Cook Report at end of any session"/>
 
-### Decisions Made
-- [decision]: [rationale]
+Emit a Cook Report with: Status, Phases, Files Changed, Tests, Quality results, Commit hash.
+When invoked by `team` with a NEXUS Handoff, include the Deliverables table — MANDATORY.
 
-### Session State
-- Saved to .rune/decisions.md
-- Saved to .rune/progress.md
-```
+## Returns
+
+| Artifact | Format | Location |
+|----------|--------|----------|
+| Plan files (master + phase) | Markdown | `.rune/plan-<feature>.md`, `.rune/plan-<feature>-phase<N>.md` |
+| Implementation code | Source files | Per plan file paths |
+| Test files | Source files | Co-located or `__tests__/` per project convention |
+| Verification results | Inline stdout | Shown in Cook Report |
+| Cook Report | Markdown (inline) | Emitted at end of session |
+| Session state | Markdown | `.rune/decisions.md`, `.rune/progress.md`, `.rune/conventions.md` |
 
 ## Sharp Edges
 
-Known failure modes for this skill. Check these before declaring done.
+<MUST-READ path="references/sharp-edges.md" trigger="before declaring done — review all 18 failure modes"/>
 
-| Failure Mode | Severity | Mitigation |
-|---|---|---|
-| Skipping scout to "save time" on a simple task | CRITICAL | Scout Gate blocks this — Phase 1 is mandatory regardless of perceived simplicity |
-| Writing code without user-approved plan | HIGH | Plan Gate: do NOT proceed to Phase 3 without explicit approval ("go", "proceed", "yes") |
-| Claiming "all tests pass" without showing output | HIGH | Constraint 7 blocks this — show actual test runner output via completion-gate |
-| Entering debug↔fix loop more than 3 times without escalating | MEDIUM | After 3 loops → re-plan → if still blocked → Approach Pivot Gate → brainstorm(rescue) |
-| Surrendering "no solution" without triggering Approach Pivot Gate | CRITICAL | MUST invoke brainstorm(rescue) before telling user "can't be done" — pivot to different category first |
-| Re-planning with the same approach category after it fundamentally failed | HIGH | Re-plan = revise steps within same approach. If CATEGORY is wrong → Approach Pivot Gate, not re-plan |
-| Not escalating to sentinel:opus on security-sensitive tasks | MEDIUM | Auth, crypto, payment code → sentinel must run at opus, not sonnet |
-| Running Phase 5 checks sequentially instead of parallel | MEDIUM | Launch preflight+sentinel+review as parallel Task agents for speed |
-| Saying "done" without evidence trail | CRITICAL | completion-gate validates claims — UNCONFIRMED = BLOCK |
-| Analysis paralysis — 5+ reads without writing | HIGH | Analysis Paralysis Guard: act on incomplete info or report BLOCKED with specific missing piece |
-| Fast mode on security-relevant code | HIGH | Fast mode auto-excludes auth/crypto/payments — never fast-track security code |
-| Loading all phase files at once into context | HIGH | Phase File Gate: load ONLY the active phase file — one phase per session |
-| Resuming without checking master plan | MEDIUM | Phase 0 (RESUME CHECK) runs before Phase 1 — detects existing plans |
+**CRITICAL failures** (always check): skipping scout | writing code without plan approval | "done" without evidence trail | surrendering without Approach Pivot Gate | breaking change without RFC | treating Cancel/Pause as scope change.
+
+## Self-Validation
+
+```
+SELF-VALIDATION (run before emitting Cook Report):
+- [ ] Every phase in Phase Skip Rules was either executed or explicitly skipped with reason
+- [ ] Plan approval gate was not bypassed — user said "go" (check conversation history)
+- [ ] No Phase 4 code was written before Phase 3 tests (TDD order preserved)
+- [ ] All Phase 5 quality gates (preflight, sentinel, review) ran — not just claimed
+- [ ] Cook Report contains actual commit hash, not placeholder
+```
 
 ## Done When
 
-- All applicable phases complete per Phase Skip Rules (determined before starting)
-- User has approved the plan (Phase 2 gate — explicit "go" received)
-- All tests PASS — actual test runner output shown
-- preflight + sentinel + review all PASS or findings addressed
-- verification (lint + types + build) green
-- Commit created with semantic message
-- Cook Report emitted with commit hash and phase list
-- Session state saved to .rune/ via session-bridge
+All applicable phases complete + Self-Validation passed:
+- User approved plan | All tests PASS (output shown) | preflight+sentinel+review PASS | build green
+- Cook Report emitted with commit hash | Session state saved to .rune/ via session-bridge
 
 ## Cost Profile
 

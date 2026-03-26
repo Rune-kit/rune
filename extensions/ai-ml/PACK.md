@@ -76,6 +76,13 @@ deep-research → embedding-search: relevance scoring uses embeddings for semant
 - **Prompt injection**: Web pages may contain adversarial content targeting extraction LLMs — system prompt must block.
 - **Sandbox escape**: Use rootless Docker or gVisor for high-security code execution environments.
 
+## Done When
+
+- LLM API client implemented with retry logic, exponential backoff, and structured output validation via Zod/Pydantic
+- RAG pipeline operational: chunking, embedding, vector store, retrieval, and reranking all configured and tested
+- Embedding index metadata includes pinned model version and dimension count to prevent upgrade mismatches
+- AI agent state persists across requests with no cross-session leakage and graceful crash recovery
+
 ## Cost Profile
 
 ~24,000–40,000 tokens per full pack run (all 10 skills). Individual skill: ~2,500–5,000 tokens. Sonnet default. Use haiku for code detection scans; escalate to sonnet for pipeline design, extraction strategy, and research loop orchestration.

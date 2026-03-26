@@ -3,7 +3,7 @@ name: journal
 description: Persistent state tracking and Architecture Decision Records across sessions. Manages progress state, module health, dependency graphs, and ADRs for any workflow.
 metadata:
   author: runedev
-  version: "0.2.0"
+  version: "0.3.0"
   layer: L3
   model: haiku
   group: state
@@ -43,6 +43,7 @@ None — pure L3 state management utility.
 .rune/module-status.json   — Machine-readable module states
 .rune/dependency-graph.mmd — Mermaid diagram, color-coded by health
 .rune/adr/                 — Architecture Decision Records (one per decision)
+.rune/risks/               — Risk Register entries (one per identified risk)
 ```
 
 ## Execution
@@ -111,6 +112,50 @@ For each architectural decision or trade-off made during this session (applies t
 - **[Alternative B]**: Rejected because [specific reason]. May reconsider if [condition changes].
 ```
 
+### Step 3.5 — Record risks
+
+For each risk identified during the session (technical, schedule, dependency, security):
+
+1. Generate a risk filename: `.rune/risks/RISK-[NNN]-[slug].md` where NNN is next sequential number
+2. Use `Write` to create the risk file:
+
+```markdown
+# RISK-[NNN]: [Risk Title]
+
+**Date Identified**: [YYYY-MM-DD]
+**Identified By**: [workflow — cook | plan | deploy | audit | adversary]
+**Severity**: Critical | High | Medium | Low
+**Likelihood**: High | Medium | Low
+**Status**: Open | Mitigated | Accepted | Closed
+
+## Description
+[What could go wrong — specific scenario, not vague "things might break"]
+
+## Impact
+[What happens if this risk materializes — quantify if possible]
+
+## Mitigation
+[Actions to reduce likelihood or impact]
+- [ ] [Action 1 — owner, deadline]
+- [ ] [Action 2]
+
+## Trigger Conditions
+[How to detect this risk is materializing — monitoring, alerts, symptoms]
+
+## Contingency
+[What to do if risk materializes despite mitigation — the Plan B]
+```
+
+3. **Risk classification matrix**:
+
+| Likelihood \ Severity | Critical | High | Medium | Low |
+|----------------------|----------|------|--------|-----|
+| **High** | 🔴 Immediate action | 🔴 This sprint | 🟡 This quarter | ⚪ Backlog |
+| **Medium** | 🔴 This sprint | 🟡 This quarter | ⚪ Backlog | ⚪ Accept |
+| **Low** | 🟡 This quarter | ⚪ Backlog | ⚪ Accept | ⚪ Accept |
+
+4. Risks marked 🔴 MUST have mitigation actions with deadlines. ⚪ Accept = documented acknowledgment, no action required.
+
 ### Step 4 — Update dependency graph
 
 If any module dependencies changed during this session (new imports, removed dependencies, refactored interfaces):
@@ -145,6 +190,7 @@ Emit the journal update summary to the calling skill.
 - **Module**: [current module]
 - **Health**: [before] → [after]
 - **ADRs Written**: [count]
+- **Risks Logged**: [count] ([severity breakdown])
 - **Files Updated**: [list of .rune/ files modified]
 - **Next Module**: [next in queue, or "rescue complete"]
 ```
@@ -154,8 +200,9 @@ Emit the journal update summary to the calling skill.
 ```
 1. Read .rune/RESCUE-STATE.md   → full rescue history
 2. Read .rune/module-status.json → module states and health scores
-3. Read git log                  → latest changes since last session
-4. Read CLAUDE.md               → project conventions
+3. Read .rune/risks/             → open risks and their status
+4. Read git log                  → latest changes since last session
+5. Read CLAUDE.md               → project conventions
 → Result: Zero context loss across rescue sessions
 ```
 
@@ -180,6 +227,7 @@ Known failure modes for this skill. Check these before declaring done.
 ## Done When
 
 - All decisions from the session recorded as ADR files with rationale
+- All identified risks recorded as RISK files with severity, mitigation, and trigger conditions
 - Progress state updated (module status, phase, or deploy event as appropriate)
 - Dependency graph updated if module relationships changed
 - Journal Update summary emitted to calling skill

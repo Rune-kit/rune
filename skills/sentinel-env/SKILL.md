@@ -3,7 +3,7 @@ name: sentinel-env
 description: Environment-aware pre-flight check. Validates OS, runtime versions, installed tools, port availability, env vars, and disk space BEFORE coding starts. Prevents "works on my machine" failures. Like sentinel but for the environment, not the code.
 metadata:
   author: runedev
-  version: "0.1.0"
+  version: "0.2.0"
   layer: L3
   model: haiku
   group: validation
@@ -111,6 +111,34 @@ Detect and verify tools the project depends on:
 4. **Database tools**: Check if `prisma`, `drizzle`, `alembic`, `django` migrations exist → verify DB client installed
 5. **Build tools**: Check for `turbo.json` (turborepo), `nx.json` (Nx), `Makefile`, etc.
 
+6. **Hard dependencies** — tools the project WRAPS (not just uses as dev dependency):
+   > From CLI-Anything (HKUDS/CLI-Anything, 17.4k★): "The software is a required dependency, not optional."
+
+   Scan for evidence that the project wraps an external tool:
+   - `Grep` for `shutil.which(`, `which `, `command -v ` → project looks up an executable at runtime
+   - `Grep` for `subprocess.run(`, `child_process.exec(`, `Deno.Command(` → project invokes external CLI
+   - `Read` README/docs for "requires X installed" or "depends on X"
+
+   For each detected hard dependency:
+   ```bash
+   # Verify the tool exists on PATH
+   which <tool-name> 2>/dev/null || echo "MISSING: <tool-name>"
+   # If found, check version
+   <tool-name> --version 2>/dev/null
+   ```
+
+   **Verdict:**
+   - Tool found on PATH → PASS (log version)
+   - Tool NOT found → **BLOCK** with clear install instructions per OS:
+     ```
+     [ENV-XXX] Required tool '<tool>' not found on PATH
+       → Debian/Ubuntu: sudo apt install <tool>
+       → macOS: brew install <tool>
+       → Windows: winget install <tool> (or choco install <tool>)
+       → Manual: <download URL if known>
+     ```
+   - This prevents the entire class of "it worked in CI but not locally" failures where `subprocess.run()` silently fails
+
 ### Step 4: Port Availability Check
 
 Detect which ports the project needs and check if they're available:
@@ -210,6 +238,8 @@ For each finding, include a specific remediation command the developer can copy-
 | .env file contains secrets — accidentally logged | CRITICAL | NEVER read .env values, only check key existence via grep for key names |
 | Platform detection wrong — WSL vs native Windows | MEDIUM | Check for WSL explicitly (`uname -r` contains "microsoft") |
 | Over-checking — flagging optional tools as required | MEDIUM | Only check tools evidenced by config files, not speculative |
+| Missing hard dependency — project wraps external CLI but tool not checked | HIGH | Step 3.6: scan for `shutil.which`, `subprocess.run`, `child_process.exec` → verify tool exists on PATH |
+| Hard dep found but wrong version — tool exists but API changed | MEDIUM | Log version for manual review. Version compatibility is project-specific — don't guess |
 
 ## Done When
 

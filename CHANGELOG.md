@@ -3,6 +3,89 @@
 All notable changes to Rune are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.5.0] - 2026-03-25
+
+### Added
+- **Compiled Intent Mesh (CIM)** — compile-time `skill-index.json` generation with intent keywords, adjacency graph, and chain predictions
+- **intent-router hook** — UserPromptSubmit hook that auto-suggests skill routing based on prompt analysis against compiled index
+- **Privacy Mesh** — three-tier pre-tool guard (ALLOW/WARN/BLOCK) with content scanning for AWS keys, GitHub tokens, Stripe keys, etc.
+- **Per-project privacy config** — `.rune/privacy.json` for custom BLOCK/WARN/ALLOW patterns and elevated skills
+- **Skill-aware elevation** — sentinel, review, audit bypass WARN tier; BLOCK tier cannot be bypassed
+- **Split pack auto-discovery** — compiler discovers skill files from `skills/` subdir when `format: split` packs have no explicit manifest
+- **550 tests** — 18 new tests for skill-index generation, hook behavior, and split pack discovery
+
+### Fixed
+- **Command injection** in `version-sync-check.js` — replaced `execSync` with `execFileSync`
+- **Dynamic doctor threshold** — skill count no longer hardcoded, scans source directory
+- **Split pack builds** — packs with `format: split` but no `skills:` YAML array now build correctly
+
+### Changed
+- Skill count: 60→61 (L3: +1 slides)
+- Hook count: 8→10 (intent-router, pre-tool-guard rewrite)
+- Pre-tool-guard: simple WARN → three-tier Privacy Mesh with content scanning
+
+## [2.4.0] - 2026-03-24
+
+### Added
+- **Scripts Bundling** — compiler copies `scripts/` directories and resolves `{scripts_dir}` placeholders in skill output
+- **slides** skill (L3) — presentation/slide generation utility
+- **Mesh Contract** — `.rune/contract.md` enforced by cook and sentinel
+
+### Changed
+- Skill count: 59→60 (L3: 26→27)
+
+## [2.3.0] - 2026-03-22
+
+### Added
+- **Tier Override** — compiler resolves Pro/Business skills over Free counterparts with `discoverTieredPacks()`
+- Skill-level merging for tiered packs (Pro overrides Free, Business overrides both)
+- 8 tests for tier override functionality
+
+### Changed
+- Compiler emitter supports multi-tier pack resolution
+
+## [2.2.6] - 2026-03-18
+
+### Improved
+- **cook v1.0.0** — Two-stage Mid-Run Signal Detection (keyword fast-path for Cancel/Pause/Status/Steer + context classification for longer messages), Hash-Based Tool Loop Detection (3x warn, 5x force stop, content-aware stuck detection)
+- **debug v0.6.0** — Hash-Based Evidence Loop Detection (re-read/re-test/re-grep detection), hypothesis category diversity rule (Data/Control Flow/Environment/State must rotate across cycles)
+
+### Sources
+- nextlevelbuilder/goclaw (832★) — two-stage intent classification, SHA256-based loop detection
+
+## [2.2.5] - 2026-03-18
+
+### Improved
+- **ba v0.3.0** — Structured Elicitation Frameworks (PICO, INVEST, Jobs-to-be-Done) with decision table for framework selection per requirement type
+- **research v0.3.0** — Minimum 3 Complementary Sources HARD-GATE, source type taxonomy, domain diversity rule, triangulation-based synthesis
+- **completion-gate v1.4.0** — Default-FAIL QA mindset HARD-GATE, adversarial validation checklist, skeptic sweep on weakest claims
+
+### Sources
+- K-Dense claude-scientific-skills (170 skills, literature-review PICO pattern)
+- msitarzewski/agency-agents (50.8k★, Default-FAIL QA mindset)
+
+## [2.2.4] - 2026-03-17
+
+### Improved
+- **plan v0.6.0** — Workflow Registry 4-view (by Workflow, Component, User Journey, State)
+- **team v0.5.0** — NEXUS Handoff Templates with metadata/context/deliverables/quality/evidence
+- **cook v0.9.0** — NEXUS-enhanced Cook Report with Deliverables table + Acceptance Criteria tracking
+
+### Sources
+- msitarzewski/agency-agents (50.8k★)
+
+## [2.2.3] - 2026-03-15
+
+### Improved
+- **7 core skills enriched** from CLI-Anything (17.4k★), GSD (30.8k★), taste-skill (3.4k★)
+- test v0.5.0, verification v0.5.0, cook v0.8.0, plan v0.5.0, hallucination-guard v0.3.0, sentinel-env v0.2.0, completion-gate v1.3.0
+
+## [2.2.2] - 2026-03-14
+
+### Improved
+- **4 core skills enriched** from superpowers (89k★)
+- review v0.3.0, review-intake v1.1.0, skill-forge v1.2.0, completion-gate v1.2.0
+
 ## [2.2.1] - 2026-03-14
 
 ### Added

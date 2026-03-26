@@ -3,7 +3,7 @@ name: db
 description: Database workflow specialist. Generates migration files with rollback scripts, detects breaking schema changes, and validates query parameterization.
 metadata:
   author: runedev
-  version: "0.1.0"
+  version: "0.2.0"
   layer: L2
   model: sonnet
   group: development
@@ -34,6 +34,10 @@ Database workflow specialist. Handles the parts of database work that cause prod
 - `cook` (L1): schema change detected in diff
 - `deploy` (L2): pre-deploy migration safety check
 - `audit` (L2): database health dimension
+
+## References
+
+- `references/scaling-reference.md` — Index strategies, query optimization, N+1 prevention, connection pooling, read replicas, partitioning, sharding, denormalization. Load when scaling, performance, or indexing context detected.
 
 ## Executable Steps
 
@@ -251,6 +255,18 @@ Known failure modes for this skill. Check these before declaring done.
 - Schema changelog updated in .rune/schema-changelog.md
 - Structured DB Report emitted with PASS/WARN/BLOCK verdict
 
+## Returns
+
+| Artifact | Format | Location |
+|----------|--------|----------|
+| Migration file (up) | SQL or ORM-specific | `migrations/<timestamp>_<name>/` |
+| Rollback script (down) | SQL or ORM-specific | same migration directory |
+| Schema changelog entry | Markdown | `.rune/schema-changelog.md` |
+| Index recommendations | Structured list | inline (DB Report) |
+| DB Report with verdict | Markdown (PASS/WARN/BLOCK) | inline |
+
 ## Cost Profile
 
 ~2000-6000 tokens input, ~800-2000 tokens output. Sonnet for migration generation quality.
+
+**Scope guardrail:** db generates and validates migrations — it does not run them in production. Execution is delegated to `verification` in test environments only.

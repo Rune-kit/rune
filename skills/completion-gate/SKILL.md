@@ -4,7 +4,7 @@ description: "Validates agent claims against evidence trail. Catches 'done' with
 user-invocable: false
 metadata:
   author: runedev
-  version: "1.2.0"
+  version: "1.6.0"
   layer: L3
   model: haiku
   group: validation
@@ -73,6 +73,24 @@ If ANY stub detected:
 - Add synthetic claim: "implemented [filename]" → CONTRADICTED (file is a stub)
 - This catches agents that create files but don't implement them
 
+### Step 1c — Self-Validation Check
+
+If the skill that just ran has a `## Self-Validation` section, extract its checklist and treat each item as an implicit claim:
+
+```
+For each Self-Validation check in the skill's SKILL.md:
+  1. Read the check (e.g., "at least one assertion per test")
+  2. Look for evidence in tool output that this check was satisfied
+  3. If evidence found → add as CONFIRMED claim
+  4. If no evidence → add as UNCONFIRMED claim ("Self-Validation: [check] — no evidence")
+```
+
+Why: Self-Validation catches domain-specific quality issues that generic claim matching (Step 2) cannot detect. A test skill knows "no assertions = useless test" but completion-gate doesn't — unless the skill's Self-Validation tells it to check.
+
+<HARD-GATE>
+If a skill has Self-Validation and ANY check is UNCONFIRMED or CONTRADICTED → overall verdict cannot be CONFIRMED, even if all explicit claims pass.
+</HARD-GATE>
+
 ### Step 2 — Match Evidence
 
 For each claim, look for corresponding evidence in the conversation context:
@@ -87,7 +105,14 @@ For each claim, look for corresponding evidence in the conversation context:
 | "no security issues" | Sentinel report with PASS verdict | Sentinel skill output |
 | "coverage ≥ X%" | Coverage tool output with actual percentage | Test runner with coverage flag |
 
-### Step 3 — Validate Each Claim
+### Step 3 — Validate Each Claim (Default-FAIL Mindset)
+
+<HARD-GATE>
+Default posture is FAIL, not PASS. Actively seek 3-5 issues per review.
+Zero issues found = red flag — look harder, not a sign of quality.
+This prevents rubber-stamping where the gate confirms everything without scrutiny.
+</HARD-GATE>
+
 
 For each claim + evidence pair:
 
@@ -99,6 +124,23 @@ IF evidence exists BUT contradicts claim:
 IF no evidence found:
   → UNCONFIRMED (agent may be right but didn't prove it)
 ```
+
+**3-Axis verification** — categorize each claim into one of three axes, then ensure all axes are covered:
+
+| Axis | Question | Example Claims |
+|------|----------|----------------|
+| **Completeness** | Were all planned tasks done? All specs implemented? | "implemented feature X", "all TODO items done", "migration created" |
+| **Correctness** | Does output match spec intent? Do tests verify real behavior? | "tests pass", "build succeeds", "lint clean", "fixed the bug" |
+| **Coherence** | Does it follow project patterns? Consistent with existing code? | "follows conventions", "uses existing patterns", "no new deps needed" |
+
+If an axis has ZERO claims → flag as gap: "No [Completeness/Correctness/Coherence] evidence found — agent may have skipped this dimension."
+
+**Adversarial validation checklist** (run AFTER initial verdicts):
+1. Re-read each CONFIRMED claim — is the evidence actually proving THIS claim, or a different one?
+2. Check for **partial completion** — did the agent do 80% but claim 100%? (e.g., "implemented feature" but only the happy path)
+3. Check for **scope mismatch** — does the evidence prove the SPECIFIC claim or a broader/narrower version?
+4. If all claims are CONFIRMED on first pass, apply **skeptic sweep**: re-examine the weakest 2 claims with heightened scrutiny
+5. Check **axis coverage** — are all 3 axes (Completeness/Correctness/Coherence) represented? Missing axis = investigation gap
 
 ### Step 4 — Report
 
@@ -122,6 +164,34 @@ IF no evidence found:
 ### Verdict
 UNCONFIRMED — 1 claim lacks evidence, 1 contradicted. Cannot proceed to commit.
 ```
+
+### Step 4.5 — Cross-Phase Integration Check
+
+> From GSD (gsd-build/get-shit-done, 30.8k★): "Phase boundaries are where integration bugs hide."
+
+When validating a completed phase in a multi-phase plan, check for integration gaps between phases:
+
+1. **Orphaned exports** — files/functions created in this phase that claim to be used by future phases (see `## Cross-Phase Context → Exports`) but are not yet importable:
+   ```
+   Grep for the export name in the current codebase:
+   - If export exists AND is importable → CONFIRMED
+   - If export exists but has wrong signature vs phase file contract → CONTRADICTED
+   - Expected export missing entirely → UNCONFIRMED ("Phase N claims to export X but X not found")
+   ```
+
+2. **Uncalled routes** — API endpoints added in this phase but not wired to any frontend/consumer yet:
+   - This is OK if a future phase handles wiring (check master plan)
+   - Flag as WARN if no future phase mentions consuming this route
+
+3. **Auth gaps** — new endpoints or pages without authentication/authorization:
+   - `Grep` for route handlers without auth middleware
+   - Flag as WARN (may be intentional for public endpoints, but worth checking)
+
+4. **E2E flow trace** — for the primary user flow this phase enables:
+   - Trace: entry point → business logic → data layer → response
+   - If any step in the chain is missing or stubbed → CONTRADICTED
+
+**This step is OPTIONAL for single-phase tasks and MANDATORY for multi-phase master plans.**
 
 ### Step 5 — Evidence Quality Gate
 
@@ -170,12 +240,18 @@ Completion Gate Report with status (CONFIRMED/UNCONFIRMED/CONTRADICTED), claim v
 | Agent pre-generates evidence by running commands proactively | LOW | This is actually GOOD behavior — we want agents to provide evidence |
 | Completion-gate itself claims "all confirmed" without evidence | CRITICAL | Gate report MUST include the evidence table — no table = report is invalid |
 | Existence Theater — agent creates files but they're stubs | HIGH | Step 1b stub detection: grep for Placeholder/TODO/NotImplementedError in new files |
+| Cross-phase integration gaps — exports exist but wrong signature | HIGH | Step 4.5: verify exports match Code Contracts from phase file |
+| Phase complete but E2E flow broken — missing link in the chain | MEDIUM | Step 4.5 E2E flow trace: entry → logic → data → response must all be connected |
+| Rubber-stamping — all CONFIRMED without scrutiny | HIGH | Default-FAIL mindset: actively seek 3-5 issues. Zero issues = red flag, apply skeptic sweep on weakest 2 claims |
+| Partial completion claimed as full — 80% done but "implemented" | HIGH | Adversarial checklist: check for partial completion, scope mismatch, evidence-claim alignment |
+| Self-Validation skipped — skill has checks but gate ignores them | HIGH | Step 1c: extract Self-Validation from skill's SKILL.md, treat each as implicit claim. Missing = UNCONFIRMED |
 
 ## Done When
 
 - All completion claims extracted from agent output
 - Each claim matched against tool output evidence
 - Verdict table emitted with claim/evidence/verdict for each item
+- All 3 verification axes (Completeness/Correctness/Coherence) have at least one claim checked
 - Overall verdict: CONFIRMED / UNCONFIRMED / CONTRADICTED
 - If not CONFIRMED: specific gaps listed with remediation steps
 

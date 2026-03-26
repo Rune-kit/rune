@@ -5,7 +5,7 @@ context: fork
 agent: general-purpose
 metadata:
   author: runedev
-  version: "0.4.0"
+  version: "0.6.0"
   layer: L1
   model: opus
   group: orchestrator
@@ -66,6 +66,26 @@ Lite Mode Phases:
 
 Standard team workflow with worktree isolation (Phases 1-5 as documented below).
 
+### Complexity Tiers (DAG Stage Selection)
+
+Before decomposing, classify the task into a complexity tier. Each tier defines a different DAG (directed acyclic graph) of stages, ensuring the right amount of process for the task's complexity.
+
+| Tier | Signals | DAG Stages | Context Windows |
+|------|---------|------------|-----------------|
+| **Trivial** | ≤3 files, single module, no shared contracts | impl → test | 1 (single cook) |
+| **Medium** | 4-10 files, 2-3 modules, shared interfaces | research → plan → impl → test → review → fix | 3 (plan, impl+test, review+fix) |
+| **Large** | 10+ files, 3+ modules, breaking changes or RFC | research → plan → impl → test → review₁ → fix → review₂ → final merge | 4+ (plan, impl+test, review₁+fix, review₂+merge) |
+
+**Key principle — reviewer isolation**: The agent that writes code MUST NOT review its own code. Each review stage uses a **separate context window** (separate Task invocation) that has never seen the implementation reasoning. This prevents author bias from contaminating the review.
+
+**Stage → Context Window mapping**:
+- `research + plan` = Context Window 1 (opus — architectural reasoning)
+- `impl + test` = Context Window 2 (sonnet — code writing)
+- `review₁ + fix` = Context Window 3 (sonnet — fresh eyes, no impl context)
+- `review₂ + merge` = Context Window 4 (sonnet — final verification, Large tier only)
+
+**Merge queue**: When multiple streams complete at different times, use dependency order for merging. If a later stream's merge creates conflicts with an already-merged stream, provide the conflicting stream's cook report as **conflict context** to the resolution agent — never resolve blindly.
+
 ## Calls (outbound)
 
 - `plan` (L2): high-level task decomposition into independent workstreams
@@ -78,6 +98,7 @@ Standard team workflow with worktree isolation (Phases 1-5 as documented below).
 - `completion-gate` (L3): validate workstream completion claims against evidence
 - `constraint-check` (L3): audit HARD-GATE compliance across parallel streams
 - `worktree` (L3): create isolated worktrees for parallel cook instances
+- `context-pack` (L3): create structured handoff briefings before spawning subagents
 - L4 extension packs: domain-specific patterns when context matches (e.g., @rune/mobile when porting web to mobile)
 
 ## Called By (inbound)
@@ -152,7 +173,11 @@ Mark todo[1] `in_progress`.
 
 **2a. Launch parallel streams.**
 
-Launch independent streams (depends_on: []) in parallel using Task tool with worktree isolation:
+Launch independent streams (depends_on: []) in parallel using Task tool with worktree isolation.
+
+> From agency-agents (msitarzewski/agency-agents, 50.8k★): "Structured handoff docs prevent the #1 multi-agent failure: context loss between agents."
+
+Each stream receives a **NEXUS Handoff Template** — not a bare prompt:
 
 ```
 For each stream where depends_on == []:
@@ -160,8 +185,43 @@ For each stream where depends_on == []:
     subagent_type: "general-purpose",
     model: "sonnet",
     isolation: "worktree",
-    prompt: "Cook task: [stream.task]. Files in scope: [stream.files]. Return cook report on completion."
+    prompt: <NEXUS Handoff below>
   )
+```
+
+**NEXUS Handoff Template** (sent to each cook instance):
+
+```markdown
+## NEXUS Handoff: Stream [id]
+
+### Metadata
+- Stream: [id] of [total]
+- Depends on: [none | stream ids]
+- File ownership: [list — ONLY these files may be modified]
+- Model: sonnet
+
+### Context
+- Project: [project name and type]
+- Overall goal: [1-line feature description]
+- This stream's goal: [specific sub-task]
+- Conventions: [key patterns from scout — naming, file structure, test framework]
+
+### Deliverable
+- [ ] [specific outcome 1 — e.g., "AuthService with login/register/reset methods"]
+- [ ] [specific outcome 2 — e.g., "Unit tests covering happy path + 3 error cases"]
+- [ ] [specific outcome 3 — e.g., "Types exported for Phase 2 consumers"]
+
+### Quality Expectations
+- Tests: must pass with evidence (stdout captured)
+- Types: no `any`, strict mode
+- Security: no hardcoded secrets, parameterized queries
+- Conventions: [project-specific — from scout output]
+
+### Evidence Required
+Return a Cook Report with:
+- Exact files modified (git diff --stat)
+- Test output (stdout — not just "tests pass")
+- Any CONCERNS discovered during implementation
 ```
 
 **2b. Launch dependent streams sequentially.**
@@ -169,13 +229,10 @@ For each stream where depends_on == []:
 ```
 For each stream where depends_on != []:
   WAIT for all depends_on streams to complete.
-  Then launch:
-  Task(
-    subagent_type: "general-purpose",
-    model: "sonnet",
-    isolation: "worktree",
-    prompt: "Cook task: [stream.task]. Files in scope: [stream.files]. Patterns from stream [depends_on] are available in worktree. Return cook report."
-  )
+  Then launch with NEXUS Handoff that includes:
+  - Completed stream's deliverables as "Available Context"
+  - Exported interfaces/types from prior streams in "Code Contracts" section
+  - Any CONCERNS from prior streams in "Known Issues" section
 ```
 
 **2b.5. Pre-merge scope verification.**
@@ -367,16 +424,24 @@ Mark todo[4] `completed`.
 - **Duration**: [time across streams]
 
 ### Streams
-| Stream | Task | Status | Cook Report |
-|--------|------|--------|-------------|
-| A | [task] | complete | [summary] |
-| B | [task] | complete | [summary] |
-| C | [task] | complete | [summary] |
+| Stream | Task | Status | Deliverables | Concerns |
+|--------|------|--------|-------------|----------|
+| A | [task] | DONE | 3/3 delivered | None |
+| B | [task] | DONE_WITH_CONCERNS | 2/2 delivered | Perf regression on large input |
+| C | [task] | DONE | 2/2 delivered | None |
+
+### Acceptance Criteria
+| # | Criterion | Stream | Evidence | Verdict |
+|---|-----------|--------|----------|---------|
+| 1 | Auth endpoints return JWT | A | Test stdout: "3 passed" | PASS |
+| 2 | No SQL injection | A | Sentinel: PASS | PASS |
+| 3 | Dashboard loads < 2s | B | No perf test run | UNVERIFIED |
 
 ### Integration
 - Merge conflicts: [count]
 - Integration tests: [passed]/[total]
 - Coverage: [%]
+- Unresolved concerns: [count — from DONE_WITH_CONCERNS streams]
 ```
 
 ---
@@ -388,6 +453,16 @@ Independent streams  → PARALLEL (max 3 sonnet agents)
 Dependent streams    → SEQUENTIAL (respecting dependency order)
 All streams done     → MERGE sequentially (avoid conflicts)
 ```
+
+## Returns
+
+| Artifact | Format | Location |
+|----------|--------|----------|
+| Workstream assignments | Markdown (inline) | NEXUS Handoff Templates emitted per stream |
+| Cook Reports (per stream) | Markdown (inline) | Collected from each parallel cook instance |
+| Merged implementation | Source files | `main` branch after Phase 4 merge |
+| Integration test results | Inline stdout | Captured in Phase 5 verify |
+| Team Report | Markdown (inline) | Emitted at end of session |
 
 ## Sharp Edges
 
@@ -405,6 +480,8 @@ Known failure modes for this skill. Check these before declaring done.
 | Agent modified files outside declared scope | HIGH | Pre-merge scope verification in Phase 2b.5 — flag before merge, not after |
 | Merge failure with no rollback path | HIGH | pre-team-merge tag created before merges — git reset --hard on failure |
 | Poisoned cook report merged blindly | HIGH | Phase 3a.5 integrity-check on all cook reports before merge |
+| Bare prompt to cook instance — no context, conventions, or scope boundary | HIGH | NEXUS Handoff Template: structured handoff with metadata, deliverables, quality expectations, and evidence requirements |
+| Cook returns "done" with no acceptance criteria tracking | MEDIUM | Team Report includes Acceptance Criteria table with per-criterion evidence and PASS/FAIL/UNVERIFIED verdict |
 
 ## Done When
 
@@ -418,3 +495,5 @@ Known failure modes for this skill. Check these before declaring done.
 ## Cost Profile
 
 ~$0.20-0.50 per session. Opus for coordination. Most expensive orchestrator but handles largest tasks.
+
+**Scope guardrail**: Do not invoke launch, rescue, or scaffold autonomously unless explicitly delegated by the parent agent.

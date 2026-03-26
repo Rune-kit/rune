@@ -4,7 +4,7 @@ description: "Deploy application to target platform. Use when user explicitly sa
 disable-model-invocation: true
 metadata:
   author: runedev
-  version: "0.3.0"
+  version: "0.4.0"
   layer: L2
   model: sonnet
   group: delivery
@@ -63,6 +63,49 @@ If sentinel returns CRITICAL issues → STOP. Do NOT proceed. Report issues.
 ```
 
 Both gates MUST pass. No exceptions.
+
+### Step 1.5 — Release Checklist (Production Deploys Only)
+
+**Skip for**: staging, preview, development deploys.
+
+Before production deploy, verify ALL items:
+
+| # | Check | How | Gate |
+|---|-------|-----|------|
+| 1 | Version bumped | `package.json`/`pyproject.toml` version matches release | BLOCK if unchanged |
+| 2 | Changelog updated | `CHANGELOG.md` has entry for this version | WARN if missing |
+| 3 | Breaking changes documented | RFC artifact exists for each breaking change | BLOCK if RFC missing |
+| 4 | Migration scripts ready | DB migrations tested on staging first | BLOCK if untested migration |
+| 5 | Rollback plan documented | `.rune/deploy/rollback-<version>.md` exists | WARN if missing |
+| 6 | Release notes drafted | Customer-facing notes for release-comms | WARN if missing |
+| 7 | Dependencies locked | Lock file committed, no floating versions | BLOCK if unlocked |
+
+**Rollback Plan Template** (`.rune/deploy/rollback-<version>.md`):
+
+```markdown
+# Rollback Plan: v<version>
+
+## Trigger Conditions
+- [When to rollback — e.g., error rate >5%, P0 incident, data corruption]
+
+## Steps
+1. [Revert command — e.g., `vercel rollback`, `fly releases rollback`]
+2. [DB rollback — e.g., `npm run migrate:rollback` or "N/A — no migration"]
+3. [Cache invalidation if needed]
+4. [Notify stakeholders]
+
+## Verification
+- [ ] Previous version serving traffic
+- [ ] Health check passing
+- [ ] No data loss confirmed
+
+## Post-Rollback
+- [ ] Incident created for root cause analysis
+- [ ] Fix branch created from rolled-back commit
+```
+
+If any BLOCK item fails → STOP deploy. Fix before retrying.
+If WARN items missing → proceed but flag in deploy report.
 
 ### Step 2 — Detect platform
 
@@ -147,6 +190,18 @@ Deploy Report with platform, status (success/failed/rollback), deployed URL, bui
 3. MUST verify deploy is live and responding before declaring success
 4. MUST NOT deploy with known CRITICAL security findings
 5. MUST log deploy metadata (version, timestamp, commit hash)
+6. MUST complete release checklist for production deploys — version bump, changelog, rollback plan
+7. MUST create rollback plan artifact before first production deploy of a version
+
+## Returns
+
+| Artifact | Format | Location |
+|----------|--------|----------|
+| Deploy report | Markdown | inline (chat output) |
+| Deploy status (success/failed/rollback) | Text | inline |
+| Health check results (HTTP status, visual) | Markdown | inline |
+| Rollback plan document | Markdown | `.rune/deploy/rollback-<version>.md` |
+| Monitoring confirmation | Text | inline |
 
 ## Sharp Edges
 

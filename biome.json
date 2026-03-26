@@ -9,6 +9,7 @@
     "includes": [
       "**/compiler/**/*.js",
       "**/scripts/**/*.js",
+      "**/scripts/__tests__/**/*.js",
       "!**/node_modules",
       "!**/builds",
       "!**/*.md",

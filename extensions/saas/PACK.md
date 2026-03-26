@@ -23,7 +23,7 @@ SaaS applications share a common set of hard problems that most teams solve from
 
 ## Triggers
 
-- Auto-trigger: when `tenant`, `subscription`, `billing`, `stripe`, `paddle`, `lemonsqueezy`, `plan`, `pricing`, `featureFlag`, `rbac`, `permission`, `onboarding` patterns detected in codebase
+- Auto-trigger: when `tenant`, `subscription`, `billing`, `stripe`, `paddle`, `lemonsqueezy`, `polar`, `checkout`, `plan`, `pricing`, `featureFlag`, `rbac`, `permission`, `onboarding` patterns detected in codebase
 - `/rune multi-tenant` — audit or implement tenant isolation
 - `/rune billing-integration` — set up or audit billing provider integration
 - `/rune subscription-flow` — build subscription management UI
@@ -37,7 +37,7 @@ SaaS applications share a common set of hard problems that most teams solve from
 | Skill | Model | Description |
 |-------|-------|-------------|
 | [multi-tenant](skills/multi-tenant.md) | sonnet | Multi-tenancy patterns — database isolation strategies, tenant context middleware, data partitioning, cross-tenant query prevention, tenant-aware background jobs, and GDPR data export. |
-| [billing-integration](skills/billing-integration.md) | sonnet | Billing integration — Stripe and LemonSqueezy. Subscription lifecycle, webhook handling, usage-based billing, dunning management, and tax handling. |
+| [billing-integration](skills/billing-integration.md) | sonnet | Billing integration — Stripe, LemonSqueezy, and Polar. Subscription + one-time checkout, Standard Webhooks verification, digital product delivery (repo invite, license key), dunning management, and tax handling. |
 | [subscription-flow](skills/subscription-flow.md) | sonnet | Subscription UI flows — pricing page, checkout, plan upgrades/downgrades, plan migration, annual/monthly toggle with proration preview, coupon codes, lifetime deal support, and cancellation with retention. |
 | [feature-flags](skills/feature-flags.md) | sonnet | Feature flag management — gradual rollouts, kill switches, A/B testing, user-segment targeting, and stale flag cleanup. |
 | [team-management](skills/team-management.md) | sonnet | Organization, team, and member permissions — RBAC hierarchy, invite flow with expiry, permission checking at API and UI layers, and audit trail for permission changes. |
@@ -53,11 +53,12 @@ SaaS applications share a common set of hard problems that most teams solve from
 
 ## Tech Stack Support
 
-| Billing Provider | SDK | Webhook Verification | Vietnam/Global |
-|---|---|---|---|
-| Stripe | stripe-node v17+ | Built-in `constructEvent` | Requires US/EU entity |
-| LemonSqueezy | @lemonsqueezy/lemonsqueezy.js | HMAC SHA256 header | ✅ Works globally, Merchant of Record |
-| Paddle | @paddle/paddle-node-sdk | Paddle webhook SDK | ✅ Works globally, Merchant of Record |
+| Billing Provider | SDK | Webhook Verification | Vietnam/Global | Best For |
+|---|---|---|---|---|
+| Stripe | stripe-node v17+ | Built-in `constructEvent` | Requires US/EU entity | Full-featured SaaS billing |
+| LemonSqueezy | @lemonsqueezy/lemonsqueezy.js | HMAC SHA256 `x-signature` | ✅ MoR, global | Subscriptions, global sellers |
+| Polar | @polar-sh/sdk | Standard Webhooks (HMAC SHA256) | ✅ MoR, global | Developer tools, one-time purchases, OSS monetization |
+| Paddle | @paddle/paddle-node-sdk | Paddle webhook SDK | ✅ MoR, global | B2B SaaS, complex tax |
 
 | Feature Flag Provider | Self-hosted | Managed | Best For |
 |---|---|---|---|
@@ -95,11 +96,15 @@ Called By ← ba (L2): translating business requirements into SaaS implementatio
 | Feature gate checked client-side only (bypassed via API) | HIGH | Enforce feature gates in API middleware, not just UI components |
 | Last org Owner removed (org locked out) | HIGH | Block role change that would leave org with zero Owners |
 | Stale feature flags accumulate (>50 flags, no cleanup) | MEDIUM | Weekly CI job: detect flags in code not in provider and vice versa |
+| Checkout metadata missing fulfillment context (no user ID, no GitHub username) | HIGH | Always pass user identifier in checkout metadata — webhook handler cannot look up user without it |
+| GitHub invite fails silently, order marked delivered | HIGH | Check invite API response status; mark order as `partial` if any repo invite fails; implement admin retry endpoint |
+| Standard Webhooks timestamp replay attack | MEDIUM | Reject webhook-timestamp older than 5 minutes; prevents replayed webhook payloads |
 
 ## Done When
 
 - Tenant isolation audited: every query scoped, RLS or middleware enforced, background jobs carry tenantId, GDPR export endpoint implemented
-- Billing webhooks verified, idempotent, and handling all lifecycle events including dunning flow
+- Billing webhooks verified (provider-specific signature or Standard Webhooks HMAC), idempotent, and handling all lifecycle events including dunning flow
+- One-time checkout flow implemented with metadata-driven delivery (repo invite, license key, or download link)
 - Subscription flow has pricing page, checkout, upgrade, downgrade, proration preview, coupon codes, cancellation, and lifetime deal support
 - Feature flags implemented with evaluation caching, stale flag detection, and test mocking
 - Team RBAC implemented with invite flow, permission middleware, and audit trail

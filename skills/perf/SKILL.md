@@ -3,7 +3,7 @@ name: perf
 description: Performance regression gate. Detects N+1 queries, sync-in-async, missing indexes, memory leaks, and bundle bloat before they reach production.
 metadata:
   author: runedev
-  version: "0.1.0"
+  version: "0.2.0"
   layer: L2
   model: sonnet
   group: quality
@@ -37,6 +37,11 @@ Performance regression gate. Analyzes code changes for patterns that cause measu
 - `audit` (L2): performance dimension delegation
 - `review` (L2): performance patterns detected in diff
 - `deploy` (L2): pre-deploy perf regression check
+
+## References
+
+- `references/cost-reference.md` — Cost priority hierarchy, quick wins checklist, instance right-sizing, data transfer traps, serverless optimization, observability cost control, managed vs self-hosted matrix, unit economics tracking. Load when cost analysis or FinOps context detected.
+- `references/scalability-reference.md` — Bottleneck identification flow, performance thresholds, API patterns (cursor pagination, rate limiting, circuit breaker, graceful shutdown), caching strategies, queue-based load leveling, concurrency patterns, K8s HPA, CDN headers, load testing. Load when scaling or infrastructure optimization context detected.
 
 ## Executable Steps
 
@@ -292,6 +297,17 @@ Known failure modes for this skill. Check these before declaring done.
 - Benchmark scripts ran (if configured) or INFO: skipped
 - Perf Report emitted with PASS/WARN/BLOCK verdict
 
+## Returns
+
+| Artifact | Format | Location |
+|----------|--------|----------|
+| Perf Report with verdict | Markdown (PASS/WARN/BLOCK) | inline |
+| Per-finding details | Structured list (file:line + impact) | inline |
+| Lighthouse scores (if ran) | Score table | inline |
+| Framework-specific findings | Categorized list | inline |
+
 ## Cost Profile
 
 ~3000-8000 tokens input, ~500-1500 tokens output. Sonnet for pattern recognition.
+
+**Scope guardrail:** perf investigates and reports only — it does not fix code. All fixes are delegated to `fix` (L2) after the report is reviewed.

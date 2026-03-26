@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Rune Guides — From Install to Production</title>
-  <meta name="description" content="Complete guide to using Rune — the 58-skill mesh for AI coding assistants. Install, configure, and master every workflow.">
+  <meta name="description" content="Complete guide to using Rune — the 59-skill mesh for AI coding assistants. Install, configure, and master every workflow.">
   <meta property="og:title" content="Rune Guides — From Install to Production">
-  <meta property="og:description" content="Learn how to use Rune's 58-skill mesh to supercharge your AI coding assistant.">
+  <meta property="og:description" content="Learn how to use Rune's 59-skill mesh to supercharge your AI coding assistant.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://rune-kit.github.io/rune/guides/">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -379,18 +379,38 @@
       cursor: pointer; display: flex; align-items: center; justify-content: center;
       font-size: 16px; transition: all var(--transition); flex-shrink: 0;
     }
-    .theme-toggle:hover { border-color: var(--accent); color: var(--text-primary); }
-    .goog-te-banner-frame { display: none !important; }
-    body { top: 0 !important; }
-    .goog-te-gadget > span { display: none !important; }
-    .goog-te-gadget { font-size: 0; line-height: 0; }
-    .goog-te-combo {
-      background: var(--bg-card); color: var(--text-secondary);
-      border: 1px solid var(--border); border-radius: var(--radius-sm);
-      padding: 5px 8px; font-family: var(--font-body); font-size: 12px;
-      cursor: pointer; outline: none;
+    .theme-toggle:hover, .lang-toggle:hover { border-color: var(--accent); color: var(--text-primary); }
+    .lang-toggle {
+      background: none; border: 1px solid var(--border); color: var(--text-secondary);
+      width: 34px; height: 34px; border-radius: var(--radius-sm);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 16px; transition: all var(--transition); flex-shrink: 0;
     }
-    .goog-te-combo:hover { border-color: var(--accent); }
+    /* Google Translate — hide ALL injected elements */
+    .goog-te-banner-frame { display: none !important; }
+    body { top: 0 !important; position: static !important; }
+    .skiptranslate { display: none !important; height: 0 !important; overflow: hidden !important; }
+    .goog-te-spinner-pos, .goog-te-balloon-frame, #goog-gt-tt, .goog-te-ftab-frame { display: none !important; }
+    .goog-text-highlight { background: none !important; box-shadow: none !important; }
+    font[style] > font { vertical-align: unset !important; }
+    #_gt_dummy { display: none !important; visibility: hidden !important; height: 0 !important; overflow: hidden !important; }
+    /* Language dropdown */
+    .lang-dropdown { position: relative; }
+    .lang-menu {
+      position: absolute; top: calc(100% + 6px); right: 0; z-index: 100;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-md); padding: 4px; min-width: 140px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      display: flex; flex-direction: column;
+    }
+    .lang-menu[hidden] { display: none; }
+    .lang-menu button {
+      background: none; border: none; color: var(--text-secondary);
+      padding: 7px 12px; font-family: var(--font-body); font-size: 13px;
+      text-align: left; cursor: pointer; border-radius: var(--radius-sm);
+      transition: all var(--transition);
+    }
+    .lang-menu button:hover { background: var(--bg-elevated); color: var(--text-primary); }
 
     /* ─── RESPONSIVE ─── */
     @media (max-width: 900px) {
@@ -431,9 +451,28 @@
         <a href="../">Home</a>
         <a href="./" class="active">Guides</a>
         <a href="../#pricing">Pricing</a>
-        <div class="nav-controls">
+        <div class="nav-controls notranslate" translate="no">
           <button class="theme-toggle" id="theme-toggle" aria-label="Toggle light/dark mode" title="Toggle theme">&#9790;</button>
-          <div id="google_translate_element"></div>
+          <div class="lang-dropdown" id="lang-dropdown">
+            <button class="lang-toggle" id="lang-btn" aria-label="Translate page" title="Translate page">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10A15.3 15.3 0 0 1 12 2z"/></svg>
+            </button>
+            <div class="lang-menu notranslate" id="lang-menu" translate="no" hidden>
+              <button data-lang="">English</button>
+              <button data-lang="vi">Tiếng Việt</button>
+              <button data-lang="ja">日本語</button>
+              <button data-lang="ko">한국어</button>
+              <button data-lang="zh-CN">中文(简)</button>
+              <button data-lang="zh-TW">中文(繁)</button>
+              <button data-lang="fr">Français</button>
+              <button data-lang="de">Deutsch</button>
+              <button data-lang="es">Español</button>
+              <button data-lang="pt">Português</button>
+              <button data-lang="ru">Русский</button>
+              <button data-lang="th">ไทย</button>
+              <button data-lang="id">Bahasa</button>
+            </div>
+          </div>
         </div>
         <a href="https://github.com/rune-kit/rune" class="btn btn-ghost btn-sm" target="_blank" rel="noopener">GitHub</a>
       </div>
@@ -520,7 +559,7 @@
       <h2 id="what-is-rune">What is Rune?</h2>
 
       <p>
-        <strong>Rune is a 58-skill mesh ecosystem</strong> for AI coding assistants. Instead of giving your AI one prompt at a time,
+        <strong>Rune is a 59-skill mesh ecosystem</strong> for AI coding assistants. Instead of giving your AI one prompt at a time,
         Rune gives it structured workflows where skills call each other automatically.
       </p>
 
@@ -575,7 +614,7 @@
 
 <span class="comment"># Verify it's loaded</span>
 <span class="cmd">claude</span>
-<span class="output">  58 skills loaded from rune</span></div>
+<span class="output">  59 skills loaded from rune</span></div>
             <button class="copy-btn" data-copy="claude plugin marketplace add rune-kit/rune && claude plugin install rune">Copy</button>
           </div>
           <div class="callout callout-tip">
@@ -585,14 +624,14 @@
         </div>
 
         <div class="tab-panel" id="install-cursor">
-          <p>Cursor uses <code>.mdc</code> rule files. Rune compiles all 58 skills into Cursor's format.</p>
+          <p>Cursor uses <code>.mdc</code> rule files. Rune compiles all 59 skills into Cursor's format.</p>
           <div class="code-wrapper">
             <div class="code-block"><span class="comment"># In your project directory</span>
 <span class="cmd">npx --yes @rune-kit/rune init <span class="flag">--platform cursor</span></span>
 
 <span class="output">  → Detected: cursor</span>
 <span class="output">  ✓ Created rune.config.json</span>
-<span class="output">  ✓ Built 58 skills + 14 extensions to .cursor/rules/</span></div>
+<span class="output">  ✓ Built 59 skills + 14 extensions to .cursor/rules/</span></div>
             <button class="copy-btn" data-copy="npx --yes @rune-kit/rune init --platform cursor">Copy</button>
           </div>
           <p>Skills are compiled into <code>.cursor/rules/</code>. Cursor picks them up automatically.</p>
@@ -603,7 +642,7 @@
           <div class="code-wrapper">
             <div class="code-block"><span class="cmd">npx --yes @rune-kit/rune init <span class="flag">--platform windsurf</span></span>
 
-<span class="output">  ✓ Built 58 skills + 14 extensions to .windsurf/rules/</span></div>
+<span class="output">  ✓ Built 59 skills + 14 extensions to .windsurf/rules/</span></div>
             <button class="copy-btn" data-copy="npx --yes @rune-kit/rune init --platform windsurf">Copy</button>
           </div>
         </div>
@@ -613,7 +652,7 @@
           <div class="code-wrapper">
             <div class="code-block"><span class="cmd">npx --yes @rune-kit/rune init <span class="flag">--platform antigravity</span></span>
 
-<span class="output">  ✓ Built 58 skills + 14 extensions to .agent/rules/</span></div>
+<span class="output">  ✓ Built 59 skills + 14 extensions to .agent/rules/</span></div>
             <button class="copy-btn" data-copy="npx --yes @rune-kit/rune init --platform antigravity">Copy</button>
           </div>
           <div class="callout callout-info">
@@ -628,7 +667,7 @@
           <div class="code-wrapper">
             <div class="code-block"><span class="cmd">clawhub install rune-kit</span>
 
-<span class="comment"># All 58 skills installed as one mesh package</span>
+<span class="comment"># All 59 skills installed as one mesh package</span>
 <span class="comment"># Works with any OpenClaw-compatible agent</span></div>
             <button class="copy-btn" data-copy="clawhub install rune-kit">Copy</button>
           </div>
@@ -709,7 +748,7 @@
       </div>
 
       <p>
-        200+ connections between 58 skills. When <code>debug</code> can't find the cause,
+        200+ connections between 59 skills. When <code>debug</code> can't find the cause,
         it escalates to <code>problem-solver</code>. When <code>cook</code> hits a wall 3 times,
         it pivots to <code>brainstorm</code>. When <code>sentinel</code> finds a vulnerability,
         it blocks the commit. The mesh is self-healing.
@@ -1011,7 +1050,7 @@
 <span class="output">  ├── rune-fix/SKILL.md</span>
 <span class="output">  ├── rune-plan/SKILL.md</span>
 <span class="output">  ├── rune-test/SKILL.md</span>
-<span class="output">  └── ... (58 skills total)</span></div>
+<span class="output">  └── ... (59 skills total)</span></div>
       </div>
 
       <p>
@@ -1070,7 +1109,7 @@
       <div class="code-wrapper">
         <div class="code-block"><span class="cmd">clawhub install rune-kit</span>
 
-<span class="comment"># All 58 skills + 14 extension packs as one mesh package</span>
+<span class="comment"># All 59 skills + 14 extension packs as one mesh package</span>
 <span class="comment"># Slug: rune-kit on clawhub.ai</span></div>
       </div>
 
@@ -1080,7 +1119,7 @@
       </div>
 
       <div class="callout callout-info">
-        <strong>All platforms get the same 58 skills.</strong> The compiler handles format differences.
+        <strong>All platforms get the same 59 skills.</strong> The compiler handles format differences.
         Cross-references, tool names, and model hints are adapted per platform.
       </div>
 
@@ -1217,7 +1256,7 @@
 
       <h3>Is Rune free?</h3>
       <p>
-        Yes. The full 58-skill mesh + 14 extension packs are <strong>free forever, MIT license</strong>.
+        Yes. The full 59-skill mesh + 14 extension packs are <strong>free forever, MIT license</strong>.
         <a href="../#pricing">Rune Pro</a> ($49 lifetime) adds business department skills (Product, Sales, Data Science).
       </p>
 
@@ -1370,18 +1409,42 @@
     })();
   </script>
 
-  <!-- Google Translate (free, no API key) -->
+  <!-- Language Switcher (Google Translate via cookie) -->
   <script>
-    function googleTranslateElementInit() {
-      new google.translate.TranslateElement({
-        pageLanguage: 'en',
-        includedLanguages: 'vi,ja,ko,zh-CN,zh-TW,fr,de,es,pt,ru,ar,hi,th,id',
-        layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
-        autoDisplay: false
-      }, 'google_translate_element');
-    }
+    (() => {
+      const btn = document.getElementById('lang-btn');
+      const menu = document.getElementById('lang-menu');
+      const wrap = document.getElementById('lang-dropdown');
+
+      btn.addEventListener('click', () => {
+        const open = !menu.hidden;
+        menu.hidden = open;
+        btn.setAttribute('aria-expanded', String(!open));
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!wrap.contains(e.target)) menu.hidden = true;
+      });
+
+      menu.addEventListener('click', (e) => {
+        const lang = e.target.dataset.lang;
+        if (lang === undefined) return;
+        menu.hidden = true;
+        if (!lang) {
+          document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/';
+          document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.' + location.hostname;
+          location.reload();
+          return;
+        }
+        document.cookie = 'googtrans=/en/' + lang + '; path=/';
+        document.cookie = 'googtrans=/en/' + lang + '; path=/; domain=.' + location.hostname;
+        location.reload();
+      });
+    })();
   </script>
   <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+  <script>function googleTranslateElementInit() { new google.translate.TranslateElement({ pageLanguage: 'en', autoDisplay: false }, '_gt_dummy'); }</script>
+  <div id="_gt_dummy" style="display:none"></div>
 
 </body>
 </html>

@@ -3,7 +3,7 @@ name: hallucination-guard
 description: Verify AI-generated imports, API calls, and packages actually exist. Catches phantom functions, non-existent packages, and slopsquatting attacks.
 metadata:
   author: runedev
-  version: "0.2.0"
+  version: "0.3.0"
   layer: L3
   model: haiku
   group: validation
@@ -74,15 +74,30 @@ File: resolved file path
 
 If export not found → mark as **WARN** (symbol may not be exported).
 
-### Step 3 — Verify external packages
+### Step 3 — Verify external packages (Dependency Check Before Import)
+
+> From taste-skill (Leonxlnx/taste-skill, 3.4k★): "Before importing ANY 3rd party lib, check package.json."
 
 Use `Read` on the project's dependency manifest to confirm each external package is listed:
 
 - JavaScript/TypeScript: `package.json` → check `dependencies` and `devDependencies`
-- Python: `requirements.txt` or `pyproject.toml`
-- Rust: `Cargo.toml` → `[dependencies]`
+- Python: `requirements.txt` or `pyproject.toml` → `[project.dependencies]` and `[project.optional-dependencies]`
+- Rust: `Cargo.toml` → `[dependencies]` and `[dev-dependencies]`
 
-If package is **not listed** in the manifest → mark as **BLOCK** (phantom dependency).
+**Pre-import gate** (BEFORE writing import statements, not just after):
+1. If the agent is ABOUT to import a package → check manifest FIRST
+2. If package is NOT in manifest → output install command before writing the import:
+   ```
+   ⚠ Package '<name>' not in dependencies. Install first:
+     npm install <name>        # JS/TS
+     pip install <name>        # Python
+     cargo add <name>          # Rust
+   ```
+3. If package IS in manifest → proceed with import
+
+**Post-import verification** (after code is written):
+- If package is **not listed** in the manifest → mark as **BLOCK** (phantom dependency)
+- If package is listed but not installed (no lockfile entry) → mark as **WARN** (not yet installed)
 
 Also check for typosquatting: if package name has edit distance ≤ 2 from a known popular package (axios/axois, lodash/lodahs, react/recat), mark as **SUSPICIOUS**.
 

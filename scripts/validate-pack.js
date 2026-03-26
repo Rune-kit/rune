@@ -5,8 +5,11 @@
 // If no path given, validates all packs in .rune/community-packs/
 // Exit 0 = all pass, Exit 1 = issues found
 
-const fs = require('node:fs');
-const path = require('node:path');
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { basename, dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // Required top-level sections in every PACK.md
 const REQUIRED_SECTIONS = [
@@ -23,23 +26,23 @@ const REQUIRED_SECTIONS = [
 // Required YAML frontmatter fields
 const REQUIRED_FRONTMATTER = ['name:', 'description:', 'layer:'];
 
-function parseFrontmatter(content) {
+export function parseFrontmatter(content) {
   const match = content.match(/^---\n([\s\S]*?)\n---/);
   if (!match) return null;
   return match[1];
 }
 
-function validatePack(packDir) {
+export function validatePack(packDir) {
   const issues = [];
-  const packName = path.basename(packDir);
-  const packFile = path.join(packDir, 'PACK.md');
+  const packName = basename(packDir);
+  const packFile = join(packDir, 'PACK.md');
 
-  if (!fs.existsSync(packFile)) {
+  if (!existsSync(packFile)) {
     issues.push(`${packName}: Missing PACK.md`);
     return issues;
   }
 
-  const content = fs.readFileSync(packFile, 'utf-8').replace(/\r\n/g, '\n');
+  const content = readFileSync(packFile, 'utf-8').replace(/\r\n/g, '\n');
 
   // Check frontmatter
   const frontmatter = parseFrontmatter(content);
@@ -78,51 +81,54 @@ function validatePack(packDir) {
   return issues;
 }
 
-// Main
-const targetPath = process.argv[2];
-let packDirs = [];
+// CLI entry point
+const isMain =
+  process.argv[1] && fileURLToPath(import.meta.url).endsWith(process.argv[1].replace(/\\/g, '/').split('/').pop());
+if (isMain) {
+  const targetPath = process.argv[2];
+  let packDirs = [];
 
-if (targetPath) {
-  // Validate single pack
-  packDirs = [path.resolve(targetPath)];
-} else {
-  // Validate all community packs
-  const communityDir = path.join(process.cwd(), '.rune', 'community-packs');
-  if (fs.existsSync(communityDir)) {
-    const entries = fs.readdirSync(communityDir, { withFileTypes: true });
-    packDirs = entries
-      .filter((e) => e.isDirectory() && e.name !== 'node_modules')
-      .map((e) => path.join(communityDir, e.name));
-  }
-
-  // Also validate core extension packs
-  const extensionsDir = path.join(__dirname, '..', 'extensions');
-  if (fs.existsSync(extensionsDir)) {
-    const entries = fs.readdirSync(extensionsDir, { withFileTypes: true });
-    packDirs = packDirs.concat(entries.filter((e) => e.isDirectory()).map((e) => path.join(extensionsDir, e.name)));
-  }
-}
-
-if (packDirs.length === 0) {
-  console.log('No extension packs found to validate.');
-  process.exit(0);
-}
-
-let totalIssues = 0;
-let totalPacks = 0;
-
-for (const dir of packDirs) {
-  totalPacks++;
-  const issues = validatePack(dir);
-  if (issues.length > 0) {
-    totalIssues += issues.length;
-    for (const issue of issues) {
-      console.log(`  FAIL: ${issue}`);
-    }
+  if (targetPath) {
+    packDirs = [resolve(targetPath)];
   } else {
-    console.log(`  PASS: ${path.basename(dir)}`);
-  }
-}
+    // Validate all community packs
+    const communityDir = join(process.cwd(), '.rune', 'community-packs');
+    if (existsSync(communityDir)) {
+      const entries = readdirSync(communityDir, { withFileTypes: true });
+      packDirs = entries
+        .filter((e) => e.isDirectory() && e.name !== 'node_modules')
+        .map((e) => join(communityDir, e.name));
+    }
 
-console.log(`\n${totalPacks} packs validated, ${totalIssues} issues found.`);
-process.exit(totalIssues > 0 ? 1 : 0);
+    // Also validate core extension packs
+    const extensionsDir = join(__dirname, '..', 'extensions');
+    if (existsSync(extensionsDir)) {
+      const entries = readdirSync(extensionsDir, { withFileTypes: true });
+      packDirs = packDirs.concat(entries.filter((e) => e.isDirectory()).map((e) => join(extensionsDir, e.name)));
+    }
+  }
+
+  if (packDirs.length === 0) {
+    console.log('No extension packs found to validate.');
+    process.exit(0);
+  }
+
+  let totalIssues = 0;
+  let totalPacks = 0;
+
+  for (const dir of packDirs) {
+    totalPacks++;
+    const issues = validatePack(dir);
+    if (issues.length > 0) {
+      totalIssues += issues.length;
+      for (const issue of issues) {
+        console.log(`  FAIL: ${issue}`);
+      }
+    } else {
+      console.log(`  PASS: ${basename(dir)}`);
+    }
+  }
+
+  console.log(`\n${totalPacks} packs validated, ${totalIssues} issues found.`);
+  process.exit(totalIssues > 0 ? 1 : 0);
+}

@@ -61,7 +61,17 @@ export async function runDoctor({ outputRoot, adapter, config, runeRoot }) {
   // Check 3: Count skill files
   const files = await readdir(outputDir);
   const skillFiles = files.filter((f) => f.startsWith('rune-') && f !== `rune-index${adapter.fileExtension}`);
-  const expectedSkillCount = 55 - (config.skills?.disabled?.length || 0);
+
+  // Dynamic expected count: scan source skills/ directory
+  const sourceSkillsDir = path.join(runeRoot, 'skills');
+  let sourceSkillCount = 0;
+  if (existsSync(sourceSkillsDir)) {
+    const entries = await readdir(sourceSkillsDir, { withFileTypes: true });
+    sourceSkillCount = entries.filter(
+      (e) => e.isDirectory() && existsSync(path.join(sourceSkillsDir, e.name, 'SKILL.md')),
+    ).length;
+  }
+  const expectedSkillCount = sourceSkillCount - (config.skills?.disabled?.length || 0);
 
   if (skillFiles.length >= expectedSkillCount) {
     results.checks.push({ name: 'Skill files', status: 'pass', detail: `${skillFiles.length}/${expectedSkillCount}` });

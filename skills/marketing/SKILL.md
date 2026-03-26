@@ -28,6 +28,7 @@ Create marketing assets and execute launch strategy. Marketing generates landing
 - `research` (L3): competitor analysis, SEO keyword data
 - `asset-creator` (L3): generate OG images, social cards, banners
 - `video-creator` (L3): create demo/explainer video plan
+- `slides` (L3): generate presentation decks for launches and demos
 - `browser-pilot` (L3): capture screenshots for marketing assets
 - L4 extension packs: domain-specific content when context matches (e.g., @rune/content for blog posts, @rune/analytics for campaign measurement)
 
@@ -161,6 +162,8 @@ Call `rune:video-creator` to produce:
 - 60-second demo video script (screen recording plan)
 - Shot list with timestamps
 
+Call `rune:slides` to generate presentation decks for launch demos, sprint reviews, or investor pitches.
+
 If `rune:browser-pilot` is available, capture screenshots of the running app to use as real product imagery.
 
 ### Step 7 — Present for approval
@@ -224,6 +227,19 @@ Known failure modes for this skill. Check these before declaring done.
 - Files saved to marketing/ directory
 - Marketing Assets report emitted with file list
 
+## Returns
+
+| Artifact | Format | Location |
+|----------|--------|----------|
+| Brand voice contract | Markdown | `marketing/brand-voice.md` |
+| Landing page copy | Markdown | `marketing/landing-copy.md` |
+| Social media posts | Markdown | `marketing/social-posts.md` |
+| SEO metadata | JSON | `marketing/seo-meta.json` |
+| SEO audit report | Markdown | `marketing/seo-audit.md` |
+| Video demo script | Markdown | `marketing/video-script.md` |
+
 ## Cost Profile
 
 ~2000-5000 tokens input, ~1000-3000 tokens output. Sonnet for copywriting quality.
+
+**Scope guardrail:** marketing generates assets based on actual product capabilities only — no aspirational copy, no fabricated stats.

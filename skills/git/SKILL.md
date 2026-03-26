@@ -3,7 +3,7 @@ name: git
 description: Specialized git operations — semantic commits, PR descriptions, branch management, conflict resolution guidance. Replaces ad-hoc git commands with a dedicated, convention-aware utility.
 metadata:
   author: runedev
-  version: "0.2.0"
+  version: "0.3.0"
   layer: L3
   model: haiku
   group: utility
@@ -27,6 +27,7 @@ Specialized git operations utility. Handles semantic commits, PR descriptions, b
 - `/rune git pr` — manual PR generation
 - `/rune git branch <description>` — generate branch name
 - `/rune git changelog` — generate changelog from commits
+- `/rune git release <version>` — create tagged release with changelog
 
 ## Calls (outbound)
 
@@ -187,6 +188,49 @@ Group commits by conventional commit type. Format as [Keep a Changelog](https://
 
 Link to PRs/issues when references found in commit messages.
 
+### Release Mode
+
+Create a version tag with release artifacts.
+
+**Triggers:**
+- `/rune git release <version>` — create release for specified version
+- Called by `launch` (L1) during release pipeline
+- Called by `deploy` (L2) after successful production deploy
+
+#### Step 1 — Validate Version
+
+Parse version string. Must follow semver (`major.minor.patch`):
+- Breaking changes → major bump
+- New features → minor bump
+- Bug fixes → patch bump
+
+Check `git tag -l` to ensure version doesn't already exist.
+
+#### Step 2 — Generate Release Artifacts
+
+1. **Changelog**: Run Changelog Mode to generate entries since last tag
+2. **Version bump**: Update version in `package.json`, `pyproject.toml`, `Cargo.toml`, or equivalent
+3. **Release notes**: Summarize changes for GitHub Release body
+
+#### Step 3 — Tag and Push
+
+```bash
+git add <version-files>
+git commit -m "chore: bump version to v<version>"
+git tag -a v<version> -m "Release v<version>"
+git push origin master --tags
+```
+
+#### Step 4 — Create GitHub Release
+
+```bash
+gh release create v<version> --title "v<version>" --notes "<release-notes>"
+```
+
+#### Step 5 — Notify
+
+If deploy reports customer email list available (via rune-pay `/admin/emails`), flag for notification.
+
 ## Output Format
 
 ### Commit Mode
@@ -233,6 +277,16 @@ Examples: `feat/jwt-refresh`, `fix/123-login-crash`, `refactor/auth-module`
 
 ### Changed
 - Change description (#PR)
+```
+
+### Release Mode
+```
+## Release: v<version>
+- **Tag**: v<version>
+- **Commits**: [count] since last release
+- **Changelog**: [path to CHANGELOG.md]
+- **GitHub Release**: [URL]
+- **Artifacts**: version bump, changelog, tag, release
 ```
 
 ## Constraints

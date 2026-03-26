@@ -77,6 +77,9 @@ Brief description.
 Calls → [L3 utility]: [when/why]
 Called By ← [L2 hub]: [when/why]
 Called By ← [L1 orchestrator]: [when auto-detected]
+Feeds Into → [skill]: [what artifact] → [how consumed]
+Fed By ← [skill]: [what artifact] ← [what this pack needs]
+Feedback Loop ↻ [skill-a] ↔ [skill-b]: [what gets refined bidirectionally]
 ```
 
 ## Tech Stack Support (if applicable)
@@ -97,11 +100,26 @@ Called By ← [L1 orchestrator]: [when auto-detected]
 |---|---|---|
 | [domain-specific failure] | HIGH/MEDIUM | [how to avoid] |
 
+## Self-Validation
+
+Per-skill quality checks that run before reporting "done". Domain-specific — not covered by centralized completion-gate.
+
+```
+SELF-VALIDATION (per skill):
+skill-1:
+  - [ ] [domain-specific quality check]
+  - [ ] [output format compliance]
+skill-2:
+  - [ ] [domain-specific quality check]
+  - [ ] [completeness check]
+```
+
 ## Done When
 
 - [Verifiable condition 1]
 - [Verifiable condition 2]
 - [Structured output emitted]
+- Self-Validation: all per-skill checks passed
 
 ## Cost Profile
 

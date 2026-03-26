@@ -1,10 +1,12 @@
-# Dev files
+# Dev/CI files
 .claude/
 .claude-plugin/
 .rune/
 .github/
-docs/
 compiler/__tests__/
+
+# Docs (served via GitHub Pages, not npm)
+docs/
 
 # Config
 .gitignore
@@ -12,5 +14,7 @@ compiler/__tests__/
 .prettierrc*
 rune.config.json
 
-# References (local only)
-docs/references/
+# Internal files
+CLAUDE.md
+AGENTS.md
+ROADMAP.md

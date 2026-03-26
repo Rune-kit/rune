@@ -19,6 +19,9 @@ node_modules/
 # Compiler output
 dist/
 
+# Coverage
+coverage/
+
 # Admin dashboard (local-only)
 docs/dashboard.html
 
@@ -26,3 +29,26 @@ docs/dashboard.html
 .env
 .env.local
 .gitnexus
+
+# Local tooling artifacts
+.claude/skills/
+.claude/settings.local.json
+CLAUDE.md
+AGENTS.md
+.openclaw/
+.cursor/
+
+# Audit reports
+AUDIT-REPORT.md
+
+# Internal docs (competitive analysis, audits, video production)
+docs/ANTIGRAVITY-GAP-ANALYSIS.md
+docs/CROSS-IDE-ANALYSIS.md
+docs/SKILL-DEPTH-AUDIT.md
+docs/TRADE-MATRIX.md
+docs/video-demo-plan.md
+docs/references/claudekit-analysis.md
+docs/references/voltagent-analysis.md
+docs/assets/demo-subtitles.srt
+docs/assets/end-card.html
+docs/assets/thumbnail.html

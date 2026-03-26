@@ -161,6 +161,17 @@ Known failure modes for this skill. Check these before declaring done.
 - Source URL provided
 - Documentation emitted in output format
 
+## Returns
+
+| Artifact | Format | Location |
+|----------|--------|----------|
+| API reference (signature + params) | Markdown | inline |
+| Minimal working code example | Code block | inline |
+| Deprecation / version notes | Markdown | inline |
+| Source URL | Plain text | inline |
+
 ## Cost Profile
 
 ~300-600 tokens input, ~200-400 tokens output. Haiku. Fast lookup.
+
+**Scope guardrail:** docs-seeker looks up documentation only — it does not apply changes, write code, or interpret whether the API fits the caller's use case.

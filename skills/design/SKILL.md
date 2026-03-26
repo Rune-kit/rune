@@ -443,6 +443,15 @@ Trading/Fintech — Data-Dense Dark — Web
 | Persistence Gate | .rune/design-system.md written before reporting done | Write file first |
 | Platform Gate | Platform detected before generating tokens | Default to web, note assumption |
 
+## Returns
+
+| Artifact | Format | Location |
+|----------|--------|----------|
+| Design system file | Markdown | `.rune/design-system.md` |
+| Design report | Markdown | inline (chat output) |
+| Accessibility audit findings | Markdown list | inline + appended to design-system.md |
+| UX writing guidelines | Markdown section | `.rune/design-system.md` § UX Writing |
+
 ## Sharp Edges
 
 Known failure modes for this skill. Check these before declaring done.

@@ -3,7 +3,7 @@ name: review
 description: Code quality review — patterns, security, performance, correctness. Finds bugs, suggests improvements, triggers fix for issues found. Escalates to opus for security-critical code.
 metadata:
   author: runedev
-  version: "0.3.0"
+  version: "0.5.0"
   layer: L2
   model: sonnet
   group: development
@@ -69,6 +69,26 @@ Determine what to review.
 - If triggered by a specific file or feature: use `Read` on each named file
 - If context is unclear: use `rune:scout` to identify all files touched by the change
 - List every file in scope before proceeding — do not review files outside the stated scope
+
+### Step 1.5: Blast Radius Assessment
+
+For each modified function/class, estimate its blast radius before reviewing.
+
+```
+Use Grep to count direct callers/importers of each modified symbol:
+  blast_radius = count(files importing or calling this symbol)
+```
+
+| Blast Radius | Risk | Review Depth |
+|-------------|------|-------------|
+| 1-5 callers | Low | Standard review |
+| 6-20 callers | Medium | Check all callers for compatibility |
+| 21-50 callers | High | Thorough review + regression test check |
+| 50+ callers | Critical | MUST escalate to adversarial analysis (rune:adversary) even in quick triage |
+
+<HARD-GATE>
+Modifying a symbol with 50+ callers + HIGH severity change (logic, types, behavior) → adversarial analysis REQUIRED. Quick review is NOT sufficient for high-blast-radius changes.
+</HARD-GATE>
 
 ### Step 2: Logic Check (Production-Critical Focus)
 
@@ -155,6 +175,22 @@ Check for security-relevant issues.
 - Scan for: XSS vectors (unsanitized HTML output), CSRF exposure, open redirects
 - If any security-sensitive code found (auth logic, input handling, crypto, payment): call `rune:sentinel` for deep scan
 - Sentinel escalation is mandatory — do not skip it for auth or crypto code
+
+### Step 4.5: API Pit-of-Success Check
+
+For code that exposes APIs, shared utilities, or reusable interfaces, evaluate through 3 adversary personas:
+
+| Adversary | Mindset | What They Reveal |
+|-----------|---------|-----------------|
+| **The Scoundrel** | Malicious — controls config, crafts inputs, exploits edge cases | Security holes, privilege escalation, injection surfaces |
+| **The Lazy Developer** | Copy-pastes from docs, skips error handling, uses defaults | Unsafe defaults, missing validation, footgun APIs |
+| **The Confused Developer** | Misunderstands API semantics, passes wrong types, ignores return values | Ambiguous interfaces, poor naming, missing type safety |
+
+**Pit-of-Success principle**: Secure, correct usage should be the path of least resistance. If the API makes it EASIER to use it wrong than right → WARN.
+
+Check: Does the API have sensible defaults? Does misuse fail loudly (not silently)? Is the happy path obvious from the signature?
+
+**Skip if**: Code is internal-only (no external consumers), single-use utility, or test-only.
 
 ### Step 5: Test Coverage
 
@@ -324,6 +360,35 @@ className="focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
 - iOS target: solid-background cards (iOS 26 Liquid Glass deprecates this visual language) — should use translucent/blur surfaces
 - Android target: hardcoded hex colors instead of `MaterialTheme.colorScheme` tokens → not adaptive to dynamic color
 
+## Weighted Composite Scoring
+
+When a review is part of a recurring quality-gate cycle (e.g., sprint review, pre-release gate), produce a **composite quality score** alongside the findings list. This makes review output numeric and comparable across runs.
+
+### Formula
+
+```
+Quality Score = (Correctness × 0.35) + (Security × 0.30) + (Test Coverage × 0.20) + (Conventions × 0.15)
+```
+
+Each dimension is scored 0–100 based on findings count and severity:
+- 0 CRITICAL/HIGH findings → 100 for that dimension
+- 1 CRITICAL → dimension capped at 40
+- 1 HIGH → dimension capped at 70
+- Each additional MEDIUM → subtract 5 (floor: 50)
+
+### Grade Thresholds
+
+| Score | Grade | Verdict |
+|-------|-------|---------|
+| 90–100 | Excellent | APPROVE |
+| 75–89 | Good | APPROVE with notes |
+| 60–74 | Fair | REQUEST CHANGES (MEDIUM issues) |
+| 40–59 | Poor | REQUEST CHANGES (HIGH issues present) |
+| 0–39 | Critical | REQUEST CHANGES (CRITICAL present) |
+
+**When to include**: Only when `mode: "scored"` is passed by the caller, or when invoked by `audit`. Default review output uses the standard severity-ranked report without the score.
+
+
 ## Severity Levels
 
 ```
@@ -339,7 +404,11 @@ LOW       — style inconsistency, naming suggestion, minor refactor opportunity
 ## Code Review Report
 - **Files Reviewed**: [count]
 - **Findings**: [count by severity]
+- **Review Commit**: [git hash at time of review]
 - **Overall**: APPROVE | REQUEST CHANGES | NEEDS DISCUSSION
+
+### Spec Compliance
+- [PASS/FAIL]: [acceptance criteria coverage]
 
 ### CRITICAL
 - `path/to/file.ts:42` — [description of critical issue]
@@ -350,12 +419,26 @@ LOW       — style inconsistency, naming suggestion, minor refactor opportunity
 ### MEDIUM
 - `path/to/file.ts:120` — [description of medium issue]
 
+### Blast Radius
+- [High-impact symbols with caller counts]
+
 ### Positive Notes
 - [good patterns observed]
 
 ### Verdict
 [Summary and recommendation]
 ```
+
+### Review Staleness Detection
+
+Track the git commit hash at review time. If code changes after review → review is STALE.
+
+```
+Review commit: abc123 → Code changed to def456 → Review is STALE, re-review required
+```
+
+When `cook` or `ship` checks review status: compare review commit hash with current HEAD. If different → WARN: "Review is stale — code changed since last review."
+
 
 ## Constraints
 
@@ -366,6 +449,16 @@ LOW       — style inconsistency, naming suggestion, minor refactor opportunity
 5. MUST categorize findings: CRITICAL (blocks commit) / HIGH / MEDIUM / LOW
 6. MUST escalate to sentinel if auth/crypto/secrets code is touched
 7. MUST flag untested code paths and recommend tests via rune:test
+
+## Returns
+
+| Artifact | Format | Location |
+|----------|--------|----------|
+| Code review report | Markdown | inline (chat output) |
+| Severity-ranked findings | Markdown table | inline |
+| Spec compliance verdict | Markdown | inline |
+| Composite quality score | Markdown table | inline (when `mode: "scored"`) |
+| Blast radius assessment | Markdown table | inline |
 
 ## Sharp Edges
 
@@ -380,6 +473,7 @@ LOW       — style inconsistency, naming suggestion, minor refactor opportunity
 | Treating purple/indigo accent as "just a color choice" | MEDIUM | It is a documented AI-generated UI signature — always flag for domain justification |
 | Suggesting "add X" without checking if X is used | MEDIUM | YAGNI pushback: grep codebase for the suggested feature → if uncalled anywhere → respond "Not called anywhere. Remove? (YAGNI)". Valid pushback, not laziness |
 | Adding abstractions "for future flexibility" | MEDIUM | Three similar lines > premature abstraction. Only abstract when there are 3+ concrete callers today |
+| Missing cross-phase integration check at phase boundary | MEDIUM | When reviewing a phase completion: check orphaned exports, uncalled routes, auth gaps, E2E flow continuity. Delegate to completion-gate Step 4.5 |
 
 ## Done When
 

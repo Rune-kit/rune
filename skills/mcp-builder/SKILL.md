@@ -353,6 +353,19 @@ mcp-server-<name>/
 - Verification passed (types + tests)
 - Ready to install in Claude Code / Cursor / other IDEs
 
+## Returns
+
+| Artifact | Format | Location |
+|----------|--------|----------|
+| MCP server source code | TypeScript or Python | `mcp-server-<name>/src/` |
+| Tool definitions (one per tool) | TS/Python files | `src/tools/<name>.ts` or `.py` |
+| Resource handlers | TS/Python files | `src/resources/<name>.ts` or `.py` |
+| Test suite | TS/Python test files | `tests/` |
+| README with tool catalog | Markdown | `mcp-server-<name>/README.md` |
+| Environment config template | `.env.example` | project root |
+
 ## Cost Profile
 
 ~3000-6000 tokens input, ~2000-5000 tokens output. Sonnet — MCP server generation is a structured code task, not architectural reasoning.
+
+**Scope guardrail:** mcp-builder generates the server and tests — it does not deploy, register with MCP registries, or configure the host IDE beyond providing the installation snippet.

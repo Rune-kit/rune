@@ -299,6 +299,15 @@ Choose Option B if [specific hedge condition].
 Proceeding to rune:plan with Option A. Constraints to honor: [list].
 ```
 
+## Returns
+
+| Artifact | Format | Location |
+|----------|--------|----------|
+| Option matrix (2-3 Discovery / 3-5 Rescue) | Markdown sections | inline (chat output) |
+| Trade-off analysis per option | Markdown (pros/cons/effort/risk) | inline |
+| Single recommendation with hedge condition | Markdown | inline |
+| Approved design document | Markdown | `docs/plans/<feature>.md` |
+
 ## Sharp Edges
 
 Known failure modes for this skill. Check these before declaring done.
@@ -326,3 +335,5 @@ Known failure modes for this skill. Check these before declaring done.
 ## Cost Profile
 
 ~2000-5000 tokens input, ~1000-2500 tokens output. Opus for creative reasoning depth. Runs infrequently — only when creative exploration is needed.
+
+**Scope guardrail:** Brainstorm produces options and a recommendation — never implementation code or an execution plan. All code and planning begins only after user approves an approach and `rune:plan` is invoked.

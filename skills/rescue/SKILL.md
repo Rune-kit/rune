@@ -40,6 +40,7 @@ Legacy refactoring orchestrator for safely modernizing messy codebases. Rescue r
 - `session-bridge` (L3): save rescue state between sessions
 - `onboard` (L2): generate context for unfamiliar legacy project
 - `dependency-doctor` (L3): audit dependencies in legacy project
+- `context-pack` (L3): create structured handoff briefings before spawning subagents
 - `neural-memory` | Phase start + phase end | Recall past refactoring patterns, capture new ones
 
 ## Called By (inbound)
@@ -412,6 +413,16 @@ Rollback point: git tag rune-rescue-baseline (set in Phase 0)
 - **Health Score**: [before] → [after]
 - **Rollback Tag**: [git tag name]
 ```
+
+## Returns
+
+| Artifact | Format | Location |
+|----------|--------|----------|
+| Rescue state | Markdown | `RESCUE-STATE.md` (updated each session) |
+| Characterization tests | Source files | Written by `rune:safeguard` per module |
+| Refactored modules | Source files | Modified in-place, committed per surgery session |
+| Health score comparison | Inline (Rescue Report) | Baseline vs final autopsy scores |
+| Rescue Report | Markdown (inline) | Emitted at session end (per module and final) |
 
 ## Sharp Edges
 

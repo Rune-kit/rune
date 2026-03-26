@@ -43,9 +43,9 @@
         const dy = nodes[i].y - nodes[j].y;
         const dist = Math.sqrt(dx * dx + dy * dy);
         if (dist < maxDist) {
-          const alpha = (1 - dist / maxDist) * 0.35;
-          ctx.strokeStyle = `rgba(16, 185, 129, ${alpha})`;
-          ctx.lineWidth = 0.6;
+          const alpha = (1 - dist / maxDist) * 0.5;
+          ctx.strokeStyle = `rgba(60, 85, 50, ${alpha})`;
+          ctx.lineWidth = 0.8;
           ctx.beginPath();
           ctx.moveTo(nodes[i].x, nodes[i].y);
           ctx.lineTo(nodes[j].x, nodes[j].y);
@@ -56,7 +56,7 @@
 
     // draw nodes
     for (const n of nodes) {
-      ctx.fillStyle = 'rgba(16, 185, 129, 0.6)';
+      ctx.fillStyle = 'rgba(60, 85, 50, 0.7)';
       ctx.beginPath();
       ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
       ctx.fill();
@@ -98,7 +98,7 @@
     });
   }, { threshold: 0.1 });
 
-  document.querySelectorAll('.layer, .feature-card, .workflow-card, .compare-card, .ext-card, .install-card, .pricing-card, .stat').forEach(el => {
+  document.querySelectorAll('.layer, .feature-card, .workflow-card, .compare-card, .ext-card, .install-card, .pricing-card, .stat, .mesh-tier, .mesh-point').forEach(el => {
     el.style.animationPlayState = 'paused';
     observer.observe(el);
   });
@@ -134,29 +134,57 @@
 
 // ─── Payment Flow ───
 const PAY_API = 'https://pay.theio.vn';
-const BANK_ID = 'vpbank';
+const BANK_ID = 'tpbank';
 const BANK_ACCOUNT = '04162263666';
-const ACCOUNT_NAME = 'NGUYEN CONG';
+const ACCOUNT_NAME = 'NGUYEN VIET NAM';
+
+// Launch promo: 50% off for 7 days
+const PROMO = {
+  discount: 0.5,
+  endsAt: new Date('2026-03-25T23:59:59+07:00').getTime(),
+};
+
+function isPromoActive() {
+  return Date.now() < PROMO.endsAt;
+}
+
+function fmtVND(n) {
+  return n.toLocaleString('vi-VN') + ' VND';
+}
 
 const PRODUCT_INFO = {
   'rune-pro': {
     title: 'Get Rune Pro', titleShort: 'Rune Pro',
-    priceVN: '1,190,000 VND', priceIntl: '$49 USD',
-    amountLabel: '1,190,000 VND (~$49 USD)',
+    basePrice: 1190000, baseIntl: 49,
     btnClass: 'btn-pro',
   },
   'rune-biz': {
     title: 'Get Rune Business', titleShort: 'Rune Business',
-    priceVN: '3,590,000 VND', priceIntl: '$149 USD',
-    amountLabel: '3,590,000 VND (~$149 USD)',
+    basePrice: 3590000, baseIntl: 149,
     btnClass: 'btn-biz',
   },
 };
 
+function getProductPricing(key) {
+  const info = PRODUCT_INFO[key];
+  const promo = isPromoActive();
+  const price = promo ? Math.round(info.basePrice * (1 - PROMO.discount)) : info.basePrice;
+  const intl = promo ? Math.round(info.baseIntl * (1 - PROMO.discount)) : info.baseIntl;
+  return {
+    ...info,
+    priceVN: fmtVND(price),
+    priceIntl: '$' + intl + ' USD',
+    amountLabel: fmtVND(price) + ' (~$' + intl + ' USD)',
+    promo,
+    originalVN: fmtVND(info.basePrice),
+    originalIntl: '$' + info.baseIntl + ' USD',
+  };
+}
+
 let payState = { product: null, orderCode: null, pollTimer: null };
 
 function openPayment(product) {
-  const info = PRODUCT_INFO[product];
+  const info = getProductPricing(product);
   if (!info) return;
 
   payState = { product, orderCode: null, pollTimer: null };
@@ -164,8 +192,17 @@ function openPayment(product) {
   document.getElementById('pay-title').textContent = info.title;
   document.getElementById('pay-title-2').textContent = info.title;
   document.getElementById('pay-amount-2').textContent = info.amountLabel;
-  document.getElementById('pay-price-vn').textContent = info.priceVN;
-  document.getElementById('pay-price-intl').textContent = info.priceIntl;
+
+  const vnPriceEl = document.getElementById('pay-price-vn');
+  const intlPriceEl = document.getElementById('pay-price-intl');
+  if (info.promo) {
+    vnPriceEl.innerHTML = '<s style="opacity:.5">' + info.originalVN + '</s> ' + info.priceVN;
+    intlPriceEl.innerHTML = '<s style="opacity:.5">' + info.originalIntl + '</s> ' + info.priceIntl;
+  } else {
+    vnPriceEl.textContent = info.priceVN;
+    intlPriceEl.textContent = info.priceIntl;
+  }
+
   document.getElementById('pay-github').value = '';
   document.getElementById('pay-email').value = '';
   document.getElementById('pay-error').hidden = true;
@@ -190,14 +227,79 @@ function closePayment() {
 }
 
 function showPayStep(n) {
-  for (let i = 1; i <= 4; i++) {
-    document.getElementById('pay-step-' + i).hidden = (i !== n);
+  for (let i = 1; i <= 6; i++) {
+    const el = document.getElementById('pay-step-' + i);
+    if (el) el.hidden = (i !== n);
   }
 }
 
 function showVNPayment() {
   showPayStep(2);
   document.getElementById('pay-github').focus();
+}
+
+function showIntlPayment() {
+  const info = getProductPricing(payState.product);
+  document.getElementById('pay-title-5').textContent = info.title;
+  document.getElementById('pay-amount-5').textContent = info.priceIntl;
+  document.getElementById('pay-intl-github').value = '';
+  document.getElementById('pay-intl-email').value = '';
+  document.getElementById('pay-intl-error').hidden = true;
+
+  const btn = document.getElementById('pay-intl-submit');
+  btn.className = 'btn ' + info.btnClass;
+  btn.style.width = '100%';
+  btn.style.marginTop = '16px';
+
+  showPayStep(5);
+  document.getElementById('pay-intl-github').focus();
+}
+
+async function startPolarCheckout() {
+  const github = document.getElementById('pay-intl-github').value.trim();
+  const email = document.getElementById('pay-intl-email').value.trim();
+  const errorEl = document.getElementById('pay-intl-error');
+
+  if (!github) {
+    errorEl.textContent = 'Please enter your GitHub username';
+    errorEl.hidden = false;
+    return;
+  }
+
+  if (!/^[a-zA-Z0-9](?:[a-zA-Z0-9]|-(?=[a-zA-Z0-9])){0,38}$/.test(github)) {
+    errorEl.textContent = 'Invalid GitHub username format';
+    errorEl.hidden = false;
+    return;
+  }
+
+  errorEl.hidden = true;
+  const btn = document.getElementById('pay-intl-submit');
+  btn.disabled = true;
+  btn.textContent = 'Redirecting to checkout...';
+
+  try {
+    const res = await fetch(PAY_API + '/checkout/polar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        product: payState.product,
+        githubUsername: github,
+        email: email || undefined,
+      }),
+    });
+
+    const data = await res.json();
+    if (!data.success || !data.url) throw new Error(data.error || 'Failed to create checkout');
+
+    // Redirect to Polar checkout page (context embedded in success_url by worker)
+    window.location.href = data.url;
+  } catch (err) {
+    errorEl.textContent = err.message;
+    errorEl.hidden = false;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Pay with Card / PayPal';
+  }
 }
 
 async function createOrder() {
@@ -264,8 +366,14 @@ function startPolling(github) {
       if (data.status === 'delivered') {
         clearInterval(payState.pollTimer);
         payState.pollTimer = null;
-        document.getElementById('pay-success-user').textContent = github;
-        showPayStep(4);
+        // VN users → Vietnamese success (step 6)
+        const vnUser = document.getElementById('pay-success-user-vn');
+        if (vnUser) vnUser.textContent = github;
+        const vnInstall = document.getElementById('pay-success-install-vn');
+        if (vnInstall && (payState.product === 'rune-biz' || payState.product === 'RUNE-BIZ')) {
+          vnInstall.textContent = 'Bạn nhận cả Pro + Business packs — xem README trong repo';
+        }
+        showPayStep(6);
       } else if (data.status === 'underpaid') {
         document.getElementById('pay-status').innerHTML =
           '<span style="color:var(--loss)">&#9888; Amount too low. Please transfer the exact amount.</span>';
@@ -274,4 +382,114 @@ function startPolling(github) {
       // silent retry
     }
   }, 5000);
+}
+
+// ─── Promo Countdown ───
+(function initPromoCountdown() {
+  if (!isPromoActive()) return;
+
+  // Add "50% OFF" ribbon to Pro and Business cards
+  ['.pricing-pro', '.pricing-biz'].forEach(sel => {
+    const card = document.querySelector(sel);
+    if (!card) return;
+    const ribbon = document.createElement('div');
+    ribbon.className = 'promo-ribbon';
+    ribbon.textContent = '50% OFF';
+    card.appendChild(ribbon);
+  });
+
+  // Update pricing cards with promo prices + save badge
+  const proCard = document.querySelector('.pricing-pro .pricing-price');
+  const bizCard = document.querySelector('.pricing-biz .pricing-price');
+  if (proCard) proCard.innerHTML = '<s style="opacity:.35;font-size:.55em">$49</s> $25<span class="pricing-period"> lifetime</span><br><span class="promo-save">Save $24</span>';
+  if (bizCard) bizCard.innerHTML = '<s style="opacity:.35;font-size:.55em">$149</s> $75<span class="pricing-period"> lifetime</span><br><span class="promo-save">Save $74</span>';
+
+  // Update "What's Included" values in Business card
+  document.querySelectorAll('.includes-value').forEach(el => {
+    if (el.textContent.includes('$49')) el.innerHTML = '<s>$49</s> $25 value';
+    if (el.textContent.includes('$100')) el.innerHTML = '<s>$100</s> $50 value';
+  });
+
+  // Update buttons
+  const proBtn = document.querySelector('.pricing-pro .btn-pro');
+  const bizBtn = document.querySelector('.pricing-biz .btn-biz');
+  if (proBtn) proBtn.innerHTML = 'Get Rune Pro &mdash; <s style="opacity:.6">$49</s>&nbsp;$25';
+  if (bizBtn) bizBtn.innerHTML = 'Get Rune Business &mdash; <s style="opacity:.6">$149</s>&nbsp;$75';
+
+  // Update comparison table
+  document.querySelectorAll('.table-price').forEach(el => {
+    if (el.textContent.includes('$49')) el.innerHTML = '<s style="opacity:.5">$49</s>&nbsp;$25';
+    if (el.textContent.includes('$149')) el.innerHTML = '<s style="opacity:.5">$149</s>&nbsp;$75';
+  });
+
+  // Create countdown banner (sticky bottom)
+  const banner = document.createElement('div');
+  banner.id = 'promo-banner';
+  banner.style.cssText = `
+    position:fixed;bottom:0;left:0;right:0;z-index:9999;
+    background:linear-gradient(135deg,#4a6843 0%,#5b7852 50%,#7a9e6e 100%);
+    color:#fff;text-align:center;padding:10px 16px;
+    font:600 14px/1.4 "Space Grotesk",sans-serif;
+    display:flex;align-items:center;justify-content:center;gap:16px;
+    box-shadow:0 -4px 20px rgba(91,120,82,.2);
+  `.replace(/\n\s+/g, '');
+  banner.innerHTML = ''
+    + '<span style="font-size:18px">&#9889;</span>'
+    + '<span><strong>Launch Week</strong> &mdash; 50% OFF all paid packs</span>'
+    + '<span id="promo-timer" style="font-family:JetBrains Mono,monospace;font-weight:700;background:rgba(0,0,0,.2);padding:5px 12px;border-radius:6px;letter-spacing:.5px;min-width:150px"></span>'
+    + '<a href="#pricing" style="background:#f5f0e8;color:#4a6843;text-decoration:none;font-weight:700;padding:6px 16px;border-radius:6px;font-size:13px;white-space:nowrap">Grab the deal &rarr;</a>';
+  document.body.appendChild(banner);
+  document.body.style.paddingBottom = '52px';
+
+  function tick() {
+    const diff = PROMO.endsAt - Date.now();
+    if (diff <= 0) { banner.remove(); document.body.style.paddingBottom = ''; return; }
+    const d = Math.floor(diff / 86400000);
+    const h = Math.floor((diff % 86400000) / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    const timer = document.getElementById('promo-timer');
+    if (timer) timer.textContent = d + 'd ' + h + 'h ' + m + 'm ' + s + 's';
+  }
+  tick();
+  setInterval(tick, 1000);
+})();
+
+// ─── Polar Success Return ───
+(function checkPolarReturn() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('polar') === 'success') {
+    // Read context from URL (embedded by worker in success_url)
+    const github = params.get('gh') || 'your GitHub account';
+    const product = params.get('pkg') || '';
+
+    // Clean URL
+    window.history.replaceState({}, '', window.location.pathname);
+
+    // Show success message
+    const modal = document.getElementById('pay-modal');
+    if (modal) {
+      modal.hidden = false;
+      document.body.style.overflow = 'hidden';
+      showSuccessForProduct(product, github);
+      for (let i = 1; i <= 5; i++) {
+        document.getElementById('pay-step-' + i).hidden = (i !== 4);
+      }
+    }
+  }
+})();
+
+// Update success page based on product context
+function showSuccessForProduct(product, github) {
+  const el = document.getElementById('pay-success-user');
+  if (el) el.textContent = github || 'your GitHub account';
+
+  const installEl = document.getElementById('pay-success-install');
+  if (!installEl) return;
+
+  if (product === 'rune-biz' || product === 'RUNE-BIZ') {
+    installEl.textContent = 'You get Pro + Business packs — check the repo README for setup';
+  } else {
+    installEl.textContent = 'Follow the setup guide in the repo README';
+  }
 }
