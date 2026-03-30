@@ -3,7 +3,7 @@ name: retro
 description: Engineering retrospective. Analyzes commit history, work patterns, and code quality metrics with trend tracking. Per-person breakdowns, shipping streaks, and actionable improvements. Use when asked for "retro", "weekly review", "what did we ship", or "engineering retrospective".
 metadata:
   author: runedev
-  version: "0.1.0"
+  version: "0.2.0"
   layer: L2
   model: sonnet
   group: knowledge
@@ -28,6 +28,7 @@ Retro is ENCOURAGING but CANDID. Every critique is anchored in specific commits,
 - `/rune retro 14d` — sprint retro (2 weeks)
 - `/rune retro 30d` — monthly review
 - `/rune retro compare` — current vs previous period side-by-side
+- `/rune retro --business` — cross-domain executive retrospective with HTML report (Business tier)
 - Called by `audit` (L2) for engineering health dimension
 - Auto-suggest: end of work week (Friday sessions)
 
@@ -246,6 +247,45 @@ SELF-VALIDATION (run before emitting report):
 - [ ] Retro JSON saved to .rune/retros/ for trend tracking
 - [ ] No code was modified — retro is read-only
 ```
+
+## Business Mode (--business)
+
+When invoked as `/rune retro --business`, generate a cross-domain executive retrospective with HTML output. Requires Business tier (`.rune/org/org.md` should exist).
+
+### Business Data Sources
+
+Pull from all installed domain packs:
+- **Engineering**: git history (commits, velocity, test ratio, fix ratio, hotspots)
+- **Revenue** (@rune-pro/sales): pipeline metrics, deal velocity, churn risk
+- **Support** (@rune-pro/support): ticket volume, SLA compliance, CSAT
+- **Finance** (@rune-business/finance): burn rate, runway, budget variance
+- **Compliance** (@rune-business/legal): framework status, audit dates, open items
+
+### Business Execution Steps
+
+1. **Gather**: Run standard retro Steps 1-10 for engineering data
+2. **Org Context**: Read `.rune/org/org.md` for team structure and governance level
+3. **Cross-Domain KPIs**: Aggregate metrics from domain signal history (`.rune/signals/`)
+4. **Team Health**: Score each team from org config on velocity, quality, morale
+5. **Compliance**: Check compliance frameworks from org security policies
+6. **HTML Render**: Load `report-templates/retro-business.html` from Business pack and populate all `{{placeholder}}` fields with computed data
+7. **Save**: Write HTML to `.rune/retros/{YYYY-MM-DD}-business.html`
+8. **Also save** JSON snapshot (same as standard retro) for trend tracking
+
+### Business Output
+
+```
+.rune/retros/2026-03-30-business.html  — Self-contained HTML report
+.rune/retros/2026-03-30.json           — Machine-readable metrics
+```
+
+The HTML report includes: KPI cards with trend deltas, domain performance bars (engineering, revenue, support, finance), team health table, compliance status, key insights (wins + risks), and is printable to PDF via Ctrl+P.
+
+### Graceful Degradation
+
+- If no Business pack installed: skip business mode, fall back to standard retro
+- If domain data unavailable: show "No data" for that domain, don't fail
+- If `.rune/org/org.md` missing: use generic team structure, WARN in report
 
 ## Constraints
 

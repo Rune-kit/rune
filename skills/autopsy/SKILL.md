@@ -3,7 +3,7 @@ name: autopsy
 description: Full codebase health assessment. Analyzes complexity, dependencies, dead code, tech debt, and git hotspots. Produces a health score and rescue plan.
 metadata:
   author: runedev
-  version: "0.2.0"
+  version: "0.3.0"
   layer: L2
   model: opus
   group: rescue
@@ -210,3 +210,50 @@ Known failure modes for this skill. Check these before declaring done.
 ~5000-10000 tokens input, ~2000-4000 tokens output. Opus for deep analysis. Most expensive L2 skill but runs once per rescue.
 
 **Scope guardrail:** autopsy assesses — it does not refactor. All surgery is delegated to `surgeon` after the report is complete.
+
+## Executive Mode (--executive)
+
+When invoked as `/rune autopsy --executive`, generate a board-ready HTML health assessment. Requires Business tier.
+
+### Executive Execution Steps
+
+1. **Standard Autopsy**: Run Steps 1-5 (structure scan, module analysis, health scoring, risk assessment, RESCUE-REPORT.md)
+2. **Org Context**: Read `.rune/org/org.md` for team structure and governance level
+3. **Cross-Domain Impact**: Map module health to business domains (which team owns which modules)
+4. **Business Risk Translation**: Convert technical health scores to business risk language:
+   - Critical modules in revenue path → "Revenue infrastructure at risk"
+   - Low test coverage on auth → "Security compliance gap"
+   - High churn in customer-facing code → "Customer experience degradation risk"
+5. **HTML Render**: Load `report-templates/autopsy-executive.html` from Business pack and populate all `{{placeholder}}` fields:
+   - SVG health ring (score → stroke-dasharray calculation: `score / 100 * 440`)
+   - Dimension bars (6 dimensions with color coding)
+   - Module table (sorted by priority)
+   - Surgery queue (top 5 modules)
+   - Risk matrix (6 categories)
+   - Git archaeology summary
+   - Cross-domain impact table
+   - Recommended actions (numbered, prioritized)
+6. **Save**: Write HTML to `EXECUTIVE-HEALTH.html` at project root
+
+### Executive Output
+
+```
+EXECUTIVE-HEALTH.html          — Board-ready HTML report
+RESCUE-REPORT.md               — Detailed technical report (standard autopsy)
+.rune/retros/{date}.json       — Health metrics for trend tracking
+```
+
+### Color Coding
+
+| Score Range | Color | Tier |
+|-------------|-------|------|
+| 80-100 | var(--success) #10b981 | Healthy |
+| 60-79 | var(--warning) #f59e0b | Watch |
+| 40-59 | #f97316 (orange) | At-risk |
+| 0-39 | var(--danger) #ef4444 | Critical |
+
+### Graceful Degradation
+
+- If no Business pack installed: skip executive mode, produce standard RESCUE-REPORT.md only
+- If `.rune/org/org.md` missing: skip team mapping, show modules without domain ownership
+- If org teams don't map to code modules: show "Unmapped" in cross-domain table
