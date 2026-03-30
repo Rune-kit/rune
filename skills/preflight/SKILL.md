@@ -3,7 +3,7 @@ name: preflight
 description: Pre-commit quality gate that catches "almost right" code. Goes beyond linting — checks logic correctness, error handling, regressions, and completeness.
 metadata:
   author: runedev
-  version: "0.6.0"
+  version: "0.7.0"
   layer: L2
   model: sonnet
   group: quality
@@ -236,6 +236,40 @@ When a domain pack is installed (e.g., `@rune-pro/finance`, `@rune-pro/legal`), 
 - `migrations/003-add-billing.sql` — BLOCK: DROP TABLE without rollback script
 - `src/billing/invoice.ts:42` — WARN: price calculation uses `toFixed(2)` instead of `Intl.NumberFormat`
 ```
+
+### Step 4.6 — Organization Approval Requirements (Business)
+
+If `.rune/org/org.md` exists, load organization approval workflows and enforce them as additional quality gates.
+
+1. `Read` `.rune/org/org.md` and extract `## Policies`, `## Approval Flows`, and `## Governance Level`
+2. Apply organization-level quality requirements:
+
+| Org Policy | Preflight Check | Severity |
+|------------|----------------|----------|
+| `minimum_reviewers` | Verify PR has required reviewer count before merge | WARN: "Org requires {N} reviewers" |
+| `self-merge_allowed` | If "Never" or "No", flag self-merge attempts | BLOCK if org prohibits |
+| `required_checks` | Verify all org-required checks (tests, security scan, type check, lint) are passing | BLOCK if missing |
+| `staging_required` | If "Yes", verify staging deployment exists before production | WARN if no staging step |
+| `feature_flags` | If "Required for user-facing changes", flag new UI without feature flag | WARN |
+| `cross-domain_changes` | If changes span multiple team domains, require reviewer from each | WARN |
+
+3. Load `## Approval Flows > ### Feature Launch` and display the required approval chain:
+   - Output: "Org approval chain: {flow}" so developer knows the full pipeline
+   - If governance level is "Maximum", flag any attempt to skip gates
+
+4. Append org findings under `### Organization Requirements` section:
+
+```
+### Organization Requirements
+- **Org template**: [startup|mid-size|enterprise]
+- **Governance level**: [Minimal|Moderate|Maximum]
+- **Minimum reviewers**: 2 (1 must be director+)
+- **Required checks**: tests (≥80% coverage), security scan, type check, lint
+- **Approval chain**: contributor proposes → lead reviews → vp approves → deploy
+- WARN: Self-merge not allowed per org policy
+```
+
+If `.rune/org/org.md` does not exist, skip and log INFO: "no org config, organization requirements check skipped".
 
 ### Step 4.8 — Preflight Composite Score
 

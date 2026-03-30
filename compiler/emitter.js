@@ -8,7 +8,7 @@
 import { existsSync } from 'node:fs';
 import { cp, mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { extractCrossRefs, extractToolRefs, parsePack, parseSkill, parseTemplate } from './parser.js';
+import { extractCrossRefs, extractToolRefs, parseOrgConfig, parsePack, parseSkill, parseTemplate } from './parser.js';
 import { transformSkill } from './transformer.js';
 import { resolveScriptsPath } from './transforms/scripts-path.js';
 
@@ -290,6 +290,103 @@ async function applyInjections(body, rules) {
 }
 
 /**
+ * Load org config from .rune/org/org.md if it exists.
+ * Returns parsed org config or null if not present.
+ */
+async function loadOrgConfig(runeRoot, tierSources) {
+  // Org templates are a Business feature — only load if business tier is available
+  if (!tierSources || !tierSources.business) return null;
+
+  const orgPath = path.join(runeRoot, '.rune', 'org', 'org.md');
+  if (!existsSync(orgPath)) return null;
+
+  try {
+    const content = await readFile(orgPath, 'utf-8');
+    return parseOrgConfig(content, orgPath);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Generate <ORG-POLICY> block from org config for injection into sentinel/preflight.
+ */
+function buildOrgPolicyBlock(orgConfig, targetSkill) {
+  if (!orgConfig) return null;
+
+  const lines = [];
+  lines.push(`\n\n<!-- Business: Organization Policy (${orgConfig.name}) -->`);
+  lines.push(`<ORG-POLICY template="${orgConfig.name}" governance="${orgConfig.governanceLevel.level}">`);
+
+  if (targetSkill === 'sentinel') {
+    // Inject security + code review + deployment policies
+    const security = orgConfig.policies.security || [];
+    const codeReview = orgConfig.policies.code_review || [];
+    const deployment = orgConfig.policies.deployment || [];
+
+    if (security.length > 0) {
+      lines.push('\n### Security Policies');
+      for (const rule of security) {
+        lines.push(`- **${rule.key}**: ${rule.value}`);
+      }
+    }
+    if (codeReview.length > 0) {
+      lines.push('\n### Code Review Policies');
+      for (const rule of codeReview) {
+        lines.push(`- **${rule.key}**: ${rule.value}`);
+      }
+    }
+    if (deployment.length > 0) {
+      lines.push('\n### Deployment Policies');
+      for (const rule of deployment) {
+        lines.push(`- **${rule.key}**: ${rule.value}`);
+      }
+    }
+  } else if (targetSkill === 'preflight') {
+    // Inject code review + deployment + approval flows
+    const codeReview = orgConfig.policies.code_review || [];
+    const deployment = orgConfig.policies.deployment || [];
+
+    if (codeReview.length > 0) {
+      lines.push('\n### Code Review Requirements');
+      for (const rule of codeReview) {
+        lines.push(`- **${rule.key}**: ${rule.value}`);
+      }
+    }
+    if (deployment.length > 0) {
+      lines.push('\n### Deployment Requirements');
+      for (const rule of deployment) {
+        lines.push(`- **${rule.key}**: ${rule.value}`);
+      }
+    }
+
+    // Include approval flows
+    const flows = orgConfig.approvalFlows;
+    if (Object.keys(flows).length > 0) {
+      lines.push('\n### Approval Flows');
+      for (const [name, flow] of Object.entries(flows)) {
+        lines.push(`\n**${name}**:`);
+        lines.push('```');
+        lines.push(flow);
+        lines.push('```');
+      }
+    }
+  }
+
+  // Governance settings
+  const gov = orgConfig.governanceLevel;
+  if (gov.settings.length > 0) {
+    lines.push('\n### Governance Settings');
+    for (const setting of gov.settings) {
+      lines.push(`- ${setting}`);
+    }
+  }
+
+  lines.push('</ORG-POLICY>');
+  return lines.join('\n');
+}
+
+/**
  * Generate output filename for a skill
  */
 function outputFileName(skillName, adapter) {
@@ -364,6 +461,9 @@ export async function buildAll({
   // Load reference injection rules from Pro/Business packs
   const injectionRules = hasTiers ? await loadInjectionRules(extensionsDir, tierSources) : new Map();
 
+  // Load org config from .rune/org/org.md (Business feature)
+  const orgConfig = await loadOrgConfig(runeRoot, tierSources);
+
   // Build skills — collect parsed data for skill-index + openclaw reuse
   const parsedSkills = [];
 
@@ -403,6 +503,15 @@ export async function buildAll({
         const { body: injectedBody, count } = await applyInjections(body, injectionRules.get(parsed.name));
         finalBody = injectedBody;
         stats.injectionsApplied += count;
+      }
+
+      // Inject org policies into sentinel/preflight (Business feature)
+      if (orgConfig && (parsed.name === 'sentinel' || parsed.name === 'preflight')) {
+        const orgBlock = buildOrgPolicyBlock(orgConfig, parsed.name);
+        if (orgBlock) {
+          finalBody += orgBlock;
+          stats.orgPoliciesInjected = (stats.orgPoliciesInjected || 0) + 1;
+        }
       }
 
       const output = [header, finalBody, footer].filter(Boolean).join('\n');

@@ -330,6 +330,156 @@ export function parseTemplate(content, filePath = '') {
   };
 }
 
+/**
+ * Parse organization config from .rune/org/org.md
+ * Extracts teams, roles, policies, approval flows, and governance level.
+ */
+export function parseOrgConfig(content, filePath = '') {
+  const { frontmatter, body } = parseFrontmatter(content);
+
+  const teams = parseMarkdownTable(body, 'Teams');
+  const roles = parseMarkdownTable(body, 'Roles');
+  const policies = parseOrgPolicies(body);
+  const approvalFlows = parseApprovalFlows(body);
+  const governanceLevel = parseGovernanceLevel(body);
+
+  return {
+    name: frontmatter.name || '',
+    description: frontmatter.description || '',
+    version: frontmatter.version || '1.0.0',
+    tier: frontmatter.tier || 'business',
+    teams,
+    roles,
+    policies,
+    approvalFlows,
+    governanceLevel,
+    body,
+    filePath,
+    frontmatter,
+  };
+}
+
+/**
+ * Parse a Markdown table under a ## heading into array of objects.
+ * Handles | col1 | col2 | format with header row + separator row + data rows.
+ */
+function parseMarkdownTable(body, sectionName) {
+  // Find the section
+  const sectionPattern = new RegExp(
+    `## ${sectionName}\\s*\\n([\\s\\S]*?)(?=\\n## |$)`,
+  );
+  const sectionMatch = body.match(sectionPattern);
+  if (!sectionMatch) return [];
+
+  const sectionContent = sectionMatch[1];
+  const lines = sectionContent
+    .split('\n')
+    .filter((l) => l.trim().startsWith('|'));
+  if (lines.length < 3) return []; // need header + separator + at least 1 row
+
+  const parseRow = (line) =>
+    line
+      .split('|')
+      .slice(1, -1)
+      .map((cell) => cell.trim());
+
+  const headers = parseRow(lines[0]).map((h) =>
+    h.toLowerCase().replace(/\s+/g, '_'),
+  );
+  // Skip separator row (lines[1])
+  const rows = [];
+  for (let i = 2; i < lines.length; i++) {
+    const cells = parseRow(lines[i]);
+    if (cells.length === 0) continue;
+    const row = {};
+    headers.forEach((h, idx) => {
+      row[h] = cells[idx] || '';
+    });
+    rows.push(row);
+  }
+  return rows;
+}
+
+/**
+ * Parse ### subsections under ## Policies into a map of policy name → rules array.
+ */
+function parseOrgPolicies(body) {
+  const policiesPattern = /## Policies\s*\n([\s\S]*?)(?=\n## [^#]|$)/;
+  const policiesMatch = body.match(policiesPattern);
+  if (!policiesMatch) return {};
+
+  // Prepend \n so first ### subsection is also captured by split
+  const policiesContent = '\n' + policiesMatch[1].trimStart();
+  const policies = {};
+  const subSections = policiesContent.split(/\n### /);
+
+  for (let i = 1; i < subSections.length; i++) {
+    const lines = subSections[i].split('\n');
+    const name = lines[0].trim().toLowerCase().replace(/\s+/g, '_');
+    const rules = lines
+      .slice(1)
+      .filter((l) => l.trim().startsWith('- **'))
+      .map((l) => {
+        const match = l.match(/- \*\*(.+?)\*\*:\s*(.+)/);
+        if (!match) return null;
+        return {
+          key: match[1].trim().toLowerCase().replace(/\s+/g, '_'),
+          value: match[2].trim(),
+        };
+      })
+      .filter(Boolean);
+    policies[name] = rules;
+  }
+  return policies;
+}
+
+/**
+ * Parse ### subsections under ## Approval Flows into named flow strings.
+ */
+function parseApprovalFlows(body) {
+  const flowsPattern = /## Approval Flows\s*\n([\s\S]*?)(?=\n## [^#]|$)/;
+  const flowsMatch = body.match(flowsPattern);
+  if (!flowsMatch) return {};
+
+  // Prepend \n so first ### subsection is also captured by split
+  const flowsContent = '\n' + flowsMatch[1].trimStart();
+  const flows = {};
+  const subSections = flowsContent.split(/\n### /);
+
+  for (let i = 1; i < subSections.length; i++) {
+    const lines = subSections[i].split('\n');
+    const name = lines[0].trim().toLowerCase().replace(/\s+/g, '_');
+    // Extract content between ``` blocks
+    const codeMatch = subSections[i].match(/```\n([\s\S]*?)```/);
+    if (codeMatch) {
+      flows[name] = codeMatch[1].trim();
+    }
+  }
+  return flows;
+}
+
+/**
+ * Parse ## Governance Level section for governance mode and settings.
+ */
+function parseGovernanceLevel(body) {
+  const govPattern = /## Governance Level\s*\n([\s\S]*?)(?=\n## |$)/;
+  const govMatch = body.match(govPattern);
+  if (!govMatch) return { level: 'unknown', settings: [] };
+
+  const content = govMatch[1];
+  // Extract bold level: **Minimal**, **Moderate**, **Maximum**
+  const levelMatch = content.match(/\*\*(\w+)\*\*/);
+  const level = levelMatch ? levelMatch[1].toLowerCase() : 'unknown';
+
+  // Extract bullet settings
+  const settings = content
+    .split('\n')
+    .filter((l) => l.trim().startsWith('- '))
+    .map((l) => l.trim().replace(/^- /, ''));
+
+  return { level, settings };
+}
+
 function parseSkillManifest(skills) {
   if (!Array.isArray(skills)) return [];
 

@@ -7,7 +7,7 @@
 import { existsSync } from 'node:fs';
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
-import { parsePack, parseTemplate } from './parser.js';
+import { parseOrgConfig, parsePack, parseTemplate } from './parser.js';
 
 /**
  * Run doctor checks on compiled output
@@ -148,6 +148,19 @@ export async function runDoctor({ outputRoot, adapter, config, runeRoot }) {
       detail: `${templateErrors.length} issues`,
     });
     results.warnings.push(...templateErrors);
+  }
+
+  // Check 10: Org template validation (Business)
+  const orgErrors = await checkOrgTemplates(runeRoot, config);
+  if (orgErrors.length === 0) {
+    results.checks.push({ name: 'Org templates', status: 'pass' });
+  } else {
+    results.checks.push({
+      name: 'Org templates',
+      status: 'warn',
+      detail: `${orgErrors.length} issues`,
+    });
+    results.warnings.push(...orgErrors);
   }
 
   if (results.errors.length > 0) results.healthy = false;
@@ -365,6 +378,80 @@ function extractFrontmatterSignals(content) {
     }
   }
   return signals;
+}
+
+/**
+ * Validate org templates in Business tier.
+ * Checks: valid frontmatter, required sections, policy structure.
+ */
+async function checkOrgTemplates(runeRoot, config) {
+  const errors = [];
+  const tierSources = config.tierSources || {};
+  if (!tierSources.business) return errors;
+
+  const orgTemplatesDir = path.join(tierSources.business, 'org-templates');
+  if (!existsSync(orgTemplatesDir)) return errors;
+
+  let entries;
+  try {
+    entries = await readdir(orgTemplatesDir);
+  } catch {
+    return errors;
+  }
+
+  const mdFiles = entries.filter((f) => f.endsWith('.md'));
+  if (mdFiles.length === 0) {
+    errors.push('org-templates/: directory exists but contains no .md files');
+    return errors;
+  }
+
+  const requiredSections = ['Teams', 'Roles', 'Policies', 'Governance Level'];
+
+  for (const file of mdFiles) {
+    const filePath = path.join(orgTemplatesDir, file);
+    try {
+      const content = await readFile(filePath, 'utf-8');
+      const parsed = parseOrgConfig(content, filePath);
+
+      // Check required frontmatter
+      if (!parsed.name) {
+        errors.push(`org-templates/${file}: missing 'name' in frontmatter`);
+      }
+      if (!parsed.description) {
+        errors.push(`org-templates/${file}: missing 'description' in frontmatter`);
+      }
+
+      // Check required sections exist
+      for (const section of requiredSections) {
+        const pattern = new RegExp(`## ${section}`);
+        if (!pattern.test(content)) {
+          errors.push(`org-templates/${file}: missing required section '## ${section}'`);
+        }
+      }
+
+      // Check teams table has entries
+      if (parsed.teams.length === 0) {
+        errors.push(`org-templates/${file}: ## Teams table is empty`);
+      }
+
+      // Check roles table has entries
+      if (parsed.roles.length === 0) {
+        errors.push(`org-templates/${file}: ## Roles table is empty`);
+      }
+
+      // Check governance level is valid
+      const validLevels = ['minimal', 'moderate', 'maximum'];
+      if (!validLevels.includes(parsed.governanceLevel.level)) {
+        errors.push(
+          `org-templates/${file}: governance level '${parsed.governanceLevel.level}' not in [${validLevels.join(', ')}]`,
+        );
+      }
+    } catch (err) {
+      errors.push(`org-templates/${file}: parse error — ${err.message}`);
+    }
+  }
+
+  return errors;
 }
 
 /**

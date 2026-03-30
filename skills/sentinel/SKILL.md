@@ -3,7 +3,7 @@ name: sentinel
 description: Automated security gatekeeper. Blocks unsafe code before commit — secret scanning, OWASP top 10, dependency audit, permission checks. A GATE, not a suggestion.
 metadata:
   author: runedev
-  version: "0.8.0"
+  version: "0.9.0"
   layer: L2
   model: sonnet
   group: quality
@@ -197,6 +197,40 @@ If `.rune/contract.md` exists, validate staged changes against project contract 
 4. Contract violations are NOT subject to Six-Gate downgrading — they are project-level invariants, not security heuristics
 
 If `.rune/contract.md` does not exist, skip and log INFO: "no project contract, contract validation skipped".
+
+### Step 4.86 — Organization Policy Enforcement (Business)
+
+If `.rune/org/org.md` exists, load organization security policies and enforce them as additional gates.
+
+1. `Read` `.rune/org/org.md` and extract the `## Policies > ### Security` section
+2. For each org security policy, validate staged changes:
+
+| Org Policy | Check | Severity |
+|------------|-------|----------|
+| `dependency_audit_frequency` | Verify audit cadence matches org requirement | WARN if overdue |
+| `secret_rotation` | Flag secrets older than org-defined rotation period | WARN |
+| `compliance_frameworks` | Ensure listed frameworks (SOC2, GDPR, HIPAA, PCI-DSS) checks are active | WARN if missing |
+| `penetration_testing` | Log when last pentest was conducted vs org schedule | INFO |
+| `separation_of_duties` | Verify commit author ≠ PR approver when org requires it | BLOCK if violated |
+
+3. Check `## Policies > ### Code Review` for minimum reviewer requirements:
+   - If org requires N reviewers, include in report: "Org policy requires {N} reviewer(s)"
+   - If org requires security reviewer for auth/data paths, flag auth-touching changes
+
+4. Check `## Policies > ### Deployment` for deploy window and feature flag requirements:
+   - If org requires feature flags for user-facing changes, flag new UI code without feature flag wrapper
+
+5. Append org policy findings to the sentinel report under `### Organization Policy` section
+
+```
+### Organization Policy
+- **Org template**: [startup|mid-size|enterprise]
+- **Governance level**: [Minimal|Moderate|Maximum]
+- `auth/login.ts` — WARN: org requires security reviewer for auth paths (Policy: Code Review)
+- Deploy window: Weekdays 09:00-16:00 (org policy)
+```
+
+If `.rune/org/org.md` does not exist, skip and log INFO: "no org config, organization policy check skipped".
 
 ### Step 4.9 — Six-Gate Finding Validation
 
