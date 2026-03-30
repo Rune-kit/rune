@@ -82,15 +82,30 @@ _Methodology: Claude Code CLI headless mode (`claude -p --output-format json`), 
 
 ---
 
-## What's New (v2.5.0)
+## What's New (v2.6.0)
 
-- **Compiled Intent Mesh (CIM)** — compile-time generated `skill-index.json` with intent keywords, mesh graph, and chain predictions. Zero runtime deps. `intent-router` hook auto-suggests skills from user prompts
-- **Privacy Mesh** — three-tier pre-tool guard (ALLOW/WARN/BLOCK) with content scanning, skill-aware elevation, per-project `.rune/privacy.json` config
-- **Split Pack Auto-Discovery** — compiler now auto-discovers skill files from `skills/` subdirectory when `format: split` packs have no explicit manifest
+- **Mesh Signals** — event-driven skill communication via frontmatter. Skills declare `emit` and `listen` signals; compiler builds a signal graph in `skill-index.json`. 17 signals across 15 core skills. Completes the spec-kit trilogy: Tier Override → Mesh Contract → Mesh Signals
+- **Signal Validation** — `scripts/validate-signals.js` checks orphan listeners (hard error), unlistened emitters (warning), signal naming conventions
+- **Mesh Contract** (v2.5.0) — `.rune/contract.md` project-level invariants enforced by cook + sentinel as hard gates
+- **Compiled Intent Mesh** (v2.5.0) — compile-time `skill-index.json` with intent keywords, mesh graph, chain predictions
 - **Tier Override** — Pro/Business packs override Free packs with skill-level merging
 - **Scripts Bundling** — compiler copies `scripts/` directories, resolves `{scripts_dir}` placeholders
-- **61 Core Skills** — +2 since v2.4.0: slides, retro
-- **550 Tests** — compiler + hooks + scripts validation
+- **566 Tests** — compiler + signals + hooks + scripts validation
+
+### Signal Graph
+
+Skills communicate through declarative signals — no runtime event bus, just metadata for discovery, validation, and routing:
+
+```
+scout ──emit:codebase.scanned──→ plan, brainstorm
+fix ────emit:code.changed──────→ test, sentinel, review, preflight, verification
+test ───emit:tests.passed──────→ deploy
+test ───emit:tests.failed──────→ debug
+sentinel─emit:security.passed──→ deploy
+debug ──emit:bug.diagnosed─────→ fix
+deploy ─emit:deploy.complete───→ watchdog
+cook ───emit:phase.complete────→ session-bridge
+```
 
 ## What Rune Is (and Isn't)
 
@@ -432,10 +447,11 @@ See [docs/MULTI-PLATFORM.md](docs/MULTI-PLATFORM.md) for the full architecture.
 Core Skills:       61 (L0: 1 │ L1: 5 │ L2: 28 │ L3: 27)
 Extension Packs:   14 free + 4 pro + 4 business
 Mesh Connections:  200+ cross-references
+Mesh Signals:      17 signals across 15 skills (emit/listen graph)
 Connections/Skill: 3.4 avg
 Platforms:         8 (Claude Code, Cursor, Windsurf, Antigravity, Codex, OpenCode, OpenClaw, Generic)
 Compiler:          ~1400 LOC (parser + 8 transforms + 8 adapters + CLI)
-Quality:           61/61 skills with Output Format, Sharp Edges, Done When, Cost Profile
+Tests:             566 (compiler + signals + hooks + scripts)
 Pack Depth:        22 packs total (14 free + 4 pro + 4 business, all free packs rated Deep)
 ```
 
