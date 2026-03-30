@@ -124,7 +124,20 @@ export async function runDoctor({ outputRoot, adapter, config, runeRoot }) {
     }
   }
 
-  // Check 8: Template signal validation (Pro/Business packs)
+  // Check 8: Reference injection rule validation
+  const injectionErrors = await checkInjectionRules(runeRoot, config);
+  if (injectionErrors.length === 0) {
+    results.checks.push({ name: 'Injection rules', status: 'pass' });
+  } else {
+    results.checks.push({
+      name: 'Injection rules',
+      status: 'warn',
+      detail: `${injectionErrors.length} issues`,
+    });
+    results.warnings.push(...injectionErrors);
+  }
+
+  // Check 9: Template signal validation (Pro/Business packs)
   const templateErrors = await checkTemplateSignals(runeRoot, config);
   if (templateErrors.length === 0) {
     results.checks.push({ name: 'Template signals', status: 'pass' });
@@ -189,6 +202,65 @@ async function checkSplitPacks(extensionsDir) {
       const skillPath = path.join(packDir, skill.file);
       if (!existsSync(skillPath)) {
         errors.push(`@rune/${entry.name}: skill file "${skill.file}" declared in manifest but not found`);
+      }
+    }
+  }
+
+  return errors;
+}
+
+/**
+ * Check that inject.json rules reference existing files and valid skills.
+ */
+async function checkInjectionRules(runeRoot, config) {
+  const errors = [];
+  const parentDir = path.resolve(runeRoot, '..');
+
+  // Collect known skill names from Free core
+  const knownSkills = new Set();
+  const skillsDir = path.join(runeRoot, 'skills');
+  if (existsSync(skillsDir)) {
+    for (const entry of await readdir(skillsDir, { withFileTypes: true })) {
+      if (entry.isDirectory() && existsSync(path.join(skillsDir, entry.name, 'SKILL.md'))) {
+        knownSkills.add(entry.name);
+      }
+    }
+  }
+
+  // Scan tier directories for inject.json files
+  const tierDirs = [
+    path.join(runeRoot, 'extensions'),
+    path.join(parentDir, 'Pro', 'extensions'),
+    path.join(parentDir, 'Business', 'extensions'),
+  ];
+
+  for (const extDir of tierDirs) {
+    if (!existsSync(extDir)) continue;
+    for (const packEntry of await readdir(extDir, { withFileTypes: true })) {
+      if (!packEntry.isDirectory()) continue;
+      const injectFile = path.join(extDir, packEntry.name, 'inject.json');
+      if (!existsSync(injectFile)) continue;
+
+      try {
+        const raw = await readFile(injectFile, 'utf-8');
+        const config = JSON.parse(raw);
+        const packDir = path.join(extDir, packEntry.name);
+
+        for (const rule of config.injections || []) {
+          // Check target skill exists
+          if (rule.skill && !knownSkills.has(rule.skill)) {
+            errors.push(`${packEntry.name}/inject.json: target skill "${rule.skill}" not found in Free core`);
+          }
+          // Check reference file exists
+          if (rule.ref) {
+            const refPath = path.join(packDir, rule.ref);
+            if (!existsSync(refPath)) {
+              errors.push(`${packEntry.name}/inject.json: reference file "${rule.ref}" not found`);
+            }
+          }
+        }
+      } catch (e) {
+        errors.push(`${packEntry.name}/inject.json: invalid JSON — ${e.message}`);
       }
     }
   }

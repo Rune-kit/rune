@@ -207,6 +207,89 @@ async function discoverTemplates(packDir) {
 }
 
 /**
+ * Load reference injection rules from all tier extension directories.
+ * Each pack can have an inject.json file defining which references to inject
+ * into Free core skills when that pack is installed.
+ *
+ * @param {string} freeExtDir - path to free extensions/ directory
+ * @param {Object<string, string>} tierSources - { pro: "/path", business: "/path" }
+ * @returns {Promise<Map<string, Array<{ref: string, context: string, packDir: string}>>>}
+ *   Map of skillName → array of injections
+ */
+async function loadInjectionRules(freeExtDir, tierSources) {
+  const injections = new Map(); // skillName → [{ref, context, packDir}]
+
+  const extDirs = [freeExtDir, tierSources.pro, tierSources.business].filter(Boolean);
+
+  for (const extDir of extDirs) {
+    if (!existsSync(extDir)) continue;
+    const entries = await readdir(extDir, { withFileTypes: true });
+
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      const injectFile = path.join(extDir, entry.name, 'inject.json');
+      if (!existsSync(injectFile)) continue;
+
+      try {
+        const raw = await readFile(injectFile, 'utf-8');
+        const config = JSON.parse(raw);
+        const packDir = path.join(extDir, entry.name);
+
+        for (const rule of config.injections || []) {
+          if (!rule.skill || !rule.ref) continue;
+          if (!injections.has(rule.skill)) {
+            injections.set(rule.skill, []);
+          }
+          injections.get(rule.skill).push({
+            ref: rule.ref,
+            context: rule.context || '',
+            packDir,
+            pack: entry.name,
+          });
+        }
+      } catch {
+        // Invalid JSON — skip gracefully
+      }
+    }
+  }
+
+  return injections;
+}
+
+/**
+ * Apply reference injections to a skill's body.
+ * Reads the referenced files and appends them as context blocks.
+ *
+ * @param {string} body - original skill body
+ * @param {Array<{ref: string, context: string, packDir: string}>} rules - injection rules
+ * @returns {Promise<{body: string, count: number}>} injected body + count of injections applied
+ */
+async function applyInjections(body, rules) {
+  const blocks = [];
+
+  for (const rule of rules) {
+    const refPath = path.join(rule.packDir, rule.ref);
+    if (!existsSync(refPath)) continue;
+
+    try {
+      const content = await readFile(refPath, 'utf-8');
+      // Strip frontmatter if present
+      const cleaned = content.replace(/\r\n/g, '\n').replace(/^---\n[\s\S]*?\n---\n?/, '').trim();
+      blocks.push(
+        `\n\n<!-- Pro Reference: ${rule.pack}/${rule.ref} -->\n` +
+        `<CONTEXT-INJECTION source="${rule.pack}" context="${rule.context}">\n` +
+        `${cleaned}\n` +
+        `</CONTEXT-INJECTION>`
+      );
+    } catch {
+      // Unreadable reference — skip
+    }
+  }
+
+  return { body: body + blocks.join(''), count: blocks.length };
+}
+
+/**
  * Generate output filename for a skill
  */
 function outputFileName(skillName, adapter) {
@@ -271,11 +354,15 @@ export async function buildAll({
     toolRefsResolved: 0,
     scriptsCopied: 0,
     templateCount: 0,
+    injectionsApplied: 0,
     files: [],
     skipped: [],
     errors: [],
     tierOverrides: [],
   };
+
+  // Load reference injection rules from Pro/Business packs
+  const injectionRules = hasTiers ? await loadInjectionRules(extensionsDir, tierSources) : new Map();
 
   // Build skills — collect parsed data for skill-index + openclaw reuse
   const parsedSkills = [];
@@ -310,7 +397,15 @@ export async function buildAll({
         });
       }
 
-      const output = [header, body, footer].filter(Boolean).join('\n');
+      // Apply reference injections from Pro/Business packs
+      let finalBody = body;
+      if (injectionRules.has(parsed.name)) {
+        const { body: injectedBody, count } = await applyInjections(body, injectionRules.get(parsed.name));
+        finalBody = injectedBody;
+        stats.injectionsApplied += count;
+      }
+
+      const output = [header, finalBody, footer].filter(Boolean).join('\n');
 
       let outputPath;
       let displayName;
@@ -550,7 +645,7 @@ function generateIndex(stats, adapter) {
   const lines = [
     '# Rune Skill Index',
     '',
-    `> Platform: ${adapter.name} | Skills: ${stats.skillCount} | Extensions: ${stats.packCount}${stats.templateCount > 0 ? ` | Templates: ${stats.templateCount}` : ''}`,
+    `> Platform: ${adapter.name} | Skills: ${stats.skillCount} | Extensions: ${stats.packCount}${stats.templateCount > 0 ? ` | Templates: ${stats.templateCount}` : ''}${stats.injectionsApplied > 0 ? ` | Injections: ${stats.injectionsApplied}` : ''}`,
     '',
     '## Core Skills',
     '',
