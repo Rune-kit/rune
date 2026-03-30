@@ -69,7 +69,15 @@ function parseFrontmatter(content) {
     const kvMatch = trimmed.match(/^(\w[\w-]*):\s*(.+)$/);
     if (kvMatch) {
       const value = kvMatch[2].replace(/^["']|["']$/g, '');
-      frontmatter[kvMatch[1]] = value;
+      // Comma-separated list fields at top level too (Pro/Business packs)
+      if (COMMA_LIST_FIELDS.has(kvMatch[1])) {
+        frontmatter[kvMatch[1]] = value
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean);
+      } else {
+        frontmatter[kvMatch[1]] = value;
+      }
     }
   }
 
@@ -182,9 +190,13 @@ export function parseSkill(content, filePath = '') {
 
   const metadata = frontmatter.metadata || {};
 
-  // Extract signals — emit/listen arrays from metadata
-  const emit = Array.isArray(metadata.emit) ? metadata.emit : [];
-  const listen = Array.isArray(metadata.listen) ? metadata.listen : [];
+  // Extract signals — emit/listen arrays from metadata or top-level (Pro/Business packs)
+  const emit = Array.isArray(metadata.emit) ? metadata.emit : Array.isArray(frontmatter.emit) ? frontmatter.emit : [];
+  const listen = Array.isArray(metadata.listen)
+    ? metadata.listen
+    : Array.isArray(frontmatter.listen)
+      ? frontmatter.listen
+      : [];
   const signals = emit.length > 0 || listen.length > 0 ? { emit, listen } : null;
 
   return {

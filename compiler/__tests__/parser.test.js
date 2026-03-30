@@ -144,4 +144,58 @@ describe('signals parsing', () => {
     assert.ok(parsed.signals.emit.includes('tests.failed'));
     assert.ok(parsed.signals.listen.includes('code.changed'));
   });
+
+  test('top-level emit/listen (Pro/Business pack format)', () => {
+    const content = [
+      '---',
+      'name: "feature-spec"',
+      'pack: "@rune-pro/product"',
+      'version: "1.2.0"',
+      'model: opus',
+      'tools: [Read, Write]',
+      'emit: product.spec.drafted',
+      'listen: sales.account.researched, product.research.complete',
+      '---',
+      '',
+      '# feature-spec',
+    ].join('\n');
+
+    const parsed = parseSkill(content);
+    assert.ok(parsed.signals, 'top-level signals should be parsed');
+    assert.deepStrictEqual(parsed.signals.emit, ['product.spec.drafted']);
+    assert.deepStrictEqual(parsed.signals.listen, ['sales.account.researched', 'product.research.complete']);
+  });
+
+  test('top-level emit only (no listen)', () => {
+    const content = [
+      '---',
+      'name: "account-research"',
+      'emit: sales.account.researched',
+      '---',
+      '',
+      '# account-research',
+    ].join('\n');
+
+    const parsed = parseSkill(content);
+    assert.ok(parsed.signals);
+    assert.deepStrictEqual(parsed.signals.emit, ['sales.account.researched']);
+    assert.deepStrictEqual(parsed.signals.listen, []);
+  });
+
+  test('metadata emit takes precedence over top-level', () => {
+    const content = [
+      '---',
+      'name: "hybrid"',
+      'emit: top.level.signal',
+      'metadata:',
+      '  emit: nested.signal',
+      '---',
+      '',
+      '# hybrid',
+    ].join('\n');
+
+    const parsed = parseSkill(content);
+    assert.ok(parsed.signals);
+    assert.deepStrictEqual(parsed.signals.emit, ['nested.signal']);
+  });
 });

@@ -10,16 +10,23 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SKILLS_DIR = join(__dirname, '..', 'skills');
+const PRO_DIR = join(__dirname, '..', '..', 'Pro', 'extensions');
+const BUSINESS_DIR = join(__dirname, '..', '..', 'Business', 'extensions');
 
 // Signal naming: lowercase, dot-separated segments (e.g. code.changed, tests.passed)
 const SIGNAL_NAME_PATTERN = /^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*)+$/;
 
 /**
  * Parse emit/listen signals from SKILL.md frontmatter
+ * Supports both core format (skills/fix/SKILL.md) and pack format (skills/feature-spec.md)
  */
 export function parseSignals(filePath) {
   const content = readFileSync(filePath, 'utf-8').replace(/\r\n/g, '\n');
-  const name = filePath.split(/[/\\]/).at(-2);
+  const segments = filePath.split(/[/\\]/);
+  const fileName = segments.at(-1);
+  // Core format: skills/fix/SKILL.md → name from directory
+  // Pack format: skills/feature-spec.md → name from filename
+  const name = fileName === 'SKILL.md' ? segments.at(-2) : fileName.replace(/\.md$/, '');
 
   const fmMatch = content.match(/^---\n([\s\S]*?)\n---/);
   if (!fmMatch) return { name, emit: [], listen: [] };
@@ -41,10 +48,11 @@ function parseCommaList(frontmatter, key) {
 }
 
 /**
- * Validate signal consistency across all skills
+ * Scan a core skills directory (skills/fix/SKILL.md format)
  */
-export function validateSignals(skillsDir) {
+function scanCoreSkills(skillsDir) {
   const skills = {};
+  if (!existsSync(skillsDir)) return skills;
   const dirs = readdirSync(skillsDir, { withFileTypes: true })
     .filter((d) => d.isDirectory())
     .map((d) => d.name);
@@ -54,6 +62,44 @@ export function validateSignals(skillsDir) {
     if (existsSync(skillPath)) {
       skills[dir] = parseSignals(skillPath);
     }
+  }
+  return skills;
+}
+
+// Scan pack extensions directory (extensions/pro-{name}/skills/{skill}.md format)
+function scanPackSkills(extensionsDir) {
+  const skills = {};
+  if (!existsSync(extensionsDir)) return skills;
+  const packs = readdirSync(extensionsDir, { withFileTypes: true }).filter((d) => d.isDirectory());
+
+  for (const pack of packs) {
+    const packSkillsDir = join(extensionsDir, pack.name, 'skills');
+    if (!existsSync(packSkillsDir)) continue;
+    const files = readdirSync(packSkillsDir, { withFileTypes: true }).filter(
+      (f) => f.isFile() && f.name.endsWith('.md'),
+    );
+
+    for (const file of files) {
+      const skillPath = join(packSkillsDir, file.name);
+      const skillName = file.name.replace(/\.md$/, '');
+      skills[skillName] = parseSignals(skillPath);
+    }
+  }
+  return skills;
+}
+
+/**
+ * Validate signal consistency across all skills (Free + Pro + Business)
+ */
+export function validateSignals(skillsDir, { proDirs = [], tierLabels = [] } = {}) {
+  const skills = { ...scanCoreSkills(skillsDir) };
+  const tierSkills = {};
+
+  for (let i = 0; i < proDirs.length; i++) {
+    const packSkills = scanPackSkills(proDirs[i]);
+    const label = tierLabels[i] || `tier-${i}`;
+    tierSkills[label] = packSkills;
+    Object.assign(skills, packSkills);
   }
 
   // Build global signal registry
@@ -105,6 +151,7 @@ export function validateSignals(skillsDir) {
     listenerCount,
     issues,
     warnings,
+    tierSkills,
   };
 }
 
@@ -112,7 +159,12 @@ export function validateSignals(skillsDir) {
 const isMain =
   process.argv[1] && fileURLToPath(import.meta.url).endsWith(process.argv[1].replace(/\\/g, '/').split('/').pop());
 if (isMain) {
-  const { skillCount, signalCount, emitterCount, listenerCount, issues, warnings } = validateSignals(SKILLS_DIR);
+  const proDirs = [PRO_DIR, BUSINESS_DIR].filter(existsSync);
+  const tierLabels = ['Pro', 'Business'];
+  const { skillCount, signalCount, emitterCount, listenerCount, issues, warnings } = validateSignals(SKILLS_DIR, {
+    proDirs,
+    tierLabels,
+  });
   console.log(`Scanned ${skillCount} skills — ${signalCount} signals, ${emitterCount} emit, ${listenerCount} listen`);
 
   if (warnings.length > 0) {
