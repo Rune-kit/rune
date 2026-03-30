@@ -7,7 +7,7 @@
 import { existsSync } from 'node:fs';
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
-import { parsePack } from './parser.js';
+import { parsePack, parseTemplate } from './parser.js';
 
 /**
  * Run doctor checks on compiled output
@@ -124,6 +124,19 @@ export async function runDoctor({ outputRoot, adapter, config, runeRoot }) {
     }
   }
 
+  // Check 8: Template signal validation (Pro/Business packs)
+  const templateErrors = await checkTemplateSignals(runeRoot, config);
+  if (templateErrors.length === 0) {
+    results.checks.push({ name: 'Template signals', status: 'pass' });
+  } else {
+    results.checks.push({
+      name: 'Template signals',
+      status: 'warn',
+      detail: `${templateErrors.length} issues`,
+    });
+    results.warnings.push(...templateErrors);
+  }
+
   if (results.errors.length > 0) results.healthy = false;
 
   return results;
@@ -181,6 +194,105 @@ async function checkSplitPacks(extensionsDir) {
   }
 
   return errors;
+}
+
+/**
+ * Check that template signal references exist in the skill ecosystem.
+ * Scans templates/ in Pro/Business extension dirs (relative to runeRoot parent).
+ */
+async function checkTemplateSignals(runeRoot, config) {
+  const errors = [];
+  const parentDir = path.resolve(runeRoot, '..');
+
+  // Collect all known signals from core + pack skills
+  const knownSignals = new Set();
+  const skillsDir = path.join(runeRoot, 'skills');
+  if (existsSync(skillsDir)) {
+    for (const entry of await readdir(skillsDir, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue;
+      const skillFile = path.join(skillsDir, entry.name, 'SKILL.md');
+      if (!existsSync(skillFile)) continue;
+      const content = await readFile(skillFile, 'utf-8');
+      for (const signal of extractFrontmatterSignals(content)) {
+        knownSignals.add(signal);
+      }
+    }
+  }
+
+  // Scan tier extension dirs for signals + templates
+  const tierDirs = [
+    path.join(runeRoot, 'extensions'),
+    path.join(parentDir, 'Pro', 'extensions'),
+    path.join(parentDir, 'Business', 'extensions'),
+  ];
+
+  const templateFiles = [];
+
+  for (const extDir of tierDirs) {
+    if (!existsSync(extDir)) continue;
+    for (const packEntry of await readdir(extDir, { withFileTypes: true })) {
+      if (!packEntry.isDirectory()) continue;
+      const packDir = path.join(extDir, packEntry.name);
+
+      // Collect signals from pack skills
+      const packSkillsDir = path.join(packDir, 'skills');
+      if (existsSync(packSkillsDir)) {
+        for (const sf of await readdir(packSkillsDir)) {
+          if (!sf.endsWith('.md')) continue;
+          const content = await readFile(path.join(packSkillsDir, sf), 'utf-8');
+          for (const signal of extractFrontmatterSignals(content)) {
+            knownSignals.add(signal);
+          }
+        }
+      }
+
+      // Collect template files
+      const templatesDir = path.join(packDir, 'templates');
+      if (existsSync(templatesDir)) {
+        for (const tf of await readdir(templatesDir)) {
+          if (!tf.endsWith('.md')) continue;
+          templateFiles.push(path.join(templatesDir, tf));
+        }
+      }
+    }
+  }
+
+  // Validate each template's signals
+  for (const templatePath of templateFiles) {
+    const content = await readFile(templatePath, 'utf-8');
+    const parsed = parseTemplate(content, templatePath);
+    const templateName = parsed.name || path.basename(templatePath, '.md');
+
+    for (const signal of parsed.signals.listen) {
+      if (!knownSignals.has(signal)) {
+        errors.push(`template "${templateName}": listens to "${signal}" but no skill emits it`);
+      }
+    }
+  }
+
+  return errors;
+}
+
+/**
+ * Extract emit/listen signal names from a file's frontmatter
+ */
+function extractFrontmatterSignals(content) {
+  const signals = [];
+  const normalized = content.replace(/\r\n/g, '\n');
+  const fmMatch = normalized.match(/^---\n([\s\S]*?)\n---/);
+  if (!fmMatch) return signals;
+
+  const raw = fmMatch[1];
+  for (const key of ['emit', 'listen']) {
+    const match = raw.match(new RegExp(`^\\s*${key}:\\s*(.+)$`, 'm'));
+    if (match) {
+      for (const s of match[1].split(',')) {
+        const trimmed = s.trim();
+        if (trimmed) signals.push(trimmed);
+      }
+    }
+  }
+  return signals;
 }
 
 /**

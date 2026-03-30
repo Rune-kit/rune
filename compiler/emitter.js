@@ -8,7 +8,7 @@
 import { existsSync } from 'node:fs';
 import { cp, mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { extractCrossRefs, extractToolRefs, parsePack, parseSkill } from './parser.js';
+import { extractCrossRefs, extractToolRefs, parsePack, parseSkill, parseTemplate } from './parser.js';
 import { transformSkill } from './transformer.js';
 import { resolveScriptsPath } from './transforms/scripts-path.js';
 
@@ -179,6 +179,34 @@ export async function discoverTieredPacks(freeExtDir, tierSources = {}, enabledP
 }
 
 /**
+ * Discover workflow templates in a pack's templates/ directory
+ *
+ * @param {string} packDir - path to the pack directory (e.g. extensions/pro-product/)
+ * @returns {Promise<Array<{name: string, file: string, parsed: object}>>} array of parsed templates
+ */
+async function discoverTemplates(packDir) {
+  const templatesDir = path.join(packDir, 'templates');
+  if (!existsSync(templatesDir)) return [];
+
+  const entries = await readdir(templatesDir, { withFileTypes: true });
+  const templates = [];
+
+  for (const entry of entries) {
+    if (!entry.isFile() || !entry.name.endsWith('.md')) continue;
+    const filePath = path.join(templatesDir, entry.name);
+    const content = await readFile(filePath, 'utf-8');
+    const parsed = parseTemplate(content, filePath);
+    templates.push({
+      name: parsed.name || entry.name.replace(/\.md$/, ''),
+      file: `templates/${entry.name}`,
+      parsed,
+    });
+  }
+
+  return templates.sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/**
  * Generate output filename for a skill
  */
 function outputFileName(skillName, adapter) {
@@ -242,6 +270,7 @@ export async function buildAll({
     crossRefsResolved: 0,
     toolRefsResolved: 0,
     scriptsCopied: 0,
+    templateCount: 0,
     files: [],
     skipped: [],
     errors: [],
@@ -398,6 +427,32 @@ export async function buildAll({
         parsed.toolRefs = extractToolRefs(parsed.body);
       }
 
+      // Discover and append workflow templates (Pro/Business packs)
+      const templates = await discoverTemplates(packDir);
+      if (templates.length > 0) {
+        const templateSection = [
+          '',
+          '## Workflow Templates',
+          '',
+          'Pre-built multi-phase workflows for `cook --template <name>`:',
+          '',
+          ...templates.map(
+            (t) =>
+              `| \`${t.name}\` | ${t.parsed.description.slice(0, 100)} | chain: ${t.parsed.chain} |`,
+          ),
+          '',
+          ...templates.map((t) => {
+            const header = `### Template: ${t.name}`;
+            return `${header}\n\n${t.parsed.body}`;
+          }),
+        ];
+        parsed.body = `${parsed.body}\n\n${templateSection.join('\n')}`;
+        // Re-extract refs after template injection
+        parsed.crossRefs = extractCrossRefs(parsed.body);
+        parsed.toolRefs = extractToolRefs(parsed.body);
+        stats.templateCount = (stats.templateCount || 0) + templates.length;
+      }
+
       // Normalize pack name for headers (ext-trading instead of @rune/trading)
       parsed.name = `ext-${packName}`;
 
@@ -495,7 +550,7 @@ function generateIndex(stats, adapter) {
   const lines = [
     '# Rune Skill Index',
     '',
-    `> Platform: ${adapter.name} | Skills: ${stats.skillCount} | Extensions: ${stats.packCount}`,
+    `> Platform: ${adapter.name} | Skills: ${stats.skillCount} | Extensions: ${stats.packCount}${stats.templateCount > 0 ? ` | Templates: ${stats.templateCount}` : ''}`,
     '',
     '## Core Skills',
     '',

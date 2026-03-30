@@ -5,7 +5,7 @@ context: fork
 agent: general-purpose
 metadata:
   author: runedev
-  version: "1.7.0"
+  version: "1.8.0"
   layer: L1
   model: sonnet
   group: orchestrator
@@ -39,7 +39,33 @@ Cook supports predefined workflow chains for common task types. Use these as sho
 /rune cook security   → Full pipeline + sentinel@opus + sast (all phases, security-escalated)
 /rune cook hotfix     → Minimal: fix → verify → commit (Phase 4 → 6 → 7, skip scout if user provides context)
 /rune cook nano       → Trivial: do → verify → done (no phases, ≤3 steps)
+/rune cook --template <name> → Load pre-built workflow template from installed Pro/Business packs
 ```
+
+### Template Workflows (Pro/Business)
+
+When `--template <name>` is provided, cook loads a pre-built workflow template instead of auto-detecting:
+
+```
+/rune cook --template product-discovery   → Pro: stakeholder interviews → problem framing → competitive → spec → validation
+/rune cook --template product-launch      → Pro: spec lock → implement → quality gates → staged rollout → announcement
+/rune cook --template product-iteration   → Pro: metrics review → feedback synthesis → re-prioritize → implement → measure
+/rune cook --template data-exploration    → Pro: data profiling → hypotheses → statistical testing → visualization → report
+/rune cook --template data-pipeline       → Pro: schema design → ETL → quality gates → deploy → monitoring
+/rune cook --template sales-outreach-campaign → Pro: prospect research → messaging → sequence → A/B test → launch
+/rune cook --template sales-deal-review   → Pro: account deep-dive → risk assessment → competitive strategy → action plan
+/rune cook --template support-incident-response → Pro: triage → diagnose → fix → verify → postmortem → KB update
+/rune cook --template support-kb-refresh  → Pro: audit → gap analysis → draft → review → publish
+```
+
+**Template resolution**: Templates are `.md` files in `extensions/pro-*/templates/` or `extensions/business-*/templates/`. Each template defines: phases, skill connections, mesh signals, and acceptance criteria. The compiler includes templates in pack output during build.
+
+**When --template is used**:
+1. Skip Phase 1.5 (auto-detection) — template pre-selects domain and pack
+2. Skip Phase 1.7 (workflow matching) — template IS the workflow
+3. Load template phases as the master plan (Phase 2 becomes "review template plan" not "create plan")
+4. Execute each template phase in order, invoking declared skills
+5. Emit template's declared signals on completion
 
 **Chain selection**: If user invokes `/rune cook` without a chain type, auto-detect from the task description:
 - Contains "bug", "fix", "broken", "error" → `bugfix`
@@ -47,6 +73,7 @@ Cook supports predefined workflow chains for common task types. Use these as sho
 - Contains "security", "auth", "vulnerability", "CVE" → `security`
 - Contains "urgent", "hotfix", "production" → `hotfix`
 - Contains "quick", "just", "chỉ cần", "copy", "move", "rename", "bump" → `nano`
+- Contains `--template` → load template workflow (see above)
 - Default → `feature`
 
 ## Phase Skip Rules
@@ -212,7 +239,15 @@ After scout completes, check if the detected tech stack or task description matc
 
 ## Phase 0: RESUME CHECK (Before Phase 1)
 
-**Goal**: Detect if a master plan already exists for this task. If so, skip Phase 1-2 and resume from the current phase.
+**Goal**: Detect if a master plan already exists for this task, or if a `--template` was specified. If so, skip Phase 1-2 and resume/load the workflow.
+
+**Step 0.4 — Template Detection**: If user passed `--template <name>`:
+1. Search installed pack templates for the name: `Glob` for `extensions/*/templates/<name>.md` and `extensions/pro-*/templates/<name>.md`
+2. If found: `Read` the template file → parse phases, signals, connections, acceptance criteria
+3. Generate a master plan from the template: each template phase becomes a plan phase
+4. Write plan files to `.rune/plan-<template-name>.md` + `.rune/plan-<template-name>-phaseN.md`
+5. Announce "Loading template: <name> (<pack>)" → skip Phase 1, 1.5, 1.7, 2 → proceed to Phase 4 with Phase 1 of the template
+6. If template not found: warn user and fall through to normal workflow
 
 **Step 0.5 — Cross-Project Recall**: Call `neural-memory` (Recall Mode) with 3-5 topics relevant to the current task. Always prefix queries with the project name (e.g., `"ProjectName auth pattern"` not `"auth pattern"`).
 

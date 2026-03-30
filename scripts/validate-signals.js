@@ -89,6 +89,38 @@ function scanPackSkills(extensionsDir) {
 }
 
 /**
+ * Scan pack templates directory (extensions/pro-{name}/templates/{template}.md)
+ * Templates declare signals in a nested format: signals: { emit: "...", listen: "..." }
+ */
+function scanTemplateSignals(extensionsDir) {
+  const templates = {};
+  if (!existsSync(extensionsDir)) return templates;
+  const packs = readdirSync(extensionsDir, { withFileTypes: true }).filter((d) => d.isDirectory());
+
+  for (const pack of packs) {
+    const templatesDir = join(extensionsDir, pack.name, 'templates');
+    if (!existsSync(templatesDir)) continue;
+    const files = readdirSync(templatesDir, { withFileTypes: true }).filter(
+      (f) => f.isFile() && f.name.endsWith('.md'),
+    );
+
+    for (const file of files) {
+      const templatePath = join(templatesDir, file.name);
+      const content = readFileSync(templatePath, 'utf-8').replace(/\r\n/g, '\n');
+      const fmMatch = content.match(/^---\n([\s\S]*?)\n---/);
+      if (!fmMatch) continue;
+
+      const raw = fmMatch[1];
+      const templateName = `template:${file.name.replace(/\.md$/, '')}`;
+      const emit = parseCommaList(raw, 'emit');
+      const listen = parseCommaList(raw, 'listen');
+      templates[templateName] = { name: templateName, emit, listen };
+    }
+  }
+  return templates;
+}
+
+/**
  * Validate signal consistency across all skills (Free + Pro + Business)
  */
 export function validateSignals(skillsDir, { proDirs = [], tierLabels = [] } = {}) {
@@ -100,6 +132,10 @@ export function validateSignals(skillsDir, { proDirs = [], tierLabels = [] } = {
     const label = tierLabels[i] || `tier-${i}`;
     tierSkills[label] = packSkills;
     Object.assign(skills, packSkills);
+
+    // Also scan templates for signal declarations
+    const templateSignals = scanTemplateSignals(proDirs[i]);
+    Object.assign(skills, templateSignals);
   }
 
   // Build global signal registry

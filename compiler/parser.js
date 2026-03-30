@@ -47,6 +47,17 @@ function parseFrontmatter(content) {
     }
 
     if (currentIndent === 'nested' && line.startsWith('  ')) {
+      // YAML list item (e.g. "  - value")
+      const listMatch = trimmed.match(/^-\s+(.+)$/);
+      if (listMatch) {
+        // Convert nested block to array if not already
+        if (!Array.isArray(frontmatter[nestedKey])) {
+          frontmatter[nestedKey] = [];
+        }
+        frontmatter[nestedKey].push(listMatch[1].replace(/^["']|["']$/g, ''));
+        continue;
+      }
+
       const kvMatch = trimmed.match(/^(\w[\w-]*):\s*(.+)$/);
       if (kvMatch) {
         const rawValue = kvMatch[2].replace(/^["']|["']$/g, '');
@@ -255,6 +266,70 @@ export function parsePack(content, filePath = '') {
  * @param {Array} skills - array of skill entries from frontmatter metadata.skills
  * @returns {Array<{name: string, file: string, model: string, description: string}>}
  */
+/**
+ * Parse a workflow template file (templates/*.md)
+ *
+ * Templates have the same frontmatter structure as skills but with additional
+ * template-specific fields: domain, chain, connections[]
+ *
+ * @param {string} content - raw template file content
+ * @param {string} [filePath] - optional file path for error reporting
+ * @returns {ParsedTemplate}
+ */
+export function parseTemplate(content, filePath = '') {
+  const { frontmatter, body } = parseFrontmatter(content);
+
+  // Parse signals — can be nested object { emit: "...", listen: "..." } or flat
+  const signalsRaw = frontmatter.signals || {};
+  const emit =
+    typeof signalsRaw.emit === 'string'
+      ? signalsRaw.emit
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : Array.isArray(signalsRaw.emit)
+        ? signalsRaw.emit
+        : [];
+  const listen =
+    typeof signalsRaw.listen === 'string'
+      ? signalsRaw.listen
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : Array.isArray(signalsRaw.listen)
+        ? signalsRaw.listen
+        : [];
+
+  // Parse connections array — supports both comma-separated string and YAML array
+  let connections = [];
+  if (frontmatter.connections) {
+    if (typeof frontmatter.connections === 'string') {
+      connections = frontmatter.connections
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+    } else if (Array.isArray(frontmatter.connections)) {
+      connections = frontmatter.connections;
+    }
+  }
+
+  return {
+    name: frontmatter.name || '',
+    pack: frontmatter.pack || '',
+    version: frontmatter.version || '1.0.0',
+    description: frontmatter.description || '',
+    domain: frontmatter.domain || '',
+    chain: frontmatter.chain || 'standard',
+    signals: { emit, listen },
+    connections,
+    body,
+    crossRefs: extractCrossRefs(body),
+    sections: extractSections(body),
+    filePath,
+    frontmatter,
+  };
+}
+
 function parseSkillManifest(skills) {
   if (!Array.isArray(skills)) return [];
 
