@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=2.6.0">
+  <link rel="stylesheet" href="style.css?v=2.6.1">
 </head>
 <body>
   <!-- NAV -->
@@ -526,7 +526,7 @@ claude plugin install rune</code></pre>
 
         <div class="mesh-tier mesh-tier-biz">
           <div class="mesh-tier-header">
-            <span class="mesh-tier-badge mesh-badge-biz">BUSINESS $149</span>
+            <span class="mesh-tier-badge mesh-badge-biz">BUSINESS $169</span>
             <strong>Enterprise Skills</strong>
             <span class="mesh-tier-stats">+26 skills &bull; includes all Pro skills</span>
           </div>
@@ -692,6 +692,145 @@ claude plugin install rune</code></pre>
           <p>3 governance templates (startup, mid-size, enterprise) with teams, roles, approval flows, and sentinel enforcement levels.</p>
         </div>
       </div>
+
+      <!-- ROI strip -->
+      <div class="biz-roi">
+        <div class="biz-roi-item">
+          <span class="biz-roi-num">87</span>
+          <span class="biz-roi-label">Skills across<br>8 departments</span>
+        </div>
+        <div class="biz-roi-divider"></div>
+        <div class="biz-roi-item">
+          <span class="biz-roi-num">~50h</span>
+          <span class="biz-roi-label">Saved per week<br>vs manual workflows</span>
+        </div>
+        <div class="biz-roi-divider"></div>
+        <div class="biz-roi-item">
+          <span class="biz-roi-num">1 prompt</span>
+          <span class="biz-roi-label">Replaces 8&ndash;12<br>manual steps</span>
+        </div>
+        <div class="biz-roi-divider"></div>
+        <div class="biz-roi-item">
+          <span class="biz-roi-num">&lt;1 week</span>
+          <span class="biz-roi-label">ROI payback<br>at $169 lifetime</span>
+        </div>
+      </div>
+
+      <!-- Business in Action: real workflows -->
+      <h3 class="biz-action-title">Business in Action</h3>
+      <p class="biz-action-sub">Real cross-department workflows that run with a single prompt.</p>
+
+      <div class="biz-scenarios">
+        <div class="biz-scenario">
+          <div class="biz-scenario-header">
+            <span class="biz-scenario-icon">&#128200;</span>
+            <div>
+              <strong>Quarterly Planning</strong>
+              <span class="biz-scenario-tag">4 departments &bull; 1 prompt</span>
+            </div>
+          </div>
+          <div class="biz-scenario-prompt">&gt; &ldquo;Run quarterly planning for Q3 &mdash; pull revenue data, update forecasts, flag compliance risks, draft hiring plan&rdquo;</div>
+          <div class="biz-scenario-flow">
+            <span class="biz-flow-node biz-flow-pro">Product<small>roadmap.priorities</small></span>
+            <span class="biz-flow-arrow">&rarr;</span>
+            <span class="biz-flow-node biz-flow-biz">Finance<small>forecast.update</small></span>
+            <span class="biz-flow-arrow">&rarr;</span>
+            <span class="biz-flow-node biz-flow-biz">Legal<small>compliance.review</small></span>
+            <span class="biz-flow-arrow">&rarr;</span>
+            <span class="biz-flow-node biz-flow-biz">HR<small>hiring.plan</small></span>
+          </div>
+          <div class="biz-scenario-result">
+            <span class="biz-result-badge">Output</span>
+            Q3 plan with budget allocation, compliance sign-off, and 3 open headcount requests &mdash; ready for exec review.
+          </div>
+        </div>
+
+        <div class="biz-scenario">
+          <div class="biz-scenario-header">
+            <span class="biz-scenario-icon">&#128680;</span>
+            <div>
+              <strong>Customer Escalation</strong>
+              <span class="biz-scenario-tag">5 departments &bull; auto-triggered</span>
+            </div>
+          </div>
+          <div class="biz-scenario-prompt">&gt; &ldquo;Enterprise customer threatening churn &mdash; $240k ARR at risk. Escalate across all departments.&rdquo;</div>
+          <div class="biz-scenario-flow">
+            <span class="biz-flow-node biz-flow-pro">Support<small>escalation.critical</small></span>
+            <span class="biz-flow-arrow">&rarr;</span>
+            <span class="biz-flow-node biz-flow-pro">Sales<small>account.review</small></span>
+            <span class="biz-flow-arrow">&rarr;</span>
+            <span class="biz-flow-node biz-flow-biz">Legal<small>contract.review</small></span>
+            <span class="biz-flow-arrow">&rarr;</span>
+            <span class="biz-flow-node biz-flow-biz">Finance<small>revenue.impact</small></span>
+            <span class="biz-flow-arrow">&rarr;</span>
+            <span class="biz-flow-node biz-flow-pro">Product<small>feature.priority</small></span>
+          </div>
+          <div class="biz-scenario-result">
+            <span class="biz-result-badge">Output</span>
+            Retention playbook: contract concession options, feature fast-track timeline, revenue impact analysis, and exec talking points.
+          </div>
+        </div>
+
+        <div class="biz-scenario">
+          <div class="biz-scenario-header">
+            <span class="biz-scenario-icon">&#128101;</span>
+            <div>
+              <strong>New Hire Onboard</strong>
+              <span class="biz-scenario-tag">4 departments &bull; 1 prompt</span>
+            </div>
+          </div>
+          <div class="biz-scenario-prompt">&gt; &ldquo;Onboard senior engineer starting Monday &mdash; setup contracts, payroll, equipment, team intro, 30-60-90 plan&rdquo;</div>
+          <div class="biz-scenario-flow">
+            <span class="biz-flow-node biz-flow-biz">HR<small>onboard.init</small></span>
+            <span class="biz-flow-arrow">&rarr;</span>
+            <span class="biz-flow-node biz-flow-biz">Legal<small>contract.generate</small></span>
+            <span class="biz-flow-arrow">&rarr;</span>
+            <span class="biz-flow-node biz-flow-biz">Finance<small>payroll.setup</small></span>
+            <span class="biz-flow-arrow">&rarr;</span>
+            <span class="biz-flow-node biz-flow-free">Engineering<small>access.provision</small></span>
+          </div>
+          <div class="biz-scenario-result">
+            <span class="biz-result-badge">Output</span>
+            Complete onboard package: signed contract, payroll configured, equipment ordered, Slack channels joined, 30-60-90 plan drafted.
+          </div>
+        </div>
+      </div>
+
+      <!-- Before / After -->
+      <div class="biz-before-after">
+        <div class="biz-ba-card biz-ba-before">
+          <div class="biz-ba-label">Without Business</div>
+          <ol class="biz-ba-steps">
+            <li>Open spreadsheet, pull last quarter revenue</li>
+            <li>Email finance for updated forecasts</li>
+            <li>Slack legal about compliance deadlines</li>
+            <li>Schedule meeting with HR for headcount</li>
+            <li>Wait 2&ndash;3 days for responses</li>
+            <li>Copy-paste data between 4 tools</li>
+            <li>Manually check for conflicts</li>
+            <li>Draft plan in Google Docs</li>
+            <li>Send for review, wait for feedback</li>
+            <li>Revise, re-send, repeat</li>
+          </ol>
+          <div class="biz-ba-total">~12 steps &bull; 3&ndash;5 days &bull; 4 tools</div>
+        </div>
+        <div class="biz-ba-vs">VS</div>
+        <div class="biz-ba-card biz-ba-after">
+          <div class="biz-ba-label">With Business</div>
+          <div class="biz-ba-prompt">
+            <code>&gt; Run quarterly planning for Q3</code>
+          </div>
+          <ul class="biz-ba-auto">
+            <li><span class="biz-auto-check">&#10003;</span> Revenue data pulled automatically</li>
+            <li><span class="biz-auto-check">&#10003;</span> Forecast updated via finance signals</li>
+            <li><span class="biz-auto-check">&#10003;</span> Compliance risks flagged by legal</li>
+            <li><span class="biz-auto-check">&#10003;</span> Headcount plan drafted by HR</li>
+            <li><span class="biz-auto-check">&#10003;</span> Cross-department conflicts detected</li>
+            <li><span class="biz-auto-check">&#10003;</span> Executive summary generated</li>
+          </ul>
+          <div class="biz-ba-total biz-ba-total-after">1 prompt &bull; 2 minutes &bull; 0 context switches</div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -772,7 +911,7 @@ claude plugin install rune</code></pre>
           <div class="pricing-tier">
             <span class="pricing-badge pricing-badge-best">&#9733; BEST VALUE</span>
             <h3>Rune Business</h3>
-            <div class="pricing-price">$149<span class="pricing-period"> lifetime</span></div>
+            <div class="pricing-price">$169<span class="pricing-period"> lifetime</span></div>
           </div>
           <p class="pricing-desc">Full department coverage &mdash; every business function, one purchase.</p>
 
@@ -787,7 +926,7 @@ claude plugin install rune</code></pre>
               </ul>
             </div>
             <div class="includes-box includes-box-biz">
-              <strong>Rune Business</strong> <span class="includes-value">$100 value</span>
+              <strong>Rune Business</strong> <span class="includes-value">$120 value</span>
               <ul>
                 <li>Finance Ops, Legal &amp; Compliance, HR &amp; Recruiting</li>
                 <li>Enterprise Search + Priority support</li>
@@ -807,7 +946,7 @@ claude plugin install rune</code></pre>
             <li>All future Pro + Business packs included</li>
             <li>Lifetime access &mdash; no subscriptions ever</li>
           </ul>
-          <button class="btn btn-biz" style="width:100%" onclick="openPayment('rune-biz')">Get Rune Business &mdash; $149</button>
+          <button class="btn btn-biz" style="width:100%" onclick="openPayment('rune-biz')">Get Rune Business &mdash; $169</button>
           <p class="pricing-note pricing-guarantee">&#128176; 14-Day Money-Back Guarantee &mdash; no questions asked</p>
         </div>
       </div>
@@ -821,7 +960,7 @@ claude plugin install rune</code></pre>
               <th>Capability</th>
               <th>Free</th>
               <th>Pro <span class="table-price">$49</span></th>
-              <th>Business <span class="table-price">$149</span></th>
+              <th>Business <span class="table-price">$169</span></th>
             </tr>
           </thead>
           <tbody>
