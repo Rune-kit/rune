@@ -101,8 +101,6 @@ Compile all results into the structured report. Update all TodoWrite items to co
 
 ### 3-Level Artifact Verification
 
-> From GSD (gsd-build/get-shit-done, 30.8k★): "Task done ≠ Goal achieved."
-
 Every file created or modified during implementation must pass ALL 3 levels:
 
 **Level 1 — EXISTS**: File is on disk, non-empty.

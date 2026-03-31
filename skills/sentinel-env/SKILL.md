@@ -112,8 +112,6 @@ Detect and verify tools the project depends on:
 5. **Build tools**: Check for `turbo.json` (turborepo), `nx.json` (Nx), `Makefile`, etc.
 
 6. **Hard dependencies** — tools the project WRAPS (not just uses as dev dependency):
-   > From CLI-Anything (HKUDS/CLI-Anything, 17.4k★): "The software is a required dependency, not optional."
-
    Scan for evidence that the project wraps an external tool:
    - `Grep` for `shutil.which(`, `which `, `command -v ` → project looks up an executable at runtime
    - `Grep` for `subprocess.run(`, `child_process.exec(`, `Deno.Command(` → project invokes external CLI

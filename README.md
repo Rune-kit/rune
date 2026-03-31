@@ -83,16 +83,21 @@ _Methodology: Claude Code CLI headless mode (`claude -p --output-format json`), 
 
 ---
 
-## What's New (v2.7.0)
+## What's New (v2.8.0)
+
+- **Anti-Loop Intelligence** — 7 core skills enriched with execution loop detection, saturation analysis, error pattern matching, artifact folding, budget-aware progression, and recovery policy routing
+- **cook v2.1.0** — observation/effect ratio tracking (detects stuck agents reading without writing) + budget-aware phase progression with hard caps on replans, quality retries, and session tool calls
+- **completion-gate v1.8.0** — execution loop audit: classifies tool calls as observation vs effect, flags imbalanced ratios and repeating sequences in gate reports
+- **scout v0.3.0** — info saturation detection: tracks entity discovery rate and content similarity to stop scanning when diminishing returns detected
+- **research v0.4.0** — diminishing returns detection: monitors new-entity ratio and result overlap across searches to skip redundant queries
+- **context-engine v0.9.0** — artifact folding: large tool outputs (>4000 chars or >120 lines) saved to `.rune/artifacts/` with compact preview in context
+- **debug v1.0.0** — known error pattern catalog: 8 error archetypes (STATELESS_LOSS, MODULE_NOT_FOUND, TYPE_MISMATCH, ASYNC_DEADLOCK, etc.) with recovery hints + error fingerprinting for dedup
+- **fix v0.8.0** — recovery policy matrix: classifies errors into 8 types (INPUT_REQUIRED→PROMPT_USER, TIMEOUT→RETRY, POLICY_BLOCKED→ABORT, etc.) before attempting fixes
+- **Source attribution cleanup** — removed all enrichment credit lines from skill files to reduce context noise
+
+### Previous (v2.7.0)
 
 - **Deep Knowledge** — 8 core skills enriched with battle-tested patterns: context compaction, structured cumulative memory, milestone analysis, multi-provider adapters, AI-driven interview, prompt-as-API-contract, token budget tracking, incremental stream processing
-- **context-engine v0.8.0** — structured compaction summaries with continuation point anchoring + sentence-level stream processing pattern
-- **session-bridge v0.5.0** — cumulative project notes (`.rune/cumulative-notes.md`) for living institutional memory across sessions
-- **retro v0.3.0** — milestone progressive analysis at project thresholds (4/12/24/50 retros) with focal-point depth scaling
-- **mcp-builder v0.4.0** — multi-provider adapter pattern reference with discriminated StreamChunk union + dual-model cost config
-- **onboard v0.4.0** — AI-driven conversational interview mode (`--interview`) for ambiguous or complex projects
-- **perf v0.3.0** — token budget tracking for AI-powered apps (loop detection, model mismatch, unbounded tokens, duplicate calls)
-- **cook v2.0.0** — prompt-as-API-contract pattern for structured sub-skill output
 - **946 Tests** — compiler + signals + hooks + scripts + status + visualizer validation
 
 ### Previous (v2.6.0)

@@ -262,8 +262,6 @@ Every plan output — master plan, phase file, or inline plan — MUST end with 
 
 ## Change Stacking (Overlap Detection)
 
-> From OpenSpec (Fission-AI/OpenSpec, 32.8k★): "Dependencies without metadata create phantom coupling."
-
 When producing phase files with wave-based task grouping, every task MUST declare dependency metadata:
 
 ```markdown

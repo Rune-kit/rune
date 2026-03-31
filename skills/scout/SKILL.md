@@ -3,7 +3,7 @@ name: scout
 description: "Fast codebase scanner. Use when any skill needs codebase context. Finds files, patterns, dependencies, project structure. Pure read-only — never modifies files."
 metadata:
   author: runedev
-  version: "0.2.0"
+  version: "0.3.0"
   layer: L2
   model: haiku
   group: creation
@@ -78,6 +78,27 @@ Based on the scan request, run focused searches:
 3. Use `Read` to examine the most relevant files (max 10 files, prioritize by relevance)
 
 **Verification gate**: At least 1 relevant file found, OR confirm the target does not exist.
+
+#### Info Saturation Detection (Know When to Stop)
+
+Scout's default is "max 10 file reads" — but the real question is whether additional reads are productive. Track saturation across Phase 2 searches:
+
+**Entity tracking**: As you scan files, extract key entities (function names, class names, imports, API endpoints, config keys). Maintain a running set of discovered entities.
+
+| Signal | Threshold | Meaning | Action |
+|--------|-----------|---------|--------|
+| **New entity ratio** | Last 2 file reads added <2 new entities | Search is exhausted for this domain | STOP scanning, move to Phase 3 |
+| **Content similarity** | Last 2 files share >70% of the same imports/patterns | Files are in the same module, redundant reads | Skip remaining files in this directory |
+| **Query variation** | 3+ Glob/Grep queries with different patterns all return the same files | All search angles converge | Domain is fully mapped, proceed |
+
+**When saturation detected**: Emit in Scout Report:
+```
+### Saturation
+- Reached after [N] file reads — last 2 reads added [M] new entities
+- Recommendation: synthesize_and_report (further scanning unlikely to yield new insights)
+```
+
+**Why**: Without saturation detection, scout reads its full budget of 10 files even when 3 files already contain everything needed. This wastes context tokens and delays the calling skill. Early saturation detection returns control faster.
 
 ### Phase 3: Dependency Mapping
 

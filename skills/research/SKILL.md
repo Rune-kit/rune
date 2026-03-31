@@ -3,7 +3,7 @@ name: research
 description: Web search and external knowledge lookup. Gathers data on technologies, libraries, best practices, and competitor solutions.
 metadata:
   author: runedev
-  version: "0.3.0"
+  version: "0.4.0"
   layer: L3
   model: haiku
   group: knowledge
@@ -66,6 +66,29 @@ Call `WebSearch` for each query. Collect result titles, URLs, and snippets. Iden
 - Relevance to the query
 - **Diversity: never select 3+ URLs from the same domain** — spread across source types
 
+
+### Step 2b — Diminishing Returns Detection
+
+After each WebSearch call, evaluate whether additional searches are productive:
+
+**Track across search results**:
+- **Entity set**: Extract key entities from each result set (library names, API names, version numbers, technique names, company names)
+- **New entity ratio**: `new_entities_in_this_search / total_entities_found_so_far`
+- **Result overlap**: How many URLs from this search were already seen in previous searches
+
+| Signal | Threshold | Action |
+|--------|-----------|--------|
+| New entity ratio < 10% | Last search added almost nothing new | Skip remaining queries, proceed to Step 3 with existing results |
+| Result overlap > 60% | Most URLs already fetched or seen | Skip this query's results entirely |
+| All 3 queries return same top 3 URLs | Search space is exhausted | Proceed directly to Step 3 — more queries won't help |
+
+**Report when triggered**:
+```
+Note: Research saturation reached after [N] searches — [M] unique entities found.
+Additional queries showed <10% new information. Proceeding with synthesis.
+```
+
+**Why**: Research skills commonly waste 2-3 WebFetch calls on pages that repeat information already gathered. Saturation detection saves tool calls and context tokens while preserving research quality — the first 3 sources typically contain 90%+ of available information.
 
 ### Step 3 — Deep Dive
 

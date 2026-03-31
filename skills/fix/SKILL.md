@@ -3,7 +3,7 @@ name: fix
 description: Apply code changes and fixes. Writes implementation code, applies bug fixes, and verifies changes with tests. Core action hub in the development mesh.
 metadata:
   author: runedev
-  version: "0.7.0"
+  version: "0.8.0"
   layer: L2
   model: sonnet
   group: development
@@ -67,6 +67,29 @@ Read and fully understand the fix request before touching any file.
 - Identify what is broken or missing and what the expected behavior should be
 - If the request is ambiguous or root cause is unclear → call `rune:debug` before proceeding
 - Note the scope: single function, single file, or multi-file change
+
+### Step 1b: Recovery Policy Matrix
+
+Before locating code, classify the incoming error/task into a recovery category to determine the right fix strategy. This prevents wasting effort on the wrong approach.
+
+| Error Type | Recovery Action | Strategy |
+|------------|----------------|----------|
+| `INPUT_REQUIRED` — missing user input, ambiguous spec | **PROMPT_USER** | Return NEEDS_CONTEXT with specific questions. Do NOT guess. |
+| `INPUT_INVALID` — wrong format, type mismatch, encoding | **AUTO_FIX** | Fix at validation layer. Add schema validation (Zod/Pydantic) if missing. |
+| `TIMEOUT` — operation exceeded time limit | **RETRY** with adjustment | Increase timeout, add retry with exponential backoff, or chunk the operation. |
+| `POLICY_BLOCKED` — security gate, lint rule, contract violation | **ABORT** | Do NOT work around the policy. Report to caller with the specific rule that blocked. |
+| `PERMISSION_DENIED` — auth failure, file access, API scope | **PROMPT_USER** | Cannot fix permissions programmatically. Report exact permission needed. |
+| `DEPENDENCY_ERROR` — missing package, version conflict, broken dep | **AUTO_FIX** | Install missing dep, resolve version conflict, or suggest alternative package. |
+| `LOGIC_ERROR` — wrong output, incorrect calculation, bad algorithm | **INVESTIGATE** | Do NOT auto-fix. Call `rune:debug` — logic errors need root cause analysis. |
+| `ENVIRONMENT_ERROR` — wrong Node/Python version, missing system dep | **PROMPT_USER** | Report exact version/tool needed. Agent cannot change system environment. |
+
+**Decision flow**:
+1. Read the incoming diagnosis/error
+2. Classify into one of the 8 error types above
+3. Apply the recovery action — this determines whether to proceed (AUTO_FIX, RETRY), ask (PROMPT_USER), stop (ABORT), or re-diagnose (INVESTIGATE)
+4. Announce: "Recovery policy: {error_type} → {action}"
+
+**Why**: Without a recovery matrix, fix attempts the same strategy (read → change → test) for every error type. A POLICY_BLOCKED error doesn't need code reading — it needs the policy reported. An INPUT_REQUIRED error doesn't need debugging — it needs a question asked. Matching strategy to error type eliminates wasted cycles.
 
 ### Step 2: Locate
 
@@ -264,6 +287,7 @@ Known failure modes for this skill. Check these before declaring done.
 | Removing debug instrumentation before fix is verified | MEDIUM | Step 5b: preserve `#region agent-debug` markers until all tests pass — premature cleanup erases failure history |
 | Runaway fix loop — 20+ fixes without checking quality decay | HIGH | Step 4.5: WTF-likelihood self-regulation. >20% risk = STOP. Hard cap 30 fixes/session. Each fix adds risk — diminishing returns after ~15 |
 | Each fix creates a new bug elsewhere — whack-a-mole | CRITICAL | Tight coupling signal. STOP fixing → escalate to debug with note "each fix creates new failure — suspect structural issue". Debug will route to plan for redesign |
+| Applying same fix strategy to every error type | MEDIUM | Step 1b Recovery Policy Matrix: classify error type FIRST — POLICY_BLOCKED needs reporting not fixing, INPUT_REQUIRED needs questions not code |
 
 ## Done When
 

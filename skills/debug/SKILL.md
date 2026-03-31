@@ -3,7 +3,7 @@ name: debug
 description: Root cause analysis for bugs and unexpected behavior. Traces errors through code, uses structured reasoning, and hands off to fix when cause is found. Core of the debug↔fix mesh.
 metadata:
   author: runedev
-  version: "0.9.0"
+  version: "1.0.0"
   layer: L2
   model: sonnet
   group: development
@@ -177,6 +177,38 @@ After successful root cause identification (Step 5), append entry:
 ```
 
 This prevents re-debugging the same issue across sessions.
+
+### Step 2d: Known Error Pattern Matching
+
+Before forming hypotheses, match the error against common **error archetypes**. If a match is found, skip directly to the known fix approach — no hypothesis cycling needed.
+
+**Error Pattern Catalog**:
+
+| Pattern ID | Detection (Error Type + Keywords) | Root Cause | Recovery Hint |
+|------------|----------------------------------|------------|---------------|
+| `STATELESS_LOSS` | `NameError` / `ReferenceError` + variable defined in previous step | Execution context doesn't persist between tool calls | "Combine all variable definitions and usage in a single code block" |
+| `MODULE_NOT_FOUND` | `ModuleNotFoundError` / `Cannot find module` | Dependency not installed or wrong import path | "Check package.json/requirements.txt. Install missing dep, then retry" |
+| `TYPE_MISMATCH` | `TypeError` + "undefined is not a function" / "has no attribute" | Wrong type passed through chain — object where primitive expected or vice versa | "Trace the value backward: where was it created? What type was intended?" |
+| `ASYNC_DEADLOCK` | `TimeoutError` / `Promise` + hang / `await` missing | Async/await misuse — missing await, blocking in async, unresolved promise | "Check: missing await? Blocking call in async context? Unresolved promise chain?" |
+| `PATH_MISMATCH` | `ENOENT` / `FileNotFoundError` + path string in error | Relative vs absolute path, or CWD differs from expected | "Print resolved path. Check CWD. Use path.resolve() or Path.resolve()" |
+| `ENCODING_ISSUE` | `UnicodeDecodeError` / `SyntaxError` + quotes/special chars | Non-ASCII characters in code or data (curly quotes, BOM, etc.) | "Check for smart quotes, BOM markers, or non-ASCII in the file. Use `file` command to check encoding" |
+| `ENV_MISSING` | `KeyError` / "undefined" + env var name | Environment variable not set or .env not loaded | "Check .env file exists and is loaded. Verify var name matches exactly (case-sensitive)" |
+| `CIRCULAR_IMPORT` | `ImportError` + "partially initialized" / "circular" | Module A imports B imports A | "Restructure: move shared types to a third module, or use lazy imports" |
+
+**Matching rules**:
+- Match on error type + 2+ keywords from the Detection column
+- If matched: report the pattern ID and recovery hint in the Debug Report, then proceed to test the known fix approach as H1 (highest priority hypothesis)
+- If NOT matched: proceed to Step 3 (form hypotheses from scratch)
+
+**Error fingerprinting**: When comparing errors across hypothesis cycles, normalize these elements before comparison:
+- Line numbers → `<LINE>`
+- File paths → `<PATH>`
+- Variable/function names → `<IDENT>`
+- Timestamps → `<TIME>`
+
+Two errors with the same fingerprint after normalization are the SAME error — don't re-investigate, the previous hypothesis result still applies.
+
+**Catalog growth**: After each successful debug (Step 5), check: does this error pattern match any existing catalog entry? If not, and the root cause is generalizable (not project-specific), suggest adding it to the catalog via a note in the Debug Report: "New pattern candidate: [pattern] — consider adding to error catalog."
 
 ### Step 3: Form Hypotheses
 
@@ -390,6 +422,8 @@ Debug returns one of four statuses to its caller (cook, fix, test, surgeon). The
 | Running same test 3x with same failure without code change | MEDIUM | True stuck loop — no progress possible. Hand off to fix with current incomplete diagnosis |
 | Scope creep via debug — "while investigating, also fix X" | HIGH | Step 1.5 Scope Lock: lock edits to narrowest affected directory. Fix recommendations MUST stay within boundary. Expand only with user confirmation |
 | Debug report recommends touching 5+ unrelated files | HIGH | Symptom of fixing at crash sites instead of source. Backward trace (Step 2) to find origin. If truly 5+ files → likely architectural issue → escalate via 3-Fix Rule |
+| Re-investigating known error patterns from scratch | MEDIUM | Step 2d: match error against Known Error Pattern Catalog first — skip hypothesis cycling for recognized patterns |
+| Same error fingerprint across cycles treated as different errors | MEDIUM | Step 2d: normalize line numbers, paths, variable names before comparison — same fingerprint = same error |
 
 ## Done When
 
