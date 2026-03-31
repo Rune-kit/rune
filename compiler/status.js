@@ -10,9 +10,7 @@ import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { parseSkill } from './parser.js';
 
-// ─── Layer Colors (Unicode labels) ───
-
-const LAYER_LABELS = { L0: 'L0', L1: 'L1', L2: 'L2', L3: 'L3', L4: 'L4' };
+// ─── Constants ───
 
 // ─── Box Drawing ───
 
@@ -39,10 +37,18 @@ function displayWidth(str) {
   for (const ch of str) {
     const code = ch.codePointAt(0);
     // Emoji and wide chars take 2 columns
-    if (code > 0x1F600 || (code >= 0x2600 && code <= 0x27BF) || (code >= 0x2700 && code <= 0x27BF) ||
-        code === 0x2713 || code === 0x2717 || code === 0x2192 || code === 0x2593 || code === 0x2591) {
+    if (
+      code > 0x1f600 ||
+      (code >= 0x2600 && code <= 0x27bf) ||
+      (code >= 0x2700 && code <= 0x27bf) ||
+      code === 0x2713 ||
+      code === 0x2717 ||
+      code === 0x2192 ||
+      code === 0x2593 ||
+      code === 0x2591
+    ) {
       w += 1; // These specific Unicode symbols are single-width in most terminals
-    } else if (code > 0xFFFF) {
+    } else if (code > 0xffff) {
       w += 2; // Emoji (surrogate pairs) are double-width
     } else {
       w += 1;
@@ -96,10 +102,7 @@ export async function collectStats(runeRoot, tierSources = {}) {
         }
       }
     }
-    const allSignals = new Set([
-      ...Object.keys(signalMap.emitters),
-      ...Object.keys(signalMap.listeners),
-    ]);
+    const allSignals = new Set([...Object.keys(signalMap.emitters), ...Object.keys(signalMap.listeners)]);
     signalCount = allSignals.size;
   }
 
@@ -108,8 +111,7 @@ export async function collectStats(runeRoot, tierSources = {}) {
   for (const skill of parsedSkills) {
     totalConnections += new Set((skill.crossRefs ?? []).map((r) => r.skillName)).size;
   }
-  const avgConnections =
-    parsedSkills.length > 0 ? (totalConnections / parsedSkills.length).toFixed(1) : '0';
+  const avgConnections = parsedSkills.length > 0 ? (totalConnections / parsedSkills.length).toFixed(1) : '0';
 
   // Count free packs
   const freePacks = [];
@@ -250,7 +252,7 @@ export function renderStatus(stats, { version = '', platform = '', projectName =
       const emitters = sig.emitters.slice(0, 2).join(', ');
       const listeners = sig.listeners.slice(0, 3).join(', ');
       let sigLine = `  → ${sig.name} (${emitters} → ${listeners})`;
-      if (sigLine.length > 64) sigLine = sigLine.slice(0, 61) + '...';
+      if (sigLine.length > 64) sigLine = `${sigLine.slice(0, 61)}...`;
       lines.push(sigLine);
     }
     lines.push('');
@@ -306,10 +308,7 @@ function formatPackName(dirName, tier = 'free') {
 }
 
 function getTopSignals(signalMap, limit) {
-  const signals = new Set([
-    ...Object.keys(signalMap.emitters),
-    ...Object.keys(signalMap.listeners),
-  ]);
+  const signals = new Set([...Object.keys(signalMap.emitters), ...Object.keys(signalMap.listeners)]);
 
   const scored = [...signals].map((name) => ({
     name,

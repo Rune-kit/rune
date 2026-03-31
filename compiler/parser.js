@@ -365,16 +365,12 @@ export function parseOrgConfig(content, filePath = '') {
  */
 function parseMarkdownTable(body, sectionName) {
   // Find the section
-  const sectionPattern = new RegExp(
-    `## ${sectionName}\\s*\\n([\\s\\S]*?)(?=\\n## |$)`,
-  );
+  const sectionPattern = new RegExp(`## ${sectionName}\\s*\\n([\\s\\S]*?)(?=\\n## |$)`);
   const sectionMatch = body.match(sectionPattern);
   if (!sectionMatch) return [];
 
   const sectionContent = sectionMatch[1];
-  const lines = sectionContent
-    .split('\n')
-    .filter((l) => l.trim().startsWith('|'));
+  const lines = sectionContent.split('\n').filter((l) => l.trim().startsWith('|'));
   if (lines.length < 3) return []; // need header + separator + at least 1 row
 
   const parseRow = (line) =>
@@ -383,9 +379,7 @@ function parseMarkdownTable(body, sectionName) {
       .slice(1, -1)
       .map((cell) => cell.trim());
 
-  const headers = parseRow(lines[0]).map((h) =>
-    h.toLowerCase().replace(/\s+/g, '_'),
-  );
+  const headers = parseRow(lines[0]).map((h) => h.toLowerCase().replace(/\s+/g, '_'));
   // Skip separator row (lines[1])
   const rows = [];
   for (let i = 2; i < lines.length; i++) {
@@ -409,7 +403,7 @@ function parseOrgPolicies(body) {
   if (!policiesMatch) return {};
 
   // Prepend \n so first ### subsection is also captured by split
-  const policiesContent = '\n' + policiesMatch[1].trimStart();
+  const policiesContent = `\n${policiesMatch[1].trimStart()}`;
   const policies = {};
   const subSections = policiesContent.split(/\n### /);
 
@@ -442,7 +436,7 @@ function parseApprovalFlows(body) {
   if (!flowsMatch) return {};
 
   // Prepend \n so first ### subsection is also captured by split
-  const flowsContent = '\n' + flowsMatch[1].trimStart();
+  const flowsContent = `\n${flowsMatch[1].trimStart()}`;
   const flows = {};
   const subSections = flowsContent.split(/\n### /);
 

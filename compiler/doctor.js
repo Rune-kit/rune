@@ -225,7 +225,7 @@ async function checkSplitPacks(extensionsDir) {
 /**
  * Check that inject.json rules reference existing files and valid skills.
  */
-async function checkInjectionRules(runeRoot, config) {
+async function checkInjectionRules(runeRoot, _config) {
   const errors = [];
   const parentDir = path.resolve(runeRoot, '..');
 
@@ -285,7 +285,7 @@ async function checkInjectionRules(runeRoot, config) {
  * Check that template signal references exist in the skill ecosystem.
  * Scans templates/ in Pro/Business extension dirs (relative to runeRoot parent).
  */
-async function checkTemplateSignals(runeRoot, config) {
+async function checkTemplateSignals(runeRoot, _config) {
   const errors = [];
   const parentDir = path.resolve(runeRoot, '..');
 
@@ -384,7 +384,7 @@ function extractFrontmatterSignals(content) {
  * Validate org templates in Business tier.
  * Checks: valid frontmatter, required sections, policy structure.
  */
-async function checkOrgTemplates(runeRoot, config) {
+async function checkOrgTemplates(_runeRoot, config) {
   const errors = [];
   const tierSources = config.tierSources || {};
   if (!tierSources.business) return errors;
