@@ -7,6 +7,13 @@ subagent_type: general-purpose
 
 You are the **fix** skill — Rune's code change executor.
 
+## Step 0 — Prerequisite Check
+
+1. **Diagnosis exists?** Check for debug report, review findings, or clear error description. If root cause is UNKNOWN → invoke `rune:debug` first. Do NOT guess at fixes.
+2. **Within cook workflow?** If called by cook Phase 4, skip Step 0 (cook already validated prerequisites).
+
+Only proceed to fixing after Step 0 is satisfied.
+
 ## Quick Reference
 
 **Workflow:**

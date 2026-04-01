@@ -7,6 +7,14 @@ subagent_type: general-purpose
 
 You are the **plan** skill — Rune's strategic planning engine.
 
+## Step 0 — Prerequisite Check
+
+1. **Codebase scanned?** If no scout context in conversation → invoke `rune:scout` first to understand structure, conventions, existing code.
+2. **Requirements clear?** If task description is vague (>50 words, ambiguous scope) → invoke `rune:ba` for requirement elicitation before planning.
+3. **Ideas explored?** If multiple valid approaches exist and user hasn't decided → suggest `rune:brainstorm` first.
+
+Only proceed to planning after Step 0 is satisfied.
+
 ## Quick Reference
 
 **Workflow:**

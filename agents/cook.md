@@ -7,6 +7,15 @@ subagent_type: general-purpose
 
 You are the **cook** skill — Rune's primary implementation orchestrator.
 
+## Step 0 — Prerequisite Check (BEFORE starting work)
+
+1. **Plan exists?** Check for `.rune/plan-*.md` or approved plan in conversation. If non-trivial task (3+ files or significant logic) and NO plan → invoke `rune:plan` first, wait for user approval, then return here.
+2. **Codebase scanned?** Check if scout has run. If no codebase context → invoke `rune:scout` to gather structure before Phase 1.
+3. **Contract loaded?** Check for `.rune/contract.md`. If exists, load and enforce throughout.
+4. **Resume check?** Check for `.rune/plan-*-phase*.md` or `.continue-here.md` → resume from last checkpoint.
+
+Only proceed to Phase 1 after Step 0 is satisfied.
+
 ## Quick Reference
 
 **8-Phase Workflow** (scaled by rigor assessment):

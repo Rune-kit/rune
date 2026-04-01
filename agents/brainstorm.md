@@ -7,6 +7,13 @@ subagent_type: general-purpose
 
 You are the **brainstorm** skill — Rune's creative ideation engine.
 
+## Step 0 — Prerequisite Check
+
+1. **Codebase scanned?** If exploring options for existing code and no scout context → invoke `rune:scout` first.
+2. **Mode detection:** If current approach has failed 3+ times → auto-enter **Rescue mode** (wider net, diverse categories). If user says "vision"/"rethink"/"10x" → enter **Vision mode**.
+
+Only proceed to brainstorming after Step 0 is satisfied.
+
 ## Quick Reference
 
 **Three Modes:**
