@@ -15,6 +15,32 @@ const metricsJsonl = path.join(os.tmpdir(), `rune-metrics-${hash}.jsonl`);
 const counterFile = path.join(os.tmpdir(), `rune-context-watch-${hash}.json`);
 const runeMetricsDir = path.join(cwd, '.rune', 'metrics');
 
+// Resolve skill names → expected model from agent frontmatter
+// Reads agents/*.md at flush time — no runtime model detection needed
+// Map skill names → models, weighted by invocation count
+// skillCounts: { skillName: invocationCount }
+function resolveSkillModels(skillCounts) {
+  const models = {};
+  const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT || path.join(__dirname, '..', '..');
+  const agentsDir = path.join(pluginRoot, 'agents');
+
+  if (!fs.existsSync(agentsDir)) return models;
+
+  for (const [skill, count] of Object.entries(skillCounts)) {
+    try {
+      const agentFile = path.join(agentsDir, `${skill}.md`);
+      if (!fs.existsSync(agentFile)) continue;
+      const content = fs.readFileSync(agentFile, 'utf-8');
+      const match = content.match(/^model:\s*(\w+)/m);
+      if (match) {
+        const model = match[1];
+        models[model] = (models[model] || 0) + count;
+      }
+    } catch { /* best-effort */ }
+  }
+  return models;
+}
+
 try {
   flushMetrics();
 } catch (e) {
@@ -33,7 +59,7 @@ function flushMetrics() {
   }
 
   // Read context-watch state for tool counts and session timing
-  let watchState = { count: 0, sessionStart: null, toolCounts: {} };
+  let watchState = { count: 0, sessionStart: null, sessionId: null, toolCounts: {} };
   if (fs.existsSync(counterFile)) {
     try {
       watchState = JSON.parse(fs.readFileSync(counterFile, 'utf-8'));
@@ -50,20 +76,28 @@ function flushMetrics() {
   const sessionStart = watchState.sessionStart || now;
   const durationMin = Math.round((new Date(now) - new Date(sessionStart)) / 60000);
 
-  // Build skill usage map
+  // Build skill usage map and duration aggregation
   const skillCounts = {};
+  const skillDurations = {};
   const skillChain = [];
   for (const evt of skillEvents) {
     skillCounts[evt.skill] = (skillCounts[evt.skill] || 0) + 1;
     skillChain.push(evt.skill);
+    if (evt.duration_ms != null) {
+      skillDurations[evt.skill] = (skillDurations[evt.skill] || 0) + evt.duration_ms;
+    }
   }
 
   // Determine primary skill (most invoked)
   const primarySkill = Object.entries(skillCounts)
     .sort((a, b) => b[1] - a[1])[0]?.[0] || 'none';
 
-  // Generate session ID
-  const sessionId = `s-${now.slice(0, 10).replace(/-/g, '')}-${now.slice(11, 19).replace(/:/g, '')}`;
+  // Map skills to expected models from agent definitions (weighted by invocation count)
+  const modelsUsed = resolveSkillModels(skillCounts);
+
+  // Use session ID from context-watch (shared) or generate new
+  const sessionId = watchState.sessionId
+    || `s-${now.slice(0, 10).replace(/-/g, '')}-${now.slice(11, 19).replace(/:/g, '')}`;
 
   // 1. Append to sessions.jsonl
   const sessionEntry = {
@@ -74,7 +108,9 @@ function flushMetrics() {
     tool_distribution: watchState.toolCounts,
     skill_invocations: skillEvents.length,
     skills_used: Object.keys(skillCounts),
-    primary_skill: primarySkill
+    primary_skill: primarySkill,
+    models_used: modelsUsed,
+    skill_durations: Object.keys(skillDurations).length > 0 ? skillDurations : undefined
   };
 
   const sessionsFile = path.join(runeMetricsDir, 'sessions.jsonl');

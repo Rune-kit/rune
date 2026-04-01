@@ -21,6 +21,8 @@ import { formatDoctorResults, runDoctor } from '../doctor.js';
 import { buildAll } from '../emitter.js';
 import { collectStats, renderStatus, renderStatusJson } from '../status.js';
 import { collectGraphData, generateMeshHTML } from '../visualizer.js';
+import { getAllAnalytics } from '../analytics.js';
+import { generateDashboardHTML } from '../dashboard.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -342,10 +344,71 @@ async function cmdVisualize(projectRoot, args) {
   }
 }
 
+async function cmdAnalytics(projectRoot, args) {
+  // Business tier gating
+  const config = await readConfig(projectRoot);
+  const businessPacks = ['business-finance', 'business-legal', 'business-hr', 'business-enterprise-search'];
+  const hasBusiness =
+    config?.tiers?.business || businessPacks.some((p) => existsSync(path.join(projectRoot, 'extensions', p)));
+  if (!hasBusiness && !args.dev) {
+    log('');
+    log('  ⬢ Rune Analytics — Business tier exclusive');
+    log('');
+    log('  Analytics dashboard requires Rune Business ($169 lifetime).');
+    log('  Includes: finance, legal, HR, enterprise-search packs + analytics.');
+    log('');
+    log('  Upgrade: https://github.com/sponsors/rune-kit');
+    log('');
+    return;
+  }
+
+  const days = args.days ? parseInt(args.days, 10) : 30;
+
+  logStep('◎', `Querying metrics (${days > 0 ? days + ' days' : 'all time'})...`);
+  const data = await getAllAnalytics(projectRoot, days);
+
+  if (args.json) {
+    log(JSON.stringify(data, null, 2));
+    return;
+  }
+
+  logStep('◎', `${data.overview.total_sessions} sessions, ${data.overview.total_skill_invocations} skill invocations`);
+
+  const html = generateDashboardHTML(data);
+
+  const runeDir = path.join(projectRoot, '.rune');
+  if (!existsSync(runeDir)) {
+    const { mkdir: mkdirFs } = await import('node:fs/promises');
+    await mkdirFs(runeDir, { recursive: true });
+  }
+
+  const outputPath = args.output
+    ? path.resolve(projectRoot, args.output)
+    : path.join(runeDir, 'analytics.html');
+
+  const { writeFile: writeFileFs } = await import('node:fs/promises');
+  await writeFileFs(outputPath, html, 'utf-8');
+  logStep('✓', `Dashboard written to ${path.relative(projectRoot, outputPath)}`);
+
+  // Open in browser
+  try {
+    const { exec } = await import('node:child_process');
+    const cmd =
+      process.platform === 'win32'
+        ? `start "" "${outputPath}"`
+        : process.platform === 'darwin'
+          ? `open "${outputPath}"`
+          : `xdg-open "${outputPath}"`;
+    exec(cmd);
+  } catch {
+    /* ignore if browser open fails */
+  }
+}
+
 // ─── Arg Parsing ───
 
 // Flags that require a string value (not boolean)
-const VALUE_REQUIRED_FLAGS = new Set(['platform', 'output', 'disable', 'extensions']);
+const VALUE_REQUIRED_FLAGS = new Set(['platform', 'output', 'disable', 'extensions', 'days']);
 
 function parseArgs(argv) {
   const args = {};
@@ -403,6 +466,10 @@ async function main() {
     case 'viz':
       await cmdVisualize(projectRoot, args);
       break;
+    case 'analytics':
+    case 'dash':
+      await cmdAnalytics(projectRoot, args);
+      break;
     case 'version':
     case '--version':
     case '-v': {
@@ -422,6 +489,7 @@ async function main() {
       log('    doctor   Validate compiled output');
       log('    status   Project dashboard (skills, signals, packs, health)');
       log('    visualize  Interactive mesh graph (opens in browser)');
+      log('    analytics  Usage analytics dashboard (Business tier)');
       log('');
       log('  Options:');
       log(

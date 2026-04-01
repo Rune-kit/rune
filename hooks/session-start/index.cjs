@@ -8,10 +8,16 @@ const os = require('os');
 const cwd = process.cwd();
 const runeDir = path.join(cwd, '.rune');
 
-// Reset context-watch counter on session start (fresh context window)
+// Initialize fresh session state (shared between context-watch and metrics-collector)
 const hash = Buffer.from(cwd).toString('base64url').slice(0, 16);
 const counterFile = path.join(os.tmpdir(), `rune-context-watch-${hash}.json`);
-try { fs.unlinkSync(counterFile); } catch { /* no counter yet — fine */ }
+const now = new Date().toISOString();
+const sessionId = `s-${now.slice(0, 10).replace(/-/g, '')}-${now.slice(11, 19).replace(/:/g, '')}`;
+try {
+  fs.writeFileSync(counterFile, JSON.stringify({
+    count: 0, lastWarning: 0, sessionStart: now, sessionId, toolCounts: {}
+  }));
+} catch { /* non-critical */ }
 
 if (fs.existsSync(runeDir)) {
   const stateFiles = [
