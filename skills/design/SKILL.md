@@ -3,7 +3,7 @@ name: design
 description: Design system reasoning. Maps product domain to style, palette, typography, and platform-specific patterns. Generates .rune/design-system.md as the shared design contract for all UI-generating skills.
 metadata:
   author: runedev
-  version: "0.3.0"
+  version: "0.4.0"
   layer: L2
   model: sonnet
   group: creation
@@ -96,6 +96,31 @@ From the user's task description + codebase context, classify product type:
 | **AI-Native** | AI assistant interface, chatbot, model explorer |
 
 If domain is unclear: ask one clarifying question — "Is this closer to X or Y?"
+
+### Step 2.5 — Mood-to-Constraint Mapping
+
+After classifying domain, ask ONE question: **"What should users feel when they use this?"**
+
+Accept a single mood keyword (or infer from context if obvious). Map mood to concrete design constraints:
+
+| Mood | Color Temp | Typography Weight | Whitespace | Animation | Shadow |
+|------|-----------|-------------------|------------|-----------|--------|
+| **Impressed** | Cool (blue-slate) | Heavy display (700-800) | Generous (xl-3xl) | Dramatic reveals (0.8-1.2s ease-out) | Deep, layered |
+| **Excited** | Warm (amber-orange) | Bold contrasts (400 vs 800) | Tight-medium (sm-lg) | Energetic springs (0.4-0.6s spring) | Elevation lifts |
+| **Calm** | Neutral-warm (stone-sage) | Light-medium (300-500) | Very generous (2xl-3xl) | Slow fades (0.6-0.8s ease-out-quad) | Soft, minimal |
+| **Confident** | Cool-neutral (zinc-slate) | Medium-heavy (500-700) | Structured (md-xl) | Precise slides (0.3-0.5s ease) | Crisp, defined |
+| **Playful** | Saturated (multi-hue) | Round + bold (600-700) | Medium, irregular (md-lg) | Bouncy springs (0.4-0.6s spring, overshoot) | Hard/comic (3-5px offset) |
+| **Techy** | Cold (gray-cyan) | Mono-heavy, crisp (400-600) | Dense, grid-aligned (sm-md) | Sharp snaps (0.15-0.3s ease-out) | Minimal or glow |
+| **Professional** | Muted neutrals | System fonts, readable (400-500) | Balanced (md-lg) | Subtle (0.2-0.3s ease) | Standard elevation |
+| **Inspired** | Rich-warm (gold-terracotta) | Editorial display (300-700 range) | Asymmetric, generous | Scroll-driven reveals (0.5-0.8s) | Dramatic, directional |
+
+**Mapping rules:**
+1. Mood constraints OVERRIDE generic domain defaults where they conflict (mood is user intent, domain is convention)
+2. If mood contradicts domain safety (e.g., "Playful" + Healthcare), WARN user: "Playful tone may reduce trust in medical context — proceed?"
+3. Write selected mood + resolved constraints to `.rune/design-system.md` under `## Mood` section
+4. Downstream skills (`animation-patterns`, `palette-picker`, `type-system`) read mood constraints from design-system.md
+
+**Skip if**: User says "no preference" or "just follow domain defaults" — proceed to Step 3 with domain-only reasoning.
 
 ### Step 3 — Apply Domain Reasoning Rules
 
@@ -333,6 +358,44 @@ sm: 6px | md: 8px | lg: 12px | xl: 16px | full: 9999px
 - [ ] Responsive tested at 375px / 768px / 1024px / 1440px
 ```
 
+### Step 5.5 — UI Design Contract (UI-SPEC.md)
+
+After generating the design system, lock key visual decisions in `.rune/ui-spec.md` — a binding contract that prevents design drift during implementation.
+
+**Why**: design-system.md defines tokens (what's available). UI-SPEC locks decisions (what was chosen and WHY). Without a spec, each component re-decides layout, density, and hierarchy — causing visual inconsistency.
+
+**Generate `.rune/ui-spec.md`:**
+
+```markdown
+# UI Specification: [Project Name]
+Locked: [YYYY-MM-DD] | Mood: [selected mood]
+
+## Layout Decisions
+- Page max-width: [value]px
+- Sidebar: [yes/no] — [width]px [fixed/collapsible]
+- Content density: [compact/balanced/spacious]
+- Card sizing: [uniform/varied] — if varied, specify hierarchy rules
+
+## Visual Hierarchy Rules
+- Primary action: [color] [size] [weight] — ONE per viewport
+- Secondary action: [ghost/outline] style — max 2 per section
+- Data emphasis: [monospace + bold] for numbers, [color accent] for status
+- Section separation: [border/spacing/background] — pick ONE, be consistent
+
+## Component Decisions
+- Card style: [elevated/bordered/glass] — reasoning: [why]
+- Table style: [striped/bordered/minimal] — reasoning: [why]
+- Form layout: [stacked/inline/grid] — reasoning: [why]
+- Navigation: [sidebar/topbar/tabs] — reasoning: [why]
+
+## Locked Anti-Decisions (things we explicitly chose NOT to do)
+- ❌ [rejected option] — because [reason]
+```
+
+<HARD-GATE>
+UI-SPEC.md is a contract. Once written, changes require explicit user approval ("I want to change the card style"). Skills that generate UI (`cook`, `fix`, `scaffold`) MUST read UI-SPEC.md before producing components. Drift from spec = review finding.
+</HARD-GATE>
+
 ### Step 6 — Accessibility Review
 
 Run a focused accessibility audit on the design system and any existing UI code. This step ensures the design contract doesn't produce inaccessible outputs.
@@ -348,6 +411,39 @@ Run a focused accessibility audit on the design system and any existing UI code.
 **Output**: Accessibility audit section in Design Report with pass/fail per check and specific file:line violations.
 
 If violations found → add them to `.rune/design-system.md` Anti-Patterns section as concrete rules.
+
+### Step 6.5 — 6-Pillar Visual Audit
+
+Score the generated design system across 6 pillars. Each pillar scored 1-4 (1=Poor, 2=Fair, 3=Good, 4=Excellent). Minimum passing score: **18/24** (average 3.0).
+
+| Pillar | Score 1 (Poor) | Score 2 (Fair) | Score 3 (Good) | Score 4 (Excellent) |
+|--------|---------------|----------------|----------------|---------------------|
+| **Copy** | Placeholder text, generic CTAs ("Submit"), no voice | Real copy but inconsistent tone | Consistent voice, domain-appropriate, clear CTAs | Personality-rich, scannable, microcopy for every state |
+| **Visuals** | Stock photos, generic icons, no visual identity | Consistent icon set, basic imagery | Custom illustrations or curated photography, clear hierarchy | Distinctive visual language, icons tell stories, zero stock |
+| **Color** | Default framework palette, no semantic meaning | Brand colors defined but inconsistent usage | Full semantic palette, dark mode, accessible contrast | Mood-aligned, colorblind-safe, context-adaptive (profit/loss/status) |
+| **Typography** | Single font, no scale | Font pairing exists but inconsistent sizing | Clear hierarchy (display/heading/body/mono), numbers monospace | Mood-aligned pairing, fluid scaling, platform-native where needed |
+| **Spacing** | Inconsistent gaps, cramped or too loose | Base unit defined but not consistently applied | 8px grid, consistent section/component/element spacing | Density variants (compact/default/spacious), rhythm feels intentional |
+| **UX** | Missing states (empty/error/loading), no feedback | Basic states exist, some interactive feedback | All states covered, toast/loading/skeleton, focus management | Delightful micro-interactions, smart defaults, zero dead-ends |
+
+**Audit output:**
+
+```
+### Visual Audit Score: [total]/24
+
+| Pillar | Score | Notes |
+|--------|-------|-------|
+| Copy | 3 | Consistent voice, missing loading microcopy |
+| Visuals | 2 | Using Phosphor icons (good), no custom illustration |
+| Color | 4 | Full semantic palette, colorblind alternates defined |
+| Typography | 3 | JetBrains Mono for numbers, Inter for prose — solid |
+| Spacing | 3 | 8px grid applied, density variants not needed yet |
+| UX | 3 | All states covered, micro-interactions in progress |
+| **Total** | **18/24** | PASS — ship-ready with Copy improvements recommended |
+```
+
+**If score < 18**: Flag specific weak pillars in Design Report. Add improvement tasks to `.rune/design-system.md` under `## Improvement Backlog`.
+
+**Registry safety check**: If an existing component library is in use (shadcn, MUI, etc.), verify the design system doesn't conflict with the library's token structure. Flag collisions.
 
 ### Step 7 — UX Writing Patterns
 
@@ -448,8 +544,10 @@ Trading/Fintech — Data-Dense Dark — Web
 | Artifact | Format | Location |
 |----------|--------|----------|
 | Design system file | Markdown | `.rune/design-system.md` |
+| UI specification contract | Markdown | `.rune/ui-spec.md` |
 | Design report | Markdown | inline (chat output) |
 | Accessibility audit findings | Markdown list | inline + appended to design-system.md |
+| Visual audit score | Table (6 pillars × 1-4) | inline + appended to design report |
 | UX writing guidelines | Markdown section | `.rune/design-system.md` § UX Writing |
 
 ## Sharp Edges
@@ -462,6 +560,9 @@ Known failure modes for this skill. Check these before declaring done.
 | Purple/indigo accent on non-AI-native product | HIGH | Constraint 3 blocks this — re-generate with domain-appropriate accent |
 | Anti-pattern list copied from generic sources (not domain-specific) | HIGH | Each anti-pattern must cite why it fails in THIS specific domain |
 | design-system.md not written (only reported verbally) | HIGH | Constraint 4 — no file = no persistence = future sessions lose design context |
+| Mood contradicts domain safety conventions | HIGH | Step 2.5 warns user before proceeding (e.g., Playful + Healthcare) |
+| UI-SPEC.md drift — components diverge from locked decisions | HIGH | HARD-GATE: cook/fix must read ui-spec.md before generating UI |
+| Visual audit score < 18 shipped without improvement plan | MEDIUM | Step 6.5 flags weak pillars and creates backlog items |
 | iOS target generating solid-background cards | MEDIUM | Platform Gate: iOS 26 Liquid Glass deprecates this pattern |
 | Android target using hardcoded hex colors | MEDIUM | Platform Gate: MaterialTheme.colorScheme is mandatory for dynamic color |
 
@@ -469,12 +570,16 @@ Known failure modes for this skill. Check these before declaring done.
 
 - Design reference loaded (user override or baseline)
 - Domain classified (one of the 10 categories or explicit custom reasoning)
+- Mood mapped to constraints (or explicitly skipped with "domain defaults")
 - Design system generated with: colors (primitive + semantic), typography, spacing, effects, anti-patterns
 - Platform-specific overrides applied (if iOS/Android target)
+- UI-SPEC.md written with locked layout, hierarchy, and component decisions
 - Accessibility review completed (6 checks: contrast, focus, touch targets, labels, semantic HTML, motion)
+- 6-Pillar Visual Audit scored ≥ 18/24 (or weak pillars flagged with improvement tasks)
 - UX writing guidelines generated (error, empty state, confirmation, loading, button templates)
-- `.rune/design-system.md` written (includes UX Writing section)
-- Design Report emitted with accent/typography reasoning and anti-pattern count
+- `.rune/design-system.md` written (includes Mood + UX Writing sections)
+- `.rune/ui-spec.md` written (design contract for UI-generating skills)
+- Design Report emitted with mood, accent/typography reasoning, visual audit score, and anti-pattern count
 - Pre-Delivery Checklist included in design-system.md
 
 ## Cost Profile

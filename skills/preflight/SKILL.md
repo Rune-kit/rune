@@ -3,7 +3,7 @@ name: preflight
 description: Pre-commit quality gate that catches "almost right" code. Goes beyond linting — checks logic correctness, error handling, regressions, and completeness.
 metadata:
   author: runedev
-  version: "0.7.0"
+  version: "0.8.0"
   layer: L2
   model: sonnet
   group: quality
@@ -208,6 +208,7 @@ If a domain hook flags BLOCK, the overall preflight verdict is BLOCK regardless 
 | `openapi.*`, `*.graphql`, `*.proto` | API Contract | Breaking changes flagged, version bumped, deprecated fields documented |
 | `docs/policies/*`, `PRIVACY*`, `TERMS*` | Legal/Compliance | No placeholder text, review date current, practice matches policy |
 | `**/billing*`, `**/payment*`, `**/invoice*` | Financial | Decimal precision correct, currency locale-aware, no hardcoded rates |
+| `*.tsx`, `*.jsx`, `*.svelte`, `*.vue`, `components/*` | UI/Frontend | Design token compliance, animation a11y, touch targets, visual hierarchy |
 | `skills/*/SKILL.md`, `extensions/*/PACK.md` | Rune Skill | Frontmatter valid, all required sections present, word count within layer budget |
 | `*.test.*`, `*.spec.*`, `__tests__/*` | Test Quality | No `.skip`/`.only` left in, assertions present (not empty tests), no hardcoded timeouts |
 
@@ -220,6 +221,24 @@ For each detected domain, run its checks on the relevant files in the diff:
 3. **Scan** each relevant file for domain violations
 4. **Classify** findings: BLOCK (data loss risk, breaking contract) or WARN (best practice, incomplete)
 5. **Append** to preflight report under `### Domain Quality` section
+
+#### UI/Frontend Domain Checks
+
+When UI/Frontend hook is triggered, run these checks on all `.tsx`/`.jsx`/`.svelte`/`.vue` files in the diff:
+
+| Check | What to Scan | Severity |
+|-------|-------------|----------|
+| **Design token compliance** | Hardcoded colors (`#fff`, `rgb(`, `hsl(`) instead of CSS variables or Tailwind tokens | WARN: "Hardcoded color at {file}:{line} — use design token" |
+| **UI-SPEC drift** | If `.rune/ui-spec.md` exists, compare component decisions (card style, form layout, nav type) against spec | BLOCK: "Component at {file} uses bordered cards but UI-SPEC locks elevated cards" |
+| **Animation accessibility** | Animations/transitions without `prefers-reduced-motion` guard | WARN: "Animation at {file}:{line} missing reduced-motion check" |
+| **Touch target size** | Interactive elements with explicit small sizing (`w-5 h-5`, `p-0.5` on buttons/links) < 44×44px | WARN: "Touch target too small at {file}:{line}" |
+| **Missing states** | Components fetching data without loading/error/empty states | WARN: "Async component at {file} missing [loading|error|empty] state" |
+| **Icon accessibility** | Decorative icons without `aria-hidden="true"`, functional icons without `aria-label` | WARN: "Icon at {file}:{line} missing aria attribute" |
+| **Inline styles** | `style={{` or `style=` attribute usage instead of classes/tokens | WARN: "Inline style at {file}:{line} — use CSS class or Tailwind" |
+| **Font loading** | Custom font imports without `font-display: swap` or Next.js font optimization | WARN: "Font at {file} may cause layout shift — add font-display: swap" |
+| **Placeholder content** | Strings like "Lorem ipsum", "TODO", "placeholder", "test text" in JSX/template | BLOCK: "Placeholder content at {file}:{line} — replace before shipping" |
+
+**Skip if**: Diff contains only test files, config files, or non-UI code (detected by absence of JSX/template syntax).
 
 #### Pack Integration
 

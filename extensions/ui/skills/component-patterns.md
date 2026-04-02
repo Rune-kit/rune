@@ -24,6 +24,31 @@ Write the refactored component skeleton following the compound component pattern
 **Step 4 — Composition vs inheritance + slot patterns**
 After structural refactor, audit for slot opportunities (Svelte `<slot>`, Vue `v-slot`, React `children` with typed slots). Enforce: prefer composition (pass components as props) over inheritance (extend base class). Flag any `extends React.Component` or class-based patterns for migration.
 
+**Step 5 — Bento Card Archetypes**
+
+When designing card-based layouts, apply named archetypes instead of uniform grids. Each archetype has a specific interaction model and animation signature. Mix archetypes within a page to create visual hierarchy.
+
+| Archetype | Content Type | Layout | Interaction | Animation |
+|-----------|-------------|--------|-------------|-----------|
+| **Intelligent List** | Ranked/sortable items (leaderboard, top assets, recent activity) | Vertical stack, auto-reorders | Drag to reorder, click to expand | `layoutId` shared animation on reorder — items slide to new position (Framer Motion `layout` prop) |
+| **Command Input** | Search, AI prompt, quick actions | Single input + dropdown results | Type to filter, keyboard nav, Enter to execute | Typewriter placeholder text + shimmer gradient on focus + results fade-in with 50ms stagger |
+| **Live Status** | Real-time metrics (uptime, price, active users) | Compact card, number-dominant | Hover for sparkline/history | Breathing pulse on idle (opacity 0.85↔1, 3s), overshoot scale on value change (spring) |
+| **Wide Data Stream** | Horizontal feed (news, transactions, timeline) | Full-width horizontal scroll or infinite carousel | Swipe/drag, auto-advance optional | Infinite scroll with momentum, snap to item, fade edges to signal overflow |
+| **Contextual Panel** | Detail view, settings, metadata | Expandable from parent card or sidebar | Click parent → panel slides in | Stagger children (50ms each), float-in from right (translateX 24px → 0) |
+
+**Anti-patterns for card layouts:**
+- ❌ **Uniform grid** — all cards same size, same padding, same content structure = AI signature
+- ❌ **Card soup** — cards with no clear grouping or hierarchy
+- ❌ **Static bento** — bento layout without interaction model = decorative, not functional
+
+**Composition rules:**
+1. A page should use 2-4 archetypes max — more = visual noise
+2. **Live Status** cards cluster together (dashboard KPI row)
+3. **Intelligent List** is the primary content area — usually takes 60%+ of viewport
+4. **Command Input** is a singleton — ONE per page, always accessible (often pinned top or Cmd+K)
+5. **Wide Data Stream** breaks vertical rhythm — use as section separator between dense blocks
+6. **Contextual Panel** is secondary — triggered by interaction, never shown by default on load
+
 #### Example
 
 ```tsx

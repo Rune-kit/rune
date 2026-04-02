@@ -24,6 +24,27 @@ Use Grep to find every animation/transition declaration. Verify each is wrapped 
 **Step 4 — Page transition patterns**
 Apply View Transitions API for same-document navigations (SvelteKit, Astro, vanilla JS). For React/Next.js, use Framer Motion `AnimatePresence` + `layoutId` for shared layout animations. Emit transition wrapper component with both strategies.
 
+**Step 5 — Mood-to-Animation Timing**
+
+If `.rune/design-system.md` contains a `## Mood` section, read the selected mood and apply the matching motion profile. This ensures animation feel aligns with the product's emotional intent — not just technical correctness.
+
+| Mood | Duration | Easing | Hover | Enter/Exit | Scroll | Signature |
+|------|----------|--------|-------|------------|--------|-----------|
+| **Impressed** | 0.8-1.2s | `ease-out` | Scale 1.03 + deep shadow | Fade-up 24px | Parallax layers | Staggered reveals with 100ms delay between items |
+| **Excited** | 0.4-0.6s | `spring(1, 80, 10)` | Scale 1.06 + color shift | Slide-in from edge | Snap scroll | Overshoot on entry (1.56 bounce), pulse on data change |
+| **Calm** | 0.6-0.8s | `ease-out-quad` | Subtle opacity 0.8→1 | Slow fade 300ms | Gentle float | Breathing rhythm on idle elements (opacity 0.7↔1, 4s loop) |
+| **Confident** | 0.3-0.5s | `ease` | Precise underline/border | Clean slide 16px | None or minimal | Sharp, decisive — no overshoot, no bounce |
+| **Playful** | 0.4-0.6s | `spring(1, 100, 12)` | Wobble or tilt (rotate ±2°) | Bounce-in from bottom | Elastic snap | Squish on click (scaleX 1.05, scaleY 0.95), emoji-like feedback |
+| **Techy** | 0.15-0.3s | `ease-out` | Glow border or underline | Instant or 100ms fade | Sticky headers | Typewriter text, cursor blink, terminal-feel transitions |
+| **Professional** | 0.2-0.3s | `ease` | Background tint only | Simple fade | Fixed header | Minimal — motion serves function, never decoration |
+| **Inspired** | 0.5-0.8s | `cubic-bezier(0.4, 0, 0.2, 1)` | Reveal hidden detail | Scroll-driven enter | Parallax + reveal | Cinematic — content appears as user discovers, like turning pages |
+
+**Usage rules:**
+1. Read mood from `.rune/design-system.md` → select matching row → apply as default motion tokens
+2. If no mood defined, fall back to **Professional** (safest, least opinionated)
+3. ALL timing values must be wrapped in `prefers-reduced-motion` check — mood doesn't override accessibility
+4. Mood overrides generic Step 2 micro-interactions where they conflict
+
 #### Example
 
 ```tsx

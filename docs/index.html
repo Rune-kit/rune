@@ -28,6 +28,7 @@
         <a href="#workflows">Workflows</a>
         <a href="guides/">Guides</a>
         <a href="#mesh">Mesh</a>
+        <a href="#autopilot">Autopilot</a>
         <a href="#pricing">Pricing</a>
         <div class="nav-controls notranslate" translate="no">
           <button class="theme-toggle" id="theme-toggle" aria-label="Toggle light/dark mode" title="Toggle theme">&#9790;</button>
@@ -834,6 +835,127 @@ claude plugin install rune</code></pre>
           </ul>
           <div class="biz-ba-total biz-ba-total-after">1 prompt &bull; 2 minutes &bull; 0 context switches</div>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AUTOPILOT -->
+  <section class="section" id="autopilot">
+    <div class="container">
+      <span class="section-badge">PRO</span>
+      <h2>Ship while you sleep.</h2>
+      <p class="section-sub"><strong>Autopilot</strong> executes your plan phase by phase &mdash; self-reviewing, regression-checking, and committing. Stricter quality gates than manual mode, because no one&rsquo;s watching.</p>
+
+      <!-- Before/After -->
+      <div class="ap-compare">
+        <div class="ap-compare-card ap-compare-before">
+          <div class="ap-compare-label">cook <span class="ap-badge-free">Free</span></div>
+          <div class="ap-compare-desc">You approve each phase. You watch. You steer.</div>
+          <div class="ap-steps">
+            <div class="ap-step">Plan <span class="ap-step-wait">&#8594; you approve</span></div>
+            <div class="ap-step">Phase 1 <span class="ap-step-wait">&#8594; you review</span></div>
+            <div class="ap-step">Phase 2 <span class="ap-step-wait">&#8594; you review</span></div>
+            <div class="ap-step">Phase 3 <span class="ap-step-wait">&#8594; you review</span></div>
+            <div class="ap-step">Ship <span class="ap-step-wait">&#8594; you verify</span></div>
+          </div>
+          <div class="ap-compare-time">~2 hours of your attention</div>
+        </div>
+
+        <div class="ap-compare-vs">VS</div>
+
+        <div class="ap-compare-card ap-compare-after">
+          <div class="ap-compare-label">autopilot <span class="ap-badge-pro">Pro</span></div>
+          <div class="ap-compare-desc">Approve the plan once. Walk away. Come back to a report.</div>
+          <div class="ap-timeline">
+            <div class="ap-tl-node ap-tl-you">
+              <div class="ap-tl-dot"></div>
+              <div class="ap-tl-content">
+                <strong>You approve plan</strong>
+                <span>This is the last thing you do</span>
+              </div>
+            </div>
+            <div class="ap-tl-line"></div>
+            <div class="ap-tl-node ap-tl-auto">
+              <div class="ap-tl-dot"></div>
+              <div class="ap-tl-content">
+                <strong>Phase 1</strong>
+                <span>Build &#8594; self-review &#8594; regression check &#8594; commit</span>
+              </div>
+              <span class="ap-tl-badge">&#10003;</span>
+            </div>
+            <div class="ap-tl-line"></div>
+            <div class="ap-tl-node ap-tl-auto">
+              <div class="ap-tl-dot"></div>
+              <div class="ap-tl-content">
+                <strong>Phase 2</strong>
+                <span>Build &#8594; self-review &#8594; cross-phase coherence &#8594; commit</span>
+              </div>
+              <span class="ap-tl-badge">&#10003;</span>
+            </div>
+            <div class="ap-tl-line"></div>
+            <div class="ap-tl-node ap-tl-auto">
+              <div class="ap-tl-dot"></div>
+              <div class="ap-tl-content">
+                <strong>Phase 3</strong>
+                <span>Build &#8594; self-review &#8594; E2E gate &#8594; final review &#8594; commit</span>
+              </div>
+              <span class="ap-tl-badge">&#10003;</span>
+            </div>
+            <div class="ap-tl-line"></div>
+            <div class="ap-tl-node ap-tl-you">
+              <div class="ap-tl-dot"></div>
+              <div class="ap-tl-content">
+                <strong>You read the report</strong>
+                <span>Completion report + per-phase commits ready</span>
+              </div>
+            </div>
+          </div>
+          <div class="ap-compare-time ap-compare-time-pro">0 minutes of your attention</div>
+        </div>
+      </div>
+
+      <!-- Quality gates -->
+      <div class="ap-gates">
+        <h3>More quality gates, not fewer.</h3>
+        <p class="ap-gates-sub">When no human is watching, autopilot compensates with stricter verification than manual mode.</p>
+        <div class="ap-gates-grid">
+          <div class="ap-gate">
+            <div class="ap-gate-icon">&#9632;</div>
+            <div class="ap-gate-label">Baseline snapshot</div>
+            <div class="ap-gate-desc">Captures test count, lint errors, coverage before each phase. Regressions are caught instantly.</div>
+          </div>
+          <div class="ap-gate">
+            <div class="ap-gate-icon">&#9632;</div>
+            <div class="ap-gate-label">Zero HIGH tolerance</div>
+            <div class="ap-gate-desc">cook lets you accept HIGH findings. Autopilot blocks them &mdash; no human judgment to rely on.</div>
+          </div>
+          <div class="ap-gate">
+            <div class="ap-gate-icon">&#9632;</div>
+            <div class="ap-gate-label">Cross-phase coherence</div>
+            <div class="ap-gate-desc">Checks naming drift, import resolution, dependency direction between phases. Per-phase reviews miss this.</div>
+          </div>
+          <div class="ap-gate">
+            <div class="ap-gate-icon">&#9632;</div>
+            <div class="ap-gate-label">Warn accumulation</div>
+            <div class="ap-gate-desc">Individual MEDIUMs are OK. 3+ across phases triggers a pause &mdash; systemic drift needs human eyes.</div>
+          </div>
+          <div class="ap-gate">
+            <div class="ap-gate-icon">&#9632;</div>
+            <div class="ap-gate-label">Final all-phase review</div>
+            <div class="ap-gate-desc">After all phases complete, reviews the full diff end-to-end. Catches architectural drift across the whole feature.</div>
+          </div>
+          <div class="ap-gate">
+            <div class="ap-gate-icon">&#9632;</div>
+            <div class="ap-gate-label">Crash-safe resume</div>
+            <div class="ap-gate-desc">Context runs out? Autopilot checkpoints and resumes next session. No work lost, no state forgotten.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom CTA -->
+      <div class="ap-cta">
+        <p class="ap-tagline">cook gets the job done. <strong>autopilot gets it done while you sleep.</strong></p>
+        <p class="ap-price">Included in Pro &mdash; <strong>$49 lifetime</strong></p>
       </div>
     </div>
   </section>
