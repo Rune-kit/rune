@@ -1,16 +1,16 @@
-import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
-import path from 'node:path';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
+import path from 'node:path';
+import { afterEach, beforeEach, describe, it } from 'node:test';
 import {
-  getSessionOverview,
-  getSkillFrequency,
+  getAllAnalytics,
   getModelDistribution,
+  getSessionOverview,
   getSessionTrend,
   getSkillChains,
+  getSkillFrequency,
   getToolDistribution,
-  getAllAnalytics,
 } from '../analytics.js';
 
 // ─── Test Helpers ───
@@ -50,12 +50,12 @@ async function setupMetrics(tmpDir, sessions = [], chains = [], skillTotals = nu
   await mkdir(metricsDir, { recursive: true });
 
   if (sessions.length > 0) {
-    const lines = sessions.map((s) => JSON.stringify(s)).join('\n') + '\n';
+    const lines = `${sessions.map((s) => JSON.stringify(s)).join('\n')}\n`;
     await writeFile(path.join(metricsDir, 'sessions.jsonl'), lines);
   }
 
   if (chains.length > 0) {
-    const lines = chains.map((c) => JSON.stringify(c)).join('\n') + '\n';
+    const lines = `${chains.map((c) => JSON.stringify(c)).join('\n')}\n`;
     await writeFile(path.join(metricsDir, 'chains.jsonl'), lines);
   }
 
@@ -228,10 +228,7 @@ describe('analytics — date filtering', () => {
   });
 
   it('days=0 returns all sessions', async () => {
-    await setupMetrics(tmpDir, [
-      sessionEntry({ date: daysAgo(100) }),
-      sessionEntry({ date: today() }),
-    ]);
+    await setupMetrics(tmpDir, [sessionEntry({ date: daysAgo(100) }), sessionEntry({ date: today() })]);
     const all = await getSessionOverview(tmpDir, 0);
     assert.equal(all.total_sessions, 2);
   });
@@ -251,7 +248,7 @@ describe('analytics — edge cases', () => {
     await mkdir(metricsDir, { recursive: true });
     await writeFile(
       path.join(metricsDir, 'sessions.jsonl'),
-      JSON.stringify(sessionEntry()) + '\n' + 'NOT VALID JSON\n' + JSON.stringify(sessionEntry()) + '\n',
+      `${JSON.stringify(sessionEntry())}\nNOT VALID JSON\n${JSON.stringify(sessionEntry())}\n`,
     );
     const overview = await getSessionOverview(tmpDir, 30);
     assert.equal(overview.total_sessions, 2); // skips malformed line
@@ -306,12 +303,30 @@ describe('analytics — dashboard HTML generation', () => {
     const { generateDashboardHTML } = await import('../dashboard.js');
 
     const data = {
-      overview: { total_sessions: 5, avg_duration_min: 12, total_tool_calls: 200, total_skill_invocations: 30, active_days: 3 },
-      skillFrequency: [{ skill: 'cook', sessions_count: 4 }, { skill: 'plan', sessions_count: 2 }],
-      modelDistribution: [{ model: 'sonnet', skill_count: 8 }, { model: 'opus', skill_count: 3 }],
+      overview: {
+        total_sessions: 5,
+        avg_duration_min: 12,
+        total_tool_calls: 200,
+        total_skill_invocations: 30,
+        active_days: 3,
+      },
+      skillFrequency: [
+        { skill: 'cook', sessions_count: 4 },
+        { skill: 'plan', sessions_count: 2 },
+      ],
+      modelDistribution: [
+        { model: 'sonnet', skill_count: 8 },
+        { model: 'opus', skill_count: 3 },
+      ],
       sessionTrend: [{ date: '2026-03-30', sessions: 2, duration_min: 20, skill_invocations: 10, tool_calls: 80 }],
       skillChains: [{ chain: 'cook → plan → scout', count: 3 }],
-      toolDistribution: [{ tool: 'Read', count: 50 }, { tool: 'Edit', count: 30 }],
+      toolDistribution: [
+        { tool: 'Read', count: 50 },
+        { tool: 'Edit', count: 30 },
+      ],
+      skillHeatmap: { heatmap: [], dates: [], maxCount: 1 },
+      sessionTimeline: [],
+      skillMesh: { nodes: [], edges: [], maxCount: 1 },
       generated: new Date().toISOString(),
       days: 30,
     };
@@ -319,11 +334,10 @@ describe('analytics — dashboard HTML generation', () => {
     const html = generateDashboardHTML(data);
     assert.ok(html.includes('<!DOCTYPE html>'));
     assert.ok(html.includes('Rune Analytics'));
-    assert.ok(html.includes('Usage Trend'));
-    assert.ok(html.includes('Top Skills'));
-    assert.ok(html.includes('Model Distribution'));
-    assert.ok(html.includes('Tool Distribution'));
+    assert.ok(html.includes('Skill Mesh'));
+    assert.ok(html.includes('Models'));
     assert.ok(html.includes('Workflow Chains'));
+    assert.ok(html.includes('Recent Sessions'));
     assert.ok(html.includes('cook'));
   });
 
@@ -331,12 +345,21 @@ describe('analytics — dashboard HTML generation', () => {
     const { generateDashboardHTML } = await import('../dashboard.js');
 
     const data = {
-      overview: { total_sessions: 0, avg_duration_min: 0, total_tool_calls: 0, total_skill_invocations: 0, active_days: 0 },
+      overview: {
+        total_sessions: 0,
+        avg_duration_min: 0,
+        total_tool_calls: 0,
+        total_skill_invocations: 0,
+        active_days: 0,
+      },
       skillFrequency: [],
       modelDistribution: [],
       sessionTrend: [],
       skillChains: [],
       toolDistribution: [],
+      skillHeatmap: { heatmap: [], dates: [], maxCount: 1 },
+      sessionTimeline: [],
+      skillMesh: { nodes: [], edges: [], maxCount: 1 },
       generated: new Date().toISOString(),
       days: 30,
     };

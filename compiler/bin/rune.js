@@ -17,12 +17,12 @@ import path from 'node:path';
 import { createInterface } from 'node:readline';
 import { fileURLToPath } from 'node:url';
 import { getAdapter, listPlatforms } from '../adapters/index.js';
+import { getAllAnalytics } from '../analytics.js';
+import { generateDashboardHTML } from '../dashboard.js';
 import { formatDoctorResults, runDoctor } from '../doctor.js';
 import { buildAll } from '../emitter.js';
 import { collectStats, renderStatus, renderStatusJson } from '../status.js';
 import { collectGraphData, generateMeshHTML } from '../visualizer.js';
-import { getAllAnalytics } from '../analytics.js';
-import { generateDashboardHTML } from '../dashboard.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -364,7 +364,7 @@ async function cmdAnalytics(projectRoot, args) {
 
   const days = args.days ? parseInt(args.days, 10) : 30;
 
-  logStep('◎', `Querying metrics (${days > 0 ? days + ' days' : 'all time'})...`);
+  logStep('◎', `Querying metrics (${days > 0 ? `${days} days` : 'all time'})...`);
   const data = await getAllAnalytics(projectRoot, days);
 
   if (args.json) {
@@ -382,9 +382,7 @@ async function cmdAnalytics(projectRoot, args) {
     await mkdirFs(runeDir, { recursive: true });
   }
 
-  const outputPath = args.output
-    ? path.resolve(projectRoot, args.output)
-    : path.join(runeDir, 'analytics.html');
+  const outputPath = args.output ? path.resolve(projectRoot, args.output) : path.join(runeDir, 'analytics.html');
 
   const { writeFile: writeFileFs } = await import('node:fs/promises');
   await writeFileFs(outputPath, html, 'utf-8');

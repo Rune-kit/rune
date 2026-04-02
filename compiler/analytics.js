@@ -40,12 +40,16 @@ async function loadMetrics(runeRoot) {
   let sessions = [];
   try {
     if (existsSync(files.sessions)) sessions = readJsonl(await readFile(files.sessions, 'utf-8'));
-  } catch { /* file read error — use empty */ }
+  } catch {
+    /* file read error — use empty */
+  }
 
   let chains = [];
   try {
     if (existsSync(files.chains)) chains = readJsonl(await readFile(files.chains, 'utf-8'));
-  } catch { /* file read error — use empty */ }
+  } catch {
+    /* file read error — use empty */
+  }
 
   let skillTotals = {};
   if (existsSync(files.skills)) {
@@ -203,18 +207,167 @@ export async function getToolDistribution(runeRoot, days = 30) {
     .sort((a, b) => b.count - a.count);
 }
 
+// ─── Skill Heatmap (per-day per-skill matrix) ───
+
+export async function getSkillHeatmap(runeRoot, days = 30) {
+  const { sessions } = await loadMetrics(runeRoot);
+  const filtered = filterByDays(sessions, days);
+
+  // Build matrix: { date → { skill → count } }
+  const matrix = {};
+  const allSkills = new Set();
+
+  for (const session of filtered) {
+    const date = session.date;
+    if (!session.skills_used) continue;
+    if (!matrix[date]) matrix[date] = {};
+    for (const skill of session.skills_used) {
+      matrix[date][skill] = (matrix[date][skill] || 0) + 1;
+      allSkills.add(skill);
+    }
+  }
+
+  // Sort dates, get top skills by total frequency
+  const dates = Object.keys(matrix).sort();
+  const skillTotals = {};
+  for (const date of dates) {
+    for (const [skill, count] of Object.entries(matrix[date])) {
+      skillTotals[skill] = (skillTotals[skill] || 0) + count;
+    }
+  }
+
+  const topSkills = Object.entries(skillTotals)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 15)
+    .map(([skill]) => skill);
+
+  // Build heatmap grid: [ { skill, days: [ { date, count } ] } ]
+  const heatmap = topSkills.map((skill) => ({
+    skill,
+    total: skillTotals[skill],
+    days: dates.map((date) => ({
+      date,
+      count: matrix[date][skill] || 0,
+    })),
+  }));
+
+  return { heatmap, dates, maxCount: Math.max(1, ...heatmap.flatMap((h) => h.days.map((d) => d.count))) };
+}
+
+// ─── Session Timeline (skill sequence for last N sessions) ───
+
+export async function getSessionTimeline(runeRoot, days = 30, limit = 5) {
+  const { sessions, chains } = await loadMetrics(runeRoot);
+  const filtered = filterByDays(sessions, days)
+    .sort((a, b) => b.date.localeCompare(a.date) || (b.duration_min || 0) - (a.duration_min || 0))
+    .slice(0, limit);
+
+  // Map session IDs to their chains
+  const sessionChains = {};
+  for (const chain of chains) {
+    if (!chain.session || !Array.isArray(chain.chain)) continue;
+    if (!sessionChains[chain.session]) sessionChains[chain.session] = [];
+    sessionChains[chain.session].push(chain.chain);
+  }
+
+  return filtered.map((session) => ({
+    id: session.id,
+    date: session.date,
+    duration_min: session.duration_min || 0,
+    tool_calls: session.tool_calls || 0,
+    skills_used: session.skills_used || [],
+    primary_skill: session.primary_skill || (session.skills_used || [])[0] || 'unknown',
+    chains: (sessionChains[session.id] || []).slice(0, 5),
+  }));
+}
+
+// ─── Skill Mesh (connections from skill frequency) ───
+
+export async function getSkillMesh(runeRoot, days = 30) {
+  const { sessions, chains } = await loadMetrics(runeRoot);
+  const filtered = filterByDays(sessions, days);
+
+  // Node sizes from frequency
+  const freq = {};
+  for (const session of filtered) {
+    if (!session.skills_used) continue;
+    for (const skill of session.skills_used) {
+      freq[skill] = (freq[skill] || 0) + 1;
+    }
+  }
+
+  const nodes = Object.entries(freq)
+    .map(([skill, count]) => ({ id: skill, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 20);
+
+  const nodeSet = new Set(nodes.map((n) => n.id));
+
+  // Edges from co-occurrence in sessions
+  const edgeMap = {};
+  for (const session of filtered) {
+    if (!session.skills_used || session.skills_used.length < 2) continue;
+    const skills = session.skills_used.filter((s) => nodeSet.has(s));
+    for (let i = 0; i < skills.length; i++) {
+      for (let j = i + 1; j < skills.length; j++) {
+        const key = [skills[i], skills[j]].sort().join('::');
+        edgeMap[key] = (edgeMap[key] || 0) + 1;
+      }
+    }
+  }
+
+  // Also add chain-based edges (sequential connection = stronger signal)
+  const sessionDates = new Map(sessions.map((s) => [s.id, s.date]));
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - (days || 9999));
+  const cutoffStr = cutoff.toISOString().slice(0, 10);
+
+  for (const chain of chains) {
+    if (!chain.session || !Array.isArray(chain.chain)) continue;
+    const date = sessionDates.get(chain.session);
+    if (date === undefined || date < cutoffStr) continue;
+    const skills = chain.chain.filter((s) => nodeSet.has(s));
+    for (let i = 0; i < skills.length - 1; i++) {
+      const key = [skills[i], skills[i + 1]].sort().join('::');
+      edgeMap[key] = (edgeMap[key] || 0) + 2; // Chain edges weighted 2x
+    }
+  }
+
+  const edges = Object.entries(edgeMap)
+    .map(([key, weight]) => {
+      const [source, target] = key.split('::');
+      return { source, target, weight };
+    })
+    .sort((a, b) => b.weight - a.weight)
+    .slice(0, 40);
+
+  return { nodes, edges, maxCount: Math.max(1, ...nodes.map((n) => n.count)) };
+}
+
 // ─── All Queries ───
 
 export async function getAllAnalytics(runeRoot, days = 30) {
-  const [overview, skillFrequency, modelDistribution, sessionTrend, skillChains, toolDistribution] =
-    await Promise.all([
-      getSessionOverview(runeRoot, days),
-      getSkillFrequency(runeRoot, days),
-      getModelDistribution(runeRoot, days),
-      getSessionTrend(runeRoot, days),
-      getSkillChains(runeRoot, days),
-      getToolDistribution(runeRoot, days),
-    ]);
+  const [
+    overview,
+    skillFrequency,
+    modelDistribution,
+    sessionTrend,
+    skillChains,
+    toolDistribution,
+    skillHeatmap,
+    sessionTimeline,
+    skillMesh,
+  ] = await Promise.all([
+    getSessionOverview(runeRoot, days),
+    getSkillFrequency(runeRoot, days),
+    getModelDistribution(runeRoot, days),
+    getSessionTrend(runeRoot, days),
+    getSkillChains(runeRoot, days),
+    getToolDistribution(runeRoot, days),
+    getSkillHeatmap(runeRoot, days),
+    getSessionTimeline(runeRoot, days, 5),
+    getSkillMesh(runeRoot, days),
+  ]);
 
   return {
     overview,
@@ -223,6 +376,9 @@ export async function getAllAnalytics(runeRoot, days = 30) {
     sessionTrend,
     skillChains,
     toolDistribution,
+    skillHeatmap,
+    sessionTimeline,
+    skillMesh,
     generated: new Date().toISOString(),
     days,
   };
