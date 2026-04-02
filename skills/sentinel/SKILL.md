@@ -3,7 +3,7 @@ name: sentinel
 description: Automated security gatekeeper. Blocks unsafe code before commit — secret scanning, OWASP top 10, dependency audit, permission checks. A GATE, not a suggestion.
 metadata:
   author: runedev
-  version: "0.9.0"
+  version: "1.0.0"
   layer: L2
   model: sonnet
   group: quality
@@ -197,6 +197,34 @@ If `.rune/contract.md` exists, validate staged changes against project contract 
 4. Contract violations are NOT subject to Six-Gate downgrading — they are project-level invariants, not security heuristics
 
 If `.rune/contract.md` does not exist, skip and log INFO: "no project contract, contract validation skipped".
+
+### Step 4.87 — Config Leak Threshold Detection
+
+Detect when agent output or code changes accidentally expose internal configuration files, skill definitions, or sensitive project structure to end users.
+
+**Why**: Agents processing SKILL.md, CLAUDE.md, `.rune/` files may copy-paste internal content into user-facing output (chat responses, generated docs, UI strings). This leaks architecture details, security rules, and proprietary skill content.
+
+**Detection patterns** (scan agent output + staged files):
+
+| Pattern | What to Detect | Severity |
+|---------|---------------|----------|
+| **Internal file exposure** | 3+ distinct internal file names mentioned in plain text (not code blocks): `CLAUDE.md`, `SKILL.md`, `PACK.md`, `.rune/contract.md`, `.rune/runbook.md` | WARN |
+| **Skill content leak** | Verbatim SKILL.md content (>50 chars) appearing in user-facing strings, README, or generated docs | BLOCK |
+| **Config path exposure** | Absolute paths containing user home directory (`/Users/`, `C:\Users\`) in committed code or output | WARN |
+| **Environment variable dump** | `process.env` or `os.environ` iterated/serialized without filtering (exposes all env vars) | BLOCK |
+| **Debug config in production** | `DEBUG=true`, `LOG_LEVEL=debug`, `NODE_ENV=development` in committed config files | WARN |
+| **Connection string patterns** | Strings matching `://user:pass@host` or `mongodb+srv://` or `postgres://` in non-.env files | BLOCK |
+
+**Threshold rules:**
+- Single mention of an internal file name → PASS (could be legitimate reference)
+- 3+ distinct internal file names in one output → WARN: "Agent may be leaking internal config"
+- Any SKILL.md verbatim content in user-facing code → BLOCK: "Skill content leaked to output"
+
+**Exclusions** (prevent false positives):
+- Code blocks in architecture docs (legitimate documentation)
+- References inside other SKILL.md files (internal cross-references)
+- Test fixtures explicitly testing config handling
+- `.env.example` files (intentionally public)
 
 ### Step 4.86 — Organization Policy Enforcement (Business)
 

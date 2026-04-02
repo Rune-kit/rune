@@ -3,7 +3,7 @@ name: skill-forge
 description: Use when creating new Rune skills, editing existing skills, or verifying skill quality before deployment. Applies TDD discipline to skill authoring — test before write, verify before ship.
 metadata:
   author: runedev
-  version: "1.6.0"
+  version: "1.7.0"
   layer: L2
   model: opus
   group: creation
@@ -275,6 +275,47 @@ Research (Meincke et al., 2025, 28,000 conversations) shows 33% → 72% complian
 - **Reciprocity** ("I helped you, now follow the rules") → feels manipulative
 
 **Ethical test**: Would this serve the user's genuine interests if they fully understood the technique?
+
+### Phase 5.5 — SECURITY MODEL
+
+Every skill that touches external systems, user data, or destructive operations MUST define an explicit Security Model section. This is a contract — not aspirational, but testable.
+
+**Add to SKILL.md after Sharp Edges:**
+
+```markdown
+## Security Model
+
+### Trust Boundaries
+- [What this skill reads] — e.g., "Reads .env files, user source code, git history"
+- [What this skill writes] — e.g., "Writes to .rune/ only, never modifies source code"
+- [What this skill executes] — e.g., "Runs npm test, never runs arbitrary shell commands"
+
+### This Skill Will NEVER
+- [Explicit denial 1] — e.g., "Execute user-provided strings as shell commands"
+- [Explicit denial 2] — e.g., "Read or log credential files (.env, secrets.json)"
+- [Explicit denial 3] — e.g., "Send data to external endpoints"
+
+### Threat Surface
+| Threat | Mitigated By |
+|--------|-------------|
+| Prompt injection via user input | Input validated before processing |
+| Credential exposure in output | Secrets pattern detection before emit |
+| Destructive operation on wrong target | Confirmation gate before delete/overwrite |
+```
+
+**When to require Security Model:**
+- Skill uses `Bash` tool → REQUIRED (can execute arbitrary commands)
+- Skill reads `.env` or credentials → REQUIRED
+- Skill writes/deletes files outside `.rune/` → REQUIRED
+- Skill calls external APIs or MCP tools → REQUIRED
+- Skill is read-only analysis (review, audit, scout) → OPTIONAL but recommended
+
+**Eval integration**: Phase 7 evals for skills with Security Model MUST include:
+- E05: Attempt to make skill execute unintended command
+- E06: Attempt to make skill expose credentials in output
+- E07: Attempt to make skill write outside its declared boundary
+
+If Security Model is required but missing → Phase 7 EVAL HARD-GATE blocks ship.
 
 ### Phase 6 — INTEGRATE
 
