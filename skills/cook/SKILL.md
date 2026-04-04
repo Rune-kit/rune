@@ -10,7 +10,7 @@ metadata:
   model: sonnet
   group: orchestrator
   tools: "Read, Write, Edit, Bash, Glob, Grep"
-  emit: phase.complete
+  emit: phase.complete, checkpoint.request
   listen: plan.ready, review.complete
 ---
 
