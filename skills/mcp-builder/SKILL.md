@@ -3,7 +3,7 @@ name: mcp-builder
 description: Build Model Context Protocol servers from specifications. Generates tool definitions, resource handlers, and test suites for MCP servers in TypeScript or Python (FastMCP).
 metadata:
   author: runedev
-  version: "0.4.0"
+  version: "0.5.0"
   layer: L2
   model: sonnet
   group: creation
@@ -53,6 +53,8 @@ If vague, ask targeted questions:
 If user provides a detailed spec or existing API docs → extract answers, confirm.
 
 ### Step 2 — Architecture Design
+
+<MUST-READ path="references/auto-discovery-pattern.md" trigger="when the server has 5+ tools OR multiple API providers — use auto-discovery registry for graceful degradation"/>
 
 Determine server structure based on spec:
 

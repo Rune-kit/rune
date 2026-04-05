@@ -3,7 +3,7 @@ name: review
 description: Code quality review — patterns, security, performance, correctness. Finds bugs, suggests improvements, triggers fix for issues found. Escalates to opus for security-critical code.
 metadata:
   author: runedev
-  version: "0.7.0"
+  version: "0.8.0"
   layer: L2
   model: sonnet
   group: development
@@ -532,6 +532,29 @@ When `cook` or `ship` checks review status: compare review commit hash with curr
 | Spec compliance verdict | Markdown | inline |
 | Composite quality score | Markdown table | inline (when `mode: "scored"`) |
 | Blast radius assessment | Markdown table | inline |
+
+## Chain Metadata
+
+Append to Code Review Report when invoked standalone. Suppress when called as sub-skill inside an L1 orchestrator (cook, team, etc.) — the orchestrator emits a consolidated block. See `docs/references/chain-metadata.md`.
+
+```yaml
+chain_metadata:
+  skill: "rune:review"
+  version: "0.8.0"
+  status: "[DONE | DONE_WITH_CONCERNS]"
+  domain: "[area reviewed]"
+  files_changed: []  # review doesn't change files
+  exports:
+    findings_count: { critical: [N], high: [N], medium: [N], low: [N] }
+    findings:
+      - { severity: "[level]", file: "[path]", line: [N], message: "[issue]" }
+    verdict: "[APPROVE | REQUEST_CHANGES | NEEDS_DISCUSSION]"
+    quality_score: [0-100]  # when mode: "scored"
+  suggested_next:
+    - skill: "rune:fix"
+      reason: "[grounded in findings — e.g., '2 HIGH findings in api/users.ts need remediation']"
+      consumes: ["findings"]
+```
 
 ## Sharp Edges
 

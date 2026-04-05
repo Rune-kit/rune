@@ -8,7 +8,7 @@
 | L1 | Orchestrators | 5 | L2, L3 | L0, User | Stateful (workflow) |
 | L2 | Workflow Hubs | 28 | L2 (cross-hub), L3 | L1, L2 | Stateful (task) |
 | L3 | Utilities | 26 | Nothing (pure)* | L1, L2 | Stateless |
-| L4 | Extension Packs | 14 free + 4 pro + 4 business | L3 | L2 (domain match) | Config-based |
+| L4 | Extension Packs | 14 free + 5 pro + 4 business | L3 | L2 (domain match) | Config-based |
 
 ### L0 — The Enforcement Layer
 

@@ -3,7 +3,7 @@ name: fix
 description: Apply code changes and fixes. Writes implementation code, applies bug fixes, and verifies changes with tests. Core action hub in the development mesh.
 metadata:
   author: runedev
-  version: "0.8.0"
+  version: "0.9.0"
   layer: L2
   model: sonnet
   group: development
@@ -270,6 +270,28 @@ Fix returns one of four statuses to its caller (cook, debug, review, surgeon). T
 | Code changes | Source files | Per debug report / plan file paths |
 | Fix Report | Markdown (inline) | Emitted to calling skill (cook, debug, review, surgeon) |
 | Verification output | Inline (Fix Report) | Lint + types + test results |
+
+## Chain Metadata
+
+Append to Fix Report when invoked standalone. Suppress when called as sub-skill inside an L1 orchestrator (cook, team, etc.) — the orchestrator emits a consolidated block. See `docs/references/chain-metadata.md`.
+
+```yaml
+chain_metadata:
+  skill: "rune:fix"
+  version: "0.9.0"
+  status: "[DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED]"
+  domain: "[area fixed]"
+  files_changed:
+    - "[list of modified files]"
+  exports:
+    fix_applied: { files: ["[paths]"], description: "[what was fixed]" }
+    verification: { lint: "[PASS/FAIL]", types: "[PASS/FAIL]", tests: "[PASS/FAIL]" }
+    commit_hash: "[hash if committed]"
+  suggested_next:
+    - skill: "rune:test"
+      reason: "[grounded in changes — e.g., 'Modified 3 files in auth module, edge cases need coverage']"
+      consumes: ["fix_applied", "verification"]
+```
 
 ## Sharp Edges
 

@@ -4,7 +4,7 @@ description: "Meta-enforcement layer that routes EVERY agent action through the 
 user-invocable: false
 metadata:
   author: runedev
-  version: "1.3.0"
+  version: "1.4.0"
   layer: L0
   model: haiku
   group: orchestrator
@@ -328,9 +328,34 @@ These DO NOT need skill routing:
 
 At the end of a skill's workflow, skill-router MAY suggest a **complementary skill** — limited to ONE recommendation to prevent infinite referral chains.
 
+### Chain Metadata Awareness (Priority Source)
+
+When a previous skill's output contains a `chain_metadata` block in the conversation context, skill-router MUST use it as the PRIMARY source for next-skill suggestions:
+
+1. **Read `chain_metadata.suggested_next`** — these are data-driven recommendations from the skill that just ran. They have MORE context than the hardcoded table below.
+2. **Read `chain_metadata.status`** — override suggestion logic based on outcome:
+   - `BLOCKED` → suggest `debug` or `fix` regardless of what the hardcoded table says
+   - `NEEDS_CONTEXT` → suggest `scout` or `research`
+   - `DONE_WITH_CONCERNS` → suggest `review` or `sentinel`
+3. **Read `chain_metadata.domain`** — trigger L4 pack auto-suggest (see below)
+4. **Forward `chain_metadata.exports`** — when announcing the suggestion, mention what data is available: "Review can use the 5 changed files and test results from cook."
+
+**Conflict resolution:** If `chain_metadata.suggested_next` recommends skill A but the hardcoded table below recommends skill B, **prefer chain_metadata** — it was generated from actual output data, not generic rules.
+
+**Announcement format with chain_metadata:**
+```
+Suggested next: `rune:<skill>` — <chain_metadata.suggested_next.reason>
+Available data: <list of export keys the suggested skill would consume>
+Run it? (skip to continue)
+```
+
+### Hardcoded Fallback Table
+
+When NO chain_metadata is present (skill didn't emit one, or legacy invocation), fall back to this static table:
+
 | After This Skill | Suggest | Rationale |
 |-----------------|---------|-----------|
-| `debug` | `review` | Root cause found — review the fix area for broader issues |
+| `debug` | `fix` | Root cause found — apply the fix |
 | `fix` | `test` | Code changed — verify with tests |
 | `plan` | `adversary` | Plan created — stress-test before implementation |
 | `test` (GREEN) | `preflight` | Tests pass — check for edge cases and completeness |

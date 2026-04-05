@@ -32,6 +32,39 @@ Also defines the NEXUS Deliverables table format used when cook is invoked by `t
 - Saved to .rune/progress.md
 ```
 
+## Chain Metadata (Cross-Skill Data Forwarding)
+
+Every Cook Report MUST end with a `chain_metadata` YAML block. This enables downstream skills to consume cook's output data without parsing prose. See `docs/references/chain-metadata.md` for the full contract.
+
+```yaml
+chain_metadata:
+  skill: "rune:cook"
+  version: "2.2.0"
+  status: "[same as Cook Report status]"
+  domain: "[area worked on — e.g., auth, payments, compiler]"
+  files_changed:
+    - "[list of files created/modified in this session]"
+  exports:
+    commit_hash: "[actual git hash]"
+    files_changed_count: [N]
+    test_results: { passed: [N], failed: [N], coverage: [N] }
+    quality_gates: { preflight: "[PASS/WARN/FAIL]", sentinel: "[PASS/WARN/FAIL]", review: "[PASS/WARN/FAIL]" }
+    phase_count: [N]
+    concerns: []  # populated if DONE_WITH_CONCERNS
+  suggested_next:  # 1-3 data-driven recommendations based on THIS output
+    - skill: "rune:[skill]"
+      reason: "[grounded in actual data — not generic advice]"
+      consumes: ["[export keys the suggested skill would use]"]
+```
+
+**Rules for suggested_next:**
+- Base suggestions on ACTUAL output data (sentinel WARN → suggest deeper security review, low coverage → suggest more tests)
+- Never suggest skills that already ran successfully in this session
+- Status-aware: BLOCKED → suggest debug/fix, DONE → suggest review/deploy/test
+- Max 3 suggestions, ordered by priority
+
+**When NOT to emit:** When cook is invoked as a sub-step of `autopilot` or `team` — the orchestrator emits its own chain_metadata at the end.
+
 ## Usage Rules
 
 - When cook is invoked **standalone** (not by team): Deliverables table is optional

@@ -418,7 +418,7 @@ How it works: `rune-pulse` (statusline) reads `context_window.used_percentage` f
 
 **Autopilot** — approve a plan, walk away. Autonomous multi-session execution with zero-HIGH-tolerance quality gates, baseline regression checks, cross-phase coherence review, and structured completion reports. `cook` gets the job done. `autopilot` gets it done while you sleep.
 
-**Department Packs** — 25 skills across 4 domains:
+**Department Packs** — 34 skills across 5 domains:
 
 | Pack | What it does |
 |------|-------------|
@@ -426,6 +426,7 @@ How it works: `rune-pulse` (statusline) reads `context_window.used_percentage` f
 | **Sales** | Account research briefs, call prep with objection handling, outreach sequences, pipeline health review |
 | **Data Science** | SQL exploration → visualization → statistical testing → ML eval, all in one flow |
 | **Support** | Ticket triage with SLA routing, KB article generation, escalation playbooks, support metrics |
+| **Growth** | Niche research, content scouting, SEO architecture, landing page generation, content health monitoring, data moats |
 
 All Pro packs plug into the core mesh — `cook` orchestrates them, `sentinel` gates them, `team` parallelizes them.
 
@@ -480,14 +481,14 @@ See [docs/MULTI-PLATFORM.md](docs/MULTI-PLATFORM.md) for the full architecture.
 
 ```
 Core Skills:       61 (L0: 1 │ L1: 5 │ L2: 28 │ L3: 27)
-Extension Packs:   14 free + 4 pro + 4 business
+Extension Packs:   14 free + 5 pro + 4 business
 Mesh Connections:  200+ cross-references
 Mesh Signals:      57 signals across 66 skills (emit/listen graph)
 Connections/Skill: 3.4 avg
 Platforms:         8 (Claude Code, Cursor, Windsurf, Antigravity, Codex, OpenCode, OpenClaw, Generic)
 Compiler:          ~1400 LOC (parser + 8 transforms + 8 adapters + CLI)
 Tests:             946 (compiler + signals + status + visualizer + hooks + scripts)
-Pack Depth:        22 packs total (14 free + 4 pro + 4 business, all free packs rated Deep)
+Pack Depth:        23 packs total (14 free + 5 pro + 4 business, all free packs rated Deep)
 ```
 
 ## Acknowledgments

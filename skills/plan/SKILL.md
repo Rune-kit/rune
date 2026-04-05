@@ -3,7 +3,7 @@ name: plan
 description: Create structured implementation plans from requirements. Produces master plan + phase files for enterprise-scale project management. Master plan = overview (<80 lines). Phase files = execution detail (<150 lines each). Each session handles 1 phase. Uses opus for deep reasoning.
 metadata:
   author: runedev
-  version: "1.2.0"
+  version: "1.3.0"
   layer: L2
   model: opus
   group: creation
@@ -309,6 +309,32 @@ When producing phase files with wave-based task grouping, every task MUST declar
 | Feature spec | Markdown | `.rune/features/<name>/spec.md` (Feature Spec Mode only) |
 | Roadmap | Markdown | `.rune/roadmap.md` (Roadmap Mode only) |
 | Inline plan | Markdown (inline) | Emitted directly for trivial tasks |
+
+## Chain Metadata
+
+Append to plan output when invoked standalone. Suppress when called as sub-skill inside an L1 orchestrator (cook, team, etc.) — the orchestrator emits a consolidated block. See `docs/references/chain-metadata.md`.
+
+```yaml
+chain_metadata:
+  skill: "rune:plan"
+  version: "1.3.0"
+  status: "[DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED]"
+  domain: "[area planned]"
+  files_changed:
+    - "[.rune/plan-*.md files created]"
+  exports:
+    plan_file: "[.rune/plan-<feature>.md path]"
+    phase_count: [N]
+    estimated_complexity: "[low | medium | high]"
+    risk_areas: ["[domains with identified risks]"]
+  suggested_next:
+    - skill: "rune:adversary"
+      reason: "[grounded in plan — e.g., 'Plan touches auth + payments — stress-test assumptions']"
+      consumes: ["plan_file", "risk_areas"]
+    - skill: "rune:cook"
+      reason: "Plan ready for execution"
+      consumes: ["plan_file", "phase_count"]
+```
 
 ## Sharp Edges
 

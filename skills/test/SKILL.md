@@ -3,7 +3,7 @@ name: test
 description: "TDD test writer. Writes failing tests FIRST (red), then verifies they pass after implementation (green). Covers unit, integration, and e2e tests."
 metadata:
   author: runedev
-  version: "1.1.0"
+  version: "1.2.0"
   layer: L2
   model: sonnet
   group: development
@@ -541,6 +541,33 @@ Examples of test slop:
 | Eval scenarios | Markdown | `skills/<name>/evals.md` (for skill behavior testing) |
 | Coverage report | Inline stdout | Shown in Test Report |
 | Test Report | Markdown (inline) | Emitted to calling skill (cook, fix, review) |
+
+## Chain Metadata
+
+Append to Test Report when invoked standalone. Suppress when called as sub-skill inside an L1 orchestrator (cook, team, etc.) — the orchestrator emits a consolidated block. See `docs/references/chain-metadata.md`.
+
+```yaml
+chain_metadata:
+  skill: "rune:test"
+  version: "1.2.0"
+  status: "[DONE]"
+  domain: "[area tested]"
+  files_changed:
+    - "[test files created/modified]"
+  exports:
+    test_results: { passed: [N], failed: [N], coverage: [N] }
+    test_files: ["[paths to test files]"]
+    status: "[RED | GREEN]"  # RED = TDD failing (expected), GREEN = all pass
+  suggested_next:  # status-aware — pick based on RED or GREEN
+    # When GREEN:
+    - skill: "rune:preflight"
+      reason: "[grounded in results — e.g., 'All 15 tests GREEN, check edge case completeness']"
+      consumes: ["test_results", "test_files"]
+    # When RED (TDD expected):
+    - skill: "rune:fix"
+      reason: "[grounded in failures — e.g., '3 tests RED as expected, implement to make them pass']"
+      consumes: ["test_results", "test_files"]
+```
 
 ## Sharp Edges
 

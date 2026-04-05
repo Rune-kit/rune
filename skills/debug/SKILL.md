@@ -3,7 +3,7 @@ name: debug
 description: Root cause analysis for bugs and unexpected behavior. Traces errors through code, uses structured reasoning, and hands off to fix when cause is found. Core of the debug↔fix mesh.
 metadata:
   author: runedev
-  version: "1.0.0"
+  version: "1.1.0"
   layer: L2
   model: sonnet
   group: development
@@ -404,6 +404,28 @@ Debug returns one of four statuses to its caller (cook, fix, test, surgeon). The
 | Root cause + location | Inline (Debug Report) | Specific file:line with evidence |
 | Fix recommendation | Inline (Debug Report) | Direction only — no code changes |
 | Debug knowledge base entry | Markdown | `.rune/debug/knowledge-base.md` (appended on success) |
+
+## Chain Metadata
+
+Append to Debug Report when invoked standalone. Suppress when called as sub-skill inside an L1 orchestrator (cook, team, etc.) — the orchestrator emits a consolidated block. See `docs/references/chain-metadata.md`.
+
+```yaml
+chain_metadata:
+  skill: "rune:debug"
+  version: "1.1.0"
+  status: "[DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED]"
+  domain: "[area debugged]"
+  files_changed: []  # debug never changes files
+  exports:
+    root_cause: { file: "[path]", line: [N], explanation: "[cause]" }
+    severity: "[critical | high | medium | low]"
+    confidence: "[high | medium | low]"
+    fix_recommendation: "[direction for fix skill]"
+  suggested_next:
+    - skill: "rune:fix"
+      reason: "[grounded in root cause — e.g., 'Critical race condition found in auth.ts:42']"
+      consumes: ["root_cause", "fix_recommendation"]
+```
 
 ## Sharp Edges
 

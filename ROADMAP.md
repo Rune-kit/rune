@@ -27,7 +27,7 @@ These principles guide every roadmap decision:
 | L2 Workflow Hubs | 28 | ✅ Complete |
 | L3 Utilities | 27 | ✅ Complete |
 | L4 Free Extension Packs | 14 | ✅ Complete |
-| Pro Packs (4) | 25 skills | ✅ Shipped |
+| Pro Packs (5) | 35 skills | ✅ Shipped |
 | Business Packs (4) | 26 skills | ✅ Shipped |
 | Tests | 566 | ✅ Passing |
 | Mesh Signals | 17 | ✅ Active |

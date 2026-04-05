@@ -5,7 +5,7 @@ context: fork
 agent: general-purpose
 metadata:
   author: runedev
-  version: "2.1.0"
+  version: "2.2.0"
   layer: L1
   model: sonnet
   group: orchestrator
