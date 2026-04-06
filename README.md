@@ -83,7 +83,12 @@ _Methodology: Claude Code CLI headless mode (`claude -p --output-format json`), 
 
 ---
 
-## What's New (v2.8.0)
+## What's New (v2.9.0)
+
+- **marketing v0.4.0** — anti-AI copy rules (banned phrases, 5 hook types, specificity mandate), expanded SEO audit with schema markup guide (10 types + `@graph` pattern), programmatic SEO awareness (4 playbooks), optional Pro content-scorer/cro-analyst integration
+- **Pro growth pack v1.1.0** — 3 new skills (content-scorer, cro-analyst, marketing-psych) + 6 existing skills enriched with SEO Machine patterns (cannibalization prevention, 8-factor opportunity scoring, CTR curves, 70+ AI phrase detection, Cialdini CRO psychology, dual-track landing pages)
+
+### Previous (v2.8.0)
 
 - **Anti-Loop Intelligence** — 7 core skills enriched with execution loop detection, saturation analysis, error pattern matching, artifact folding, budget-aware progression, and recovery policy routing
 - **cook v2.1.0** — observation/effect ratio tracking (detects stuck agents reading without writing) + budget-aware phase progression with hard caps on replans, quality retries, and session tool calls
@@ -426,7 +431,7 @@ How it works: `rune-pulse` (statusline) reads `context_window.used_percentage` f
 | **Sales** | Account research briefs, call prep with objection handling, outreach sequences, pipeline health review |
 | **Data Science** | SQL exploration → visualization → statistical testing → ML eval, all in one flow |
 | **Support** | Ticket triage with SLA routing, KB article generation, escalation playbooks, support metrics |
-| **Growth** | Niche research, content scouting, SEO architecture, landing page generation, content health monitoring, data moats |
+| **Growth** | Niche research, content scouting, SEO architecture, landing page generation, content health monitoring, data moats, content quality scoring, CRO psychology analysis, 74 marketing mental models |
 
 All Pro packs plug into the core mesh — `cook` orchestrates them, `sentinel` gates them, `team` parallelizes them.
 

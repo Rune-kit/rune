@@ -97,7 +97,7 @@ When the user's intent matches a skill, invoke it BEFORE writing any code or ana
 
 ## Current Wave
 
-61 core skills built (v2.8.0 — "Anti-Loop Intelligence").
+61 core skills built (v2.9.0 — "SEO Intelligence").
 
 ### L0 Router (1)
 skill-router — meta-enforcement layer, routes every action through the correct skill
