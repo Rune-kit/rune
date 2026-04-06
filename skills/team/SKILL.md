@@ -5,7 +5,7 @@ context: fork
 agent: general-purpose
 metadata:
   author: runedev
-  version: "0.7.0"
+  version: "0.8.0"
   layer: L1
   model: opus
   group: orchestrator
@@ -476,6 +476,29 @@ All streams done     → MERGE sequentially (avoid conflicts)
 | Merged implementation | Source files | `main` branch after Phase 4 merge |
 | Integration test results | Inline stdout | Captured in Phase 5 verify |
 | Team Report | Markdown (inline) | Emitted at end of session |
+
+## Document Ownership
+
+| Scope | Access | Files |
+|-------|--------|-------|
+| **Owns** (read + write) | `.rune/team-report-*.md`, worktree branches, merge commits |
+| **Reads** (never writes) | `.rune/plan-*.md`, `.rune/contract.md`, `CLAUDE.md`, cook reports from sub-agents |
+| **Never modifies** | Source files directly (delegates to cook instances), `SKILL.md` files, `compiler/**` |
+
+Each cook instance owns its declared file set (disjoint). Team owns coordination artifacts only — never touches source code directly.
+
+## Anti-Patterns
+
+Common multi-agent orchestration failures. These cause the most expensive rework in team workflows.
+
+| Anti-Pattern | Why It Fails | Correct Approach |
+|---|---|---|
+| **Overlapping file ownership** — two agents write to the same file | Merge conflicts, lost work, non-deterministic output | Enforce disjoint `touches[]` per stream. Move shared files to a single owner |
+| **Blind merge** — merging cook reports without reviewing them | Poisoned output propagates. One bad stream corrupts the whole feature | `integrity-check` + `completion-gate` on every cook report before merge |
+| **Over-parallelization** — launching 5+ agents for a 3-file task | Context fragmentation, coordination overhead > implementation time | Auto-detect: ≤5 files → lite mode (max 2 agents). Full mode caps at 3 |
+| **Cross-domain implementation** — one agent implements both frontend and backend | Domain expertise diluted. Agent makes shallow choices in unfamiliar territory | Split by domain. Frontend agent ≠ backend agent. Each gets domain context |
+| **Missing handoff context** — bare prompt to cook instance without scope/conventions | Agent guesses project conventions, uses wrong patterns, produces inconsistent code | NEXUS Handoff Template: always include metadata, deliverables, conventions, quality expectations |
+| **Sequential when parallel is safe** — running independent streams one by one | Wastes time. 3 independent streams × 5min = 15min sequential vs 5min parallel | Check dependency graph. Independent streams → parallel. Dependent → sequential |
 
 ## Sharp Edges
 

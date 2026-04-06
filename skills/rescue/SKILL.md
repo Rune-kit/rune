@@ -5,7 +5,7 @@ context: fork
 agent: general-purpose
 metadata:
   author: runedev
-  version: "0.3.0"
+  version: "0.4.0"
   layer: L1
   model: sonnet
   group: orchestrator
@@ -423,6 +423,29 @@ Rollback point: git tag rune-rescue-baseline (set in Phase 0)
 | Refactored modules | Source files | Modified in-place, committed per surgery session |
 | Health score comparison | Inline (Rescue Report) | Baseline vs final autopsy scores |
 | Rescue Report | Markdown (inline) | Emitted at session end (per module and final) |
+
+## Document Ownership
+
+| Scope | Access | Files |
+|-------|--------|-------|
+| **Owns** (read + write) | `RESCUE-STATE.md`, `.rune/rescue-*.md`, git tags (`rune-rescue-*`), refactored source files (one module per session) |
+| **Reads** (never writes) | `CLAUDE.md`, autopsy reports, safeguard test files, `.rune/contract.md` |
+| **Never modifies** | Test files written by `safeguard` (characterization tests are the safety net — rescue reads them, never edits), `compiler/**`, `SKILL.md` files |
+
+Rescue delegates to `surgeon` for actual code changes and `safeguard` for test creation. Rescue owns the orchestration state, not the artifacts.
+
+## Anti-Patterns
+
+Common legacy refactoring failures. These turn "rescue" into "make it worse."
+
+| Anti-Pattern | Why It Fails | Correct Approach |
+|---|---|---|
+| **Big bang refactor** — rewriting everything at once | No rollback path. One bug = entire refactor is broken | One module per session. Commit + verify after each module |
+| **Surgery without safety net** — refactoring before characterization tests exist | No way to verify behavior is preserved. "It compiles" ≠ "it works" | HARD-GATE: safeguard tests must pass BEFORE any surgery begins |
+| **Coupled module surgery** — refactoring two interdependent modules simultaneously | Changes in module A break module B mid-surgery. Neither is stable | One module per session. Stabilize A completely before touching B |
+| **Ignoring the autopsy** — starting refactoring without understanding current health | Fixes symptoms not causes. Wastes effort on low-impact modules | Phase 0 autopsy is mandatory. Surgery queue ordered by impact, not convenience |
+| **Prototype patterns in production** — replacing legacy code with quick-and-dirty rewrites | Creates new legacy. The "rescue" becomes the next rescue target | Apply proven refactoring patterns from autopsy recommendations. Clean code, not fast code |
+| **No rollback point** — surgery without a tagged baseline | If surgery goes wrong, no safe state to return to | `git tag rune-rescue-baseline` before ANY code changes |
 
 ## Sharp Edges
 

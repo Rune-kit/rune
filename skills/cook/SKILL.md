@@ -5,7 +5,7 @@ context: fork
 agent: general-purpose
 metadata:
   author: runedev
-  version: "2.2.0"
+  version: "2.3.0"
   layer: L1
   model: sonnet
   group: orchestrator
@@ -805,6 +805,29 @@ When invoked by `team` with a NEXUS Handoff, include the Deliverables table — 
 | Verification results | Inline stdout | Shown in Cook Report |
 | Cook Report | Markdown (inline) | Emitted at end of session |
 | Session state | Markdown | `.rune/decisions.md`, `.rune/progress.md`, `.rune/conventions.md` |
+
+## Document Ownership
+
+| Scope | Access | Files |
+|-------|--------|-------|
+| **Owns** (read + write) | `.rune/plan-*.md`, `.rune/progress.md`, `.rune/decisions.md`, `.rune/conventions.md`, source files per approved plan |
+| **Reads** (never writes) | `CLAUDE.md`, `SKILL.md` (any), `.rune/contract.md`, `.rune/checkpoint.md` |
+| **Never modifies** | `compiler/**`, `extensions/**`, `PACK.md`, other skills' `SKILL.md`, `.rune/learnings.jsonl` |
+
+When delegating to sub-skills (scout, plan, test, review), each sub-skill owns its own output. Cook coordinates but does not overwrite sub-skill artifacts.
+
+## Anti-Patterns
+
+Common multi-agent failures to explicitly avoid. These are NOT edge cases — they are the most frequent cook failures in production.
+
+| Anti-Pattern | Why It Fails | Correct Approach |
+|---|---|---|
+| **Bypass hierarchy** — skipping scout/plan and jumping to Phase 4 code | Builds wrong thing. Most "wasted work" traces back to missing Phase 1-2 | Follow phase gates. Even "obvious" tasks benefit from 30s of scout |
+| **Shadow decisions** — making architectural choices without logging to decisions.md | Next session repeats the same debate. Team agents contradict each other | Log every non-trivial choice via `decisions.md` or `journal` |
+| **Gold-plating** — adding "nice-to-have" features not in the approved plan | Scope creep, delayed delivery, untested code paths | Build ONLY what's in the plan. Log extras as follow-up tasks |
+| **Test-after** — writing tests after implementation instead of before (TDD violation) | Tests validate implementation bugs, not requirements. Coverage looks good but misses edge cases | Phase 3 (RED) before Phase 4 (GREEN). Always |
+| **Monolithic commit** — one giant commit with all changes | Impossible to revert partially. Review is overwhelming | Commit per phase or per logical unit. Small, reviewable diffs |
+| **Assumption-based implementation** — guessing requirements instead of asking | Builds the wrong thing confidently. User discovers mismatch late | If ambiguous, ask. 30s of clarification saves 30min of rework |
 
 ## Sharp Edges
 

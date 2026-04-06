@@ -1,10 +1,10 @@
 ---
 name: scope-guard
-description: "Detects scope creep. Auto-triggered by L1 orchestrators when files exceed the original plan. Compares current git changes against plan, flags out-of-scope files, reports IN_SCOPE or CREEP_DETECTED."
+description: "Detects scope creep by quantifying drift percentage. Auto-triggered by L1 orchestrators when files exceed the original plan. Compares git changes against plan, classifies drift into 4 tiers: ON_TRACK, MINOR_DRIFT, SIGNIFICANT_DRIFT, OUT_OF_CONTROL."
 user-invocable: false
 metadata:
   author: runedev
-  version: "0.3.0"
+  version: "0.4.0"
   layer: L3
   model: haiku
   group: monitoring
@@ -73,13 +73,28 @@ Rules for OUT_OF_SCOPE (counts as creep):
 - New dependencies added without a planned feature requiring them
 - Documentation files for unplanned features
 
-### Step 4: Flag Creep
+### Step 4: Quantify Drift
 
-If any OUT_OF_SCOPE files are detected:
-- List each out-of-scope file with the reason it is flagged
-- Classify as: `MINOR CREEP` (1-2 unplanned files) or `SIGNIFICANT CREEP` (3+ unplanned files)
+Compute **Drift Percentage** — the ratio of out-of-scope changes to total changes:
 
-If zero OUT_OF_SCOPE files: status is `IN_SCOPE`.
+```
+drift_pct = (out_of_scope_files / total_files_changed) × 100
+```
+
+Classify drift into a 4-tier system:
+
+| Drift % | Level | Status | Action |
+|---------|-------|--------|--------|
+| **< 10%** | ON TRACK | `ON_TRACK` | No action needed. Proceed normally. |
+| **10-25%** | MINOR DRIFT | `MINOR_DRIFT` | Flag out-of-scope files. Suggest trim or acknowledge as intentional. Continue. |
+| **25-50%** | SIGNIFICANT DRIFT | `SIGNIFICANT_DRIFT` | **Pause recommended.** Present drift report to user. Re-scope before continuing. |
+| **> 50%** | OUT OF CONTROL | `OUT_OF_CONTROL` | **Block.** More unplanned work than planned. Escalate to orchestrator. Require re-alignment before ANY further work. |
+
+**Edge case**: If total planned files = 0 (no plan loaded), use file count thresholds instead:
+- 0 out-of-scope → ON_TRACK
+- 1-2 out-of-scope → MINOR_DRIFT
+- 3-5 out-of-scope → SIGNIFICANT_DRIFT
+- 6+ out-of-scope → OUT_OF_CONTROL
 
 ### Step 5: Report
 
@@ -91,7 +106,8 @@ Output the following structure:
 - **Planned files**: [count from plan]
 - **Actual files changed**: [count from git diff]
 - **Out-of-scope files**: [count]
-- **Status**: IN_SCOPE | MINOR CREEP | SIGNIFICANT CREEP
+- **Drift**: [X]% ([level])
+- **Status**: ON_TRACK | MINOR_DRIFT | SIGNIFICANT_DRIFT | OUT_OF_CONTROL
 
 ### In-Scope Changes
 - [file] — [matches planned task]
@@ -100,9 +116,10 @@ Output the following structure:
 - [file] — [reason: unplanned feature | unrelated refactor | unplanned dep]
 
 ### Recommendations
-- [If IN_SCOPE]: No action needed. Proceed.
-- [If MINOR CREEP]: Review [file] — consider reverting or acknowledging as intentional.
-- [If SIGNIFICANT CREEP]: STOP. Re-align with original plan before continuing. [list files to revert]
+- [ON_TRACK]: No action needed. Proceed.
+- [MINOR_DRIFT]: Review [file] — consider reverting or acknowledging as intentional.
+- [SIGNIFICANT_DRIFT]: PAUSE. Drift is [X]%. Re-align scope with original plan. Suggested cuts: [files to revert]
+- [OUT_OF_CONTROL]: STOP. [X]% of changes are unplanned — more drift than planned work. Present full report to user/orchestrator. Do NOT continue until re-scoped.
 ```
 
 ## Output Format
@@ -110,14 +127,15 @@ Output the following structure:
 ```
 ## Scope Report
 - Planned files: 3 | Actual: 5 | Out-of-scope: 2
-- Status: MINOR CREEP
+- Drift: 40% (SIGNIFICANT_DRIFT)
 
 ### Out-of-Scope Changes
 - src/components/NewWidget.tsx — unplanned feature
 - docs/new-feature.md — documentation for unplanned feature
 
 ### Recommendations
-- Review src/components/NewWidget.tsx — revert or log as intentional scope change.
+- PAUSE. Drift is 40%. Re-align scope with original plan.
+- Suggested cuts: revert src/components/NewWidget.tsx + docs/new-feature.md (reduces drift to 0%)
 ```
 
 ## Constraints
@@ -134,7 +152,7 @@ Known failure modes for this skill. Check these before declaring done.
 |---|---|---|
 | Classifying test files for planned code as out-of-scope | MEDIUM | Test files for planned source files are always IN_SCOPE — natural dependency |
 | Classifying lock file changes as out-of-scope | LOW | package-lock.json, yarn.lock, Cargo.lock are always IN_SCOPE |
-| SIGNIFICANT CREEP threshold applied to 1-2 unplanned files | LOW | MINOR = 1-2 files, SIGNIFICANT = 3+ files — don't escalate prematurely |
+| Over-escalating drift (e.g., 1 extra file = OUT_OF_CONTROL) | LOW | Use drift percentage, not gut feeling. 1 extra file out of 10 = 10% = MINOR_DRIFT, not panic |
 | Plan not loadable (no TodoWrite, no progress.md) | MEDIUM | Ask calling skill for plan as text description before proceeding |
 | Scope check against plan but not against stated intent | MEDIUM | Plan-based scope guard catches file drift; review Step 6.6 (Scope Drift Detection) catches intent drift. Both should run for full coverage |
 
@@ -143,14 +161,14 @@ Known failure modes for this skill. Check these before declaring done.
 - Plan loaded from TodoWrite active tasks or .rune/progress.md
 - git diff --stat and --cached output parsed for all changed files
 - Each changed file classified IN_SCOPE or OUT_OF_SCOPE with reasoning
-- Creep severity classified (IN_SCOPE / MINOR CREEP / SIGNIFICANT CREEP)
-- Scope Report emitted with recommendations
+- Drift percentage computed and classified (ON_TRACK / MINOR_DRIFT / SIGNIFICANT_DRIFT / OUT_OF_CONTROL)
+- Scope Report emitted with drift %, level, and actionable recommendations
 
 ## Returns
 
 | Artifact | Format | Location |
 |----------|--------|----------|
-| Scope Report | Markdown (IN_SCOPE / MINOR CREEP / SIGNIFICANT CREEP) | inline |
+| Scope Report | Markdown (drift %, 4-tier level, recommendations) | inline |
 | In-scope file list | Classified list | inline |
 | Out-of-scope drift report | File list with reasons | inline |
 | Recommendations | Actionable list | inline |

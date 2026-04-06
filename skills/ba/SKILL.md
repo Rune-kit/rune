@@ -3,7 +3,7 @@ name: ba
 description: Business Analyst agent. Deeply understands user requirements before any planning or coding begins. Asks probing questions, identifies hidden requirements, maps stakeholders, defines scope boundaries, and produces a structured Requirements Document that plan and cook consume.
 metadata:
   author: runedev
-  version: "0.4.0"
+  version: "0.5.0"
   layer: L2
   model: opus
   group: creation
@@ -64,7 +64,7 @@ Read the user's request. Classify the requirement type:
 | Greenfield | "new project", "build from scratch" | Full BA + market context |
 
 If Bug Fix → skip BA, route to cook/debug directly.
-If Refactor → light version (Step 1 + Step 4 only).
+If Refactor → light version (Step 1 + Step 4 only). Skip Steps 2, 2.5, 3, 5, 6.
 
 If existing codebase → invoke `rune:scout` for context before proceeding.
 
@@ -109,6 +109,72 @@ O: 30% faster incident detection (measurable KPI)
 - Data/Analytics/Research feature → PICO (forces measurable outcome definition)
 - Product/UX feature → Jobs-to-be-Done (keeps focus on user motivation)
 - Integration → 5 Questions only (frameworks add noise for plumbing tasks)
+
+### Step 2.5 — Ambiguity Scoring (Execution Gate)
+
+After each question round, compute an **Ambiguity Score** to determine if requirements are clear enough to proceed. This prevents premature handoff to `plan` with vague inputs.
+
+#### Scoring Formula
+
+```
+Ambiguity = 1 - weighted_average(dimensions)
+
+Dimensions (weights vary by requirement type):
+  Greenfield:  Goal (40%) + Constraints (30%) + Success Criteria (30%)
+  Feature:     Goal (30%) + Constraints (30%) + Success Criteria (20%) + Integration (20%)
+  Integration: Goal (20%) + Constraints (25%) + Success Criteria (20%) + API Contract (35%)
+```
+
+#### Dimension Scoring (0.0 – 1.0)
+
+| Dimension | 0.0 (Unknown) | 0.5 (Partial) | 1.0 (Clear) |
+|-----------|---------------|----------------|--------------|
+| **Goal** | "Make it better" | "Improve dashboard performance" | "Dashboard loads in <2s with 10k rows" |
+| **Constraints** | No constraints mentioned | "Use existing DB" | "PostgreSQL 15, no new deps, GDPR compliant" |
+| **Success Criteria** | "It should work" | "Users can see their data" | "AC-1.1: GIVEN 10k rows WHEN page loads THEN render <2s" |
+| **Integration** | "Connect to the API" | "Use REST, need auth" | "POST /api/v2/orders, OAuth2, rate limit 100/min" |
+| **API Contract** | "It sends data somewhere" | "JSON payload to endpoint" | "OpenAPI spec provided, request/response schemas defined" |
+
+#### Threshold Gate
+
+| Ambiguity | Level | Action |
+|-----------|-------|--------|
+| **< 15%** | Crystal Clear | Proceed to Step 3 immediately |
+| **15-25%** | Acceptable | Proceed with noted assumptions — flag gaps in Requirements Doc |
+| **25-40%** | Unclear | Ask 1-2 targeted follow-up questions on weakest dimension |
+| **> 40%** | Blocked | Do NOT proceed. Re-ask the weakest dimension question with examples |
+
+<HARD-GATE>
+NEVER hand off to plan with Ambiguity > 40%.
+If user insists "just build it" at > 40%, respond:
+"Ambiguity is [X]% — the weakest area is [dimension]. One more answer cuts this in half: [targeted question]"
+</HARD-GATE>
+
+#### Scoring After Each Question
+
+After each of the 5 Questions (Step 2), update the score:
+
+```
+Round 1 (WHO):    Goal ≈ 0.3, others = 0.0 → Ambiguity ≈ 91%
+Round 2 (WHAT):   Goal ≈ 0.7, Success ≈ 0.3 → Ambiguity ≈ 72%
+Round 3 (WHY):    Goal ≈ 0.9, Success ≈ 0.5 → Ambiguity ≈ 47%
+Round 4 (BOUNDS): Constraints ≈ 0.6 → Ambiguity ≈ 30%
+Round 5 (CONSTR): Constraints ≈ 0.9 → Ambiguity ≈ 12% ✅
+```
+
+If Ambiguity drops below 15% before all 5 questions are asked (e.g., user provides a detailed PRD), skip remaining questions and proceed. The gate is about clarity, not ceremony.
+
+#### Display Format
+
+After completing Step 2, show the user:
+
+```
+Clarity Score: [100 - ambiguity]%
+  Goal:             [██████████] 0.9
+  Constraints:      [████████░░] 0.8
+  Success Criteria: [██████░░░░] 0.6  ← weakest
+  Status: ACCEPTABLE (ambiguity 23%) — proceeding with noted gaps
+```
 
 ### Step 3 — Hidden Requirement Discovery
 
@@ -332,11 +398,14 @@ Known failure modes for this skill. Check these before declaring done.
 | Requirements doc too verbose (>500 lines) | MEDIUM | Max 200 lines — concise, actionable, testable |
 | Skipping BA for "simple" features that turn out complex | HIGH | Let cook's complexity detection trigger BA, not user judgment |
 | Recommending shortcuts without Completeness Score | MEDIUM | Step 3.5: every option needs X/10 score + dual effort estimate (human vs AI). "90% coverage" is a red flag when 100% costs 15 min more |
+| Handing off to plan with ambiguity > 40% | CRITICAL | Step 2.5 HARD-GATE: compute ambiguity score after elicitation, block handoff if > 40%, ask targeted follow-up on weakest dimension |
+| Skipping ambiguity scoring because "user seems clear" | HIGH | Always compute the score — perceived clarity ≠ measured clarity. The formula catches gaps humans miss |
 
 ## Done When
 
 - Requirement type classified (feature/refactor/integration/greenfield)
 - 5 probing questions asked and answered (or extracted from spec/PRD)
+- Ambiguity Score computed and displayed — must be ≤ 40% before proceeding (≤ 25% preferred)
 - Hidden requirements discovered and confirmed with user
 - Scope defined (in/out/assumptions/dependencies)
 - User stories with testable acceptance criteria produced
