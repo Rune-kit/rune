@@ -3,7 +3,7 @@ name: marketing
 description: Create marketing assets and execute launch strategy. Generates landing copy, social banners, SEO meta, blog posts, and video scripts.
 metadata:
   author: runedev
-  version: "0.3.0"
+  version: "0.4.0"
   layer: L2
   model: sonnet
   group: delivery
@@ -31,6 +31,8 @@ Create marketing assets and execute launch strategy. Marketing generates landing
 - `slides` (L3): generate presentation decks for launches and demos
 - `browser-pilot` (L3): capture screenshots for marketing assets
 - L4 extension packs: domain-specific content when context matches (e.g., @rune/content for blog posts, @rune/analytics for campaign measurement)
+- `@rune-pro/growth/content-scorer` (L4 Pro, optional): 5-dimension content quality gate — if available, score all generated copy for AI phrase contamination and humanity
+- `@rune-pro/growth/cro-analyst` (L4 Pro, optional): psychology-driven CRO analysis for landing pages — if available, audit generated landing copy through 7 behavioral lenses
 
 ## Execution Steps
 
@@ -87,8 +89,15 @@ If `marketing/brand-voice.md` already exists → Read it and apply. Do NOT regen
 
 Using product understanding, market research, and **brand voice contract**, produce:
 
+**Anti-AI Copy Rules** (apply to ALL generated copy):
+- NEVER open with "In today's...", "Are you struggling with...", "Have you ever wondered..."
+- NEVER use: "game-changer", "revolutionary", "seamlessly", "leverage", "unlock the power of", "dive deep into", "delve", "robust", "streamline", "cutting-edge"
+- MUST use one of 5 hook types for headlines: Provocative Question, Specific Scenario, Surprising Statistic, Bold Statement, or Counterintuitive Claim
+- MUST include specific numbers, names, or outcomes — not vague claims ("many users love it")
+- If the copy sounds like it was written by a generic AI → rewrite until it has personality
+
 **Hero section**
-- Headline (under 10 words, outcome-focused)
+- Headline (under 10 words, outcome-focused, uses one of the 5 hook types above)
 - Subheadline (1-2 sentences expanding the promise)
 - Primary CTA button text
 
@@ -146,6 +155,41 @@ If the project already has a deployed site or existing pages, run a technical SE
 6. **Performance signals**: Check for `next/image` or lazy loading on images. Flag `<img>` without `loading="lazy"` below fold.
 7. **Sitemap**: Check for `sitemap.xml` or sitemap generation in build config. Flag if missing.
 8. **Robots**: Check for `robots.txt`. Verify it doesn't accidentally block important pages.
+
+**9. Schema Markup**: Check for `application/ld+json` blocks. Recommend adding relevant types:
+
+| Content Type | Schema Type | Key Properties |
+|-------------|-------------|---------------|
+| Product page | `Product` | name, description, offers, review, aggregateRating |
+| Article/Blog | `Article` | headline, author, datePublished, dateModified, image |
+| FAQ section | `FAQPage` | mainEntity[].name, mainEntity[].acceptedAnswer |
+| How-to guide | `HowTo` | name, step[].name, step[].text, totalTime |
+| Organization | `Organization` | name, url, logo, sameAs[] |
+| Breadcrumbs | `BreadcrumbList` | itemListElement[].name, itemListElement[].item |
+| Software | `SoftwareApplication` | name, operatingSystem, applicationCategory, offers |
+| Review | `Review` | itemReviewed, reviewRating, author, reviewBody |
+| Comparison | `ItemList` | itemListElement[] with individual Product/Review schemas |
+| Local biz | `LocalBusiness` | name, address, telephone, openingHoursSpecification |
+
+Use `@graph` pattern to combine multiple schema types on a single page:
+```json
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    { "@type": "Organization", ... },
+    { "@type": "WebPage", ... },
+    { "@type": "BreadcrumbList", ... }
+  ]
+}
+```
+
+**10. Programmatic SEO awareness**: If the site has repeatable content patterns (product listings, city pages, comparison pages), note the opportunity for template-driven SEO pages. Common playbooks:
+- **Templates**: `best [tool] for [persona]` pages across personas
+- **Comparisons**: `[product A] vs [product B]` for all competitor pairs
+- **Locations**: `[service] in [city]` for local reach
+- **Integrations**: `[product] + [integration]` for every supported integration
+
+Flag programmatic SEO opportunities in the audit report. Execution details are in `@rune-pro/growth` pack.
 
 **Output**: SEO Audit Report with pass/fail per check. Save to `marketing/seo-audit.md`.
 
