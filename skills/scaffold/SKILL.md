@@ -33,6 +33,7 @@ Generated projects MUST build and pass tests. A scaffold that produces broken co
 - `research` (L3): Phase 2 — best practices, starter templates, library comparison
 - `plan` (L2): Phase 3 — architecture and implementation plan
 - `design` (L2): Phase 4 — design system (frontend projects only)
+- `skill-forge` (L2): when scaffolded project includes custom skills or plugin structure
 - `fix` (L2): Phase 5 — code generation (implements the plan)
 - `team` (L1): Phase 5 — parallel implementation when 3+ independent modules
 - `test` (L2): Phase 6 — test suite generation

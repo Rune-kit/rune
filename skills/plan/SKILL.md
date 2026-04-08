@@ -9,7 +9,7 @@ metadata:
   group: creation
   tools: "Read, Write, Edit, Glob, Grep"
   emit: plan.ready
-  listen: codebase.scanned
+  listen: codebase.scanned, project.onboarded
 ---
 
 # plan
@@ -122,6 +122,8 @@ High-level multi-feature planning — organize features into milestones.
 ### Step 1 — Gather Context
 
 Check for `.rune/features/*/requirements.md` via `Glob`. If a Requirements Document exists (from `rune:ba`), read it — it contains user stories, acceptance criteria, scope, constraints. Do NOT re-gather what BA already elicited.
+
+If `project.onboarded` signal was received, scout output is already available in session context — skip re-invoking scout.
 
 Invoke `rune:scout` if not already done — plans without context produce wrong file paths. Call `neural-memory` (Recall Mode) to surface past architecture decisions before making new ones.
 

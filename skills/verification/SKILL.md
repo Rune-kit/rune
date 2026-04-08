@@ -9,6 +9,7 @@ metadata:
   group: validation
   tools: "Read, Bash, Glob, Grep"
   listen: code.changed
+  emit: verification.complete
 ---
 
 # verification

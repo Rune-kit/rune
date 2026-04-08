@@ -9,6 +9,7 @@ metadata:
   model: sonnet
   group: delivery
   tools: "Read, Write, Edit, Bash, Glob, Grep"
+  listen: incident.detected
 ---
 
 # incident
@@ -22,6 +23,7 @@ Structured incident response for production issues. Follows a strict order: tria
 - `/rune incident "description of what's broken"` — direct user invocation
 - Called by `launch` (L1): watchdog alerts during Phase 3 VERIFY
 - Called by `deploy` (L2): health check fails post-deploy
+- Signal: auto-triggers when `watchdog` emits `incident.detected` — no manual invocation needed
 
 ## Calls (outbound)
 

@@ -33,6 +33,7 @@ The skill that builds skills. Applies Test-Driven Development to skill authoring
 ## Called By (inbound)
 
 - `cook` (L1): when the feature being built IS a new skill
+- `scaffold` (L1): when scaffolded project includes custom skills
 
 ## References
 

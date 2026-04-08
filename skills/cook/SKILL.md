@@ -11,7 +11,7 @@ metadata:
   group: orchestrator
   tools: "Read, Write, Edit, Bash, Glob, Grep"
   emit: phase.complete, checkpoint.request
-  listen: plan.ready, review.complete
+  listen: plan.ready, review.complete, ideas.ready, preflight.passed, verification.complete
 ---
 
 # cook

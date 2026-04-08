@@ -34,6 +34,7 @@ Output is a Requirements Document → hand off to rune:plan for implementation p
 - `research` (L3): look up similar products, APIs, integrations
 - `plan` (L2): hand off Requirements Document for implementation planning
 - `brainstorm` (L2): when multiple approaches exist for a requirement
+- `design` (L2): when requirements include UI/UX components — hand off visual requirements
 
 ## Called By (inbound)
 

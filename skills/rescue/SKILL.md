@@ -34,6 +34,7 @@ Legacy refactoring orchestrator for safely modernizing messy codebases. Rescue r
 - `autopsy` (L2): Phase 0 RECON — full codebase health assessment
 - `safeguard` (L2): Phase 1 SAFETY NET — characterization tests and protective measures
 - `surgeon` (L2): Phase 2-N SURGERY — incremental refactoring (1 module per session)
+- `retro` (L2): post-rescue retrospective — capture lessons learned
 - `journal` (L3): state tracking across rescue sessions
 - `plan` (L2): create refactoring plan based on autopsy findings
 - `review` (L2): verify each surgery phase

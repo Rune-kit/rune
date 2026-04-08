@@ -34,6 +34,7 @@ Orchestrate the full deployment and marketing pipeline. Launch coordinates testi
 - `audit` (L2): pre-launch health check — full 7-phase quality gate
 - `deploy` (L2): push to target platform
 - `incident` (L2): if post-launch health check fails → triage and contain
+- `retro` (L2): post-launch retrospective — what went well, what didn't
 - `browser-pilot` (L3): verify live site screenshots and performance
 - `marketing` (L2): create launch assets (landing copy, social, SEO)
 - `watchdog` (L3): setup post-deploy monitoring

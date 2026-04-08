@@ -41,6 +41,8 @@ Retro is ENCOURAGING but CANDID. Every critique is anchored in specific commits,
 
 - `audit` (L2): engineering velocity and health dimension
 - `cook` (L1): optional — after completing a multi-phase feature, suggest retro
+- `rescue` (L1): post-rescue retrospective
+- `launch` (L1): post-launch retrospective
 - User: `/rune retro` direct invocation
 
 ## Data Flow

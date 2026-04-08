@@ -87,6 +87,7 @@ Direct API call ≠ Wrapper/middleware layer ≠ Reverse engineering ≠ Browser
 ## Calls (outbound)
 
 - `plan` (L2): when idea is selected and needs structuring into actionable steps
+- `design` (L2): when selected approach has UI/UX implications — hand off visual decisions
 - `research` (L3): gather data for informed brainstorming (existing solutions, benchmarks)
 - `trend-scout` (L3): market context and trends for product-oriented brainstorming
 - `problem-solver` (L3): structured reasoning frameworks (SCAMPER, First Principles, 6 Hats)
