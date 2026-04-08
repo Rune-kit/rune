@@ -31,7 +31,7 @@ claude
 npx @rune-kit/rune doctor
 ```
 
-That's it. 61 skills are now active in your AI assistant.
+That's it. 62 skills are now active in your AI assistant.
 
 > **Pro Tip**: For Claude Code, skip the CLI entirely. Install Rune as a plugin:
 > `claude plugin add rune-kit/rune` -- skills load natively with zero compilation.
@@ -55,7 +55,7 @@ npx @rune-kit/rune init
 
   -> Detected: cursor
   -> Created rune.config.json
-  -> Built 61 skills + 14 extensions to .cursor/rules/
+  -> Built 62 skills + 14 extensions to .cursor/rules/
 ```
 
 **Flags**:
@@ -83,7 +83,7 @@ npx @rune-kit/rune build
   [transform] Platform: cursor
   [transform] Resolved 142 cross-references
   [transform] Resolved 87 tool-name references
-  [emit]      61 skills + 14 extensions
+  [emit]      62 skills + 14 extensions
 
   -> Built 67 files to .cursor/rules/
 ```

@@ -84,7 +84,7 @@ export function SplitHero() {
           <em className="not-italic text-[var(--primary)]">before the sprint</em>
         </h1>
         <p className="text-[var(--text-secondary)] text-body leading-relaxed mb-8 max-w-md">
-          Rune wires your AI coding assistant to a mesh of 61 skills so you spend time building, not prompting.
+          Rune wires your AI coding assistant to a mesh of 62 skills so you spend time building, not prompting.
         </p>
         <div className="flex flex-wrap gap-3">
           <a

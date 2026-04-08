@@ -192,7 +192,7 @@ After updating any doc, verify consistency across all project documentation:
 Cross-Doc Consistency:
 - [x] README.md ↔ CLAUDE.md: versions match, commands match
 - [x] README.md ↔ docs/index.html: stats match, features match
-- [ ] README.md says "61 skills" but CLAUDE.md says "59" → FIX CLAUDE.md
+- [ ] README.md says "62 skills" but CLAUDE.md says "59" → FIX CLAUDE.md
 ```
 
 **Fix inconsistencies immediately** — don't just report them. Update the stale doc to match the source of truth (usually the code or the most recently updated doc).
