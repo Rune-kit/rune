@@ -5,7 +5,7 @@
 <p align="center">
   <strong>Less skills. Deeper connections.</strong><br>
   A lean, interconnected skill ecosystem for AI coding assistants.<br>
-  61 skills · 200+ mesh connections · 8 platforms · MIT
+  62 skills · 200+ mesh connections · 8 platforms · MIT
 </p>
 
 <p align="center">
@@ -23,7 +23,7 @@
 
 Most skill ecosystems are either **too many isolated skills** (540+ that don't talk to each other) or **rigid pipelines** (A → B → C, if B fails everything stops).
 
-Rune is a **mesh** — 61 skills with 200+ connections across a 5-layer architecture. Skills call each other bidirectionally, forming resilient workflows that adapt when things go wrong.
+Rune is a **mesh** — 62 skills with 200+ connections across a 5-layer architecture. Skills call each other bidirectionally, forming resilient workflows that adapt when things go wrong.
 
 ```
 Pipeline:  A → B → C → D         (B fails = stuck)
@@ -130,7 +130,7 @@ cook ───emit:phase.complete────→ session-bridge
 
 ## What Rune Is (and Isn't)
 
-Rune started as a **Claude Code plugin** and now compiles to **every major AI IDE**. Same 61 skills, same mesh connections, same workflows — zero knowledge loss across platforms.
+Rune started as a **Claude Code plugin** and now compiles to **every major AI IDE**. Same 62 skills, same mesh connections, same workflows — zero knowledge loss across platforms.
 
 | | Rune Provides | Claude Code Provides |
 |---|---|---|
@@ -182,7 +182,7 @@ npx @rune-kit/rune init --platform windsurf
 npx @rune-kit/rune init --platform antigravity
 ```
 
-This compiles all 61 skills into your IDE's rules format. Same knowledge, same workflows.
+This compiles all 62 skills into your IDE's rules format. Same knowledge, same workflows.
 
 ### Platform Comparison
 
@@ -253,11 +253,11 @@ This compiles all 61 skills into your IDE's rules format. Same knowledge, same w
 ║  Full lifecycle workflows                             ║
 ║  cook │ team │ launch │ rescue │ scaffold             ║
 ╠══════════════════════════════════════════════════════╣
-║  L2: WORKFLOW HUBS (28)                               ║
+║  L2: WORKFLOW HUBS (29)                               ║
 ║  Cross-hub mesh — the key differentiator              ║
 ║                                                        ║
 ║  Creation:    plan │ scout │ brainstorm │ design │     ║
-║               skill-forge │ ba │ mcp-builder           ║
+║               skill-forge │ ba │ mcp-builder │ graft   ║
 ║  Development: debug │ fix │ test │ review │ db         ║
 ║  Quality:     sentinel │ preflight │ onboard │         ║
 ║               audit │ perf │ review-intake │           ║

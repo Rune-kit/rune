@@ -3,7 +3,7 @@
 ## Overview
 
 Rune is an interconnected skill ecosystem for AI coding assistants.
-61 core skills | 5-layer mesh architecture | 200+ connections | Multi-platform.
+62 core skills | 5-layer mesh architecture | 200+ connections | Multi-platform.
 Philosophy: "Less skills. Deeper connections."
 
 Works on: Claude Code (native plugin) · Cursor · Windsurf · Google Antigravity · OpenAI Codex · OpenCode · any AI IDE.
@@ -61,6 +61,7 @@ When the user's intent matches a skill, invoke it BEFORE writing any code or ana
 | "new project", "bootstrap", "scaffold" | `rune:scaffold` | Creating files without requirements/plan |
 | Large task (5+ files, 3+ modules) | `rune:team` | Sequential cook on parallel-eligible work |
 | Legacy cleanup (health <40) | `rune:rescue` | Ad-hoc refactoring without safety nets |
+| "graft", "port from repo", "copy from repo" | `rune:graft` | Manual copy-paste from GitHub without challenge gate |
 
 **Workflow chains are enforced by each skill's Step 0 prerequisite check:**
 - `cook` → checks for approved plan (invokes `plan` if missing)
@@ -97,7 +98,7 @@ When the user's intent matches a skill, invoke it BEFORE writing any code or ana
 
 ## Current Wave
 
-61 core skills built (v2.9.0 — "SEO Intelligence").
+62 core skills built (v2.10.0 — "Graft Intelligence").
 
 ### L0 Router (1)
 skill-router — meta-enforcement layer, routes every action through the correct skill
@@ -105,11 +106,11 @@ skill-router — meta-enforcement layer, routes every action through the correct
 ### L1 Orchestrators (5)
 cook, team, launch, rescue, scaffold
 
-### L2 Workflow Hubs (28)
+### L2 Workflow Hubs (29)
 plan, scout, brainstorm, design, skill-forge, debug, fix, test, review, db,
 sentinel, preflight, onboard, deploy, marketing, perf,
 autopsy, safeguard, surgeon, audit, incident, review-intake, logic-guardian,
-ba, docs, mcp-builder, adversary, retro
+ba, docs, mcp-builder, adversary, retro, graft
 
 ### L3 Utilities (27)
 research, docs-seeker, trend-scout, problem-solver, sequential-thinking,

@@ -103,7 +103,7 @@ Override: user preference   → manual in config
 
 | Group | Skills |
 |-------|--------|
-| CREATION | plan, scout, brainstorm, design, skill-forge, ba, mcp-builder |
+| CREATION | plan, scout, brainstorm, design, skill-forge, ba, mcp-builder, graft |
 | DEVELOPMENT | debug, fix, test, review, db |
 | QUALITY | sentinel, preflight, onboard, audit, perf, review-intake, logic-guardian |
 | DELIVERY | deploy, marketing, incident, docs |

@@ -73,6 +73,7 @@ When `--template <name>` is provided, cook loads a pre-built workflow template i
 - Contains "security", "auth", "vulnerability", "CVE" → `security`
 - Contains "urgent", "hotfix", "production" → `hotfix`
 - Contains "quick", "just", "chỉ cần", "copy", "move", "rename", "bump" → `nano`
+- Contains "graft", "port from", "copy from repo", "clone feature from" → **delegate to `rune:graft`** (not a cook chain — hand off entirely)
 - Contains `--template` → load template workflow (see above)
 - Default → `feature`
 
