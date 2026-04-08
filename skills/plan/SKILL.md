@@ -3,7 +3,7 @@ name: plan
 description: Create structured implementation plans from requirements. Produces master plan + phase files for enterprise-scale project management. Master plan = overview (<80 lines). Phase files = execution detail (<150 lines each). Each session handles 1 phase. Uses opus for deep reasoning.
 metadata:
   author: runedev
-  version: "1.3.0"
+  version: "1.4.0"
   layer: L2
   model: opus
   group: creation
@@ -125,6 +125,8 @@ Check for `.rune/features/*/requirements.md` via `Glob`. If a Requirements Docum
 
 Invoke `rune:scout` if not already done — plans without context produce wrong file paths. Call `neural-memory` (Recall Mode) to surface past architecture decisions before making new ones.
 
+**Feature Map**: Check for `.rune/features.md` via `Glob`. If it exists, read it — understand the existing feature landscape, dependencies, and known gaps BEFORE planning. Cross-reference: does the new feature overlap, conflict with, or depend on existing features? If `.rune/features.md` does not exist, note this — Step 6.5 will create it.
+
 ### Step 2 — Classify Complexity
 
 Determine inline plan vs master + phase files:
@@ -200,6 +202,25 @@ When presenting alternatives (from brainstorm or Step 3), rate each **Completene
 ### Step 6 — Present and Get Approval
 
 Present the **master plan** to user (NOT all phase files). User reviews: phase breakdown, key decisions, risks, completeness scores. Wait for explicit approval ("go", "proceed", "yes") before writing phase files.
+
+### Step 6.5 — Update Feature Map (Always)
+<MUST-READ path="references/feature-map.md" trigger="every plan invocation"/>
+
+After plan approval, update `.rune/features.md`:
+
+**If `.rune/features.md` does NOT exist** (first run):
+1. Reverse-engineer features from scout output — each top-level module = 1 feature
+2. Map inter-feature dependencies from imports and shared types
+3. Assess status per feature (complete, partial, planned)
+4. Generate `.rune/features.md` with Features table, Dependency Graph, Detected Gaps
+
+**If `.rune/features.md` exists** (subsequent runs):
+1. Add or update the current feature's row (status, deps, key files)
+2. Cross-reference: new feature resolves existing gaps? Creates new ones?
+3. Validate dependency graph — flag missing features, orphans, circular deps, dead signals
+4. Write updated `.rune/features.md`
+
+**Skip if**: Inline plan for trivial task (no feature-level impact).
 
 ### Step 7 — Execution Handoff
 
@@ -299,6 +320,7 @@ When producing phase files with wave-based task grouping, every task MUST declar
 11. MUST include failure scenarios table — what happens when things go wrong
 12. MUST include rejection criteria — explicit "DO NOT" anti-patterns to prevent common mistakes
 13. MUST include cross-phase context — what's assumed from prior phases, what's exported for future
+14. MUST update `.rune/features.md` after every non-trivial plan — feature map is a living artifact
 
 ## Returns
 
@@ -308,6 +330,7 @@ When producing phase files with wave-based task grouping, every task MUST declar
 | Phase files | Markdown | `.rune/plan-<feature>-phase<N>.md` (one per phase) |
 | Feature spec | Markdown | `.rune/features/<name>/spec.md` (Feature Spec Mode only) |
 | Roadmap | Markdown | `.rune/roadmap.md` (Roadmap Mode only) |
+| Feature map | Markdown | `.rune/features.md` (auto-maintained) |
 | Inline plan | Markdown (inline) | Emitted directly for trivial tasks |
 
 ## Chain Metadata
@@ -317,7 +340,7 @@ Append to plan output when invoked standalone. Suppress when called as sub-skill
 ```yaml
 chain_metadata:
   skill: "rune:plan"
-  version: "1.3.0"
+  version: "1.4.0"
   status: "[DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED]"
   domain: "[area planned]"
   files_changed:
@@ -361,6 +384,8 @@ chain_metadata:
 | Outcome Block "Next Action" is a list, not one action | LOW | One action only — ambiguity about where to start causes re-analysis and lost context |
 | Overlapping file ownership across parallel phases/streams | HIGH | Change Stacking: every task declares `touches[]` — overlap detection flags same file in 2+ tasks before execution |
 | Missing dependency between tasks that share artifacts | HIGH | Every task declares `provides[]` and `requires[]` — cycle detection + missing dep check before dispatch |
+| New feature planned without checking existing feature map | HIGH | Step 1 reads `.rune/features.md` — catches overlaps, conflicts, and missing dependencies before planning begins |
+| Feature map never created — gaps accumulate silently | MEDIUM | Step 6.5 always runs (create or update) — feature map grows organically with each plan invocation |
 
 ## Self-Validation
 
@@ -372,6 +397,8 @@ SELF-VALIDATION (run before presenting plan to user):
 - [ ] Phase files have ALL Amateur-Proof sections (data flow, code contracts, failure scenarios, rejection criteria)
 - [ ] Locked decisions from BA are reflected in plan — none contradicted or ignored
 - [ ] Every BA requirement has a corresponding Req ID in at least one phase's Traceability Matrix
+- [ ] `.rune/features.md` updated with current feature (or created if first run)
+- [ ] No cross-feature conflicts detected (or flagged to user if found)
 ```
 
 ## Done When
@@ -390,6 +417,8 @@ SELF-VALIDATION (run before presenting plan to user):
 - Self-Validation: all checks passed
 - Outcome Block present in every plan output (master plan, phase files, inline plan)
 - Outcome Block contains: What Was Planned + Immediate Next Action (single action) + How to Measure table
+- `.rune/features.md` created (first run) or updated (subsequent) with current feature
+- Cross-feature dependencies validated — no conflicts or orphans left unaddressed
 
 ## Cost Profile
 
