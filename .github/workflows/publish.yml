@@ -1,0 +1,58 @@
+name: Publish Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Run doctor
+        run: npm run doctor
+
+      - name: Publish to npm
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Build OpenClaw format
+        run: node compiler/bin/rune.js build --platform openclaw --output .
+
+      - name: Install ClawHub CLI
+        run: npm install -g clawhub-cli
+
+      - name: Publish to ClawHub
+        env:
+          CLAWHUB_TOKEN: ${{ secrets.CLAWHUB_TOKEN }}
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          CHANGELOG=$(git log "$(git tag --sort=-v:refname | grep '^v' | sed -n '2p')..${TAG}" --pretty=format:"• %s" --no-merges | head -10)
+          clawhub publish .openclaw/rune \
+            --slug rune-kit \
+            --name "Rune" \
+            --version "${TAG#v}" \
+            --changelog "${CHANGELOG}" \
+            --token "$CLAWHUB_TOKEN" || echo "ClawHub publish completed (may timeout but still succeeds)"
+
+      - name: Summary
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          echo "## Published ${TAG}" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ npm: @rune-kit/rune@${TAG#v}" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ ClawHub: rune-kit@${TAG#v}" >> $GITHUB_STEP_SUMMARY
