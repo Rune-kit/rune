@@ -73,7 +73,7 @@ export default {
       name: 'Rune',
       kind: 'skills',
       description:
-        '59-skill mesh for AI coding assistants. Routes all code tasks through specialized skills. 200+ connections, 14 extension packs.',
+        '62-skill mesh for AI coding assistants. Routes all code tasks through specialized skills. 215+ connections, 14 extension packs.',
       version: pluginJson.version || '0.0.0',
       skills: ['./skills'],
       configSchema: {
@@ -116,7 +116,7 @@ export default {
 
 > Less skills. Deeper connections.
 
-**${skills.length}-skill mesh** for AI coding assistants — 5-layer architecture, 200+ connections, 14 extension packs.
+**${skills.length}-skill mesh** for AI coding assistants — 5-layer architecture, 215+ connections, 14 extension packs.
 
 ## Install
 
