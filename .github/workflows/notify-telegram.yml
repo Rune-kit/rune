@@ -33,22 +33,25 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Send Telegram notification
+        env:
+          TAG: ${{ steps.release.outputs.tag }}
+          CHANGELOG: ${{ steps.release.outputs.changelog }}
+          BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        shell: bash
         run: |
-          TAG="${{ steps.release.outputs.tag }}"
-          CHANGELOG="${{ steps.release.outputs.changelog }}"
-
-          python3 -c "
+          python3 << 'PYEOF'
           import json, urllib.request, os
 
           tag = os.environ['TAG']
           changelog = os.environ['CHANGELOG']
 
-          text = f'''🔮 <b>Rune {tag}</b>
+          text = f"""🔮 <b>Rune {tag}</b>
 
           {changelog}
 
-          📦 <a href=\"https://github.com/rune-kit/rune/releases/tag/{tag}\">GitHub Release</a>
-          ⬆️ <code>npm i @rune-kit/rune@latest</code>'''
+          📦 <a href="https://github.com/rune-kit/rune/releases/tag/{tag}">GitHub Release</a>
+          ⬆️ <code>npm i @rune-kit/rune@latest</code>"""
 
           data = json.dumps({
               'chat_id': os.environ['CHAT_ID'],
@@ -58,15 +61,10 @@ jobs:
           }).encode('utf-8')
 
           req = urllib.request.Request(
-              f'https://api.telegram.org/bot{os.environ[\"BOT_TOKEN\"]}/sendMessage',
+              f"https://api.telegram.org/bot{os.environ['BOT_TOKEN']}/sendMessage",
               data=data,
               headers={'Content-Type': 'application/json'}
           )
           urllib.request.urlopen(req)
           print(f'Notification sent for {tag}')
-          "
-        env:
-          TAG: ${{ steps.release.outputs.tag }}
-          CHANGELOG: ${{ steps.release.outputs.changelog }}
-          BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          PYEOF
