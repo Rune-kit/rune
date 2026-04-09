@@ -83,10 +83,17 @@ _Methodology: Claude Code CLI headless mode (`claude -p --output-format json`), 
 
 ---
 
-## What's New (v2.9.0)
+## What's New (v2.10.0)
+
+- **graft skill** (NEW L2) — port features from external repos with 5-dimension challenge gate (License, Stack Fit, Scope, Quality, Maintenance)
+- **plan v1.4.0** — Feature Map system: auto-maintained `.rune/features.md` for cross-feature awareness and gap detection
+- **Mesh Signals v2** — 23 active signals, 14 mesh gaps fixed, signal dispatch ordering documented
+- **62 skills, 215+ connections** across 5 layers
+
+### Previous (v2.9.0)
 
 - **marketing v0.4.0** — anti-AI copy rules (banned phrases, 5 hook types, specificity mandate), expanded SEO audit with schema markup guide (10 types + `@graph` pattern), programmatic SEO awareness (4 playbooks), optional Pro content-scorer/cro-analyst integration
-- **Pro growth pack v1.1.0** — 3 new skills (content-scorer, cro-analyst, marketing-psych) + 6 existing skills enriched with SEO Machine patterns (cannibalization prevention, 8-factor opportunity scoring, CTR curves, 70+ AI phrase detection, Cialdini CRO psychology, dual-track landing pages)
+- **Pro growth pack v1.1.0** — 3 new skills (content-scorer, cro-analyst, marketing-psych) + 6 existing skills enriched with SEO Machine patterns
 
 ### Previous (v2.8.0)
 
