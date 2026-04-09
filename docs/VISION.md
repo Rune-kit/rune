@@ -30,7 +30,7 @@ Rune is a **skill mesh** — not a skill collection, not a pipeline, not an AI a
 
 **Technical definition:**
 
-> **Rune = 62 skills × 200+ bidirectional connections × cross-session memory × multi-platform compiler**
+> **Rune = 62 skills × 215+ bidirectional connections × cross-session memory × multi-platform compiler**
 
 All three components are equally essential:
 - Remove connections → becomes a collection (The Bloat wins)
@@ -220,7 +220,7 @@ Rune operates on three time horizons. The roadmap is intentionally non-prescript
 *Rune is successful when these are true. Not when the feature list is long.*
 
 ### Mesh Health
-- **Connection density** ≥ 3.0 connections/skill (currently: 3.4 at 200+ connections / 62 skills) — do not let this drop below 2.5
+- **Connection density** ≥ 3.0 connections/skill (currently: 3.5 at 215+ connections / 62 skills) — do not let this drop below 2.5
 - **Dead nodes** = 0 — every skill has ≥1 inbound and ≥1 outbound connection
 - **Max chain depth used** < 6 in practice (ceiling is 8) — if chains regularly hit 8, the mesh needs restructuring
 - **Bloat Index** = 0.00 — dead nodes / total skills

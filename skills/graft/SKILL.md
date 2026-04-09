@@ -92,6 +92,7 @@ Copy the feature, then refactor and optimize. Fix anti-patterns, add missing tes
 - `fix` (L2): adaptation plan → fix's implementation targets (port/improve modes)
 - `review` (L2): grafted code → review's analysis targets (improve mode)
 - `test` (L2): new grafted code → test coverage targets
+- `journal` (L3): graft.complete signal → auto-logged for pattern tracking
 
 ### Fed By ←
 

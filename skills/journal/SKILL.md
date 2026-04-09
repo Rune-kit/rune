@@ -8,6 +8,7 @@ metadata:
   model: haiku
   group: state
   tools: "Read, Write, Edit, Glob, Grep"
+  listen: graft.complete
 ---
 
 # journal
@@ -35,6 +36,7 @@ None — pure L3 state management utility.
 - `audit` (L2): save AUDIT-REPORT.md and record health trend entry
 - `incident` (L2): record incident timeline and postmortem
 - `skill-forge` (L2): record skill creation decisions and rationale
+- `graft` (L2): auto-log graft operations — source URL, mode, challenge score, files changed
 
 ## Files Managed
 

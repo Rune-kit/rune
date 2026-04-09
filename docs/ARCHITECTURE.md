@@ -6,8 +6,8 @@
 |-------|------|-------|----------|----------|-------|
 | **L0** | **Router** | **1** | **L1-L3 (routing)** | **Every message** | **Stateless (rule-based)** |
 | L1 | Orchestrators | 5 | L2, L3 | L0, User | Stateful (workflow) |
-| L2 | Workflow Hubs | 28 | L2 (cross-hub), L3 | L1, L2 | Stateful (task) |
-| L3 | Utilities | 26 | Nothing (pure)* | L1, L2 | Stateless |
+| L2 | Workflow Hubs | 29 | L2 (cross-hub), L3 | L1, L2 | Stateful (task) |
+| L3 | Utilities | 27 | Nothing (pure)* | L1, L2 | Stateless |
 | L4 | Extension Packs | 14 free + 5 pro + 4 business | L3 | L2 (domain match) | Config-based |
 
 ### L0 — The Enforcement Layer
@@ -108,6 +108,8 @@ Override: user preference   → manual in config
 | QUALITY | sentinel, preflight, onboard, audit, perf, review-intake, logic-guardian |
 | DELIVERY | deploy, marketing, incident, docs |
 | RESCUE | autopsy, safeguard, surgeon |
+| SECURITY | adversary |
+| VELOCITY | retro |
 
 ### L3 Utilities
 
@@ -116,15 +118,16 @@ Override: user preference   → manual in config
 | KNOWLEDGE | research, docs-seeker, trend-scout |
 | REASONING | problem-solver, sequential-thinking |
 | VALIDATION | verification, hallucination-guard, integrity-check, completion-gate, constraint-check, sast |
-| STATE | context-engine, journal, session-bridge |
+| STATE | context-engine, context-pack, journal, session-bridge, neural-memory |
 | MONITORING | watchdog, scope-guard |
-| MEDIA | browser-pilot, asset-creator, video-creator |
+| MEDIA | browser-pilot, asset-creator, video-creator, slides |
 | DEPS | dependency-doctor |
 | WORKSPACE | worktree |
 | GIT | git |
 | DOCUMENTS | doc-processor |
+| SECURITY | sentinel-env |
 
-## Mesh Signals (v2.6.0)
+## Mesh Signals (v2.10.0)
 
 Event-driven skill communication via frontmatter declarations. Skills declare what signals they `emit` and `listen` to — the compiler builds a signal graph and validates consistency.
 
@@ -148,7 +151,7 @@ Lowercase, dot-separated: `<domain>.<event>` (e.g. `code.changed`, `tests.failed
 | `tests.passed` | test | deploy |
 | `tests.failed` | test | debug |
 | `security.passed` | sentinel | deploy |
-| `security.blocked` | sentinel | fix |
+| `security.blocked` | sentinel | fix, plan |
 | `review.complete` | review | cook |
 | `review.issues` | review | fix |
 | `plan.ready` | plan | cook |
@@ -156,6 +159,15 @@ Lowercase, dot-separated: `<domain>.<event>` (e.g. `code.changed`, `tests.failed
 | `phase.complete` | cook, team | session-bridge |
 | `deploy.complete` | deploy | watchdog |
 | `bug.diagnosed` | debug | fix |
+| `docs.updated` | docs | — |
+| `audit.complete` | audit | — |
+| `db.migrated` | db | — |
+| `verification.complete` | verification | — |
+| `graft.complete` | graft | cook |
+| `ideas.ready` | brainstorm | cook |
+| `preflight.passed` | preflight | cook |
+| `project.onboarded` | onboard | plan |
+| `incident.detected` | — | incident |
 
 ### Validation
 
@@ -321,6 +333,20 @@ mcp-builder → hallucination-guard (verify SDK imports exist)
 # doc-processor (Document Format Utility)
 doc-processor ← docs  (PDF/DOCX generation)
 doc-processor ← marketing (generate branded PDFs)
+
+# graft (Repo Porting)
+graft → scout         (scan target repo before porting)
+graft → review        (validate grafted code quality)
+graft → journal       (record grafting decision as ADR)
+graft → sentinel      (security check on ported code)
+
+# New connections (v2.10.0)
+brainstorm → design   (ideas feed into design system generation)
+ba → design           (requirements feed into UI design)
+rescue → retro        (post-rescue retrospective)
+launch → retro        (post-launch retrospective)
+scaffold → skill-forge (scaffold identifies reusable skill patterns)
+sentinel → plan       (security.blocked triggers re-planning)
 ```
 
 ## Master Plan + Phase Files (Amateur-Proof Architecture)

@@ -5,7 +5,7 @@
 <p align="center">
   <strong>Less skills. Deeper connections.</strong><br>
   A lean, interconnected skill ecosystem for AI coding assistants.<br>
-  62 skills · 200+ mesh connections · 8 platforms · MIT
+  62 skills · 215+ mesh connections · 8 platforms · MIT
 </p>
 
 <p align="center">
@@ -23,7 +23,7 @@
 
 Most skill ecosystems are either **too many isolated skills** (540+ that don't talk to each other) or **rigid pipelines** (A → B → C, if B fails everything stops).
 
-Rune is a **mesh** — 62 skills with 200+ connections across a 5-layer architecture. Skills call each other bidirectionally, forming resilient workflows that adapt when things go wrong.
+Rune is a **mesh** — 62 skills with 215+ connections across a 5-layer architecture. Skills call each other bidirectionally, forming resilient workflows that adapt when things go wrong.
 
 ```
 Pipeline:  A → B → C → D         (B fails = stuck)
@@ -107,7 +107,7 @@ _Methodology: Claude Code CLI headless mode (`claude -p --output-format json`), 
 
 ### Previous (v2.6.0)
 
-- **Mesh Signals** — event-driven skill communication via frontmatter. Skills declare `emit` and `listen` signals; compiler builds a signal graph in `skill-index.json`. 17 signals across 15 core skills
+- **Mesh Signals** — event-driven skill communication via frontmatter. Skills declare `emit` and `listen` signals; compiler builds a signal graph in `skill-index.json`. 23 signals across 15 core skills
 - **Signal Validation** — `scripts/validate-signals.js` checks orphan listeners (hard error), unlistened emitters (warning), signal naming conventions
 - **Mesh Contract** (v2.5.0) — `.rune/contract.md` project-level invariants enforced by cook + sentinel as hard gates
 - **Tier Override** — Pro/Business packs override Free packs with skill-level merging
@@ -138,7 +138,7 @@ Rune started as a **Claude Code plugin** and now compiles to **every major AI ID
 | **Quality Gates** | preflight + sentinel + review + completion-gate (parallel) | None built-in |
 | **Domain Knowledge** | 14 extension packs (trading, SaaS, mobile, etc.) | General-purpose |
 | **Cross-Session State** | .rune/ directory (decisions, conventions, progress) | Conversation only |
-| **Mesh Resilience** | 200+ skill connections, fail-loud-route-around | Linear execution |
+| **Mesh Resilience** | 215+ skill connections, fail-loud-route-around | Linear execution |
 | **Cost Optimization** | Auto model selection (haiku/sonnet/opus per task) | Single model |
 | | | |
 | **Sandbox & Permissions** | — | Claude Code handles this |
@@ -154,7 +154,7 @@ Rune started as a **Claude Code plugin** and now compiles to **every major AI ID
 | CI quality gates | `verification` skill: lint + typecheck + tests + build (actual commands, not LLM review) |
 | Memory / state | `session-bridge` + `journal`: cross-session decisions, conventions, ADRs, module health |
 | Multi-model strategy | Every skill has assigned model: haiku (scan), sonnet (code), opus (architecture) |
-| Agent specialization | 61 specialized skills with dedicated roles (architect, coder, reviewer, scanner, researcher, BA, scaffolder) — each runs as a Task agent via Claude Code |
+| Agent specialization | 62 specialized skills with dedicated roles (architect, coder, reviewer, scanner, researcher, BA, scaffolder) — each runs as a Task agent via Claude Code |
 | Security scanning | `sentinel`: OWASP patterns, secret scanning, dependency audit. `sast`: static analysis |
 
 ## Install
@@ -189,7 +189,7 @@ This compiles all 62 skills into your IDE's rules format. Same knowledge, same w
 | Feature | Claude Code | Cursor / Windsurf / Others |
 |---------|-------------|---------------------------|
 | Skills available | 61/61 | 61/61 |
-| Mesh connections | 200+ (programmatic) | 200+ (rule references) |
+| Mesh connections | 215+ (programmatic) | 215+ (rule references) |
 | Workflows & HARD-GATEs | Full | Full |
 | Extension packs | 14 | 14 |
 | Subagent parallelism | Native | Sequential fallback |
@@ -485,10 +485,10 @@ See [docs/MULTI-PLATFORM.md](docs/MULTI-PLATFORM.md) for the full architecture.
 ## Numbers
 
 ```
-Core Skills:       61 (L0: 1 │ L1: 5 │ L2: 28 │ L3: 27)
+Core Skills:       62 (L0: 1 │ L1: 5 │ L2: 29 │ L3: 27)
 Extension Packs:   14 free + 5 pro + 4 business
-Mesh Connections:  200+ cross-references
-Mesh Signals:      57 signals across 66 skills (emit/listen graph)
+Mesh Connections:  215+ cross-references
+Mesh Signals:      23 signals across 62 skills (emit/listen graph)
 Connections/Skill: 3.4 avg
 Platforms:         8 (Claude Code, Cursor, Windsurf, Antigravity, Codex, OpenCode, OpenClaw, Generic)
 Compiler:          ~1400 LOC (parser + 8 transforms + 8 adapters + CLI)
