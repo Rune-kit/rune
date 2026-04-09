@@ -9,7 +9,7 @@ metadata:
   group: creation
   tools: "Read, Write, Edit, Glob, Grep"
   emit: plan.ready
-  listen: codebase.scanned, project.onboarded
+  listen: codebase.scanned, project.onboarded, security.blocked
 ---
 
 # plan
@@ -111,6 +111,7 @@ High-level multi-feature planning — organize features into milestones.
 - `ba` (L2): Requirements Document → plan's primary input (locked decisions, user stories)
 - `scout` (L2): codebase analysis → plan's convention/pattern awareness
 - `neural-memory` (external): past architectural decisions → plan's precedent context
+- `sentinel` (L2): repeated security blocks → plan's constraint awareness for future features
 
 ### Feedback Loops ↻
 

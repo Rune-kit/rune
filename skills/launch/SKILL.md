@@ -11,6 +11,7 @@ metadata:
   model: sonnet
   group: orchestrator
   tools: "Read, Write, Edit, Bash, Glob, Grep"
+  listen: audit.complete
 ---
 
 # launch

@@ -9,7 +9,7 @@ metadata:
   group: development
   tools: "Read, Glob, Grep"
   emit: review.complete, review.issues
-  listen: code.changed
+  listen: code.changed, docs.updated
 ---
 
 # review

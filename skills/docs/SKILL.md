@@ -8,6 +8,7 @@ metadata:
   model: sonnet
   group: delivery
   tools: "Read, Write, Edit, Glob, Grep"
+  emit: docs.updated
 ---
 
 # docs

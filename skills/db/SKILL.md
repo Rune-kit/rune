@@ -8,6 +8,7 @@ metadata:
   model: sonnet
   group: development
   tools: "Read, Write, Edit, Bash, Glob, Grep"
+  emit: db.migrated
 ---
 
 # db

@@ -8,6 +8,7 @@ metadata:
   model: sonnet
   group: quality
   tools: "Read, Bash, Glob, Grep"
+  emit: audit.complete
 ---
 
 # audit

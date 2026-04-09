@@ -9,7 +9,7 @@ metadata:
   group: development
   tools: "Read, Write, Edit, Bash, Glob, Grep"
   emit: tests.passed, tests.failed
-  listen: code.changed
+  listen: code.changed, db.migrated
 ---
 
 # test

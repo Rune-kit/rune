@@ -380,6 +380,11 @@ If the coder model needs info from other phases, it's in the Cross-Phase Context
 
 Quality checks run in **two stages** — spec compliance gates code review. Reviewing code quality before verifying it matches the spec wastes effort on code that may need rewriting.
 
+**Signal dispatch ordering**: When `fix` emits `code.changed`, 4 listeners react (preflight, sentinel, test, review). Cook coordinates dispatch order — do NOT let all 4 fire simultaneously:
+- **Stage 1**: preflight + sentinel (parallel — independent checks)
+- **Stage 2**: test (after Stage 1 passes — no point testing non-compliant code)
+- **Stage 3**: review (after test passes — review verified code only)
+
 ```
 STAGE 1 (parallel):
   Launch 5a (preflight) + 5b (sentinel) simultaneously.

@@ -10,7 +10,7 @@ metadata:
   group: delivery
   tools: "Read, Write, Edit, Bash, Glob, Grep"
   emit: deploy.complete
-  listen: security.passed, tests.passed
+  listen: security.passed, tests.passed, docs.updated, audit.complete, db.migrated
 ---
 
 # deploy
