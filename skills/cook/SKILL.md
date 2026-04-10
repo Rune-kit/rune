@@ -5,7 +5,7 @@ context: fork
 agent: general-purpose
 metadata:
   author: runedev
-  version: "2.3.0"
+  version: "2.4.0"
   layer: L1
   model: sonnet
   group: orchestrator
@@ -396,6 +396,29 @@ STAGE 2 (after Stage 1 passes):
   Launch 5c (review) + 5d (completion-gate) simultaneously.
   If any returns BLOCK → fix findings, re-run the blocking check only.
 ```
+
+### Remediation Cycle Counter
+
+Every BLOCK finding gets a cycle counter. Fix → re-run → still BLOCK? Increment. **Max 3 cycles per gate** before escalation.
+
+```
+Cycle 1: fix finding → re-run gate
+Cycle 2: different fix → re-run gate
+Cycle 3: last attempt → re-run gate
+Cycle 4: STOP. Escalate to user with all 3 failed attempts + evidence.
+```
+
+Track per-gate, not globally — preflight cycle 2 does not count against sentinel cycle 1. If the SAME finding persists across 3 cycles, the fix approach is wrong — do NOT keep trying the same strategy. Cycle 2+ MUST try a different fix than Cycle 1.
+
+### Upstream Inconsistency Protocol
+
+During Phase 5 quality checks, if a gate finding traces to an **upstream artifact** (plan was wrong, spec was incomplete, architecture was flawed) rather than an implementation bug:
+
+1. Tag finding as `UPSTREAM:<phase>` (e.g., `UPSTREAM:plan`, `UPSTREAM:spec`)
+2. STOP current quality gate — fixing code won't resolve an upstream problem
+3. Re-invoke the upstream skill (`rune:plan` for plan issues, `rune:ba` for spec gaps) with the finding as context
+4. Get user approval on the corrected upstream artifact
+5. Resume Phase 5 from the beginning (re-run all gates — upstream change may invalidate prior PASS results)
 
 ### 5a. Preflight (Spec Compliance + Logic) — STAGE 1
 **REQUIRED SUB-SKILL**: Use `rune:preflight`
@@ -834,6 +857,8 @@ Common multi-agent failures to explicitly avoid. These are NOT edge cases — th
 | **Test-after** — writing tests after implementation instead of before (TDD violation) | Tests validate implementation bugs, not requirements. Coverage looks good but misses edge cases | Phase 3 (RED) before Phase 4 (GREEN). Always |
 | **Monolithic commit** — one giant commit with all changes | Impossible to revert partially. Review is overwhelming | Commit per phase or per logical unit. Small, reviewable diffs |
 | **Assumption-based implementation** — guessing requirements instead of asking | Builds the wrong thing confidently. User discovers mismatch late | If ambiguous, ask. 30s of clarification saves 30min of rework |
+| **Infinite remediation loop** — fixing the same BLOCK finding 4+ times with the same approach | Wastes tokens, drifts further from solution. If 3 attempts failed, the approach is wrong | Remediation Cycle Counter: max 3 cycles, Cycle 2+ must try different strategy, Cycle 4 escalates to user |
+| **Code fix for upstream problem** — fixing implementation when the plan/spec was wrong | Code "passes" but implements the wrong thing. Bug resurfaces in integration | Upstream Inconsistency Protocol: tag as UPSTREAM, re-invoke upstream skill, get approval, re-run gates |
 
 ## Sharp Edges
 
@@ -849,6 +874,8 @@ SELF-VALIDATION (run before emitting Cook Report):
 - [ ] Plan approval gate was not bypassed — user said "go" (check conversation history)
 - [ ] No Phase 4 code was written before Phase 3 tests (TDD order preserved)
 - [ ] All Phase 5 quality gates (preflight, sentinel, review) ran — not just claimed
+- [ ] No quality gate exceeded 3 remediation cycles without user escalation
+- [ ] No upstream issue was fixed by code change alone — UPSTREAM findings re-invoked the source skill
 - [ ] Cook Report contains actual commit hash, not placeholder
 ```
 
