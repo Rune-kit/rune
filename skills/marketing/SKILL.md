@@ -29,6 +29,7 @@ Create marketing assets and execute launch strategy. Marketing generates landing
 - `asset-creator` (L3): generate OG images, social cards, banners
 - `video-creator` (L3): create demo/explainer video plan
 - `slides` (L3): generate presentation decks for launches and demos
+- `doc-processor` (L3): export marketing deliverables as PDF/DOCX (press kits, one-pagers, sponsor decks)
 - `browser-pilot` (L3): capture screenshots for marketing assets
 - L4 extension packs: domain-specific content when context matches (e.g., @rune/content for blog posts, @rune/analytics for campaign measurement)
 - `@rune-pro/growth/content-scorer` (L4 Pro, optional): 5-dimension content quality gate — if available, score all generated copy for AI phrase contamination and humanity

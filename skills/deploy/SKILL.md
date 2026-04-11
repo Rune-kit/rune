@@ -181,6 +181,49 @@ Output the deploy report:
 
 If any step failed, include the error output and recommended next action.
 
+## Progressive Rollout / Feature Flag Mode
+
+When deploying high-risk changes (new features, migrations, architectural changes), use staged rollout instead of all-at-once deploy. Triggered by: user says "canary", "rollout", "feature flag", "staged", or "progressive" — or when release checklist item 3 (breaking changes) fires.
+
+### Progressive Rollout Chain
+
+```
+Stage 1: CANARY (5% traffic)
+  → deploy to production with feature flag OFF
+  → enable flag for 5% of users (staff, beta users, or random sample)
+  → watchdog: monitor error rate, latency, conversions for 15-30 minutes
+  → GATE: error rate < 0.5% AND latency ≤ baseline × 1.2
+
+Stage 2: EXPAND (25% → 50% → 100%)
+  → for each step: enable flag for N%, wait 15 min, check watchdog metrics
+  → GATE: same thresholds at each step
+  → At 100%: cleanup flag (remove feature flag code, ship cleanup PR)
+
+ROLLBACK TRIGGER: any stage fails watchdog gate → immediately set flag to 0%, incident auto-created
+```
+
+### Feature Flag Integration
+
+| Platform | Flag Mechanism | Cleanup Step |
+|----------|---------------|-------------|
+| Vercel | Edge Config or `@vercel/flags` | Remove flag key after 100% rollout |
+| LaunchDarkly | SDK variation check | Archive flag, clean up `variation()` calls |
+| Growthbook | Feature flag SDK | Deactivate + remove SDK calls |
+| DIY `.env` flag | `FEATURE_X_ENABLED=true` env var | Remove env var + conditional after 100% |
+
+**Minimum feature flag implementation** (no platform dependency):
+```typescript
+// Simple env-based flag — works anywhere
+const FEATURE_X = process.env.FEATURE_X_ENABLED === 'true';
+if (FEATURE_X) { /* new path */ } else { /* old path */ }
+// Cleanup: when flag reaches 100% → inline the new path, delete the conditional
+```
+
+### Skip if
+- Hotfix deploy (urgency outweighs staged rollout)
+- Static site deploy with no user-state impact
+- Non-production deploy (staging, preview)
+
 ## Output Format
 
 Deploy Report with platform, status (success/failed/rollback), deployed URL, build time, and checks (tests, security, HTTP, visual, monitoring). See Step 6 Report above for full template.

@@ -98,6 +98,7 @@ Before decomposing, classify the task into a complexity tier. Each tier defines 
 - `integrity-check` (L3): verify cook report integrity before merge
 - `completion-gate` (L3): validate workstream completion claims against evidence
 - `constraint-check` (L3): audit HARD-GATE compliance across parallel streams
+- `scope-guard` (L3): pre-merge scope verification — validate each stream's actual file changes against declared ownership
 - `worktree` (L3): create isolated worktrees for parallel cook instances
 - `context-pack` (L3): create structured handoff briefings before spawning subagents
 - L4 extension packs: domain-specific patterns when context matches (e.g., @rune/mobile when porting web to mobile)
@@ -486,6 +487,24 @@ All streams done     → MERGE sequentially (avoid conflicts)
 | **Never modifies** | Source files directly (delegates to cook instances), `SKILL.md` files, `compiler/**` |
 
 Each cook instance owns its declared file set (disjoint). Team owns coordination artifacts only — never touches source code directly.
+
+## Monorepo Awareness
+
+When the project is a monorepo (signals: `pnpm-workspace.yaml`, `turbo.json`, `nx.json`, or `packages/` directory with multiple `package.json`):
+
+**Stream assignment rules for monorepos:**
+- Assign streams by **package boundary**, not by file type — one stream per package (e.g., Stream A = `packages/api`, Stream B = `packages/web`)
+- Cross-package changes (e.g., shared types in `packages/core` consumed by both api + web) must be in a **dependency stream** that completes before consumer streams start
+- Use `turbo run test --filter=...[HEAD^1]` in Phase 5 (VERIFY) to test only affected packages — do NOT run the full test suite when only 1 package changed
+
+**Dependency stream pattern for cross-package changes:**
+
+```
+Stream A (depends_on: []): packages/core — shared types + utilities
+Stream B (depends_on: ["A"]): packages/api — consumes updated core types
+Stream C (depends_on: ["A"]): packages/web — consumes updated core types
+B and C run in parallel after A completes.
+```
 
 ## Anti-Patterns
 

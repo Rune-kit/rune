@@ -30,6 +30,7 @@ Generated projects MUST build and pass tests. A scaffold that produces broken co
 ## Calls (outbound)
 
 - `ba` (L2): Phase 1 — requirement elicitation (always, even in Express mode)
+- `sentinel-env` (L3): Phase 1.5 — environment pre-flight (validate runtime versions, ports, required tools before generating code)
 - `research` (L3): Phase 2 — best practices, starter templates, library comparison
 - `plan` (L2): Phase 3 — architecture and implementation plan
 - `design` (L2): Phase 4 — design system (frontend projects only)
@@ -234,6 +235,46 @@ Max 3 fix-verify loops. If still failing after 3 → report failures to user wit
 | Phase 6 (Test) | Tests fail on generated code | Fix code (not tests) → re-run, max 3 loops |
 | Phase 9 (Verify) | Lint/type/build errors | Fix → re-verify, max 3 loops |
 | Phase 9 (Verify) | Still failing after 3 loops | Report to user with specific failures |
+
+## Monorepo Mode
+
+When user says "monorepo", "workspace", "turborepo", "nx", or "multi-package", scaffold switches to Monorepo Mode.
+
+### Monorepo Detection & Setup
+
+```
+SIGNALS: pnpm-workspace.yaml | turbo.json | nx.json | packages/ directory | "monorepo" in task
+```
+
+### Structure Generated
+
+```
+project/
+├── packages/
+│   ├── core/          ← shared types, utilities
+│   ├── api/           ← backend service
+│   └── web/           ← frontend app
+├── package.json       ← root workspace config (private: true)
+├── pnpm-workspace.yaml or turbo.json
+├── tsconfig.base.json ← shared TS config
+└── .gitignore
+```
+
+### Monorepo-Specific Steps (additions to standard scaffold)
+
+1. **Workspace config**: generate `pnpm-workspace.yaml` (preferred) or `package.json` workspaces field
+2. **Build orchestration**: if turborepo → generate `turbo.json` with `build`, `test`, `lint` pipelines and `dependsOn` for cross-package deps
+3. **Shared TS config**: `tsconfig.base.json` at root; each package extends it
+4. **Internal packages**: use `workspace:*` protocol for cross-package deps (not file: paths)
+5. **Test isolation**: each package has its own `npm test` script; root runs `turbo run test`
+6. **Affected-only CI guidance**: include `.github/workflows/ci.yml` with `turbo run test --filter=...[HEAD^1]` for affected-only runs
+
+### Monorepo Anti-Patterns
+
+- DO NOT generate a single root `package.json` with all deps — defeats workspace isolation
+- DO NOT use `file:../core` — use `workspace:*` (pnpm) or `*` (yarn)
+- DO NOT run all tests from root without turborepo/nx orchestration — causes O(n) sequential runs
+- DO NOT share mutable state between packages via imports — use events or shared types only
 
 ## Constraints
 

@@ -35,7 +35,9 @@ Retro is ENCOURAGING but CANDID. Every critique is anchored in specific commits,
 ## Calls (outbound)
 
 - `scout` (L2): scan codebase for test file counts, project structure
-- `neural-memory` (L3): recall past retro insights for trend comparison
+- `plan` (L2): when retro identifies systemic bottlenecks — hand findings to plan for next sprint (e.g., "fix ratio >50% → allocate debugging time in next phase")
+- `journal` (L3): retro findings → ADR entries for recurring team patterns
+- `neural-memory` (L3): recall past retro insights for trend comparison; save this retro's key insights for future sessions
 
 ## Called By (inbound)
 

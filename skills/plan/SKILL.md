@@ -81,6 +81,7 @@ High-level multi-feature planning — organize features into milestones.
 
 - `scout` (L2): scan codebase for existing patterns, conventions, and structure
 - `brainstorm` (L2): when multiple valid approaches exist
+- `adversary` (L2): optional red-team gate on critical plan output (features touching auth, payments, or data integrity)
 - `research` (L3): external knowledge lookup
 - `sequential-thinking` (L3): complex architecture with many trade-offs
 - L4 extension packs: domain-specific architecture patterns

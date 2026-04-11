@@ -37,10 +37,35 @@ Cook supports predefined workflow chains for common task types. Use these as sho
 /rune cook bugfix     → Diagnose → fix → verify (Phase 1 → 4 → 6 → 7)
 /rune cook refactor   → Understand → plan → implement → quality (Phase 1 → 2 → 4 → 5 → 6 → 7)
 /rune cook security   → Full pipeline + sentinel@opus + sast (all phases, security-escalated)
-/rune cook hotfix     → Minimal: fix → verify → commit (Phase 4 → 6 → 7, skip scout if user provides context)
+/rune cook hotfix     → Production Hotfix Protocol: contain → fix → verify → deploy → watchdog → postmortem (see below)
 /rune cook nano       → Trivial: do → verify → done (no phases, ≤3 steps)
 /rune cook --template <name> → Load pre-built workflow template from installed Pro/Business packs
 ```
+
+### Production Hotfix Protocol
+
+When `hotfix` chain is active AND triggered from a live incident (not a dev-time fix), follow the full orchestrated chain — not just fix → verify → commit.
+
+```
+FULL HOTFIX CHAIN (when incident is active):
+
+1. CONTAIN   → `rune:incident` (if not already running): triage + contain blast radius first
+2. BRANCH    → create hotfix branch via worktree (isolate from main)
+3. FIX       → `rune:fix` (minimal change only — no refactoring, no scope creep)
+4. VERIFY    → `rune:verification` (full test suite on hotfix branch)
+5. SENTINEL  → `rune:sentinel` (security check — fix may introduce new surface)
+6. DEPLOY    → `rune:deploy` (deploy hotfix to production)
+7. WATCHDOG  → `rune:watchdog` (confirm health check passes post-deploy)
+8. POSTMORTEM → `rune:journal` + `rune:neural-memory` (capture root cause + fix pattern)
+
+HARD-GATES:
+- Do NOT skip CONTAIN if users are actively affected
+- Do NOT skip SENTINEL on hotfix — rushed fixes frequently introduce new vulnerabilities
+- Do NOT merge hotfix to main without VERIFY passing
+- Do NOT skip POSTMORTEM — hotfix without learning = same incident next month
+```
+
+**Minimal hotfix chain (non-incident, dev-time):** Phase 4 → 6 → 7 (fix → verify → commit). User provides context, skip scout.
 
 ### Template Workflows (Pro/Business)
 
@@ -723,6 +748,7 @@ Mentally track tool call fingerprints. 3 identical calls → WARN. 5 identical c
 | 1 | `scout` | L2 | Scan codebase before planning |
 | 1 | `onboard` | L2 | Initialize project context if no CLAUDE.md |
 | 1 | `ba` | L2 | Requirement elicitation for features |
+| 1 | `logic-guardian` | L2 | Conditional: when `.rune/logic-manifest.json` exists — protect complex business logic before any edits |
 | 2 | `plan` | L2 | Create implementation plan |
 | 2 | `brainstorm` | L2 | Trade-off analysis / rescue mode |
 | 2 | `design` | L2 | UI/design phase for frontend features |
@@ -735,6 +761,7 @@ Mentally track tool call fingerprints. 3 identical calls → WARN. 5 identical c
 | 5a | `preflight` | L2 | Spec compliance + logic review |
 | 5b | `sentinel` | L2 | Security scan |
 | 5c | `review` | L2 | Code quality review |
+| 5 | `scope-guard` | L3 | Verify changed files match approved plan scope (flag out-of-scope files before commit) |
 | 5 | `perf` | L2 | Performance regression check (optional) |
 | 5 | `audit` | L2 | Project health audit when scope warrants |
 | 5 | `review-intake` | L2 | Structured review intake for complex PRs |

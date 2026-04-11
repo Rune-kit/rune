@@ -194,6 +194,30 @@ Check: Does the API have sensible defaults? Does misuse fail loudly (not silentl
 
 **Skip if**: Code is internal-only (no external consumers), single-use utility, or test-only.
 
+### Step 4.7: API Contract / Breaking Change Check
+
+For any change that modifies exported functions, REST endpoints, event schemas, or shared types, check for backward-compatibility violations before proceeding.
+
+**Breaking change signals** — flag any of these as HIGH:
+
+| Signal | Example | Why it Breaks |
+|--------|---------|---------------|
+| Removed export | `export function getUser` deleted | Callers crash at import |
+| Renamed parameter | `id: string` → `userId: string` | Named-argument callers break |
+| Narrowed return type | `User \| null` → `User` (null removed) | Callers that handle null crash |
+| Required arg added | `fn(a)` → `fn(a, b: string)` | All existing callers missing `b` |
+| Status code changed | 200 → 204 on success | Clients checking for body break |
+| Event schema changed | `{ userId }` → `{ user_id }` | Consumers miss the field |
+| Endpoint path renamed | `/users/:id` → `/users/:userId` | All client URLs broken |
+
+**Versioning check:**
+1. Run `git diff main...HEAD` — list every changed exported symbol
+2. For each changed export: check if old signature still exists as an alias or overload
+3. If breaking and no version bump → WARN: "Breaking change detected in [symbol] — needs CHANGELOG entry and version bump"
+4. If `CHANGELOG.md` found: check that breaking changes are documented in the current version entry
+
+**Skip if**: Change is internal-only (no exports changed, no public API surface affected), or in test files only.
+
 ### Step 5: Test Coverage
 
 Identify gaps in test coverage.

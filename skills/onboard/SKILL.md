@@ -26,6 +26,7 @@ Auto-generate project context for AI sessions. Scans the codebase and creates a 
 ## Calls (outbound)
 
 - `scout` (L2): deep codebase scan — structure, frameworks, patterns, dependencies
+- `sentinel-env` (L3): validate developer environment (runtime versions, required tools, env vars) so the onboarded project is actually runnable
 - `autopsy` (L2): when project appears messy or undocumented — health assessment
 
 ## Called By (inbound)
