@@ -98,7 +98,7 @@ When the user's intent matches a skill, invoke it BEFORE writing any code or ana
 
 ## Current Wave
 
-62 core skills built (v2.10.0 — "Graft Intelligence").
+62 core skills built (v2.11.0 — "Mesh Integrity").
 
 ### L0 Router (1)
 skill-router — meta-enforcement layer, routes every action through the correct skill

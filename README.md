@@ -83,14 +83,16 @@ _Methodology: Claude Code CLI headless mode (`claude -p --output-format json`), 
 
 ---
 
-## What's New (v2.10.0)
+## What's New (v2.11.0)
 
-- **graft skill** (NEW L2) — port features from external repos with 5-dimension challenge gate (License, Stack Fit, Scope, Quality, Maintenance)
-- **plan v1.4.0** — Feature Map system: auto-maintained `.rune/features.md` for cross-feature awareness and gap detection
-- **Mesh Signals v2** — 23 active signals, 14 mesh gaps fixed, signal dispatch ordering documented
-- **62 skills, 215+ connections** across 5 layers
+- **Mesh integrity** — 8 dead wires fixed, 5 workflow gaps closed (hotfix chain, API versioning, monorepo mode, feature flags, dependency upgrade campaigns)
+- **audit v0.4.0** — DX Review Mode: Addy Osmani's 8 developer experience principles with scoring rubric and browser-pilot integration
+- **cook v2.4.0** — remediation cycle counter + upstream inconsistency protocol
+- **problem-solver v0.4.0** — Cynefin, SWOT, PESTLE, Porter's Five Forces, ethics framework
+- **plan v1.5.0** — autopilot suggested_next: autonomous execution path for Pro users after plan approval
+- **Autopilot routing** — skill-router Tier 1 entry for Pro autopilot ("auto", "làm hết", "đi ngủ" → autonomous mode)
 
-### Previous (v2.9.0)
+### Previous (v2.10.0)
 
 - **marketing v0.4.0** — anti-AI copy rules (banned phrases, 5 hook types, specificity mandate), expanded SEO audit with schema markup guide (10 types + `@graph` pattern), programmatic SEO awareness (4 playbooks), optional Pro content-scorer/cro-analyst integration
 - **Pro growth pack v1.1.0** — 3 new skills (content-scorer, cro-analyst, marketing-psych) + 6 existing skills enriched with SEO Machine patterns

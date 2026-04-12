@@ -3,6 +3,62 @@
 All notable changes to Rune are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.11.0] - 2026-04-12
+
+### Added
+- **DX Review Mode** — audit v0.4.0: Addy Osmani's 8 developer experience principles with scoring rubric and browser-pilot integration
+- **Autopilot routing** — skill-router Tier 1 entry for Pro autopilot (keywords: auto, autopilot, autonomous, "làm hết", "đi ngủ")
+- **plan v1.5.0** — autopilot as suggested_next after plan approval (Pro-conditional)
+- **cook v2.4.0** — remediation cycle counter, upstream inconsistency protocol
+- **problem-solver v0.4.0** — Cynefin, SWOT, PESTLE, Porter's Five Forces, ethics framework
+- **Auto-publish CI** — GitHub Actions workflow for npm + ClawHub on tag push
+
+### Fixed
+- **8 dead mesh wires** — asymmetric Calls/Called By entries across retro, incident, sentinel, onboard, marketing, scaffold
+- **5 workflow gaps** — hotfix chain (cook), API versioning check (review), monorepo mode (team+scaffold), progressive rollout (deploy), upgrade campaign (dependency-doctor)
+- Stale 61-skill references in landing page thumbnail
+
+## [2.10.0] - 2026-04-06
+
+### Added
+- **graft skill** (NEW L2) — port features from external repos with 5-dimension challenge gate
+- **plan v1.4.0** — Feature Map system: auto-maintained `.rune/features.md`
+- **Mesh Signals v2** — 23 active signals, 14 mesh gaps fixed, signal dispatch ordering
+
+## [2.9.0] - 2026-04-04
+
+### Added
+- **marketing v0.4.0** — anti-AI copy rules, expanded SEO audit with schema markup guide
+- **Pro growth pack v1.1.0** — 3 new skills + 6 enriched with SEO Machine patterns
+
+## [2.8.0] - 2026-04-01
+
+### Added
+- **Anti-Loop Intelligence** — 7 core skills enriched with Memento-Skills patterns
+- **cook v2.1.0** — observation/effect ratio tracking, budget-aware phase progression
+- **debug v1.0.0** — known error pattern catalog (8 archetypes + fingerprinting)
+- **fix v0.8.0** — recovery policy matrix (8 error types → structured actions)
+
+## [2.7.0] - 2026-03-31
+
+### Added
+- **Deep Knowledge** — OpenGnothia + Pro enrichment wave
+- **context-engine v0.8.0** — compaction technique + stream processing
+- **session-bridge v0.5.0** — structured cumulative memory
+- **retro v0.3.0** — milestone progressive analysis
+- **mcp-builder v0.4.0** — multi-provider adapter pattern
+- **onboard v0.4.0** — AI-driven interview mode
+- **cook v2.0.0** — prompt-as-API-contract pattern
+- **perf v0.3.0** — token budget tracking
+
+## [2.6.0] - 2026-03-30
+
+### Added
+- **Mesh Signals** — event-driven skill communication, 17 signals, 15 skills wired
+- **`rune status`** — CLI neofetch dashboard (tiered Free/Pro/Biz, --json)
+- **`rune visualize`** — interactive mesh graph (Canvas 2D, hover/click/filter)
+- **566 tests** → **946 tests** (signals, hooks, status, visualizer)
+
 ## [2.5.0] - 2026-03-25
 
 ### Added
