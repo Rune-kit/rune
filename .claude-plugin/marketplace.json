@@ -98,20 +98,6 @@
       "source": "./extensions/chrome-ext",
       "description": "Chrome Extension — manifest v3, service workers, content scripts, popup UI",
       "category": "domain"
-    },
-    {
-      "name": "@rune-pro",
-      "description": "Rune Pro — Autopilot (autonomous multi-session execution) + Product, Sales, Data Science, Support, Growth Marketing. 5 packs + 1 standalone skill. $49 lifetime.",
-      "homepage": "https://rune-kit.github.io/rune#pricing",
-      "repository": "https://github.com/rune-kit/rune-pro",
-      "category": "premium"
-    },
-    {
-      "name": "@rune-business",
-      "description": "Rune Business — Finance, Legal, HR, Enterprise Search. 4 enterprise packs + all Pro packs included. $149 lifetime.",
-      "homepage": "https://rune-kit.github.io/rune#pricing",
-      "repository": "https://github.com/rune-kit/rune-business",
-      "category": "premium"
     }
   ]
 }
