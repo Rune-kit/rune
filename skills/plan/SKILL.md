@@ -3,7 +3,7 @@ name: plan
 description: Create structured implementation plans from requirements. Produces master plan + phase files for enterprise-scale project management. Master plan = overview (<80 lines). Phase files = execution detail (<150 lines each). Each session handles 1 phase. Uses opus for deep reasoning.
 metadata:
   author: runedev
-  version: "1.4.0"
+  version: "1.5.0"
   layer: L2
   model: opus
   group: creation
@@ -344,7 +344,7 @@ Append to plan output when invoked standalone. Suppress when called as sub-skill
 ```yaml
 chain_metadata:
   skill: "rune:plan"
-  version: "1.4.0"
+  version: "1.5.0"
   status: "[DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED]"
   domain: "[area planned]"
   files_changed:
@@ -358,6 +358,10 @@ chain_metadata:
     - skill: "rune:adversary"
       reason: "[grounded in plan — e.g., 'Plan touches auth + payments — stress-test assumptions']"
       consumes: ["plan_file", "risk_areas"]
+    - skill: "rune:autopilot"
+      reason: "Plan approved — autonomous execution available (Pro tier, multi-session)"
+      consumes: ["plan_file", "phase_count"]
+      condition: "Pro tier installed AND phase_count >= 3 AND user signals autonomous intent"
     - skill: "rune:cook"
       reason: "Plan ready for execution"
       consumes: ["plan_file", "phase_count"]

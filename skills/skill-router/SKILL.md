@@ -148,8 +148,11 @@ These 5 skills are the main interface. Most user intents route here first:
 | Legacy code / rescue / modernize | `rune:rescue` | Old/messy codebase |
 | Check project health / full audit | `rune:audit` | Quality assessment |
 | New project / bootstrap / scaffold | `rune:scaffold` | Greenfield project creation |
+| Auto / autopilot / autonomous / "do it all" / "làm hết" / "đi ngủ" | `rune:autopilot` ⚡Pro | Autonomous multi-session execution (requires approved plan + Pro tier installed) |
 
 **Default route**: If unclear, route to `rune:cook`. Cook handles 70% of all requests.
+
+> **Pro skill note**: `rune:autopilot` requires `@rune-pro` installed. If not available, fall back to `rune:cook` with the approved plan and inform user that autopilot is a Pro feature.
 
 #### Tier 2 — Power User Skills (Direct Invocation)
 
