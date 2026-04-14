@@ -2,6 +2,7 @@
  * Doctor — Validates compiled output
  *
  * Checks: files exist, cross-references resolve, layer discipline, source freshness.
+ * Mesh checks: reciprocal connections, version suggestions, required sections.
  */
 
 import { existsSync } from 'node:fs';
@@ -452,6 +453,238 @@ async function checkOrgTemplates(_runeRoot, config) {
   }
 
   return errors;
+}
+
+/**
+ * Check mesh integrity: reciprocal connections, version suggestions, required sections
+ *
+ * @param {string} runeRoot - path to Rune source root
+ * @returns {Promise<object>} mesh check results
+ */
+export async function checkMeshIntegrity(runeRoot) {
+  const results = {
+    checks: [],
+    warnings: [],
+    errors: [],
+    stats: { skills: 0, connections: 0, missingReciprocals: 0 },
+  };
+
+  const skillsDir = path.join(runeRoot, 'skills');
+  if (!existsSync(skillsDir)) {
+    results.errors.push('skills/ directory not found');
+    return results;
+  }
+
+  // Step 1: Parse all skills
+  const skills = new Map(); // name → { calls: [], calledBy: [], version, sections }
+  const entries = await readdir(skillsDir, { withFileTypes: true });
+
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    const skillFile = path.join(skillsDir, entry.name, 'SKILL.md');
+    if (!existsSync(skillFile)) continue;
+
+    const content = await readFile(skillFile, 'utf-8');
+    const parsed = parseSkillConnections(content, entry.name);
+    skills.set(entry.name, parsed);
+  }
+
+  results.stats.skills = skills.size;
+
+  // Step 2: Validate reciprocals
+  const missingReciprocals = [];
+
+  for (const [name, skill] of skills) {
+    for (const called of skill.calls) {
+      const targetSkill = skills.get(called.skill);
+      if (!targetSkill) continue; // External skill or L4 pack
+
+      // Check if target acknowledges this caller
+      const acknowledges = targetSkill.calledBy.some((c) => c.skill === name);
+      if (!acknowledges) {
+        missingReciprocals.push({
+          caller: name,
+          callee: called.skill,
+          reason: called.reason,
+        });
+      }
+    }
+    results.stats.connections += skill.calls.length;
+  }
+
+  results.stats.missingReciprocals = missingReciprocals.length;
+
+  if (missingReciprocals.length === 0) {
+    results.checks.push({ name: 'Reciprocal connections', status: 'pass' });
+  } else {
+    results.checks.push({
+      name: 'Reciprocal connections',
+      status: 'warn',
+      detail: `${missingReciprocals.length} missing`,
+    });
+    // Group by callee for cleaner output
+    const byCallee = {};
+    for (const m of missingReciprocals) {
+      if (!byCallee[m.callee]) byCallee[m.callee] = [];
+      byCallee[m.callee].push(m.caller);
+    }
+    for (const [callee, callers] of Object.entries(byCallee)) {
+      results.warnings.push(`${callee}: missing callers in Called By: ${callers.join(', ')}`);
+    }
+  }
+
+  // Step 3: Check version maturity
+  const matureButLow = [];
+  for (const [name, skill] of skills) {
+    if (!skill.version) continue;
+    const [major, minor] = skill.version.split('.').map(Number);
+    // Suggest 1.0 if version is 0.8+ and has all required sections
+    if (major === 0 && minor >= 8 && skill.hasAllSections) {
+      matureButLow.push({ name, version: skill.version });
+    }
+  }
+
+  if (matureButLow.length === 0) {
+    results.checks.push({ name: 'Version maturity', status: 'pass' });
+  } else {
+    results.checks.push({
+      name: 'Version maturity',
+      status: 'warn',
+      detail: `${matureButLow.length} skills ready for 1.0`,
+    });
+    for (const s of matureButLow) {
+      results.warnings.push(`${s.name} v${s.version}: mature skill, consider promoting to 1.0`);
+    }
+  }
+
+  // Step 4: Check required sections
+  const requiredSections = ['Sharp Edges', 'Done When', 'Cost Profile'];
+  const missingSections = [];
+
+  for (const [name, skill] of skills) {
+    const missing = requiredSections.filter((s) => !skill.sections.includes(s));
+    if (missing.length > 0) {
+      missingSections.push({ name, missing });
+    }
+  }
+
+  if (missingSections.length === 0) {
+    results.checks.push({ name: 'Required sections', status: 'pass' });
+  } else {
+    results.checks.push({
+      name: 'Required sections',
+      status: 'warn',
+      detail: `${missingSections.length} skills incomplete`,
+    });
+    for (const s of missingSections) {
+      results.warnings.push(`${s.name}: missing sections: ${s.missing.join(', ')}`);
+    }
+  }
+
+  return results;
+}
+
+/**
+ * Parse skill connections from SKILL.md content
+ */
+function parseSkillConnections(content, skillName) {
+  const result = {
+    name: skillName,
+    calls: [],
+    calledBy: [],
+    version: null,
+    sections: [],
+    hasAllSections: false,
+  };
+
+  // Extract version from frontmatter
+  const versionMatch = content.match(/version:\s*["']?([\d.]+)["']?/);
+  if (versionMatch) {
+    result.version = versionMatch[1];
+  }
+
+  // Extract Calls section
+  const callsMatch = content.match(/## Calls \(outbound\)\s*\n([\s\S]*?)(?=\n## |\n---|\Z)/);
+  if (callsMatch) {
+    const lines = callsMatch[1].split('\n');
+    for (const line of lines) {
+      // Match patterns like: - `scout` (L2): scan codebase
+      // Or: - scout (L2): scan codebase
+      const match = line.match(/^-\s*`?([a-z][\w-]*)`?\s*\(L\d\)/i);
+      if (match) {
+        const skillRef = match[1].toLowerCase();
+        const reason = line.replace(match[0], '').replace(/^[:\s-]+/, '').trim();
+        result.calls.push({ skill: skillRef, reason });
+      }
+    }
+  }
+
+  // Extract Called By section
+  const calledByMatch = content.match(/## Called By \(inbound\)\s*\n([\s\S]*?)(?=\n## |\n---|\Z)/);
+  if (calledByMatch) {
+    const lines = calledByMatch[1].split('\n');
+    for (const line of lines) {
+      const match = line.match(/^-\s*`?([a-z][\w-]*)`?\s*\(L\d\)/i);
+      if (match) {
+        const skillRef = match[1].toLowerCase();
+        result.calledBy.push({ skill: skillRef });
+      }
+    }
+  }
+
+  // Check for required sections
+  const sectionPatterns = [
+    { name: 'Sharp Edges', pattern: /## Sharp Edges/ },
+    { name: 'Done When', pattern: /## Done When/ },
+    { name: 'Cost Profile', pattern: /## Cost Profile/ },
+    { name: 'Returns', pattern: /## Returns/ },
+  ];
+
+  for (const { name, pattern } of sectionPatterns) {
+    if (pattern.test(content)) {
+      result.sections.push(name);
+    }
+  }
+
+  result.hasAllSections = sectionPatterns.every(({ name }) => result.sections.includes(name));
+
+  return result;
+}
+
+/**
+ * Format mesh results for console output
+ */
+export function formatMeshResults(results) {
+  const lines = [];
+  lines.push(`\n  Mesh Integrity Check`);
+  lines.push(`  Skills: ${results.stats.skills} | Connections: ${results.stats.connections}`);
+  lines.push('');
+
+  for (const check of results.checks) {
+    const icon = check.status === 'pass' ? '✓' : check.status === 'warn' ? '!' : '✗';
+    const detail = check.detail ? ` (${check.detail})` : '';
+    lines.push(`  [${icon}] ${check.name}${detail}`);
+  }
+
+  if (results.warnings.length > 0) {
+    lines.push('');
+    for (const w of results.warnings) {
+      lines.push(`  ⚠ ${w}`);
+    }
+  }
+
+  if (results.errors.length > 0) {
+    lines.push('');
+    for (const e of results.errors) {
+      lines.push(`  ✗ ${e}`);
+    }
+  }
+
+  const healthy = results.errors.length === 0 && results.warnings.length === 0;
+  lines.push('');
+  lines.push(healthy ? '  ✓ Mesh is healthy' : `  ! Mesh has ${results.warnings.length} warnings`);
+
+  return lines.join('\n');
 }
 
 /**

@@ -6,7 +6,7 @@
  * Commands:
  *   rune init    — Interactive setup for a new project
  *   rune build   — Compile skills for the configured platform
- *   rune doctor  — Validate compiled output
+ *   rune doctor  — Validate compiled output + mesh integrity (--mesh for mesh only)
  *   rune status  — Project dashboard (neofetch-style)
  *   rune visualize — Interactive mesh graph
  */
@@ -19,7 +19,7 @@ import { fileURLToPath } from 'node:url';
 import { getAdapter, listPlatforms } from '../adapters/index.js';
 import { getAllAnalytics } from '../analytics.js';
 import { generateDashboardHTML } from '../dashboard.js';
-import { formatDoctorResults, runDoctor } from '../doctor.js';
+import { checkMeshIntegrity, formatDoctorResults, formatMeshResults, runDoctor } from '../doctor.js';
 import { buildAll } from '../emitter.js';
 import { collectStats, renderStatus, renderStatusJson } from '../status.js';
 import { collectGraphData, generateMeshHTML } from '../visualizer.js';
@@ -237,6 +237,17 @@ async function cmdBuild(projectRoot, args) {
 async function cmdDoctor(projectRoot, args) {
   const config = await readConfig(projectRoot);
 
+  // --mesh flag: run mesh integrity check only
+  if (args.mesh) {
+    log('');
+    const meshResults = await checkMeshIntegrity(RUNE_ROOT);
+    log(formatMeshResults(meshResults));
+    if (meshResults.errors.length > 0) process.exit(1);
+    // Exit with warning code if there are warnings (for CI awareness)
+    if (args.strict && meshResults.warnings.length > 0) process.exit(1);
+    return;
+  }
+
   if (!config) {
     // No config = CI or fresh clone. Run source-only checks (split packs).
     log('');
@@ -248,6 +259,12 @@ async function cmdDoctor(projectRoot, args) {
       runeRoot: RUNE_ROOT,
     });
     log(formatDoctorResults(results));
+
+    // Also run mesh check in source-only mode
+    log('');
+    const meshResults = await checkMeshIntegrity(RUNE_ROOT);
+    log(formatMeshResults(meshResults));
+
     if (!results.healthy) process.exit(1);
     return;
   }
@@ -264,6 +281,11 @@ async function cmdDoctor(projectRoot, args) {
   });
 
   log(formatDoctorResults(results));
+
+  // Also run mesh check
+  log('');
+  const meshResults = await checkMeshIntegrity(runeRoot);
+  log(formatMeshResults(meshResults));
 
   if (!results.healthy) process.exit(1);
 }
@@ -484,7 +506,9 @@ async function main() {
       log('  Commands:');
       log('    init     Interactive setup (auto-detects platform)');
       log('    build    Compile skills for configured platform');
-      log('    doctor   Validate compiled output');
+      log('    doctor   Validate compiled output + mesh integrity');
+      log('             --mesh   Mesh integrity only (reciprocals, versions, sections)');
+      log('             --strict Fail on warnings (for CI)');
       log('    status   Project dashboard (skills, signals, packs, health)');
       log('    visualize  Interactive mesh graph (opens in browser)');
       log('    analytics  Usage analytics dashboard (Business tier)');
