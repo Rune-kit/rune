@@ -4,7 +4,7 @@ description: "Context window management. Auto-triggered when context is filling 
 user-invocable: false
 metadata:
   author: runedev
-  version: "0.9.0"
+  version: "1.0.0"
   layer: L3
   model: haiku
   group: state
@@ -44,7 +44,11 @@ Context-engine also manages **behavioral mode injection** via `contexts/` direct
 
 ## Called By (inbound)
 
-- Auto-triggered at phase boundaries and context thresholds by L1 orchestrators
+- `cook` (L1): Phase boundaries and when tool count exceeds thresholds
+- `team` (L1): before parallel workstream dispatch, after merge
+- `rescue` (L1): between refactoring sessions for state persistence
+- `context-pack` (L3): when packaging context for sub-agent handoff
+- `session-bridge` (L3): coordinates with context-engine for compaction timing
 
 ## Execution
 

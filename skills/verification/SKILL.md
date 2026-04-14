@@ -204,6 +204,14 @@ None — pure runner using Bash for all checks. Does not invoke other skills.
 - `db` (L2): run migration in test environment
 - `perf` (L2): run benchmark scripts if configured
 - `skill-forge` (L2): verify newly created skill passes lint/type/build checks
+- `team` (L1): verify each parallel workstream before merge
+- `scaffold` (L1): verify scaffolded project builds and passes initial tests
+- `launch` (L1): pre-deploy verification gate
+- `mcp-builder` (L2): verify generated MCP server compiles and starts
+- `preflight` (L2): run verification as part of pre-commit quality gate
+- `logic-guardian` (L2): verify logic invariants hold after changes
+- `dependency-doctor` (L3): verify builds pass after dependency updates
+- `sast` (L3): run verification alongside static analysis
 
 ## Output Format
 

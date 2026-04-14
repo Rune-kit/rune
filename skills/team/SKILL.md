@@ -5,7 +5,7 @@ context: fork
 agent: general-purpose
 metadata:
   author: runedev
-  version: "0.8.0"
+  version: "1.0.0"
   layer: L1
   model: opus
   group: orchestrator

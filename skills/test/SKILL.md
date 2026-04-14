@@ -307,6 +307,12 @@ Save eval files as `skills/<name>/evals.md`. Each eval is a numbered scenario (E
 - `launch` (L1): pre-deployment test suite
 - `safeguard` (L2): writing characterization tests for legacy code
 - `review-intake` (L2): write tests for issues identified during review intake
+- `scaffold` (L1): generate initial test suite for new project
+- `graft` (L2): write integration tests for grafted code
+- `skill-forge` (L2): write tests for new skill functionality
+- `mcp-builder` (L2): write tests for MCP server tools
+- `debug` (L2): write regression test capturing the bug
+- `plan` (L2): reference test requirements in implementation plan
 
 ## Calls (outbound)
 

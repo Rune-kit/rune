@@ -3,7 +3,7 @@ name: brainstorm
 description: Creative ideation and solution exploration. Generates multiple approaches with trade-offs, uses structured frameworks (SCAMPER, First Principles), and hands off to plan for structuring.
 metadata:
   author: runedev
-  version: "0.4.0"
+  version: "0.5.0"
   layer: L2
   model: opus
   group: creation
@@ -243,12 +243,49 @@ Additionally in Rescue Mode:
 For approaches with many interacting variables, invoke `rune:sequential-thinking` to reason through trade-offs systematically.
 
 ### Step 4 — Recommend
+
 Select ONE approach as the recommendation. State:
 - Which option is recommended
 - Primary reason (1 sentence)
 - Conditions under which a different option would be better (hedge case)
 
 Do not recommend "it depends" without a concrete decision rule.
+
+### Step 4.5 — Tiered Recommendations (Product/Strategy Mode)
+
+For product-level brainstorming (Vision Mode or when approaches have strategic implications), structure the recommendation into **time-horizon tiers**:
+
+| Tier | Timeframe | Focus |
+|------|-----------|-------|
+| **Quick Win** | 0-30 days | Immediate value, validates direction, low risk |
+| **Differentiation** | 1-3 months | Competitive advantage, harder to copy |
+| **Long-term Moat** | 6-12 months | Defensible position, compounds over time |
+
+**For each tier, specify:**
+
+```markdown
+### Quick Win (0-30 days)
+- **Action**: [specific deliverable from the chosen approach]
+- **Resources**: [team/tools needed]
+- **Expected Impact**: [measurable outcome]
+- **Validates**: [what assumption this proves/disproves]
+
+### Differentiation (1-3 months)
+- **Action**: [...]
+- **Resources**: [...]
+- **Expected Impact**: [...]
+
+### Long-term Moat (6-12 months)
+- **Action**: [...]
+- **Resources**: [...]
+- **Expected Impact**: [...]
+```
+
+**Rules:**
+- Quick Win MUST be achievable with chosen approach in first sprint
+- Each tier builds on the previous — not 3 independent tracks
+- Skip this step for pure technical brainstorming (no product/strategy dimension)
+- If all tiers look equally expensive → approach may be too complex for Quick Win
 
 ### Step 5 — Return to Plan
 Pass the recommended approach back to `rune:plan` for structuring into an executable implementation plan. Include:

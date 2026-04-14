@@ -19,7 +19,10 @@ Passive scope monitor. Reads the original task plan, inspects current git diff t
 
 ## Called By (inbound)
 
-- Auto-triggered by L1 orchestrators when files changed exceed plan expectations
+- `cook` (L1): Phase 6.6 scope drift detection when files touched > planned
+- `team` (L1): after each parallel workstream completes, before merge
+- `rescue` (L1): during safeguard phase to detect unplanned changes
+- `plan` (L2): optional scope validation after plan acceptance
 
 ## Calls (outbound)
 

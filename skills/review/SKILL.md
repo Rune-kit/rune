@@ -3,7 +3,7 @@ name: review
 description: Code quality review — patterns, security, performance, correctness. Finds bugs, suggests improvements, triggers fix for issues found. Escalates to opus for security-critical code.
 metadata:
   author: runedev
-  version: "0.8.0"
+  version: "1.0.0"
   layer: L2
   model: sonnet
   group: development
@@ -564,7 +564,7 @@ Append to Code Review Report when invoked standalone. Suppress when called as su
 ```yaml
 chain_metadata:
   skill: "rune:review"
-  version: "0.8.0"
+  version: "1.0.0"
   status: "[DONE | DONE_WITH_CONCERNS]"
   domain: "[area reviewed]"
   files_changed: []  # review doesn't change files

@@ -3,7 +3,7 @@ name: fix
 description: Apply code changes and fixes. Writes implementation code, applies bug fixes, and verifies changes with tests. Core action hub in the development mesh.
 metadata:
   author: runedev
-  version: "0.9.0"
+  version: "1.0.0"
   layer: L2
   model: sonnet
   group: development
@@ -278,7 +278,7 @@ Append to Fix Report when invoked standalone. Suppress when called as sub-skill 
 ```yaml
 chain_metadata:
   skill: "rune:fix"
-  version: "0.9.0"
+  version: "1.0.0"
   status: "[DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED]"
   domain: "[area fixed]"
   files_changed:
