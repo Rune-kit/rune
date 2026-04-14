@@ -3,7 +3,7 @@ name: ba
 description: Business Analyst agent. Deeply understands user requirements before any planning or coding begins. Asks probing questions, identifies hidden requirements, maps stakeholders, defines scope boundaries, and produces a structured Requirements Document that plan and cook consume.
 metadata:
   author: runedev
-  version: "0.5.0"
+  version: "0.6.0"
   layer: L2
   model: opus
   group: creation
@@ -271,6 +271,47 @@ Assess and document ONLY relevant NFRs:
 
 Only include NFRs relevant to this specific task. Don't generate a generic checklist.
 
+### Step 6.5 — Tiered Recommendations
+
+For product-oriented requirements (Feature Request, Integration, Greenfield), generate **tiered strategic recommendations**. This structures the path forward into actionable time horizons.
+
+**Three Tiers:**
+
+| Tier | Timeframe | Focus | Characteristics |
+|------|-----------|-------|-----------------|
+| **Quick Win** | 0-30 days | Immediate impact | Low effort, high visibility, builds momentum |
+| **Differentiation** | 1-3 months | Competitive edge | Medium effort, unique value, hard to copy |
+| **Long-term Moat** | 6-12 months | Sustainable advantage | High effort, defensible, compounds over time |
+
+**For each tier, specify:**
+
+```markdown
+### Quick Win (0-30 days)
+- **Action**: [Specific deliverable]
+- **Resources**: [Team size, tools, dependencies]
+- **Expected Impact**: [Measurable outcome]
+- **Risk if skipped**: [What happens without this]
+
+### Differentiation (1-3 months)
+- **Action**: [...]
+- **Resources**: [...]
+- **Expected Impact**: [...]
+- **Risk if skipped**: [...]
+
+### Long-term Moat (6-12 months)
+- **Action**: [...]
+- **Resources**: [...]
+- **Expected Impact**: [...]
+- **Risk if skipped**: [...]
+```
+
+**Rules:**
+- Quick Win MUST be achievable in first sprint — no dependencies on later tiers
+- Differentiation should create switching costs or unique capabilities
+- Long-term Moat should compound (network effects, data moats, ecosystem lock-in)
+- Every tier includes "Risk if skipped" — makes trade-offs explicit
+- Skip this step for Bug Fix and Refactor types (no strategic dimension)
+
 ### Step 7 — Requirements Document
 
 Produce structured output and hand off to `plan`:
@@ -305,6 +346,24 @@ Created: [date] | BA Session: [summary]
 
 ## Risks
 - [risk]: [mitigation]
+
+## Strategic Recommendations
+[from Step 6.5 — skip for Bug Fix/Refactor]
+
+### Quick Win (0-30 days)
+- **Action**: [specific deliverable]
+- **Resources**: [effort estimate]
+- **Expected Impact**: [measurable outcome]
+
+### Differentiation (1-3 months)
+- **Action**: [...]
+- **Resources**: [...]
+- **Expected Impact**: [...]
+
+### Long-term Moat (6-12 months)
+- **Action**: [...]
+- **Resources**: [...]
+- **Expected Impact**: [...]
 
 ## Next Step
 → Hand off to rune:plan for implementation planning
@@ -360,6 +419,27 @@ US-1: As a [persona], I want to [action] so that [benefit]
 
 Plan gates on Decision compliance — Discretion items don't need approval.
 
+## Strategic Recommendations
+[Skip for Bug Fix/Refactor]
+
+### Quick Win (0-30 days)
+- **Action**: [immediate deliverable]
+- **Resources**: [effort + dependencies]
+- **Expected Impact**: [measurable KPI]
+- **Risk if skipped**: [consequence]
+
+### Differentiation (1-3 months)
+- **Action**: [competitive advantage work]
+- **Resources**: [...]
+- **Expected Impact**: [...]
+- **Risk if skipped**: [...]
+
+### Long-term Moat (6-12 months)
+- **Action**: [defensible position work]
+- **Resources**: [...]
+- **Expected Impact**: [...]
+- **Risk if skipped**: [...]
+
 ## Next Step
 → Hand off to rune:plan for implementation planning
 ```
@@ -401,6 +481,8 @@ Known failure modes for this skill. Check these before declaring done.
 | Recommending shortcuts without Completeness Score | MEDIUM | Step 3.5: every option needs X/10 score + dual effort estimate (human vs AI). "90% coverage" is a red flag when 100% costs 15 min more |
 | Handing off to plan with ambiguity > 40% | CRITICAL | Step 2.5 HARD-GATE: compute ambiguity score after elicitation, block handoff if > 40%, ask targeted follow-up on weakest dimension |
 | Skipping ambiguity scoring because "user seems clear" | HIGH | Always compute the score — perceived clarity ≠ measured clarity. The formula catches gaps humans miss |
+| Tiered recommendations too vague ("improve things") | MEDIUM | Each tier needs specific Action + measurable Expected Impact. "Build better UX" → "Reduce checkout steps from 5 to 3, targeting 15% conversion lift" |
+| All three tiers have same resources/effort | MEDIUM | Quick Win should be low-effort. If all tiers need "2 engineers, 3 months" → re-scope Quick Win to something achievable in 1 sprint |
 
 ## Done When
 
@@ -411,6 +493,7 @@ Known failure modes for this skill. Check these before declaring done.
 - Scope defined (in/out/assumptions/dependencies)
 - User stories with testable acceptance criteria produced
 - Non-functional requirements assessed (relevant ones only)
+- Tiered recommendations generated (Quick Win / Differentiation / Moat) — skip for Bug Fix/Refactor
 - Requirements Document saved to `.rune/features/<name>/requirements.md`
 - Handed off to `plan` for implementation planning
 

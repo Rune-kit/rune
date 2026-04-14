@@ -3,7 +3,7 @@ name: marketing
 description: Create marketing assets and execute launch strategy. Generates landing copy, social banners, SEO meta, blog posts, and video scripts.
 metadata:
   author: runedev
-  version: "0.4.0"
+  version: "0.5.0"
   layer: L2
   model: sonnet
   group: delivery
@@ -112,6 +112,61 @@ Using product understanding, market research, and **brand voice contract**, prod
 
 **Secondary CTA** (bottom of page)
 
+### Step 3.5 — Competitive Response Playbook
+
+When `trend-scout` identifies active competitors or market threats, generate pre-planned counter-strategies. This turns reactive scrambling into prepared responses.
+
+**Four Threat Scenarios:**
+
+| Scenario | Trigger Signal | Response Window |
+|----------|---------------|-----------------|
+| **Price War** | Competitor drops price >20% | 24-48 hours |
+| **New Market Entry** | New competitor launches in your space | 1-2 weeks |
+| **Viral Competitor** | Competitor content goes viral (10x normal engagement) | 24-72 hours |
+| **Fast Follower** | Competitor copies your feature within 30 days of launch | 1 week |
+
+**For each relevant scenario, document:**
+
+```markdown
+## Counter-Strategy: [Scenario Name]
+
+### Trigger
+- Signal: [what to watch for]
+- Detection: [how to monitor — social listening, price tracking, etc.]
+- Response window: [how fast to react]
+
+### Counter-Move
+- **Immediate (Day 1)**: [first response — usually messaging/positioning]
+- **Short-term (Week 1)**: [tactical moves — promos, content, outreach]
+- **Medium-term (Month 1)**: [strategic adjustments — product, pricing, positioning]
+
+### Resources Required
+- Team: [who needs to be involved]
+- Budget: [estimated cost]
+- Assets: [what to prepare in advance]
+
+### Success Metric
+- [How to know the counter-strategy worked]
+
+### Pre-Built Assets
+- [ ] Response messaging template
+- [ ] Social post drafts
+- [ ] Email to existing customers
+- [ ] FAQ for sales/support team
+```
+
+**Rules:**
+- Only generate playbooks for scenarios relevant to this market (skip if no direct competitors)
+- Pre-build assets NOW — when the trigger fires, you execute, not create
+- Response window is real — if you can't respond in time, the playbook failed
+- Test the detection mechanism — if you can't see the trigger, you can't respond
+
+**Skip this step if:**
+- Product is in a blue ocean (no direct competitors yet)
+- User explicitly requests marketing assets only, no strategy
+
+Save to `marketing/counter-playbook.md`.
+
 ### Step 4 — Social posts
 
 Produce ready-to-post content:
@@ -218,6 +273,7 @@ Output all assets as structured markdown sections. Present to user for review be
 After user approves, use `Write` to save:
 - `marketing/brand-voice.md` — voice contract from Step 2.5
 - `marketing/landing-copy.md` — all copy from Step 3
+- `marketing/counter-playbook.md` — competitive response strategies from Step 3.5 (if competitors exist)
 - `marketing/social-posts.md` — all posts from Step 4
 - `marketing/seo-meta.json` — SEO data from Step 5
 - `marketing/seo-audit.md` — SEO audit results from Step 5.5 (if existing site)
@@ -258,12 +314,16 @@ Known failure modes for this skill. Check these before declaring done.
 | Copy not based on actual codebase features (invented value props) | HIGH | scout must run in Step 1 — features extracted from actual code, not assumptions |
 | Missing SEO keyword analysis (no research call) | MEDIUM | Step 2: research call for keyword data is mandatory for SEO section |
 | Files saved without user approval | MEDIUM | Step 7: present ALL assets to user, wait for approval before writing files |
+| Counter-playbook without detection mechanism | HIGH | Every scenario needs a monitoring method — "watch for price drops" is useless without specifying WHERE to watch and HOW to automate |
+| Counter-playbook with unrealistic response windows | MEDIUM | If response window is 24h but pre-built assets don't exist, the playbook will fail — either extend window or create assets NOW |
+| Generating counter-playbook for blue ocean products | LOW | Skip Step 3.5 if no direct competitors — counter-strategies need someone to counter |
 
 ## Done When
 
 - scout completed and actual feature list extracted
 - Brand voice contract established (or existing one loaded)
 - Competitor/trend analysis done via trend-scout + research
+- Competitive response playbook generated (if competitors exist) with pre-built asset checklist
 - Hero copy, value props, social posts, and SEO metadata generated (following brand voice)
 - SEO audit completed (if existing site) with pass/fail results
 - Visual assets requested from asset-creator
@@ -278,6 +338,7 @@ Known failure modes for this skill. Check these before declaring done.
 |----------|--------|----------|
 | Brand voice contract | Markdown | `marketing/brand-voice.md` |
 | Landing page copy | Markdown | `marketing/landing-copy.md` |
+| Competitive response playbook | Markdown | `marketing/counter-playbook.md` |
 | Social media posts | Markdown | `marketing/social-posts.md` |
 | SEO metadata | JSON | `marketing/seo-meta.json` |
 | SEO audit report | Markdown | `marketing/seo-audit.md` |
