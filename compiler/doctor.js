@@ -613,7 +613,10 @@ function parseSkillConnections(content, skillName) {
       const match = line.match(/^-\s*`?([a-z][\w-]*)`?\s*\(L\d\)/i);
       if (match) {
         const skillRef = match[1].toLowerCase();
-        const reason = line.replace(match[0], '').replace(/^[:\s-]+/, '').trim();
+        const reason = line
+          .replace(match[0], '')
+          .replace(/^[:\s-]+/, '')
+          .trim();
         result.calls.push({ skill: skillRef, reason });
       }
     }
