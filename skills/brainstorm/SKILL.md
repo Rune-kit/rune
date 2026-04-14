@@ -101,6 +101,7 @@ Direct API call ≠ Wrapper/middleware layer ≠ Reverse engineering ≠ Browser
 - `plan` (L2): when architecture decision needs creative exploration (Discovery Mode)
 - User: `/rune brainstorm <topic>` direct invocation (Discovery Mode)
 - User: `/rune brainstorm rescue <context>` manual rescue (Rescue Mode)
+- `ba` (L2): when multiple requirement approaches exist
 
 ## Cross-Hub Connections
 

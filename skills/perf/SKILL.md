@@ -37,6 +37,7 @@ Performance regression gate. Analyzes code changes for patterns that cause measu
 - `audit` (L2): performance dimension delegation
 - `review` (L2): performance patterns detected in diff
 - `deploy` (L2): pre-deploy perf regression check
+- `adversary` (L2): scalability stress test when bottleneck patterns detected in plan
 
 ## References
 

@@ -37,6 +37,8 @@ Solve the #1 developer complaint: context loss across sessions. Session-bridge a
 - `cook` (L1): auto-save decisions during feature implementation
 - `rescue` (L1): state management throughout refactoring
 - `context-engine` (L3): save state before compaction
+- `context-pack` (L3): coordinate state for sub-agent handoff
+- `neural-memory` (L3): sync key decisions back to `.rune/` files after Capture Mode
 
 ## State Files Managed
 

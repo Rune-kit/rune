@@ -97,6 +97,8 @@ High-level multi-feature planning — organize features into milestones.
 - `scaffold` (L1): Phase 3 architecture planning
 - `skill-forge` (L2): plan structure for new skill
 - User: `/rune plan` direct invocation
+- `debug` (L2): when root cause requires architectural changes
+- `retro` (L2): reference past plans during retrospective analysis
 
 ## Data Flow
 

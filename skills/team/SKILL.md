@@ -105,6 +105,7 @@ Before decomposing, classify the task into a complexity tier. Each tier defines 
 
 ## Called By (inbound)
 
+- `scaffold` (L1): decompose scaffolding into parallel workstreams
 - User: `/rune team <task>` direct invocation only
 
 ---

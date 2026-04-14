@@ -37,6 +37,7 @@ None — pure L3 state management utility.
 - `incident` (L2): record incident timeline and postmortem
 - `skill-forge` (L2): record skill creation decisions and rationale
 - `graft` (L2): auto-log graft operations — source URL, mode, challenge score, files changed
+- `retro` (L2): record retrospective insights and decisions
 
 ## Files Managed
 

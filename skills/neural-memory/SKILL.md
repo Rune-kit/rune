@@ -55,25 +55,22 @@ Without this skill, each project is an island. With it, a caching pattern discov
 
 ## Calls (outbound)
 
-| Skill | When | Why |
-|-------|------|-----|
-| `session-bridge` | After Capture Mode | Sync key decisions back to `.rune/` files |
+- `session-bridge` (L3): after Capture Mode — sync key decisions back to `.rune/` files
 
 ## Called By (inbound)
 
-| Skill | When | Why |
-|-------|------|-----|
-| `cook` | Phase 0 (resume) + Phase 8 (complete) | Recall project context at start, capture learnings at end |
-| `debug` | After root cause found | Capture error pattern for future recognition |
-| `fix` | After fix verified | Capture fix pattern (cause → solution) |
-| `review` | After review complete | Capture code quality insight |
-| `rescue` | Phase start + phase end | Recall past refactoring patterns, capture new ones |
-| `plan` | Before architecture decisions | Recall past decisions on similar problems |
-| `session-bridge` | Step 6 (cross-project extraction) | Extract generalizable patterns to nmem |
-| `journal` | After ADR written | Extract decision + rejected alternatives to nmem |
-| `context-engine` | Before compaction | Trigger Flush Mode to preserve context |
-| `sentinel` | After security finding | Capture vulnerability pattern |
-| `incident` | After resolution | Capture incident root cause + fix |
+- `cook` (L1): Phase 0 (resume) + Phase 8 (complete) — recall context at start, capture learnings at end
+- `rescue` (L1): phase start + phase end — recall past refactoring patterns, capture new ones
+- `debug` (L2): after root cause found — capture error pattern for future recognition
+- `fix` (L2): after fix verified — capture fix pattern (cause → solution)
+- `review` (L2): after review complete — capture code quality insight
+- `plan` (L2): before architecture decisions — recall past decisions on similar problems
+- `sentinel` (L2): after security finding — capture vulnerability pattern
+- `incident` (L2): after resolution — capture incident root cause + fix
+- `retro` (L2): during retrospective — capture retro insights and patterns
+- `session-bridge` (L3): Step 6 (cross-project extraction) — extract generalizable patterns
+- `journal` (L3): after ADR written — extract decision + rejected alternatives
+- `context-engine` (L3): before compaction — trigger Flush Mode to preserve context
 
 ## Modes
 

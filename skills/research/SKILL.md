@@ -27,6 +27,10 @@ None — pure L3 utility using `WebSearch` and `WebFetch` tools directly.
 - `marketing` (L2): competitor analysis, SEO data
 - `hallucination-guard` (L3): verify package existence on npm/pypi
 - `autopsy` (L2): research best practices for legacy patterns
+- `ba` (L2): research similar products and integrations
+- `graft` (L2): research source repo patterns before grafting
+- `mcp-builder` (L2): research MCP standards and existing implementations
+- `scaffold` (L1): research project templates and best practices
 
 ## Execution
 

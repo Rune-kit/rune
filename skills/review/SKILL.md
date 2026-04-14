@@ -52,6 +52,8 @@ Every review MUST cite at least one specific concern, suggestion, or explicit ap
 - User: `/rune review` direct invocation
 - `surgeon` (L2): review refactored code quality
 - `rescue` (L1): review refactored code quality
+- `design` (L2): review UI/design implementation quality
+- `graft` (L2): review grafted code integration
 
 ## Cross-Hub Connections
 

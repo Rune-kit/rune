@@ -41,6 +41,7 @@ Output is a Requirements Document → hand off to rune:plan for implementation p
 - `cook` (L1): before Phase 2 PLAN, when task is non-trivial
 - `scaffold` (L1): Phase 1, before any project generation
 - `plan` (L2): when plan receives vague requirements
+- `mcp-builder` (L2): requirements elicitation before MCP server design
 - User: `/rune ba` direct invocation
 
 ## Cross-Hub Connections

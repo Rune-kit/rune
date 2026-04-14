@@ -32,6 +32,7 @@ Design system reasoning layer. Converts a product description into a concrete de
 ## Called By (inbound)
 
 - `cook` (L1): before any frontend code generation
+- `scaffold` (L1): design system for new project
 - `brainstorm` (L2): when selected approach has UI/UX implications
 - `ba` (L2): when requirements include UI/UX components
 - `review` (L2): when AI anti-pattern detected in diff

@@ -47,6 +47,8 @@ If status is BLOCK, output the report and STOP. Do not hand off to commit. The c
 - `audit` (L2): Phase 2 full security audit
 - `incident` (L2): security dimension check during incident response
 - `review-intake` (L2): security scan on code submitted for structured review
+- `adversary` (L2): deep security analysis when attack vectors identified in plan
+- `scaffold` (L1): security baseline for new projects
 
 ## Severity Levels
 
