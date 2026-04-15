@@ -1,6 +1,16 @@
 ---
 name: journal
-description: Persistent state tracking and Architecture Decision Records across sessions. Manages progress state, module health, dependency graphs, and ADRs for any workflow.
+description: "Persistent state tracking and Architecture Decision Records (ADRs) across sessions. Use when you need to save progress, document architectural decisions, track module health, or resume long-running workflows across multiple sessions."
+user-invocable: true
+triggers:
+  - save progress to journal
+  - record this decision
+  - create an ADR for
+  - track state across sessions
+  - write an architecture decision record
+  - resume from last session
+  - log this decision
+  - save workflow state
 metadata:
   author: runedev
   version: "0.3.0"

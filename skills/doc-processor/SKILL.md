@@ -1,6 +1,16 @@
 ---
 name: doc-processor
-description: Generate and parse office documents — PDF, DOCX, XLSX, PPTX, CSV. Pure format utility for creating reports, exporting data, and processing uploaded documents.
+description: "Generate and parse office documents — PDF, DOCX, XLSX, PPTX, CSV. Use when creating reports, exporting data, or processing uploaded documents in any structured format."
+user-invocable: true
+triggers:
+  - generate a PDF report
+  - export to DOCX
+  - parse this Excel file
+  - create a PPTX presentation
+  - convert to PDF
+  - process this document
+  - export data to CSV
+  - generate office document
 metadata:
   author: runedev
   version: "0.2.0"

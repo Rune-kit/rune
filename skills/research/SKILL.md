@@ -1,6 +1,16 @@
 ---
 name: research
-description: Web search and external knowledge lookup. Gathers data on technologies, libraries, best practices, and competitor solutions.
+description: "Web search and external knowledge lookup. Gathers data on technologies, libraries, best practices, and competitor solutions. Use when you need current information, API docs, package details, or competitor analysis that isn't in the codebase."
+user-invocable: true
+triggers:
+  - research this topic
+  - search the web for
+  - look up documentation for
+  - find best practices for
+  - check if this package exists
+  - research competitors
+  - find current information about
+  - look up the API for
 metadata:
   author: runedev
   version: "0.4.0"

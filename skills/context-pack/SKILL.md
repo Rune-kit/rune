@@ -1,7 +1,16 @@
 ---
 name: context-pack
 description: "Creates structured handoff briefings between agents. Packages task context, constraints, and progress into a compact packet that subagents can consume without re-reading the full conversation. Prevents the 'lost context' problem in multi-agent delegation."
-user-invocable: false
+user-invocable: true
+triggers:
+  - pack context for subagent
+  - create handoff briefing
+  - delegate with context
+  - hand off this task
+  - pack context before delegating
+  - create context packet
+  - prepare agent handoff
+  - pack task context
 metadata:
   author: runedev
   version: "0.1.0"
