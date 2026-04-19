@@ -3,6 +3,13 @@
 All notable changes to Rune are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.12.2] - 2026-04-19
+
+Hotfix for v2.12.1 — version sync across ancillary manifests. Same functionality as v2.12.1, no API changes.
+
+### Fixed
+- **Version sync drift**: `plugin.json`, `marketplace.json`, `docs/index.html`, and `ROADMAP.md` were left at 2.12.0 during the v2.12.1 bump, causing `npm run doctor` (and therefore CI + Publish Release workflows) to fail. v2.12.1 tag is retained on GitHub but was never published to npm — v2.12.2 is the first npm-published release of the cross-tier compatibility wave.
+
 ## [2.12.1] - 2026-04-19
 
 Cross-tier compatibility polish — same release wave as v2.12.0. No breaking changes.

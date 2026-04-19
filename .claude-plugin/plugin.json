@@ -1,6 +1,6 @@
 {
   "name": "rune",
-  "version": "2.12.0",
+  "version": "2.12.2",
   "description": "62-skill mesh for Claude Code with runtime auto-discipline — native hooks (preflight/sentinel/completion-gate) auto-fire before tool use. 215+ connections, adaptive routing, mesh analytics. Use rune:cook for any code task, rune:team for parallel work, rune:launch for deploy, rune:rescue for legacy code.",
   "author": {
     "name": "Rune Contributors"
