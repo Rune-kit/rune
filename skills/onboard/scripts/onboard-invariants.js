@@ -19,12 +19,14 @@
 import { existsSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { detectInvariants, renderInvariants } from './detect-invariants.js';
 import { applyInvariantsPointer } from './inject-claude-md.js';
 
 const AUTO_HEADER = '## Auto-detected (new)';
 const TEMPLATE_REL_PATH = '../references/invariants-template.md';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
  * Locate the next `## `-level section boundary in `text`, ignoring any `##`
@@ -60,7 +62,7 @@ function findNextSectionOffset(text) {
 }
 
 export async function loadTemplate(templatePath) {
-  const resolved = templatePath ?? path.resolve(import.meta.dirname, TEMPLATE_REL_PATH);
+  const resolved = templatePath ?? path.resolve(__dirname, TEMPLATE_REL_PATH);
   return readFile(resolved, 'utf8');
 }
 

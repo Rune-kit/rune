@@ -4,12 +4,14 @@ import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promis
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, test } from 'node:test';
+import { fileURLToPath } from 'node:url';
 import * as antigravity from '../adapters/hooks/antigravity.js';
 import { installHooks } from '../commands/hooks/install.js';
 import { hookStatus } from '../commands/hooks/status.js';
 import { uninstallHooks } from '../commands/hooks/uninstall.js';
 
-const RUNE_ROOT = path.resolve(import.meta.dirname, '..', '..');
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const RUNE_ROOT = path.resolve(__dirname, '..', '..');
 const RULES_DIR = '.antigravity/rules';
 
 let tmpRoot;

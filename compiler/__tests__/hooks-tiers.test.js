@@ -18,6 +18,7 @@ import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promis
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, test } from 'node:test';
+import { fileURLToPath } from 'node:url';
 import { installHooks } from '../commands/hooks/install.js';
 import { SETTINGS_REL_PATH } from '../commands/hooks/presets.js';
 import { hookStatus } from '../commands/hooks/status.js';
@@ -29,7 +30,8 @@ import {
   validateManifest,
 } from '../commands/hooks/tiers.js';
 
-const RUNE_ROOT = path.resolve(import.meta.dirname, '..', '..');
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const RUNE_ROOT = path.resolve(__dirname, '..', '..');
 
 let tmpRoot;
 let tierRoot;

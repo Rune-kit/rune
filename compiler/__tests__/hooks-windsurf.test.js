@@ -3,12 +3,14 @@ import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promis
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, test } from 'node:test';
+import { fileURLToPath } from 'node:url';
 import * as windsurf from '../adapters/hooks/windsurf.js';
 import { installHooks } from '../commands/hooks/install.js';
 import { hookStatus } from '../commands/hooks/status.js';
 import { uninstallHooks } from '../commands/hooks/uninstall.js';
 
-const RUNE_ROOT = path.resolve(import.meta.dirname, '..', '..');
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const RUNE_ROOT = path.resolve(__dirname, '..', '..');
 const WF_DIR = '.windsurf/workflows';
 const RULES_DIR = '.windsurf/rules';
 
