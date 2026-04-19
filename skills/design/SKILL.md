@@ -145,6 +145,8 @@ Why: Every menu option dilutes commitment. A single confident default gets commi
 
 These rules apply regardless of domain, mood, or platform. Every generated design system MUST comply.
 
+**Enforcement**: `rune:review` v1.1.0+ reads `.rune/design-system.md` § Scale Minimums and flags violations of all 3 rules below as MEDIUM/HIGH findings. Design defines, review enforces — this is the contract.
+
 #### Rule 1 — Scale Minimums
 
 Below these thresholds, designs read as "AI boilerplate" no matter how good the palette is.
