@@ -83,7 +83,18 @@ _Methodology: Claude Code CLI headless mode (`claude -p --output-format json`), 
 
 ---
 
-## What's New (v2.11.0)
+## What's New (v2.12.0 — Auto-Discipline)
+
+- **Runtime auto-discipline** — `rune hooks install` wires native hooks on Claude Code, Cursor, Windsurf, Antigravity so `preflight`, `sentinel`, `completion-gate` auto-fire before tool use. No more "remember to invoke the skill."
+- **Three presets** — `strict` (blocking gates), `gentle` (warnings, default), `off` (uninstall). Idempotent install / uninstall with full restore of user hooks.
+- **Multi-tier hook layering** — `--tier pro` / `--tier business` stack paid-tier hooks on top of Free using a tier-tagged manifest at `$<TIER>_ROOT/hooks/manifest.json`. Free compiler stays tier-agnostic (MIT-clean).
+- **logic-guardian v0.3.0** — `rune init` now auto-seeds `.rune/INVARIANTS.md` with project-detected rules (money math, state machines, payment flows). Preflight reads it as a hard gate.
+- **session-bridge v0.7.0** — emits `context.compact.imminent` signal; cook/plan/team listen and checkpoint work before compaction.
+- **autopilot v1.1.0** (Pro) — honors the hooks manifest; runs overnight with the same blocking gates your interactive sessions enforce.
+- **Security** — tier name sanitization (path-traversal-safe), precise `statusLine` detection (no false-positive uninstall of user commands), `overrides` migration for legacy hook entries.
+- **1,152 tests** — +31 from v2.11.0 covering hooks adapter, tier manifest loader, override migration, and review regressions.
+
+### Previous (v2.11.0)
 
 - **Mesh integrity** — 8 dead wires fixed, 5 workflow gaps closed (hotfix chain, API versioning, monorepo mode, feature flags, dependency upgrade campaigns)
 - **audit v0.4.0** — DX Review Mode: Addy Osmani's 8 developer experience principles with scoring rubric and browser-pilot integration
@@ -247,6 +258,52 @@ This compiles all 62 skills into your IDE's rules format. Same knowledge, same w
 # Build an MCP server
 /rune mcp-builder "weather API with forecast tools"
 ```
+
+## Auto-Discipline (Claude Code Hooks)
+
+Turn Rune skills into ambient runtime — no more `/rune preflight` every time. Install once, skills auto-fire on relevant tool calls:
+
+```bash
+# Wire Rune quality gates into Claude Code (.claude/settings.json)
+npx @rune-kit/rune hooks install --preset gentle
+
+# Preset options:
+#   gentle  — advisory, never blocks (default)
+#   strict  — blocks tool call on BLOCK verdict
+#   off     — uninstall
+
+# Inspect current wiring
+npx @rune-kit/rune hooks status
+
+# Remove (preserves user-authored hooks)
+npx @rune-kit/rune hooks uninstall
+```
+
+What gets wired:
+
+| Event | Skill | When it fires |
+|---|---|---|
+| PreToolUse(Edit\|Write) | preflight | Before Claude edits source files |
+| PreToolUse(Bash) | sentinel | Before shell commands (catches `git commit`, secrets) |
+| PostToolUse(Edit\|Write) | dependency-doctor | After dependency manifest edits |
+| Stop | completion-gate | End of session — validates claims against evidence |
+
+Rune only manages entries tagged with its command signature. User-authored hooks in the same events are preserved on install/uninstall.
+
+### Stacking paid tiers (Pro, Business)
+
+Paid tiers ship their own `hooks/manifest.json`. Point Rune at the install root and pass `--tier`:
+
+```bash
+export RUNE_PRO_ROOT=~/rune-pro
+rune hooks install --preset gentle --tier pro
+
+# Stack Free + Pro + Business in one command
+export RUNE_BUSINESS_ROOT=~/rune-business
+rune hooks install --preset gentle --tier pro --tier business
+```
+
+Multi-platform: tier hooks compile to Claude Code, Cursor, Windsurf, and Antigravity with the same command — no Claude-only lock-in.
 
 ## Architecture
 

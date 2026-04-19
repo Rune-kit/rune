@@ -3,11 +3,12 @@ name: logic-guardian
 description: Protects complex business logic from accidental deletion or overwrite. Maintains a logic manifest, enforces pre-edit gates, and validates post-edit diffs.
 metadata:
   author: runedev
-  version: "0.1.0"
+  version: "0.3.0"
   layer: L2
   model: sonnet
   group: quality
   tools: "Read, Write, Edit, Glob, Grep"
+  listen: invariants.loaded
 ---
 
 # logic-guardian
@@ -41,15 +42,23 @@ Complex projects (trading bots, payment systems, game engines, state machines) c
 
 ## Workflow
 
-### Phase 0 — Load or Initialize Manifest
+### Phase 0 — Load Manifest + Invariants
 
 1. Use `Read` on `.rune/logic-manifest.json`
 2. If file exists:
    - Parse manifest, display summary: "Loaded logic manifest: N components, M functions, K parameters"
-   - Proceed to Phase 1 (Validate)
-3. If file does NOT exist:
+   - Proceed to step 4 (load invariants)
+3. If manifest does NOT exist:
    - Announce: "No logic manifest found. Scanning project to generate one."
    - Proceed to Phase 3 (Generate)
+4. Obtain invariants (seeded by `onboard` — see onboard Step 5.4):
+   - **Preferred**: consume the `invariants.loaded` signal emitted by `session-bridge` at session start (contains pre-parsed `rules[]` + stats). No second file read needed.
+   - **Fallback**: if no signal was emitted this session, `Read` `.rune/INVARIANTS.md` directly and invoke `skills/session-bridge/scripts/load-invariants.js` to parse.
+   - Entries come from `## Danger Zones`, `## Critical Invariants`, `## State Machine Rules`, `## Cross-File Consistency`, and `## Auto-detected (new)`. Archived rules are automatically excluded by the loader.
+   - Each entry follows the `WHAT / WHERE / WHY` contract from `invariants-template.md`.
+   - Treat `INVARIANTS.md` as the **primary source of cross-file rules** — the JSON manifest covers component-level signatures; INVARIANTS.md covers rules that span files (shared constants, state transitions, mirrored schemas).
+   - If the file is absent, log **WARN**: "INVARIANTS.md not found — run `rune onboard` to seed baseline rules." Do not block.
+   - Cache parsed rules keyed by glob so Phase 2 can match the edit target in O(rules × globs) time.
 
 ### Phase 1 — Validate Manifest Against Codebase
 
@@ -83,6 +92,15 @@ Before ANY edit to a manifested file:
    - What it will NOT change
    - Which existing functions/logic will be preserved
 4. If the agent cannot list the existing functions → BLOCK the edit. Force a `Read` of the file first.
+5. **Cross-file invariant check** — for each rule loaded from `.rune/INVARIANTS.md` in Phase 0:
+   - If the target file matches any rule's `WHERE` glob, surface the rule to the agent before the edit proceeds:
+     ```
+     INVARIANT (from .rune/INVARIANTS.md):
+       WHAT:  <rule.what>
+       WHY:   <rule.why>
+     ```
+   - The agent MUST either (a) acknowledge the rule in its plan, or (b) explicitly mark it obsolete and move the entry to `## Archived`.
+   - A matched rule with no acknowledgement → BLOCK in `strict` preset, WARN in `gentle` preset.
 
 ### Phase 3 — Generate Manifest (first-time or rescan)
 

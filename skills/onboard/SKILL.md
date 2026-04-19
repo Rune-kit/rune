@@ -8,7 +8,7 @@ metadata:
   model: sonnet
   group: quality
   tools: "Read, Write, Edit, Glob, Grep"
-  emit: project.onboarded
+  emit: project.onboarded, invariants.seeded
 ---
 
 # onboard
@@ -39,7 +39,7 @@ Auto-generate project context for AI sessions. Scans the codebase and creates a 
 
 ```
 project/
-├── CLAUDE.md              # Project config for AI sessions
+├── CLAUDE.md              # Project config for AI sessions (with invariants pointer block)
 └── .rune/
     ├── conventions.md     # Detected patterns & style
     ├── decisions.md       # Empty, ready for session-bridge
@@ -47,6 +47,7 @@ project/
     ├── session-log.md     # Empty, ready for session-bridge
     ├── instincts.md       # Empty, ready for session-bridge instinct learning
     ├── contract.md        # Project invariants enforced by cook/sentinel
+    ├── INVARIANTS.md      # Danger zones + cross-file rules, consumed by logic-guardian
     └── DEVELOPER-GUIDE.md # Human-readable onboarding for new developers
 ```
 
@@ -113,6 +114,33 @@ Use `Write` to create each file:
   - Customize rules based on Step 2 findings (e.g., Python → add `no bare except`, Node.js → add `no console.log`, SQL database → add parameterized queries rule)
   - Remove sections that don't apply (e.g., `contract.operations` for a library with no deployed service)
   - The contract is a starting point — tell the user to review and customize it
+
+### Step 5.4 — Detect Invariants (Auto-Discipline Seed)
+
+Scan the project for rules that span files — the kind of mistake a linter cannot catch but a single agent edit can introduce. The goal is to seed `.rune/INVARIANTS.md` with ≥3 plausible rules so `logic-guardian` has something to enforce on day one.
+
+Invoke the scanner directly:
+
+```bash
+node skills/onboard/scripts/onboard-invariants.js --root <project-root>
+```
+
+What it produces:
+- `.rune/INVARIANTS.md` — rendered from `skills/onboard/references/invariants-template.md` plus auto-detected rules in four buckets:
+  - **Danger Zones** — directories with the most cross-file references
+  - **Critical Invariants** — shared constants exported and imported in ≥3 places
+  - **State Machine Rules** — reducer/switch shapes with state literal pairs
+  - **Cross-File Consistency** — literal tuples mirrored across ≥3 files
+- `CLAUDE.md` — adds a pointer block between `<!-- @rune-invariants-pointer:start -->` and `<!-- @rune-invariants-pointer:end -->` listing top danger-zone globs so every session sees them.
+
+Merge rules (safe re-runs):
+- If `.rune/INVARIANTS.md` exists, user edits above `## Auto-detected (new)` are **never** overwritten.
+- New detections replace **only** the content under `## Auto-detected (new)`.
+- If a user sets `<!-- @rune-invariants-pointer:skip -->` anywhere in `CLAUDE.md`, the pointer block is not re-injected.
+
+Emit signal `invariants.seeded` with `{danger_count, critical_count, state_count, cross_count}` when done. `session-bridge` listens in Phase 3 to surface the loudest rules at session start.
+
+**Do not fabricate rules.** If detection yields zero results, write `_No new detections on this run._` under `## Auto-detected (new)` and move on. A quiet INVARIANTS.md is better than fake rules the user has to prune.
 
 ### Step 5.5 — Load Existing Instincts
 

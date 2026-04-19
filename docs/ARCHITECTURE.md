@@ -127,6 +127,51 @@ Override: user preference   → manual in config
 | DOCUMENTS | doc-processor |
 | SECURITY | sentinel-env |
 
+## Runtime Layer (v2.12.0)
+
+The mesh ships as a **library** (invoke via slash commands) and as a **runtime** (native hooks that auto-fire on tool use). The runtime converts passive advice into enforced discipline.
+
+### Hook adapter registry
+
+`compiler/adapters/hooks/{claude,cursor,windsurf,antigravity}.js` — one adapter per platform. Each accepts:
+
+- `preset` — `strict` | `gentle` | `off`
+- `tierManifests` — loaded declarative hook specs from Pro/Business
+
+The adapter translates the preset + tier manifests into the platform's native hook format (Claude `.claude/settings.json`, Cursor `.cursor/rules`, Windsurf workflow+rule, Antigravity rule-inject). Free-core adapters are tier-agnostic — they receive already-parsed manifests and do not hardcode Pro/Business awareness.
+
+### Tier-tagged manifest
+
+Paid tiers ship a declarative spec at `$<TIER>_ROOT/hooks/manifest.json`:
+
+```json
+{
+  "tier": "pro",
+  "version": "1.0",
+  "hooks": [
+    { "id": "context-inject", "event": "UserPromptSubmit", "command": "...", "claudeOnly": false },
+    { "id": "context-sense", "event": "PreToolUse", "matcher": "Edit|Write", "command": "..." }
+  ],
+  "overrides": { "context-watch": "context-sense" }
+}
+```
+
+`Free/compiler/commands/hooks/tiers.js` resolves `$<TIER>_ROOT` via env var with monorepo sibling fallback (`<projectRoot>/../<Capitalized-Tier>/hooks/manifest.json`), sanitizes the tier name (`^[a-z][a-z0-9-]{0,31}$`), and re-anchors paths to prevent traversal.
+
+### Layered merge
+
+`mergePreset()` strips all Rune-managed entries once, then `appendHookBlock()` layers Free preset → Pro → Business additively. `isRuneManaged()` combines `RUNE_DISPATCH_RE` (npx shape) and `RUNE_TIER_RE` (`${RUNE_*_ROOT}` shape) so uninstall/re-install is idempotent. User-authored hooks in the same events are preserved verbatim.
+
+### Invocation
+
+```bash
+rune hooks install --preset gentle                            # Free only
+rune hooks install --preset gentle --tier pro                 # Free + Pro
+rune hooks install --preset gentle --tier pro --tier business # full stack
+rune hooks status                                             # inspect wiring
+rune hooks uninstall                                          # remove Rune entries only
+```
+
 ## Mesh Signals (v2.10.0)
 
 Event-driven skill communication via frontmatter declarations. Skills declare what signals they `emit` and `listen` to — the compiler builds a signal graph and validates consistency.

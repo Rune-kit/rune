@@ -604,7 +604,7 @@ function parseSkillConnections(content, skillName) {
   }
 
   // Extract Calls section
-  const callsMatch = content.match(/## Calls \(outbound\)\s*\n([\s\S]*?)(?=\n## |\n---|\Z)/);
+  const callsMatch = content.match(/## Calls \(outbound\)\s*\n([\s\S]*?)(?=\n## |\n---|Z)/);
   if (callsMatch) {
     const lines = callsMatch[1].split('\n');
     for (const line of lines) {
@@ -623,7 +623,7 @@ function parseSkillConnections(content, skillName) {
   }
 
   // Extract Called By section
-  const calledByMatch = content.match(/## Called By \(inbound\)\s*\n([\s\S]*?)(?=\n## |\n---|\Z)/);
+  const calledByMatch = content.match(/## Called By \(inbound\)\s*\n([\s\S]*?)(?=\n## |\n---|Z)/);
   if (calledByMatch) {
     const lines = calledByMatch[1].split('\n');
     for (const line of lines) {

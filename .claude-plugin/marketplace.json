@@ -11,8 +11,8 @@
     {
       "name": "rune",
       "source": "./",
-      "description": "62 skills wired into a self-aware 5-layer mesh — 215+ connections, adaptive routing, mesh analytics, logic preservation. Use rune:cook for any code task, rune:team for parallel work, rune:launch for deploy, rune:rescue for legacy code.",
-      "version": "2.11.0",
+      "description": "62 skills wired into a self-aware 5-layer mesh — 215+ connections, adaptive routing, mesh analytics, logic preservation. Runs as native hooks (preflight/sentinel/completion-gate auto-fire before tool use) or invoked library. Multi-platform: Claude Code, Cursor, Windsurf, Antigravity. Use rune:cook for any code task, rune:team for parallel work, rune:launch for deploy, rune:rescue for legacy code.",
+      "version": "2.12.0",
       "author": {
         "name": "Rune Contributors"
       },

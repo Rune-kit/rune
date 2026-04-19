@@ -1,6 +1,6 @@
 # Rune Roadmap
 
-> Last updated: April 2026 | Version: 2.11.0
+> Last updated: April 2026 | Version: 2.12.0
 
 ---
 
@@ -18,19 +18,21 @@ These principles guide every roadmap decision:
 
 ---
 
-## Current State (v2.11.0)
+## Current State (v2.12.0 — "Auto-Discipline")
 
 | Layer | Count | Status |
 |-------|-------|--------|
 | L0 Router | 1 | ✅ Complete |
 | L1 Orchestrators | 5 | ✅ Complete |
-| L2 Workflow Hubs | 28 | ✅ Complete |
+| L2 Workflow Hubs | 29 | ✅ Complete |
 | L3 Utilities | 27 | ✅ Complete |
 | L4 Free Extension Packs | 14 | ✅ Complete |
 | Pro Packs (5) | 35 skills | ✅ Shipped |
 | Business Packs (4) | 26 skills | ✅ Shipped |
-| Tests | 566 | ✅ Passing |
+| Tests | 1,152 | ✅ Passing |
 | Mesh Signals | 17 | ✅ Active |
+| Runtime Hooks | 4 platforms | ✅ Claude / Cursor / Windsurf / Antigravity |
+| Tier Stacking | Free + Pro + Business | ✅ `--tier` flag |
 | Platforms | 8 | ✅ Active |
 
 ---

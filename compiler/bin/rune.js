@@ -18,6 +18,10 @@ import { createInterface } from 'node:readline';
 import { fileURLToPath } from 'node:url';
 import { getAdapter, listPlatforms } from '../adapters/index.js';
 import { getAllAnalytics } from '../analytics.js';
+import { dispatchHook } from '../commands/hook-dispatch.js';
+import { installHooks } from '../commands/hooks/install.js';
+import { hookStatus } from '../commands/hooks/status.js';
+import { uninstallHooks } from '../commands/hooks/uninstall.js';
 import { generateDashboardHTML } from '../dashboard.js';
 import { checkMeshIntegrity, formatDoctorResults, formatMeshResults, runDoctor } from '../doctor.js';
 import { buildAll } from '../emitter.js';
@@ -425,10 +429,155 @@ async function cmdAnalytics(projectRoot, args) {
   }
 }
 
+// ─── Hook Commands ───
+
+async function cmdHooks(projectRoot, args, subcommand) {
+  if (!subcommand) {
+    log('');
+    log('  rune hooks — Auto-discipline entry point for AI IDEs');
+    log('');
+    log('  Subcommands:');
+    log('    install [--preset strict|gentle|off] [--platform <name>|all] [--tier pro|business]');
+    log('                                                                   Wire Rune hooks / rules / workflows');
+    log(
+      '    uninstall [--platform <name>|all]                              Remove Rune-managed entries (keeps user entries)',
+    );
+    log(
+      '    status [--platform <name>|all] [--tier pro|business]          Show active preset, wired skills, tier coverage',
+    );
+    log('');
+    log('  Platforms: claude, cursor, windsurf, antigravity (auto-detected if omitted)');
+    log('  Tiers: pro, business — requires $RUNE_PRO_ROOT / $RUNE_BUSINESS_ROOT env var or monorepo sibling.');
+    log('  Options:');
+    log('    --dry    Preview changes without writing');
+    log('    --tier <name>[,<name>]  Overlay tier manifest(s) — pass multiple tiers comma-separated.');
+    log('');
+    return;
+  }
+
+  switch (subcommand) {
+    case 'install': {
+      const tierArg = parseTierFlag(args.tier);
+      const result = await installHooks(projectRoot, {
+        preset: args.preset,
+        dry: args.dry,
+        platform: args.platform,
+        tier: tierArg,
+      });
+      log('');
+      if (result.platforms.length === 0) {
+        for (const note of result.notes) logStep('·', note);
+        log('');
+        break;
+      }
+      const tierSuffix = result.tiers?.length ? ` + tier(s): ${result.tiers.join(', ')}` : '';
+      if (result.written) {
+        logStep('✓', `Installed preset "${result.preset}"${tierSuffix} across: ${result.platforms.join(', ')}`);
+      } else if (args.dry) {
+        logStep('◎', `Dry-run — no changes written (platforms: ${result.platforms.join(', ')}${tierSuffix})`);
+      }
+      for (const r of result.results) {
+        log('');
+        log(`  [${r.platform}]`);
+        for (const file of r.files) {
+          const rel = path.relative(projectRoot, file.path);
+          logStep(file.deleted ? '−' : '→', rel);
+        }
+        for (const note of r.notes) logStep('·', note);
+      }
+      log('');
+      break;
+    }
+    case 'uninstall': {
+      const result = await uninstallHooks(projectRoot, { dry: args.dry, platform: args.platform });
+      log('');
+      if (result.platforms.length === 0) {
+        for (const note of result.notes) logStep('·', note);
+        log('');
+        break;
+      }
+      if (result.written) {
+        logStep('✓', `Uninstalled Rune entries across: ${result.platforms.join(', ')}`);
+      } else if (args.dry) {
+        logStep('◎', `Dry-run — would uninstall across: ${result.platforms.join(', ')}`);
+      }
+      for (const r of result.results) {
+        log('');
+        log(`  [${r.platform}]`);
+        for (const file of r.files) {
+          const rel = path.relative(projectRoot, file.path);
+          logStep(file.deleted ? '−' : '→', rel);
+        }
+        for (const note of r.notes) logStep('·', note);
+      }
+      log('');
+      break;
+    }
+    case 'status': {
+      const tierArg = parseTierFlag(args.tier);
+      const result = await hookStatus(projectRoot, RUNE_ROOT, { platform: args.platform, tier: tierArg });
+      log('');
+      if (result.platforms.length === 0) {
+        for (const note of result.notes) logStep('·', note);
+        log('');
+        break;
+      }
+      for (const r of result.results) {
+        log(`  [${r.platform}]${r.capability ? ` (${r.capability.maturity})` : ''}`);
+        log(`    installed: ${r.installed ? 'yes' : 'no'}`);
+        log(`    preset:    ${r.preset ?? 'none'}`);
+        if (r.wired.length > 0) log(`    wired:     ${r.wired.join(', ')}`);
+        if (r.missing.length > 0) logStep('⚠', `missing: ${r.missing.join(', ')}`);
+        if (r.events) {
+          for (const [event, skills] of Object.entries(r.events)) {
+            log(`    ${event}: ${skills.join(', ')}`);
+          }
+        }
+        for (const note of r.notes) logStep('·', note);
+        log('');
+      }
+      if (result.tiers && result.tiers.length > 0) {
+        log('  Tiers:');
+        for (const t of result.tiers) {
+          if (!t.found) {
+            logStep('⚠', `${t.tier}: manifest not found${t.error ? ` (${t.error})` : ''}`);
+          } else {
+            const req = t.requiresOk ? 'env OK' : `missing env: ${t.requiresMissing.join(', ')}`;
+            logStep('·', `${t.tier} v${t.version} — ${t.entries} entries — ${req}`);
+          }
+        }
+        log('');
+      }
+      if (result.missingInRepo.length > 0) {
+        logStep('⚠', `Skills referenced by presets but not found in repo: ${result.missingInRepo.join(', ')}`);
+        log('');
+      }
+      break;
+    }
+    default:
+      log(`  ✗ Unknown hooks subcommand: ${subcommand}. Run \`rune hooks\` for help.`);
+      process.exit(1);
+  }
+}
+
 // ─── Arg Parsing ───
 
 // Flags that require a string value (not boolean)
-const VALUE_REQUIRED_FLAGS = new Set(['platform', 'output', 'disable', 'extensions', 'days']);
+const VALUE_REQUIRED_FLAGS = new Set(['platform', 'output', 'disable', 'extensions', 'days', 'preset', 'tier']);
+
+function parseTierFlag(raw) {
+  if (!raw) return undefined;
+  if (Array.isArray(raw)) {
+    return raw
+      .flatMap((v) => String(v).split(','))
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+  return String(raw)
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
 
 function parseArgs(argv) {
   const args = {};
@@ -453,13 +602,21 @@ function parseArgs(argv) {
     }
   }
 
-  return { command: positional[0], args };
+  return { command: positional[0], subcommand: positional[1], args, positional };
 }
 
 // ─── Main ───
 
 async function main() {
-  const { command, args } = parseArgs(process.argv.slice(2));
+  const rawArgv = process.argv.slice(2);
+
+  // hook-dispatch bypasses parseArgs so flags like --gentle reach the dispatcher verbatim
+  if (rawArgv[0] === 'hook-dispatch') {
+    const exitCode = await dispatchHook(rawArgv.slice(1));
+    process.exit(exitCode);
+  }
+
+  const { command, subcommand, args } = parseArgs(rawArgv);
   const projectRoot = process.cwd();
 
   // Handle --version / -v as flag (not positional command)
@@ -490,6 +647,9 @@ async function main() {
     case 'dash':
       await cmdAnalytics(projectRoot, args);
       break;
+    case 'hooks':
+      await cmdHooks(projectRoot, args, subcommand);
+      break;
     case 'version':
     case '--version':
     case '-v': {
@@ -512,6 +672,12 @@ async function main() {
       log('    status   Project dashboard (skills, signals, packs, health)');
       log('    visualize  Interactive mesh graph (opens in browser)');
       log('    analytics  Usage analytics dashboard (Business tier)');
+      log('    hooks      Install/uninstall/status for multi-platform auto-discipline');
+      log(
+        '               hooks install [--preset gentle|strict|off] [--platform claude|cursor|windsurf|antigravity|all]',
+      );
+      log('               hooks uninstall [--platform <name>|all]');
+      log('               hooks status [--platform <name>|all]');
       log('');
       log('  Options:');
       log(

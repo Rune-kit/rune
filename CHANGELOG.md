@@ -3,6 +3,36 @@
 All notable changes to Rune are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.12.0] - 2026-04-19 — "Auto-Discipline"
+
+Rune shifts from **library** to **runtime**. Any agent with Rune installed now auto-fires quality gates at the right moment — no manual skill recall required. 5-phase auto-discipline plan complete.
+
+### Added
+- **`rune hooks install`** — writes native hook entries for `.claude/settings.json` (Claude Code). `PreToolUse` / `PostToolUse` / `Stop` auto-invoke preflight, sentinel, dependency-doctor, completion-gate. Presets: `gentle` (WARN), `strict` (BLOCK), `off` (uninstall)
+- **Multi-platform hooks** — same install command targets Cursor (`.cursor/rules/rune-*.mdc`), Windsurf (workflow + cascade-rule pair), Antigravity (rule-inject). `--platform all` auto-detects installed IDEs
+- **`rune hooks install --tier pro[,business]`** — tier-tagged hook manifests. Pro ships `context-inject` / `context-sense` / `rune-pulse` across all four platforms via declarative `$RUNE_PRO_ROOT/hooks/manifest.json`. Free compiler stays tier-agnostic
+- **`rune hooks status --tier pro`** — per-tier coverage report (installed / missing / requires-env)
+- **`rune onboard`** INVARIANTS.md seeding — scans project for load-bearing rules, writes scaffold to `.rune/INVARIANTS.md`, injects marker into CLAUDE.md
+- **logic-guardian v0.3.0** — consumes `.rune/INVARIANTS.md` in pre-edit gate
+- **session-bridge v0.7.0** — emits `invariants.loaded` signal at session start
+- **autopilot v1.1.0** (Pro) — listens to `invariants.loaded`, downgrades autonomous → semi-auto on invariant match
+- **docs/HOOKS.md** — capability matrix per platform (Free + Pro tiers)
+
+### Security
+- Tier-name validator (`TIER_NAME_RE`) prevents path traversal via `--tier ../etc`
+- Env-sourced tier roots re-anchored via `path.resolve` so `RUNE_*_ROOT=../` can't escape
+- `isRuneStatusLine()` tightened to installer-produced shapes only — user statusLines containing the `rune-pulse` substring no longer silently deleted on uninstall
+- Manifest `overrides` field now consumed (`stripHooksBySkill`) — migrates legacy tier entries to new skill names
+
+### Positioning
+- **Library → Runtime**: skills no longer passive. `cook`, `preflight`, `sentinel`, `completion-gate` auto-invoke at their natural trigger points
+- Differentiator vs ClaudeKit (80 passive skills) and gstack (35 passive skills)
+
+### Stats
+- +1152 tests (was 1091 — +26 Phase 5 + 5 review-fix regression + 30 prior phases)
+- 4 new compiler modules: `commands/hooks/{install,status,uninstall,tiers,merge,presets}.js`, `adapters/hooks/{claude,cursor,windsurf,antigravity,tier-emitter}.js`
+- Biome lint clean, doctor healthy, mesh 62 skills / 194 reciprocal connections
+
 ## [2.11.0] - 2026-04-12
 
 ### Added
