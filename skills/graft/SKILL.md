@@ -3,7 +3,7 @@ name: graft
 description: "Clone, port, or convert features from any GitHub repo into your project. Understand before copy, challenge before implement. 4 modes: port (rewrite), compare (analysis), copy (transplant), improve (copy + optimize)."
 metadata:
   author: runedev
-  version: "0.1.0"
+  version: "0.2.0"
   layer: L2
   model: sonnet
   group: creation
@@ -17,6 +17,17 @@ metadata:
 ## Purpose
 
 External code intelligence — structured workflow for learning from, adapting, and integrating features from any public repository into your project. Graft is NOT a copy-paste tool. It enforces understanding before adoption through a mandatory challenge gate that evaluates license compatibility, stack fit, scope, quality, and maintenance health before any code touches your codebase.
+
+## Core Rule: The Tree is a Menu, Not the Meal
+
+When you clone a repo you see hundreds of files. **That tree is a menu — options to order from, not a meal to eat.** Grafting the whole tree is how context windows die and foreign patterns leak into your codebase.
+
+- Read the README + the **2-5 files that implement the target feature**. Skip the rest.
+- If you cannot name the specific files you need before reading, you do not know what you want yet — go back to Step 0 and narrow scope.
+- `WebFetch` on raw GitHub URLs beats `git clone` whenever you know the exact files. Use clone only when discovery is genuinely needed.
+- A graft that reads >10 source files is almost always a scoping failure, not a thorough one.
+
+This rule applies to ALL modes. Copy mode is not an excuse to import a directory wholesale — you still select files deliberately.
 
 <HARD-GATE>
 Challenge gate (Step 4) MUST complete before adaptation planning (Step 5).
@@ -123,13 +134,15 @@ git sparse-checkout set <target-dir>
 
 For specific files or small repos: use `WebFetch` on raw GitHub URLs instead of cloning.
 
-**Read in this order** (stop when you have enough context):
+**Read in this order** (stop when you have enough context — see Core Rule: the tree is a menu):
 1. README.md — purpose, architecture overview
-2. Target dir's files — the actual code to graft
+2. Target dir's files — the actual code to graft (aim for 2-5 files, hard-cap at 10)
 3. package.json / pyproject.toml / Cargo.toml — dependencies and stack
 4. Tests for target feature — understand expected behavior
 
 **Scope guard**: If target feature spans >15 files or >2000 LOC → WARN user: "Feature is large. Suggest narrowing to [specific module]. Continue anyway?"
+
+**Menu discipline**: Before reading file #6, pause and ask "do I actually need this, or am I eating the menu?" If the answer isn't a concrete reason tied to the target feature, stop reading and move to Step 2.
 
 ### Step 2 — Analyze Source
 
@@ -289,6 +302,7 @@ graft.complete:
 5. MUST respect local conventions — grafted code should look native, not foreign
 6. MUST NOT modify the source repository — read-only access only
 7. MUST NOT graft without scoping — always narrow to specific feature/module
+8. MUST treat the source file tree as a menu, not a meal — read the 2-5 files the feature actually needs, not every file you can see
 
 ## Mesh Gates
 
@@ -305,6 +319,7 @@ graft.complete:
 | Grafting GPL code into MIT project | CRITICAL | Challenge gate checks license — blocks incompatible |
 | Blindly copying code without understanding | CRITICAL | HARD-GATE: challenge before implement |
 | Context overflow from large source files | HIGH | Scope guard: >15 files or >2000 LOC triggers warning |
+| Reading the whole repo instead of the feature | HIGH | "Tree is a menu" rule — pause before file #6, justify each read |
 | Grafted code doesn't match local conventions | HIGH | Step 3 scans local patterns, Step 5 plans adaptation |
 | Stale source (abandoned repo) | MEDIUM | Maintenance dimension in challenge gate |
 | Private repo URL fails | MEDIUM | Fallback to WebFetch raw URLs or manual paste |
@@ -320,6 +335,7 @@ SELF-VALIDATION (run before emitting graft.complete):
 - [ ] License compatibility confirmed (or user override documented)
 - [ ] Temp clone directory cleaned up
 - [ ] Grafted code compiles/lints without new errors
+- [ ] Source files read count ≤10 (menu discipline) — if >10, document why in the output
 IF ANY check fails → fix before reporting done. Do NOT defer to completion-gate.
 ```
 

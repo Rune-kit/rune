@@ -3,7 +3,7 @@ name: design
 description: Design system reasoning. Maps product domain to style, palette, typography, and platform-specific patterns. Generates .rune/design-system.md as the shared design contract for all UI-generating skills.
 metadata:
   author: runedev
-  version: "0.4.0"
+  version: "0.5.0"
   layer: L2
   model: sonnet
   group: creation
@@ -124,6 +124,82 @@ Accept a single mood keyword (or infer from context if obvious). Map mood to con
 4. Downstream skills (`animation-patterns`, `palette-picker`, `type-system`) read mood constraints from design-system.md
 
 **Skip if**: User says "no preference" or "just follow domain defaults" — proceed to Step 3 with domain-only reasoning.
+
+### Step 2.7 — Tweaks, Not Menus (Default Style Pattern)
+
+Picking from a 10-option style menu is how AI UI gets generic. Instead:
+
+1. **Propose ONE opinionated default** based on domain + mood (from Step 2.5). Describe it in 2-3 lines — style, palette direction, typography pairing.
+2. **Ask for tweaks, not choices.** The question is **"Any tweaks to this, or ship it?"** — not "Which of these do you prefer?"
+3. **Accept natural-language adjustments.** Map phrases → design system edits:
+   - "more professional" → heavier type weights, reduce saturation, tighter spacing
+   - "less corporate" → looser weights, brighter accent, more whitespace
+   - "darker" → swap base for darker neutral, raise contrast on elevated surfaces
+   - "more playful" → add subtle animation, soften corners, bolder accent
+   - "more trust" → cooler palette (slate/blue), heavier headers, smaller radius
+4. **If the user asks for a menu**, provide max 3 options — but mark one as the recommended default. Never present a neutral list of 5+ equivalent styles.
+
+Why: Every menu option dilutes commitment. A single confident default gets committed, tweaked, and shipped. A menu gets deliberated, A/B'd, and abandoned. This is the **Tweaks Default** pattern from Anthropic's design system guidance — the AI commits first, humans steer second.
+
+### Step 2.9 — Universal Anti-AI Rules (apply to ALL domains)
+
+These rules apply regardless of domain, mood, or platform. Every generated design system MUST comply.
+
+#### Rule 1 — Scale Minimums
+
+Below these thresholds, designs read as "AI boilerplate" no matter how good the palette is.
+
+| Element | Minimum | Ideal |
+|---------|---------|-------|
+| Hero/display text | 48px | 56-72px |
+| H1 (page title) | 32px | 36-40px |
+| Body text | 16px (never 14px for primary content) | 16-18px |
+| Secondary/meta text | 14px | 14-15px |
+| Touch targets (mobile) | 44×44px | 48×48px |
+| Touch target gap (mobile) | 8px | 12px |
+| Focus-visible ring | 2px | 3px |
+
+Write these minimums to `.rune/design-system.md` under `## Scale Minimums`. Downstream skills (`cook`, `fix`) treat violations as review findings.
+
+#### Rule 2 — Placeholder Over Bad SVG
+
+If the design calls for an icon, illustration, or graphic that the agent cannot generate at high quality, **ship a boxed placeholder, not a malformed SVG**.
+
+```html
+<!-- GOOD: placeholder -->
+<div class="placeholder" data-icon="dashboard" aria-label="Dashboard icon — design pass needed">
+  [ ICON: dashboard ]
+</div>
+
+<!-- BAD: AI-generated SVG with broken geometry -->
+<svg viewBox="0 0 24 24">
+  <path d="M12 2L2 7l10 5 10-5-10-5z M2 17l10 5 10-5 M2 12l10 5 10-5"/>
+</svg>
+```
+
+- Use **Phosphor Icons** (`@phosphor-icons/react`) or **Huge Icons** as the library default. Never generate custom SVG for standard iconography.
+- For illustrations, reference a placeholder string (e.g., `[ILLUSTRATION: empty-state-dashboard]`) that a human or asset-creator pass fills in later.
+- Malformed SVG is the #1 AI tell. A clean labeled placeholder is honest and professional.
+
+#### Rule 3 — Color Derivation via oklch(), not Manual Shading
+
+When the design needs a darker hover, lighter surface, or tinted state, **derive from the accent via oklch()** — never eyeball a hex value.
+
+```css
+/* GOOD: relative derivation */
+--accent: oklch(65% 0.2 255);
+--accent-hover:  oklch(from var(--accent) calc(l - 0.08) c h);
+--accent-pressed: oklch(from var(--accent) calc(l - 0.15) c h);
+--accent-subtle:  oklch(from var(--accent) calc(l + 0.3) calc(c * 0.4) h);
+
+/* BAD: manual hex shading — breaks hue/chroma consistency */
+--accent: #3b82f6;
+--accent-hover: #2563eb;  /* guessed darker */
+```
+
+Why: HSL shading distorts perceived brightness at different hues. oklch() keeps perceptual lightness consistent, so derived states look intentional rather than "kinda close." Write derived tokens to `.rune/design-system.md` — downstream skills reuse these, not re-derive.
+
+Bonus: use `text-wrap: pretty` on headings to prevent widow words. One line, zero ceremony.
 
 ### Step 3 — Apply Domain Reasoning Rules
 
@@ -532,6 +608,10 @@ Trading/Fintech — Data-Dense Dark — Web
 4. MUST write `.rune/design-system.md` — ephemeral design decisions evaporate; persistence is the point
 5. MUST NOT overwrite existing design-system.md without user confirmation
 6. MUST include platform-specific overrides when platform is iOS or Android
+7. MUST propose ONE opinionated default and ask for tweaks — never present a neutral 5+ option menu (Step 2.7 Tweaks Default)
+8. MUST enforce Scale Minimums (hero ≥48px, body ≥16px, touch targets ≥44px) in every design system (Step 2.9 Rule 1)
+9. MUST use Phosphor/Huge icons or boxed placeholders — NEVER generate custom SVG for standard iconography (Step 2.9 Rule 2)
+10. MUST derive accent variants via `oklch(from var(--accent) ...)` — NEVER hand-shade hex values (Step 2.9 Rule 3)
 
 ## Mesh Gates (L1/L2 only)
 
@@ -541,6 +621,10 @@ Trading/Fintech — Data-Dense Dark — Web
 | Anti-Pattern Gate | Anti-pattern list derived from domain rules (not generic) | Domain-specific list required |
 | Persistence Gate | .rune/design-system.md written before reporting done | Write file first |
 | Platform Gate | Platform detected before generating tokens | Default to web, note assumption |
+| Tweaks-Default Gate | One opinionated default proposed before asking for tweaks | Do NOT present neutral 5-option menus |
+| Scale-Minimums Gate | Hero ≥48px, body ≥16px, touch ≥44px written into design-system.md | Emit minimums block in output |
+| SVG-Placeholder Gate | No hand-rolled SVG for standard icons — Phosphor/Huge or placeholder | Swap to icon library or `[ ICON: name ]` box |
+| oklch-Derivation Gate | All accent variants derived via `oklch(from ...)` | Rewrite manual hex shades as relative oklch |
 
 ## Returns
 
@@ -568,13 +652,20 @@ Known failure modes for this skill. Check these before declaring done.
 | Visual audit score < 18 shipped without improvement plan | MEDIUM | Step 6.5 flags weak pillars and creates backlog items |
 | iOS target generating solid-background cards | MEDIUM | Platform Gate: iOS 26 Liquid Glass deprecates this pattern |
 | Android target using hardcoded hex colors | MEDIUM | Platform Gate: MaterialTheme.colorScheme is mandatory for dynamic color |
+| Presenting a neutral 5+ option style menu (deliberation death) | HIGH | Step 2.7 Tweaks Default — propose ONE opinionated default, ask for tweaks |
+| Body text at 14px or hero at <40px (AI boilerplate scale) | HIGH | Step 2.9 Rule 1 — enforce Scale Minimums table in every design system |
+| Hand-rolled SVG for dashboard/menu/close icons (malformed geometry) | HIGH | Step 2.9 Rule 2 — Phosphor/Huge Icons or `[ ICON: name ]` placeholder, never custom |
+| Accent variants shaded by eyeball (inconsistent perceived brightness) | MEDIUM | Step 2.9 Rule 3 — `oklch(from var(--accent) calc(l - 0.1) c h)` |
+| Missing `text-wrap: pretty` on headings (widow words) | LOW | One-line CSS — add to base heading styles |
 
 ## Done When
 
 - Design reference loaded (user override or baseline)
 - Domain classified (one of the 10 categories or explicit custom reasoning)
 - Mood mapped to constraints (or explicitly skipped with "domain defaults")
-- Design system generated with: colors (primitive + semantic), typography, spacing, effects, anti-patterns
+- Opinionated default proposed (Step 2.7) — user confirmed or requested tweaks
+- Universal anti-AI rules applied (Step 2.9): Scale Minimums, Placeholder-over-bad-SVG, oklch() color derivation
+- Design system generated with: colors (primitive + semantic, oklch-derived variants), typography, spacing, effects, anti-patterns
 - Platform-specific overrides applied (if iOS/Android target)
 - UI-SPEC.md written with locked layout, hierarchy, and component decisions
 - Accessibility review completed (6 checks: contrast, focus, touch targets, labels, semantic HTML, motion)
