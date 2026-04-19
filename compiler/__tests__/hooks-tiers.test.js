@@ -23,9 +23,14 @@ import { installHooks } from '../commands/hooks/install.js';
 import { SETTINGS_REL_PATH } from '../commands/hooks/presets.js';
 import { hookStatus } from '../commands/hooks/status.js';
 import {
+  _resetFreeVersionCache,
+  assertFreeVersionCompat,
   checkManifestRequires,
+  compareSemver,
+  getFreeVersion,
   loadTierManifest,
   locateTierManifest,
+  parseSemver,
   resolveTier,
   validateManifest,
 } from '../commands/hooks/tiers.js';
@@ -493,6 +498,100 @@ describe('review fixes: M3 overrides consumption', () => {
       claudeResult.notes.some((n) => n.includes('applied pro overrides')),
       'override application surfaces as a note',
     );
+  });
+});
+
+describe('Gap 2: minFreeVersion version gate', () => {
+  test('parseSemver accepts x.y.z and ignores prerelease/build', () => {
+    assert.deepStrictEqual(parseSemver('2.12.0'), [2, 12, 0]);
+    assert.deepStrictEqual(parseSemver('2.12.0-rc.1'), [2, 12, 0]);
+    assert.deepStrictEqual(parseSemver('2.12.0+sha.abc'), [2, 12, 0]);
+    assert.strictEqual(parseSemver('not-a-version'), null);
+    assert.strictEqual(parseSemver(null), null);
+  });
+
+  test('compareSemver returns -1/0/1 ordering', () => {
+    assert.strictEqual(compareSemver('2.12.0', '2.12.0'), 0);
+    assert.strictEqual(compareSemver('2.11.9', '2.12.0'), -1);
+    assert.strictEqual(compareSemver('2.12.1', '2.12.0'), 1);
+    assert.strictEqual(compareSemver('3.0.0', '2.12.0'), 1);
+    assert.strictEqual(compareSemver('bogus', '2.12.0'), null);
+  });
+
+  test('validateManifest accepts optional minFreeVersion', () => {
+    const m = validateManifest({ ...PRO_MANIFEST_FIXTURE, minFreeVersion: '2.12.0' });
+    assert.strictEqual(m.minFreeVersion, '2.12.0');
+  });
+
+  test('validateManifest rejects non-semver minFreeVersion', () => {
+    assert.throws(
+      () => validateManifest({ ...PRO_MANIFEST_FIXTURE, minFreeVersion: 'latest' }),
+      /minFreeVersion.*must be semver/,
+    );
+  });
+
+  test('validateManifest rejects empty minFreeVersion string', () => {
+    assert.throws(() => validateManifest({ ...PRO_MANIFEST_FIXTURE, minFreeVersion: '' }), /minFreeVersion.*non-empty/);
+  });
+
+  test('assertFreeVersionCompat is a no-op when minFreeVersion unset', () => {
+    const m = validateManifest(PRO_MANIFEST_FIXTURE);
+    assert.doesNotThrow(() => assertFreeVersionCompat(m, '0.0.1'));
+  });
+
+  test('assertFreeVersionCompat passes when current >= minFreeVersion', () => {
+    const m = validateManifest({ ...PRO_MANIFEST_FIXTURE, minFreeVersion: '2.12.0' });
+    assert.doesNotThrow(() => assertFreeVersionCompat(m, '2.12.0'));
+    assert.doesNotThrow(() => assertFreeVersionCompat(m, '2.12.1'));
+    assert.doesNotThrow(() => assertFreeVersionCompat(m, '3.0.0'));
+  });
+
+  test('assertFreeVersionCompat throws helpful upgrade error when current < minFreeVersion', () => {
+    const m = validateManifest({ ...PRO_MANIFEST_FIXTURE, minFreeVersion: '2.12.0' });
+    assert.throws(
+      () => assertFreeVersionCompat(m, '2.11.0'),
+      (err) => {
+        assert.match(err.message, /requires Rune Free >= 2\.12\.0/);
+        assert.match(err.message, /installed compiler is 2\.11\.0/);
+        assert.match(err.message, /npm i -g @rune-kit\/rune@latest/);
+        assert.match(err.message, /--tier pro/);
+        return true;
+      },
+    );
+  });
+
+  test('resolveTier enforces minFreeVersion via assertFreeVersionCompat', async () => {
+    const futureManifest = { ...PRO_MANIFEST_FIXTURE, minFreeVersion: '999.0.0' };
+    await writeFile(path.join(tierRoot, 'hooks', 'manifest.json'), JSON.stringify(futureManifest, null, 2));
+    await assert.rejects(resolveTier('pro', tmpRoot), /requires Rune Free >= 999\.0\.0/);
+  });
+
+  test('getFreeVersion reads package.json semver', () => {
+    _resetFreeVersionCache();
+    const v = getFreeVersion();
+    assert.match(v, /^\d+\.\d+\.\d+/);
+  });
+});
+
+describe('Gap 3: actionable missing-manifest error', () => {
+  test('resolveTier error lists both env var and monorepo sibling path', async () => {
+    delete process.env.RUNE_PRO_ROOT;
+    await assert.rejects(resolveTier('pro', tmpRoot), (err) => {
+      assert.match(err.message, /RUNE_PRO_ROOT/);
+      assert.match(err.message, /monorepo sibling/);
+      assert.match(err.message, /Drop --tier pro/);
+      assert.match(err.message, /rune\.dev\/docs\/hooks/);
+      return true;
+    });
+  });
+
+  test('resolveTier error for unknown tier (no env var) still includes sibling + docs hint', async () => {
+    await assert.rejects(resolveTier('unknowntier', tmpRoot), (err) => {
+      assert.match(err.message, /monorepo sibling fallback/);
+      assert.match(err.message, /Drop --tier unknowntier/);
+      assert.match(err.message, /rune\.dev\/docs\/hooks/);
+      return true;
+    });
   });
 });
 

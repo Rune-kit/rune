@@ -3,6 +3,22 @@
 All notable changes to Rune are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.12.1] - 2026-04-19
+
+Cross-tier compatibility polish — same release wave as v2.12.0. No breaking changes.
+
+### Added
+- **`minFreeVersion` manifest field** — tier manifests can declare a minimum Free compiler version. `rune hooks install --tier pro` now throws an actionable upgrade error when the local Free is too old (e.g. installing Pro v1.0.1+ against Free < 2.12.1). Prevents silent-failure combinations.
+- **`assertFreeVersionCompat()` / `parseSemver()` / `compareSemver()` / `getFreeVersion()`** — exported from `compiler/commands/hooks/tiers.js` for downstream tooling
+- **Intentional broadcast signal allowlist** (`INTENTIONAL_BROADCAST_SIGNALS` in `scripts/validate-signals.js`) — signals legitimately fire-and-forget across tiers (e.g. `autopilot.downgraded` emitted by Pro for observability) no longer trigger "unlistened signal" warnings
+
+### Changed
+- **"Could not locate tier manifest" error** rewritten with actionable guidance — shows both search locations (env var + monorepo sibling), suggests three concrete fixes (set env, clone sibling, drop `--tier` flag), and links to docs. Replaces the previous one-liner
+
+### Tests
+- +13 regression tests (8 for minFreeVersion gate, 2 for error message shape, 3 for signal allowlist)
+- 1,165 total (up from 1,152)
+
 ## [2.12.0] - 2026-04-19 — "Auto-Discipline"
 
 Rune shifts from **library** to **runtime**. Any agent with Rune installed now auto-fires quality gates at the right moment — no manual skill recall required. 5-phase auto-discipline plan complete.

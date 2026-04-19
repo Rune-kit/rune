@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { afterEach, beforeEach, describe, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { parseSignals, validateSignals } from '../validate-signals.js';
+import { INTENTIONAL_BROADCAST_SIGNALS, parseSignals, validateSignals } from '../validate-signals.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -174,6 +174,60 @@ metadata:
       const { signalCount, issues } = validateSignals(tempDir);
       assert.strictEqual(signalCount, 0);
       assert.strictEqual(issues.length, 0);
+    });
+  });
+
+  describe('Gap 1: intentional broadcast signal allowlist', () => {
+    test('allowlist includes at least autopilot.downgraded (Pro → observability)', () => {
+      assert.ok(INTENTIONAL_BROADCAST_SIGNALS.has('autopilot.downgraded'));
+    });
+
+    test('allowlisted signal emitted without listener produces NO warning', () => {
+      // Pick any name from the allowlist — the test is about the mechanism, not a single signal.
+      const [broadcastSignal] = [...INTENTIONAL_BROADCAST_SIGNALS];
+      assert.ok(broadcastSignal, 'allowlist must be non-empty');
+
+      mkdirSync(join(tempDir, 'broadcaster'));
+      writeFileSync(
+        join(tempDir, 'broadcaster', 'SKILL.md'),
+        `---
+name: broadcaster
+metadata:
+  layer: L2
+  emit: ${broadcastSignal}
+---
+# broadcaster
+`,
+      );
+
+      const { issues, warnings } = validateSignals(tempDir);
+      assert.strictEqual(issues.length, 0);
+      assert.strictEqual(
+        warnings.filter((w) => w.includes(broadcastSignal)).length,
+        0,
+        `allowlisted signal "${broadcastSignal}" should not warn`,
+      );
+    });
+
+    test('non-allowlisted orphan emit STILL warns (allowlist is opt-in, not default)', () => {
+      mkdirSync(join(tempDir, 'stray'));
+      writeFileSync(
+        join(tempDir, 'stray', 'SKILL.md'),
+        `---
+name: stray
+metadata:
+  layer: L2
+  emit: random.signal
+---
+# stray
+`,
+      );
+
+      const { warnings } = validateSignals(tempDir);
+      assert.ok(
+        warnings.some((w) => w.includes('random.signal')),
+        'non-allowlisted orphan emit must still warn',
+      );
     });
   });
 

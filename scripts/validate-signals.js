@@ -17,6 +17,17 @@ const BUSINESS_DIR = join(__dirname, '..', '..', 'Business', 'extensions');
 const SIGNAL_NAME_PATTERN = /^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*)+$/;
 
 /**
+ * Intentional broadcast signals — emitted but may legitimately have zero listeners
+ * in some tier configurations. Covers:
+ *   • cross-tier events (emitted by Free, listened by Pro/Business only)
+ *   • observability events (emitted for external logging/telemetry, not skill chains)
+ * Use sparingly — the default "unlistened = warning" is what catches dead signals.
+ */
+export const INTENTIONAL_BROADCAST_SIGNALS = new Set([
+  'autopilot.downgraded', // Pro autopilot → observability (no Free listener)
+]);
+
+/**
  * Parse emit/listen signals from SKILL.md frontmatter
  * Supports both core format (skills/fix/SKILL.md) and pack format (skills/feature-spec.md)
  */
@@ -169,9 +180,9 @@ export function validateSignals(skillsDir, { proDirs = [], tierLabels = [] } = {
     }
   }
 
-  // Warn: emitted signals that nobody listens to
+  // Warn: emitted signals that nobody listens to — unless intentionally broadcast
   for (const [signal, emitterList] of emitters) {
-    if (!listeners.has(signal)) {
+    if (!listeners.has(signal) && !INTENTIONAL_BROADCAST_SIGNALS.has(signal)) {
       warnings.push(`unlistened signal: "${signal}" emitted by [${emitterList.join(', ')}] but no skill listens to it`);
     }
   }

@@ -16,15 +16,66 @@
  * third-party) plugs in by shipping a manifest at a known path.
  */
 
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 /** Known tier env vars. Adding a new tier = add its env var here. */
 export const TIER_ENV_VARS = Object.freeze({
   pro: 'RUNE_PRO_ROOT',
   business: 'RUNE_BUSINESS_ROOT',
 });
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+/**
+ * Read Free compiler version from the bundled package.json. Cached after first read.
+ * @returns {string} semver string, e.g. "2.12.1"
+ */
+let _freeVersionCache = null;
+export function getFreeVersion() {
+  if (_freeVersionCache) return _freeVersionCache;
+  const pkgPath = path.resolve(__dirname, '..', '..', '..', 'package.json');
+  try {
+    const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'));
+    _freeVersionCache = typeof pkg.version === 'string' ? pkg.version : '0.0.0';
+  } catch {
+    _freeVersionCache = '0.0.0';
+  }
+  return _freeVersionCache;
+}
+
+/** For test/override scenarios — resets the cache. */
+export function _resetFreeVersionCache() {
+  _freeVersionCache = null;
+}
+
+/**
+ * Parse a semver `x.y.z` (ignores pre-release/build) into a tuple. Returns null on malformed input.
+ * @param {string} v
+ * @returns {[number,number,number]|null}
+ */
+export function parseSemver(v) {
+  if (typeof v !== 'string') return null;
+  const m = v.match(/^(\d+)\.(\d+)\.(\d+)/);
+  if (!m) return null;
+  return [Number(m[1]), Number(m[2]), Number(m[3])];
+}
+
+/**
+ * Compare two semver strings. Returns -1, 0, 1 or null if either is malformed.
+ */
+export function compareSemver(a, b) {
+  const pa = parseSemver(a);
+  const pb = parseSemver(b);
+  if (!pa || !pb) return null;
+  for (let i = 0; i < 3; i++) {
+    if (pa[i] < pb[i]) return -1;
+    if (pa[i] > pb[i]) return 1;
+  }
+  return 0;
+}
 
 /** Valid event names a manifest entry may declare. */
 const VALID_EVENTS = new Set(['UserPromptSubmit', 'PreToolUse', 'PostToolUse', 'Stop', 'statusLine']);
@@ -148,16 +199,51 @@ export function validateManifest(manifest, source = '<memory>') {
     };
   });
 
+  const minFreeVersion =
+    typeof manifest.minFreeVersion === 'string' && manifest.minFreeVersion.length > 0 ? manifest.minFreeVersion : null;
+  if (manifest.minFreeVersion !== undefined && minFreeVersion === null) {
+    throw new Error(`Manifest ${source}: 'minFreeVersion' must be a non-empty string if present`);
+  }
+  if (minFreeVersion && !parseSemver(minFreeVersion)) {
+    throw new Error(
+      `Manifest ${source}: 'minFreeVersion' must be semver x.y.z (got ${JSON.stringify(minFreeVersion)})`,
+    );
+  }
+
   return {
     name: typeof manifest.name === 'string' ? manifest.name : `Rune ${manifest.tier} Hooks`,
     description: typeof manifest.description === 'string' ? manifest.description : '',
     tier: manifest.tier,
     version: typeof manifest.version === 'string' ? manifest.version : '0.0.0',
+    minFreeVersion,
     requires: Array.isArray(manifest.requires) ? [...manifest.requires] : [],
     entries,
     overrides: manifest.overrides && typeof manifest.overrides === 'object' ? { ...manifest.overrides } : {},
     source,
   };
+}
+
+/**
+ * Assert the current Free compiler satisfies a manifest's `minFreeVersion`.
+ * Throws with an actionable upgrade message when the local Free is too old.
+ *
+ * @param {import('./tiers.js').TierManifest} manifest
+ * @param {string} [currentFreeVersion] — defaults to `getFreeVersion()`. Override for tests.
+ */
+export function assertFreeVersionCompat(manifest, currentFreeVersion) {
+  if (!manifest || !manifest.minFreeVersion) return;
+  const current = currentFreeVersion ?? getFreeVersion();
+  const cmp = compareSemver(current, manifest.minFreeVersion);
+  if (cmp === null) {
+    // Malformed input — surface but don't block (defensive).
+    return;
+  }
+  if (cmp < 0) {
+    throw new Error(
+      `Tier '${manifest.tier}' requires Rune Free >= ${manifest.minFreeVersion} but the installed compiler is ${current}. ` +
+        `Upgrade Free first: \`npm i -g @rune-kit/rune@latest\` (or \`npx @rune-kit/rune@latest hooks install --tier ${manifest.tier}\`).`,
+    );
+  }
 }
 
 /**
@@ -180,16 +266,32 @@ export function checkManifestRequires(manifest) {
 export async function resolveTier(tier, projectRoot) {
   const manifestPath = locateTierManifest(tier, projectRoot);
   if (!manifestPath) {
-    const envHint = TIER_ENV_VARS[tier] ? ` Set $${TIER_ENV_VARS[tier]} to your ${tier} install dir.` : '';
-    throw new Error(
-      `Could not locate '${tier}' tier manifest.${envHint}` +
-        ` See https://rune.dev/docs/hooks#tiers for install instructions.`,
-    );
+    const envVar = TIER_ENV_VARS[tier];
+    const capitalized = tier.charAt(0).toUpperCase() + tier.slice(1);
+    const siblingPath = path.resolve(projectRoot, '..', capitalized, 'hooks', 'manifest.json');
+    const lines = [`Could not locate '${tier}' tier manifest. Rune looked in:`];
+    if (envVar) {
+      lines.push(`  1. $${envVar}/hooks/manifest.json  (env var — set this if ${capitalized} is installed elsewhere)`);
+      lines.push(`  2. ${siblingPath}  (monorepo sibling fallback)`);
+    } else {
+      lines.push(`  • ${siblingPath}  (monorepo sibling fallback)`);
+    }
+    lines.push('');
+    lines.push(`Fix one of:`);
+    if (envVar) {
+      lines.push(`  • export ${envVar}=/path/to/${capitalized}   # point at your ${tier} install`);
+    }
+    lines.push(`  • Clone ${capitalized} next to Free so the sibling path resolves`);
+    lines.push(`  • Drop --tier ${tier} to install Free-only hooks`);
+    lines.push('');
+    lines.push(`See https://rune.dev/docs/hooks#tiers for details.`);
+    throw new Error(lines.join('\n'));
   }
   const manifest = await loadTierManifest(manifestPath);
   if (manifest.tier !== tier) {
     throw new Error(`Manifest at ${manifestPath} declares tier='${manifest.tier}' but was requested as '${tier}'`);
   }
+  assertFreeVersionCompat(manifest);
   return manifest;
 }
 

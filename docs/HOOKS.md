@@ -67,6 +67,26 @@ rune hooks install --preset gentle --tier pro --tier business   # stacked tiers
 
 If `RUNE_PRO_ROOT` is unset, `install` still writes the hooks but warns — the dispatched commands will no-op until the env var is set.
 
+### Version compatibility
+
+Tier manifests may declare a `minFreeVersion` field. When set, `rune hooks install --tier <name>` checks the local Free compiler version and aborts with an actionable upgrade message if too old — no silent mismatches.
+
+| Tier        | Tier version | Requires Free ≥ | Behavior when Free < min |
+|-------------|--------------|-----------------|--------------------------|
+| Pro         | 1.0.1+       | 2.12.1          | `install` throws with `npm i -g @rune-kit/rune@latest` hint |
+| Pro         | 1.0.0        | (none)          | installs against any Free ≥ 2.12.0 |
+| Business    | (reserved)   | —               | — |
+
+**Upgrade flow:**
+
+```bash
+# If you see: "Tier 'pro' requires Rune Free >= 2.12.1 but the installed compiler is 2.12.0"
+npm i -g @rune-kit/rune@latest
+rune hooks install --tier pro  # re-run, version check now passes
+```
+
+If a tier manifest is missing entirely, `install` now prints all search locations (env var + monorepo sibling) plus three concrete fixes (set env, clone sibling, or drop `--tier` for Free-only mode).
+
 **Reading the matrix:**
 
 - `auto-fire` = the IDE invokes Rune automatically on the matching event (true hook parity).
