@@ -5,7 +5,7 @@ context: fork
 agent: general-purpose
 metadata:
   author: runedev
-  version: "2.4.0"
+  version: "2.5.0"
   layer: L1
   model: sonnet
   group: orchestrator
@@ -307,9 +307,10 @@ Contract violations are NON-NEGOTIABLE. If `.rune/contract.md` exists and a plan
 2. **Feature workspace** (opt-in) — for non-trivial features (3+ phases), suggest creating `.rune/features/<feature-name>/` with `spec.md`, `plan.md`, `decisions.md`, `status.md`. Skip for simple bug fixes, fast mode.
 3. Create implementation plan: exact files to create/modify, change order, dependencies, active decision constraints
 4. If multiple valid approaches exist → invoke `rune:brainstorm` for trade-off analysis
-5. Present plan to user for approval
-6. If feature workspace was created, write approved plan to `.rune/features/<name>/plan.md`
-7. Mark Phase 2 as `completed`
+5. **Frontend detection** — if task touches `.tsx/.jsx/.vue/.svelte/.css`, component files, or mentions "UI/page/screen/design/layout/landing": invoke `rune:design` BEFORE plan approval. Pass hint `mode: "tweaks-default"` — design proposes ONE opinionated default per `.rune/design-system.md` (Step 2.7), not a 5-option menu. User replies with tweaks ("more professional", "darker") rather than picking from a list. If `.rune/design-system.md` is missing, design creates it first.
+6. Present plan to user for approval
+7. If feature workspace was created, write approved plan to `.rune/features/<name>/plan.md`
+8. Mark Phase 2 as `completed`
 
 **Gate**: User MUST approve the plan before proceeding. Do NOT skip this.
 
@@ -751,7 +752,7 @@ Mentally track tool call fingerprints. 3 identical calls → WARN. 5 identical c
 | 1 | `logic-guardian` | L2 | Conditional: when `.rune/logic-manifest.json` exists — protect complex business logic before any edits |
 | 2 | `plan` | L2 | Create implementation plan |
 | 2 | `brainstorm` | L2 | Trade-off analysis / rescue mode |
-| 2 | `design` | L2 | UI/design phase for frontend features |
+| 2 | `design` | L2 | UI/design phase for frontend features — invoke with `mode: "tweaks-default"` (one opinionated default + accept natural-language tweaks, not a 5-option menu) |
 | 2.5 | `adversary` | L2 | Red-team challenge on approved plan |
 | 3 | `test` | L2 | Write failing tests (RED phase) |
 | 4 | `fix` | L2 | Implement code changes (GREEN phase) |
