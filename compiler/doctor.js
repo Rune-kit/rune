@@ -8,6 +8,8 @@
 import { existsSync } from 'node:fs';
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
+import { detectPlatforms } from './adapters/hooks/index.js';
+import { listDetectedTiers } from './commands/hooks/tiers.js';
 import { parseOrgConfig, parsePack, parseTemplate } from './parser.js';
 
 /**
@@ -46,6 +48,9 @@ export async function runDoctor({ outputRoot, adapter, config, runeRoot }) {
   // Check 2: Output directory exists
   if (adapter.name === 'claude') {
     results.checks.push({ name: 'Output directory', status: 'skip', detail: 'Claude Code uses source directly' });
+    const tierCoverage = await checkTierCoverage({ projectRoot: outputRoot });
+    for (const check of tierCoverage.checks) results.checks.push(check);
+    for (const warn of tierCoverage.warnings) results.warnings.push(warn);
     return results;
   }
 
@@ -164,9 +169,135 @@ export async function runDoctor({ outputRoot, adapter, config, runeRoot }) {
     results.warnings.push(...orgErrors);
   }
 
+  // Check 11: Tier hook coverage across detected platforms (advisory)
+  const tierCoverage = await checkTierCoverage({ projectRoot: outputRoot });
+  for (const check of tierCoverage.checks) results.checks.push(check);
+  for (const warn of tierCoverage.warnings) results.warnings.push(warn);
+
   if (results.errors.length > 0) results.healthy = false;
 
   return results;
+}
+
+const PLATFORM_TIER_DIRS = Object.freeze({
+  cursor: '.cursor/rules',
+  windsurf: '.windsurf/workflows',
+  antigravity: '.antigravity/rules',
+});
+
+const PLATFORM_TIER_EXTS = Object.freeze({
+  cursor: '.mdc',
+  windsurf: '.md',
+  antigravity: '.md',
+});
+
+/**
+ * True if the platform's config shows tier hooks installed for `tier`.
+ * Claude: scans `.claude/settings.json` for the `${RUNE_<TIER>_ROOT}` substring
+ *         that the installer emits into every tier command string.
+ * Others: scans the platform's rules/workflow dir for a `rune-<tier>-*` file.
+ *         Windsurf additionally checks `.windsurf/rules` since a tier entry
+ *         writes both a workflow and a rule file.
+ */
+async function platformHasTier(platformId, projectRoot, tier) {
+  if (platformId === 'claude') {
+    const settingsPath = path.join(projectRoot, '.claude', 'settings.json');
+    if (!existsSync(settingsPath)) return false;
+    const raw = await readFile(settingsPath, 'utf-8');
+    return raw.includes(`\${RUNE_${tier.toUpperCase()}_ROOT}`);
+  }
+  const relDir = PLATFORM_TIER_DIRS[platformId];
+  if (!relDir) return false;
+  const ext = PLATFORM_TIER_EXTS[platformId];
+  const prefix = `rune-${tier}-`;
+
+  const scanDir = async (dir) => {
+    if (!existsSync(dir)) return false;
+    const entries = await readdir(dir, { withFileTypes: true });
+    return entries.some((e) => e.isFile() && e.name.startsWith(prefix) && e.name.endsWith(ext));
+  };
+
+  if (await scanDir(path.join(projectRoot, relDir))) return true;
+  if (platformId === 'windsurf') {
+    if (await scanDir(path.join(projectRoot, '.windsurf/rules'))) return true;
+  }
+  return false;
+}
+
+/**
+ * Advisory tier-coverage check. Silent when no tiers are detected or no
+ * tier hooks are installed anywhere. Warns when:
+ *   1. A tier's hooks are installed on some detected platforms but missing
+ *      on others — suggests re-running `rune hooks install --tier ... --platform all`.
+ *   2. A tier manifest requires env vars that are unset — installed hooks
+ *      will fail at runtime, and `rune hooks install` surfaces this too.
+ *
+ * Advisory only: emits WARN, never blocks the doctor pipeline.
+ *
+ * @param {{projectRoot: string}} options
+ * @returns {Promise<{checks: object[], warnings: string[]}>}
+ */
+export async function checkTierCoverage({ projectRoot }) {
+  const result = { checks: [], warnings: [] };
+  const tiers = await listDetectedTiers(projectRoot);
+  if (tiers.length === 0) return result;
+
+  const detected = detectPlatforms(projectRoot);
+  const gaps = [];
+  let installedSomewhere = false;
+  const coverageByTier = [];
+
+  for (const tierInfo of tiers) {
+    if (!tierInfo.found) {
+      result.warnings.push(
+        `tier ${tierInfo.tier}: manifest at ${tierInfo.manifestPath} failed to load — ${tierInfo.error}`,
+      );
+      continue;
+    }
+
+    const coverage = { tier: tierInfo.tier, installedOn: [], missingOn: [] };
+    for (const id of detected) {
+      const has = await platformHasTier(id, projectRoot, tierInfo.tier);
+      if (has) coverage.installedOn.push(id);
+      else coverage.missingOn.push(id);
+    }
+    if (coverage.installedOn.length > 0) installedSomewhere = true;
+    if (coverage.installedOn.length > 0 && coverage.missingOn.length > 0) {
+      gaps.push(coverage);
+    }
+    coverageByTier.push(coverage);
+
+    if (!tierInfo.requiresOk && coverage.installedOn.length > 0) {
+      result.warnings.push(
+        `tier ${tierInfo.tier}: required env var${tierInfo.requiresMissing.length === 1 ? '' : 's'} unset (${tierInfo.requiresMissing.join(', ')}) — hooks will FAIL at runtime. Fix: export ${tierInfo.requiresMissing[0]}=/path/to/${tierInfo.tier} then re-run your shell.`,
+      );
+    }
+  }
+
+  if (!installedSomewhere) return result;
+
+  if (gaps.length === 0) {
+    result.checks.push({
+      name: 'Tier coverage',
+      status: 'pass',
+      detail: coverageByTier.map((c) => `${c.tier}:${c.installedOn.join('+') || 'none'}`).join(', '),
+    });
+    return result;
+  }
+
+  const detailParts = gaps.map((g) => `${g.tier} missing on ${g.missingOn.join(', ')}`);
+  result.checks.push({
+    name: 'Tier coverage',
+    status: 'warn',
+    detail: detailParts.join('; '),
+  });
+  for (const gap of gaps) {
+    const plural = gap.missingOn.length === 1 ? 'platform' : 'platforms';
+    result.warnings.push(
+      `tier ${gap.tier} installed on ${gap.installedOn.join(', ')} but missing on detected ${plural} ${gap.missingOn.join(', ')}. Re-run: rune hooks install --preset gentle --tier ${gap.tier} --platform all`,
+    );
+  }
+  return result;
 }
 
 /**

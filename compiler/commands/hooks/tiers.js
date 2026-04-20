@@ -256,6 +256,48 @@ export function checkManifestRequires(manifest) {
 }
 
 /**
+ * Enumerate known tiers and return status for each that can be located.
+ * Tiers that can't be found (no env var, no monorepo sibling) are skipped.
+ * Invalid/corrupt manifests are reported with { found: false, error }.
+ *
+ * @param {string} projectRoot
+ * @returns {Promise<Array<{tier: string, found: boolean, manifestPath: string|null, version?: string, requires: string[], requiresOk: boolean, requiresMissing: string[], entries: number, error?: string}>>}
+ */
+export async function listDetectedTiers(projectRoot) {
+  const out = [];
+  for (const tier of Object.keys(TIER_ENV_VARS)) {
+    const manifestPath = locateTierManifest(tier, projectRoot);
+    if (!manifestPath) continue;
+    try {
+      const manifest = await loadTierManifest(manifestPath);
+      const req = checkManifestRequires(manifest);
+      out.push({
+        tier,
+        found: true,
+        manifestPath,
+        version: manifest.version,
+        requires: [...(manifest.requires || [])],
+        requiresOk: req.ok,
+        requiresMissing: req.missing,
+        entries: manifest.entries.length,
+      });
+    } catch (err) {
+      out.push({
+        tier,
+        found: false,
+        manifestPath,
+        requires: [],
+        requiresOk: false,
+        requiresMissing: [],
+        entries: 0,
+        error: err.message,
+      });
+    }
+  }
+  return out;
+}
+
+/**
  * Resolve a tier request (`--tier pro`) into a loaded, validated manifest,
  * or throw with a helpful upgrade/missing-env message.
  *

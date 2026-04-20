@@ -155,6 +155,15 @@ Experimental — mirrors Cursor's rule-injection pattern because Antigravity doe
 - Switch to `strict` once you trust the signal. BLOCK mode refuses the tool call until you address the finding.
 - Use `--platform all --preset strict` for team/shared machines where you want maximum discipline everywhere.
 
+## Doctor tier-coverage check
+
+`rune doctor` emits an advisory WARN when a paid tier's hooks are installed unevenly:
+
+- **Gap detected**: Pro hooks present on `.claude/settings.json` but no `rune-pro-*` files under `.cursor/rules/` (and `.cursor/` is a detected platform) → doctor suggests `rune hooks install --preset gentle --tier pro --platform all`.
+- **Missing env var**: tier manifest declares `requires: ["RUNE_PRO_ROOT"]` but the var is unset → doctor warns that installed commands will FAIL at runtime.
+
+These are warnings only — doctor never fails the pipeline for tier-coverage issues. Silent when no tier is installed.
+
 ## Limitations
 
 - Only Claude Code gets `Stop` (completion-gate) auto-fire. Every other platform requires manual `/rune completion-gate` invocation.
