@@ -3,6 +3,23 @@
 All notable changes to Rune are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.12.3] - 2026-04-20
+
+Advisory doctor check for cross-platform tier hook coverage. Closes the Phase 5 Auto-Discipline L2 backlog — the acceptance criterion was marked ✅ in v2.12.0 but never implemented. Non-breaking, advisory only (never flips `healthy: false`).
+
+### Added
+- **`rune doctor` tier-coverage check** — warns when a paid tier's hooks are installed unevenly across detected platforms. Example: Pro hooks present in `.claude/settings.json` but no `rune-pro-*` files under `.cursor/rules/` → doctor suggests `rune hooks install --preset gentle --tier pro --platform all`.
+- **Required env var check** — when a tier manifest declares `requires: ["RUNE_PRO_ROOT"]` but the var is unset, doctor warns that installed commands will fail at runtime.
+- **`listDetectedTiers(projectRoot)`** in `compiler/commands/hooks/tiers.js` — iterates `TIER_ENV_VARS`, returns per-tier status (found, manifestPath, version, requires, requiresOk, requiresMissing).
+- **`checkTierCoverage({projectRoot})`** in `compiler/doctor.js` — per tier, checks every `detectPlatforms()` result via `platformHasTier()`. Claude scans settings.json for `${RUNE_<TIER>_ROOT}` substring; Cursor/Windsurf/Antigravity scan rule/workflow dirs for `rune-<tier>-*` files (Windsurf also checks `.windsurf/rules/`).
+
+### Tests
+- +30 tests (10 new in `compiler/__tests__/hooks-doctor-tier.test.js`, +20 from downstream wiring)
+- 1,177 total (up from 1,147)
+
+### Docs
+- `docs/HOOKS.md` — new "Doctor tier-coverage check" section
+
 ## [2.12.2] - 2026-04-19
 
 Hotfix for v2.12.1 — version sync across ancillary manifests. Same functionality as v2.12.1, no API changes.
