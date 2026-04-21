@@ -39,28 +39,20 @@ jobs:
       - name: Build OpenClaw format
         run: node compiler/bin/rune.js build --platform openclaw --output .
 
-      - name: Install ClawHub CLI
-        run: npm install -g clawhub-cli
-        continue-on-error: true
-
       - name: Publish to ClawHub
-        if: success() || steps.*.outcome == 'success'
         continue-on-error: true
         env:
           CLAWHUB_TOKEN: ${{ secrets.CLAWHUB_TOKEN }}
         run: |
-          if ! command -v clawhub &> /dev/null; then
-            echo "⚠️ clawhub-cli not available — skipping ClawHub publish"
-            exit 0
-          fi
+          npm install -g clawhub
+          clawhub login --token "$CLAWHUB_TOKEN" --no-browser
           TAG="${GITHUB_REF#refs/tags/}"
           CHANGELOG=$(git log "$(git tag --sort=-v:refname | grep '^v' | sed -n '2p')..${TAG}" --pretty=format:"• %s" --no-merges | head -10)
           clawhub publish .openclaw/rune \
             --slug rune-kit \
             --name "Rune" \
             --version "${TAG#v}" \
-            --changelog "${CHANGELOG}" \
-            --token "$CLAWHUB_TOKEN" || echo "ClawHub publish completed (may timeout but still succeeds)"
+            --changelog "${CHANGELOG}" || echo "⚠️ ClawHub publish may have timed out (usually still succeeds)"
 
       - name: Generate changelog
         id: changelog
@@ -89,10 +81,18 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG="${GITHUB_REF#refs/tags/}"
-          gh release create "$TAG" \
-            --title "$TAG" \
-            --notes "${{ steps.changelog.outputs.notes }}" \
-            --latest
+          if gh release view "$TAG" &>/dev/null; then
+            echo "Release $TAG already exists — updating"
+            gh release edit "$TAG" \
+              --title "$TAG" \
+              --notes "${{ steps.changelog.outputs.notes }}" \
+              --latest
+          else
+            gh release create "$TAG" \
+              --title "$TAG" \
+              --notes "${{ steps.changelog.outputs.notes }}" \
+              --latest
+          fi
 
       - name: Summary
         run: |
@@ -100,4 +100,4 @@ jobs:
           echo "## Published ${TAG}" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ npm: @rune-kit/rune@${TAG#v}" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ GitHub Release: ${TAG}" >> $GITHUB_STEP_SUMMARY
-          echo "- ⚠️ ClawHub: skipped (clawhub-cli not yet on npm)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ ClawHub: rune-kit@${TAG#v}" >> $GITHUB_STEP_SUMMARY
