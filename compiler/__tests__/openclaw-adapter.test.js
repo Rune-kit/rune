@@ -114,6 +114,32 @@ test('generateManifest defaults version when missing', () => {
   assert.strictEqual(manifest.version, '0.0.0');
 });
 
+test('generateManifest declares artifact convention for OpenClaw skills', () => {
+  const manifest = openclaw.generateManifest(
+    [{ name: 'cook', layer: 'L1', group: 'orchestrator' }],
+    { version: '1.0.0' },
+  );
+  assert.ok(manifest.artifactConvention, 'artifactConvention field exists');
+  assert.ok(Array.isArray(manifest.artifactConvention.outputDirPriority), 'outputDirPriority is array');
+  assert.ok(manifest.artifactConvention.outputDirPriority.length >= 4, 'at least 4 fallback tiers');
+  assert.ok(
+    manifest.artifactConvention.outputDirPriority.some((tier) => tier.includes('OPENCLAW_AGENT_DIR')),
+    'OPENCLAW_AGENT_DIR is a tier',
+  );
+  assert.ok(manifest.artifactConvention.outputContract, 'outputContract documented');
+  assert.strictEqual(manifest.artifactConvention.outputContract.exitCodes[0], 'success');
+  assert.strictEqual(manifest.artifactConvention.outputContract.exitCodes[4], 'timeout with partial results (accept)');
+  assert.strictEqual(manifest.artifactConvention.outputContract.exitCodes[124], 'timeout with zero results (retry or abort)');
+});
+
+test('generateManifest description scales with skill count', () => {
+  const fewSkills = openclaw.generateManifest(
+    [{ name: 'cook', layer: 'L1' }, { name: 'plan', layer: 'L2' }],
+    { version: '1.0.0' },
+  );
+  assert.ok(fewSkills.description.includes('2-skill'), 'description reflects actual skill count');
+});
+
 // --- generateEntryPoint ---
 
 test('generateEntryPoint returns valid TypeScript with register(api)', () => {

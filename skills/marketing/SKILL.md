@@ -3,11 +3,12 @@ name: marketing
 description: Create marketing assets and execute launch strategy. Generates landing copy, social banners, SEO meta, blog posts, and video scripts.
 metadata:
   author: runedev
-  version: "0.5.0"
+  version: "0.6.0"
   layer: L2
   model: sonnet
   group: delivery
   tools: "Read, Write, Edit, Glob, Grep, WebFetch, WebSearch"
+  emit: media.request
 ---
 
 # marketing

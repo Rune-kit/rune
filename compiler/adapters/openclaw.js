@@ -7,6 +7,25 @@
  *   .openclaw/rune/skills/*.md           (transformed skill files)
  *
  * Follows the NeuralMemory OpenClaw plugin pattern.
+ *
+ * ARTIFACT CONVENTION (v2.13+):
+ * OpenClaw skills that produce file artifacts (images, reports, data) should
+ * resolve output directory in this fallback order — honored by the Rune script
+ * output contract (see skills/skill-forge Phase 5.25):
+ *
+ *   1. --out-dir <path>                       (explicit caller intent)
+ *   2. <SKILL>_OUT_DIR                        (skill-specific env var)
+ *   3. OPENCLAW_OUTPUT_DIR                    (platform-wide override)
+ *   4. OPENCLAW_AGENT_DIR/artifacts/<skill>   (per-agent scoped default)
+ *   5. OPENCLAW_STATE_DIR/artifacts/<skill>   (state-scoped fallback)
+ *   6. ./.rune/<skill>/                       (project-local default)
+ *
+ * Reference implementations in @rune-pro/media/scripts/:
+ *   - codex_imagen_bridge.mjs (full resolution + 9-tier binary detection)
+ *   - image_optimizer.py (Python equivalent)
+ *
+ * Reference codex-imagen repo (darkamenosa/codex-imagen) documents the
+ * de-facto in-the-wild convention this adapter formalizes.
  */
 
 import { BRANDING_FOOTER } from '../transforms/branding.js';
@@ -67,15 +86,36 @@ export default {
    * @param {object} pluginJson - Rune's .claude-plugin/plugin.json
    * @returns {object} manifest object
    */
-  generateManifest(_skills, pluginJson) {
+  generateManifest(skills, pluginJson) {
     return {
       id: 'rune',
       name: 'Rune',
       kind: 'skills',
-      description:
-        '62-skill mesh for AI coding assistants. Routes all code tasks through specialized skills. 215+ connections, 14 extension packs.',
+      description: `${skills.length}-skill mesh for AI coding assistants. Routes all code tasks through specialized skills. 215+ connections, 14 extension packs.`,
       version: pluginJson.version || '0.0.0',
       skills: ['./skills'],
+      artifactConvention: {
+        outputDirPriority: [
+          '--out-dir <path>',
+          '<SKILL>_OUT_DIR',
+          'OPENCLAW_OUTPUT_DIR',
+          'OPENCLAW_AGENT_DIR/artifacts/<skill>',
+          'OPENCLAW_STATE_DIR/artifacts/<skill>',
+          './.rune/<skill>/',
+        ],
+        outputContract: {
+          stdout: 'one artifact path per line (default) or JSON (--json mode)',
+          stderr: 'diagnostics + warnings',
+          exitCodes: {
+            0: 'success',
+            1: 'execution failed (retryable)',
+            2: 'usage error (bug)',
+            3: 'data-integrity error (halt)',
+            4: 'timeout with partial results (accept)',
+            124: 'timeout with zero results (retry or abort)',
+          },
+        },
+      },
       configSchema: {
         jsonSchema: {
           type: 'object',

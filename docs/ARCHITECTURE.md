@@ -213,6 +213,10 @@ Lowercase, dot-separated: `<domain>.<event>` (e.g. `code.changed`, `tests.failed
 | `preflight.passed` | preflight | cook |
 | `project.onboarded` | onboard | plan |
 | `incident.detected` | — | incident |
+| `media.request` | — | @rune-pro/media: image-generator, prompt-engineer |
+| `media.prompt.optimized` | @rune-pro/media: prompt-engineer | @rune-pro/media: image-generator |
+| `media.image.generated` | @rune-pro/media: image-generator | @rune-pro/media: asset-pipeline |
+| `media.assets.processed` | @rune-pro/media: asset-pipeline | @rune-pro/growth: landing-builder, slides |
 
 ### Validation
 

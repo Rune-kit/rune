@@ -3,6 +3,29 @@
 All notable changes to Rune are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.13.0] - 2026-04-23
+
+Script Contract + @rune-pro/media pack. Formalizes the helper-script output contract across the ecosystem, adds 9-tier binary detection to sentinel-env, and ships the long-planned Media pack closing the raster-image gap in Pro.
+
+### Added
+
+- **`@rune-pro/media` pack v1.0.0** — 3 skills (image-generator, prompt-engineer, asset-pipeline), 9 reference files, 3 helper scripts. Supports 5 providers (Codex CLI / DALL-E / Replicate / Stability AI / local SD). 4-gate safety check on prompts (trademark, public-figure, prompt-injection, uncanny-precondition). Multi-resolution + WebP/AVIF + EXIF strip pipeline. Seeds from [darkamenosa/codex-imagen](https://github.com/darkamenosa/codex-imagen) (MIT).
+- **`sentinel-env` v0.3.0** — 9-tier binary detection pattern (explicit → skill env → tool env → generic env → platform bundle → PATH → package-manager prefix → platform common dirs → release archive names). Replaces flat `which` lookup.
+- **`skill-forge` v1.8.0** — Phase 5.25 "Script Contract": mandatory stdout=paths / stderr=diagnostics / `--json` / `--debug` / `--smoke` / `--prompt-file` / `--dry-run` / semantic exit codes (0/1/2/3/4/124) / OpenClaw artifact-dir resolution for all helper scripts. HARD-GATE on pre-ship.
+- **OpenClaw adapter artifact convention** — `generateManifest` emits `artifactConvention` field (output-dir priority + output contract + exit codes). Formalizes cross-adapter de-facto convention.
+- **Skill-count-aware description** — OpenClaw manifest description now templated on actual skill count.
+
+### Tests
+
+- +2 tests in `openclaw-adapter.test.js` (artifactConvention field, description-scaling)
+- Existing 1,177 tests remain green
+
+### Docs
+
+- `docs/ARCHITECTURE.md` — 4 new signals in catalog (media.request, media.prompt.optimized, media.image.generated, media.assets.processed)
+- `CLAUDE.md` — Pro pack list updated with @rune-pro/media
+- `README.md` — What's New section for v2.13.0
+
 ## [2.12.3] - 2026-04-20
 
 Advisory doctor check for cross-platform tier hook coverage. Closes the Phase 5 Auto-Discipline L2 backlog — the acceptance criterion was marked ✅ in v2.12.0 but never implemented. Non-breaking, advisory only (never flips `healthy: false`).

@@ -83,7 +83,15 @@ _Methodology: Claude Code CLI headless mode (`claude -p --output-format json`), 
 
 ---
 
-## What's New (v2.12.0 — Auto-Discipline)
+## What's New (v2.13.0 — Script Contract + Media Pack)
+
+- **`@rune-pro/media` pack v1.0.0** — new Pro pack: raster image generation across 5 providers (Codex CLI, DALL-E, Replicate, Stability AI, local SD), prompt engineering with 4-gate safety check (trademark, public-figure, prompt-injection, uncanny-precondition), batch asset pipeline with multi-resolution variants + WebP/AVIF conversion + EXIF strip. Fills the raster gap left by `asset-creator` (SVG/HTML only) and `video-creator` (planning only).
+- **`sentinel-env` v0.3.0** — 9-tier binary detection for hard-dependency checks. Catches desktop-app bundles (macOS `.app`), npm-global on Windows (PATH oversight), platform release archives. Eliminates the "binary installed but not detected" failure class.
+- **`skill-forge` v1.8.0** — new Phase 5.25 "Script Contract" — helper scripts must follow stdout=paths / stderr=diagnostics / `--json` opt-in / `--debug` opt-in pattern, implement semantic exit codes (including `4` timeout-partial vs `124` timeout-zero), honor OpenClaw artifact-directory fallback chain. HARD-GATE on pre-ship verification.
+- **OpenClaw adapter** — `generateManifest` now declares `artifactConvention` (output-dir fallback order, output contract, exit-code vocabulary). Formalizes the de-facto in-the-wild convention from [codex-imagen](https://github.com/darkamenosa/codex-imagen).
+- **Skill-count scaling** — OpenClaw manifest description now scales with actual skill count rather than hardcoded.
+
+### Previous (v2.12.0 — Auto-Discipline)
 
 - **Runtime auto-discipline** — `rune hooks install` wires native hooks on Claude Code, Cursor, Windsurf, Antigravity so `preflight`, `sentinel`, `completion-gate` auto-fire before tool use. No more "remember to invoke the skill."
 - **Three presets** — `strict` (blocking gates), `gentle` (warnings, default), `off` (uninstall). Idempotent install / uninstall with full restore of user hooks.
