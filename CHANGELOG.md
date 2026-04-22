@@ -101,6 +101,19 @@ Rune shifts from **library** to **runtime**. Any agent with Rune installed now a
 - **marketing v0.4.0** — anti-AI copy rules, expanded SEO audit with schema markup guide
 - **Pro growth pack v1.1.0** — 3 new skills + 6 enriched with SEO Machine patterns
 
+## Wave: Design & Quality Enrichment — 2026-04-02
+
+> Enrichment-only work folded into the v2.9.0 release tag (no dedicated version bump at the time). Logged here retroactively on 2026-04-22 for changelog completeness.
+
+### Design
+- **design skill** enriched with mood-to-constraint mapping (moods → design tokens), UI-SPEC contract as frontend skill input, 6-pillar audit rubric (accessibility, hierarchy, motion, contrast, typography, spacing), bento archetypes, animation timing ladder
+- **UI preflight hook** — design-system token drift check before component generation
+
+### Quality
+- **review** — per-function test gap detection (flags functions with no direct test coverage, not just module-level)
+- **sentinel** — config leak detection in `.env`, `config/*`, shell history files
+- **skill-forge** — Security Model section required per new skill (threat surface, secrets handling, input validation)
+
 ## [2.8.0] - 2026-04-01
 
 ### Added

@@ -4,7 +4,7 @@
 >
 > This document is the primary decision-making compass for Rune.
 > When in doubt about a design direction, a new feature, or a skill addition — consult this file first.
-> Last updated: 2026-03-14
+> Last updated: 2026-04-22
 
 ---
 
@@ -198,7 +198,7 @@ Rune operates on three time horizons. The roadmap is intentionally non-prescript
 - Skill testing framework: automated validation of mesh connections and output format contracts
 - `rune:onboard` generates project-specific L4 suggestions based on detected stack
 
-**Constraint:** Core mesh (L1-L3) is frozen at ≤49 skills. Growth happens in L4.
+**Constraint:** Growth happens in L4 and community packs. Core mesh (L1-L3) expansions require Skill Addition Filter approval.
 
 ### H3 — Intelligence ✅ COMPLETE
 
@@ -212,6 +212,20 @@ Rune operates on three time horizons. The roadmap is intentionally non-prescript
 **Implementation**: Zero new L1-L3 skills added. 1 new hook (`metrics-collector`), 3 modified hooks, 4 extended skills (`audit`, `cook`, `skill-router`, `onboard`), 2 new commands (`/rune metrics`, `/rune pack`).
 
 **Constraint:** Core mesh expanded to 62 skills (v2.1.0+). Further growth happens in L4 and community packs.
+
+### H4 — Runtime Discipline ✅ COMPLETE (v2.12)
+
+**Goal:** Move mesh discipline from "invoke the skill" (opt-in) to "the platform fires it" (automatic).
+
+- ✅ **Native hooks across 4 platforms** — `rune hooks install` wires `preflight`, `sentinel`, `completion-gate`, `dependency-doctor` as pre-tool-use hooks on Claude Code, Cursor, Windsurf, Antigravity
+- ✅ **Three presets** — `strict` (blocking), `gentle` (warnings, default), `off` (uninstall). Idempotent with full user-hook restore
+- ✅ **Tier-tagged manifests** — `--tier pro` / `--tier business` stack paid-tier hooks on top of Free via `$<TIER>_ROOT/hooks/manifest.json`. Free compiler stays tier-agnostic (MIT-clean)
+- ✅ **Cross-platform tier coverage doctor** — `rune doctor` warns when a tier's hooks are installed unevenly across detected platforms
+- ✅ **logic-guardian auto-seeding** — `rune init` writes `.rune/INVARIANTS.md` with project-detected rules; preflight reads as a hard gate
+
+**Why this matters:** Principle P6 ("Constraints Block Rationalization") is now enforced at the tool-use layer, not just in skill prompts. The AI cannot "forget" to run preflight — the hook fires before every edit.
+
+**Constraint:** Hooks run on user tools, not hypothetical Rune commands. Free compiler MUST remain tier-agnostic — Pro/Business MUST NOT leak into MIT code paths.
 
 ---
 
