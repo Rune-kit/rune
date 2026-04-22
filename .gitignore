@@ -28,7 +28,6 @@ docs/dashboard.html
 # Environment
 .env
 .env.local
-.gitnexus
 
 # Local tooling artifacts
 .claude/skills/
