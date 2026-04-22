@@ -1,6 +1,6 @@
 ---
 name: graft
-description: "Clone, port, or convert features from any GitHub repo into your project. Understand before copy, challenge before implement. 4 modes: port (rewrite), compare (analysis), copy (transplant), improve (copy + optimize)."
+description: "Clone, port, or convert features from any GitHub repo into your project. Use when stealing patterns from external repos or porting proven code. Understand before copy, challenge before implement. 4 modes: port (rewrite), compare (analysis), copy (transplant), improve (copy + optimize)."
 metadata:
   author: runedev
   version: "0.2.0"

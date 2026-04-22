@@ -1,6 +1,6 @@
 ---
 name: context-pack
-description: "Creates structured handoff briefings between agents. Packages task context, constraints, and progress into a compact packet that subagents can consume without re-reading the full conversation. Prevents the 'lost context' problem in multi-agent delegation."
+description: "Creates structured handoff briefings between agents. Use when delegating complex work to subagents that would otherwise lose context. Packages task context, constraints, and progress into a compact packet that subagents can consume without re-reading the full conversation. Prevents the 'lost context' problem in multi-agent delegation."
 user-invocable: false
 metadata:
   author: runedev

@@ -1,6 +1,6 @@
 ---
 name: safeguard
-description: Build safety nets before refactoring. Creates characterization tests, boundary markers, config freezes, and rollback points.
+description: Build safety nets before refactoring. Use when running surgeon or any risky refactor that needs a rollback point. Creates characterization tests, boundary markers, config freezes, and rollback points.
 metadata:
   author: runedev
   version: "0.2.0"
