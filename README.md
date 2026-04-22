@@ -548,17 +548,32 @@ npx @rune-kit/rune doctor
 
 See [docs/MULTI-PLATFORM.md](docs/MULTI-PLATFORM.md) for the full architecture.
 
+## Documentation
+
+| Doc | What's inside |
+|-----|---------------|
+| [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md) | Your first 5 minutes with Rune — install to first `/rune cook` |
+| [`docs/SKILLS.md`](docs/SKILLS.md) | All 62 skills, searchable by intent and layer |
+| [`docs/SIGNALS.md`](docs/SIGNALS.md) | Canonical signal inventory — 25 events, emit/listen graph |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | 5-layer mesh architecture reference |
+| [`docs/VISION.md`](docs/VISION.md) | Philosophy — what Rune is and isn't |
+| [`docs/HOOKS.md`](docs/HOOKS.md) | Auto-discipline hooks per platform |
+| [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md) | Common issues + fixes |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | How to contribute skills, packs, fixes |
+| [`CHANGELOG.md`](CHANGELOG.md) | Release history |
+| [`ROADMAP.md`](ROADMAP.md) | What's next |
+
 ## Numbers
 
 ```
 Core Skills:       62 (L0: 1 │ L1: 5 │ L2: 29 │ L3: 27)
 Extension Packs:   14 free + 5 pro + 4 business
 Mesh Connections:  215+ cross-references
-Mesh Signals:      23 signals across 62 skills (emit/listen graph)
+Mesh Signals:      25 signals across 62 skills (emit/listen graph)
 Connections/Skill: 3.4 avg
 Platforms:         8 (Claude Code, Cursor, Windsurf, Antigravity, Codex, OpenCode, OpenClaw, Generic)
 Compiler:          ~1400 LOC (parser + 8 transforms + 8 adapters + CLI)
-Tests:             946 (compiler + signals + status + visualizer + hooks + scripts)
+Tests:             1,152+ (compiler + signals + status + visualizer + hooks + scripts + tier-hooks)
 Pack Depth:        23 packs total (14 free + 5 pro + 4 business, all free packs rated Deep)
 ```
 

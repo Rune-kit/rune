@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions & Community
+    url: https://t.me/xlabs_updates
+    about: Faster response for questions, discussions, and announcements on Telegram.
+  - name: Pro / Business Support
+    url: https://rune-kit.github.io/rune#pricing
+    about: Paid-tier users get priority support. See pricing and access.
+  - name: Security Disclosure
+    url: https://github.com/rune-kit/rune/security/advisories/new
+    about: Please report security vulnerabilities privately, not as a public issue.
