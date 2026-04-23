@@ -3,7 +3,7 @@ name: ba
 description: Business Analyst agent. Deeply understands user requirements before any planning or coding begins. Asks probing questions, identifies hidden requirements, maps stakeholders, defines scope boundaries, and produces a structured Requirements Document that plan and cook consume.
 metadata:
   author: runedev
-  version: "0.7.0"
+  version: "0.8.0"
   layer: L2
   model: opus
   group: creation
@@ -15,6 +15,8 @@ metadata:
 ## Purpose
 
 Business Analyst agent — the ROOT FIX for "Claude works a lot but produces nothing." BA forces deep understanding of WHAT to build before any code is written. It asks probing questions, identifies hidden requirements, maps stakeholders, defines scope boundaries, and produces a structured Requirements Document.
+
+> Wrong requirements shipped correctly is the most expensive bug. BA's job is to prevent it — measure clarity (Step 2.5), measure completeness (Step 3.5), and measure cross-dimension consistency (Step 3.6) before handoff.
 
 <HARD-GATE>
 BA produces WHAT, not HOW. Never write code. Never plan implementation.
@@ -243,6 +245,52 @@ When presenting options, alternatives, or scope decisions to the user, rate each
 **Anti-pattern**: "Choose B — it covers 90% of the value with less code." → If A is only 70 lines more, choose A. The last 10% is where production bugs hide.
 
 
+### Step 3.6 — Logic Consistency Check
+
+After ambiguity + completeness pass, scan for **cross-dimension contradictions**. Ambiguity measures CLARITY of each dimension in isolation; this step measures CONSISTENCY across dimensions. A perfectly clear requirement can still contradict itself.
+
+#### Checks
+
+Run each, label verdict 🟢 pass / 🟡 warn / 🔴 fail:
+
+| # | Check | 🔴 Fail | 🟢 Pass |
+|---|-------|---------|---------|
+| 1 | Every Acceptance Criterion traces to a User Story | AC orphaned | 1:N mapping clear |
+| 2 | Every Business Rule (Q5) is enforced in an AC or Exception Flow | Rule has no enforcement path | Rule → specific AC or exception |
+| 3 | Scope IN ∩ Scope OUT = ∅ | Direct overlap in phrasing | Sets disjoint |
+| 4 | Every user-story flow has a terminal state | State loop without exit condition | Terminal state explicit |
+| 5 | Dependencies (Step 4) ⊂ Constraints acknowledged (Q5) | Dependency never mentioned in constraints | All deps covered |
+| 6 | NFRs measurable against at least one AC | NFR has no test hook | Every NFR → testable AC |
+| 7 | Hidden requirements (Step 3) resolved in/out | Silent inclusion | User confirmed inclusion or exclusion |
+
+#### Output Format
+
+```
+Logic Consistency Report:
+  1. AC → User Story:      🟢 all AC trace to US-1 or US-2
+  2. Business rule → AC:   🟡 "no duplicate emails" cited — exception flow missing
+  3. Scope disjoint:       🟢
+  4. Terminal states:      🟢
+  5. Deps in constraints:  🔴 "PostgreSQL 15" missing from Q5 answer
+  6. NFR measurable:       🟢
+  7. Hidden reqs resolved: 🟢
+
+Verdict: 1 🔴, 1 🟡, 5 🟢 → BLOCK handoff until 🔴 fixed
+```
+
+#### Gate Rule
+
+| Result | Action |
+|--------|--------|
+| 0 🔴 | Proceed to Step 4 — 🟡 warnings become "Risks" in Requirements Doc |
+| 1-2 🔴 | BLOCK — ask targeted question or re-scope to resolve each 🔴 |
+| 3+ 🔴 | Scrap Steps 2-3 and restart — requirements structurally incoherent |
+
+<HARD-GATE>
+NEVER hand off to plan with unresolved 🔴. Ambiguity ≤ 40% does not imply consistency — they are orthogonal gates.
+If user pushes "just build it" with 🔴 present, respond: "Contradiction in [dimension]: [specific conflict]. One clarification fixes this: [targeted question]"
+</HARD-GATE>
+
 ### Step 4 — Scope Definition
 
 Based on all gathered information, produce:
@@ -330,9 +378,19 @@ For product-oriented requirements (Feature Request, Integration, Greenfield), ge
 - Every tier includes "Risk if skipped" — makes trade-offs explicit
 - Skip this step for Bug Fix and Refactor types (no strategic dimension)
 
-### Step 7 — Requirements Document
+### Step 7 — Artifact Triad
 
-Produce structured output and hand off to `plan`:
+Produce three structured artifacts — not one prose doc. Plan consumes all three; each answers a different question.
+
+| Artifact | Question Answered | Consumer |
+|----------|-------------------|----------|
+| `requirements.md` | WHAT to build and WHY | plan, cook |
+| `requirements.mermaid` | WHAT does the flow look like visually | plan, design, review |
+| `tasks.md` | WHAT work layers exist | plan (as task backbone, not from scratch) |
+
+#### Artifact 1: requirements.md
+
+Structured document combining Steps 1-6.5. Save to `.rune/features/<feature-name>/requirements.md`:
 
 ```markdown
 # Requirements Document: [Feature Name]
@@ -350,11 +408,8 @@ Created: [date] | BA Session: [summary]
 
 ## Scope
 ### In Scope
-[from Step 4]
 ### Out of Scope
-[from Step 4]
 ### Assumptions
-[from Step 4]
 
 ## Non-Functional Requirements
 [from Step 6]
@@ -368,101 +423,102 @@ Created: [date] | BA Session: [summary]
 ## Strategic Recommendations
 [from Step 6.5 — skip for Bug Fix/Refactor]
 
-### Quick Win (0-30 days)
-- **Action**: [specific deliverable]
-- **Resources**: [effort estimate]
-- **Expected Impact**: [measurable outcome]
-
-### Differentiation (1-3 months)
-- **Action**: [...]
-- **Resources**: [...]
-- **Expected Impact**: [...]
-
-### Long-term Moat (6-12 months)
-- **Action**: [...]
-- **Resources**: [...]
-- **Expected Impact**: [...]
+## Logic Consistency Report
+[from Step 3.6 — verbatim, for audit trail]
 
 ## Next Step
-→ Hand off to rune:plan for implementation planning
+→ Hand off to rune:plan (consumes all 3 artifacts)
 ```
 
-Save to `.rune/features/<feature-name>/requirements.md`
+#### Artifact 2: requirements.mermaid
+
+Auto-generate from User Stories. Save to `.rune/features/<feature-name>/requirements.mermaid`.
+
+**Sequence diagram** (primary happy path from US-1):
+
+```mermaid
+sequenceDiagram
+  actor User
+  participant System
+  participant Database
+  User->>System: [action from US-1]
+  System->>Database: [read/write from AC-1.1]
+  Database-->>System: [response]
+  System-->>User: [result from AC-1.1]
+```
+
+**State machine** (only if any User Story implies state):
+
+```mermaid
+stateDiagram-v2
+  [*] --> initial
+  initial --> processing: [trigger from AC]
+  processing --> success: [happy path AC]
+  processing --> failed: [error AC]
+  success --> [*]
+  failed --> initial: retry
+```
+
+Skip state machine if feature is stateless (simple CRUD with no lifecycle). Sequence is always produced.
+
+#### Artifact 3: tasks.md
+
+Pre-broken implementation tasks by layer. Plan refines this backbone, does not create from scratch. Save to `.rune/features/<feature-name>/tasks.md`:
+
+```markdown
+# Implementation Tasks: [Feature Name]
+
+## Data Layer
+- [ ] Schema — [tables/models from AC]
+- [ ] Migration up + down
+- [ ] Seed/fixtures if tests need them
+
+## Logic Layer
+- [ ] [each Q5 Business Rule → one task]
+- [ ] Validation for [each AC error case]
+- [ ] State transitions from requirements.mermaid (if present)
+
+## Interface Layer (API / UI)
+- [ ] [each User Story → one endpoint or UI component]
+- [ ] Contract schema from AC (request/response)
+- [ ] Error handling for [each AC error]
+
+## Test Layer
+- [ ] Unit: [each business rule → one test]
+- [ ] Integration: [each AC happy path]
+- [ ] Regression: [each AC error case]
+
+## NFR Verification
+- [ ] [each NFR from Step 6 → one measurement task]
+```
+
+Derivation rules:
+- 1 User Story → ≥1 Interface task
+- 1 Business Rule → 1 Logic task + 1 Unit test task
+- 1 AC → ≥1 Test task (happy path + error)
+- 1 NFR → 1 NFR Verification task
+
+#### Handoff
+
+Emit signal to `plan` with paths to all three artifacts. Plan MUST read all three before producing phase files — the triad is the contract.
 
 ## Output Format
 
-```
-# Requirements Document: [Feature Name]
-Created: [date] | BA Session: [summary]
+Triad of artifacts under `.rune/features/<feature-name>/`:
 
-## Context
-[Problem statement — 2-3 sentences]
+| File | Template Reference |
+|------|-------------------|
+| `requirements.md` | Step 7 Artifact 1 |
+| `requirements.mermaid` | Step 7 Artifact 2 (sequence + optional state machine) |
+| `tasks.md` | Step 7 Artifact 3 (Data / Logic / Interface / Test / NFR layers) |
 
-## Stakeholders
-- Primary user: [who, technical level, workflow context]
-- Affected systems: [existing services, databases, APIs]
-
-## User Stories
-US-1: As a [persona], I want to [action] so that [benefit]
-  AC-1.1: GIVEN [context] WHEN [action] THEN [result]
-  AC-1.2: GIVEN [error case] WHEN [action] THEN [error handling]
-
-## Scope
-### In Scope
-- [feature/behavior 1]
-- [feature/behavior 2]
-### Out of Scope
-- [explicitly excluded 1]
-### Assumptions
-- [assumption — risk if wrong]
-
-## Non-Functional Requirements
-| NFR | Requirement | Measurement |
-|-----|-------------|-------------|
-| [Performance/Security/etc.] | [specific target] | [how to verify] |
-
-## Dependencies
-- [API/service/library]: [status — available/needs setup]
-
-## Risks
-- [risk]: [mitigation strategy]
-
-## Decision Classification
+Inside `requirements.md` the **Decision Classification** table MUST appear verbatim — plan gates on Decision compliance, Discretion items skip approval:
 
 | Category | Meaning | Example |
 |----------|---------|---------|
 | **Decisions** (locked) | User confirmed — agent MUST follow | "Use PostgreSQL, not MongoDB" |
 | **Discretion** (agent decides) | User trusts agent judgment | "Pick the best validation library" |
 | **Deferred** (out of scope) | Explicitly NOT this task | "Mobile app — future phase" |
-
-Plan gates on Decision compliance — Discretion items don't need approval.
-
-## Strategic Recommendations
-[Skip for Bug Fix/Refactor]
-
-### Quick Win (0-30 days)
-- **Action**: [immediate deliverable]
-- **Resources**: [effort + dependencies]
-- **Expected Impact**: [measurable KPI]
-- **Risk if skipped**: [consequence]
-
-### Differentiation (1-3 months)
-- **Action**: [competitive advantage work]
-- **Resources**: [...]
-- **Expected Impact**: [...]
-- **Risk if skipped**: [...]
-
-### Long-term Moat (6-12 months)
-- **Action**: [defensible position work]
-- **Resources**: [...]
-- **Expected Impact**: [...]
-- **Risk if skipped**: [...]
-
-## Next Step
-→ Hand off to rune:plan for implementation planning
-```
-
-Saved to `.rune/features/<feature-name>/requirements.md`
 
 ## Constraints
 
@@ -482,9 +538,10 @@ Saved to `.rune/features/<feature-name>/requirements.md`
 | Artifact | Format | Location |
 |----------|--------|----------|
 | Requirements document | Markdown | `.rune/features/<feature-name>/requirements.md` |
-| User stories with acceptance criteria | Markdown (GIVEN/WHEN/THEN) | inline + requirements.md |
-| Scope definition (in/out/assumptions) | Markdown sections | requirements.md |
-| Non-functional requirements table | Markdown table | requirements.md |
+| Visual model | Mermaid (sequence + optional state machine) | `.rune/features/<feature-name>/requirements.mermaid` |
+| Implementation task backbone | Markdown checklist by layer | `.rune/features/<feature-name>/tasks.md` |
+| Logic Consistency Report | Markdown section | Embedded in requirements.md |
+| Ambiguity + Completeness scores | Markdown display blocks | Embedded in requirements.md |
 
 ## Sharp Edges
 
@@ -508,6 +565,11 @@ Known failure modes for this skill. Check these before declaring done.
 | Skipping ambiguity scoring because "user seems clear" | HIGH | Always compute the score — perceived clarity ≠ measured clarity. The formula catches gaps humans miss |
 | Tiered recommendations too vague ("improve things") | MEDIUM | Each tier needs specific Action + measurable Expected Impact. "Build better UX" → "Reduce checkout steps from 5 to 3, targeting 15% conversion lift" |
 | All three tiers have same resources/effort | MEDIUM | Quick Win should be low-effort. If all tiers need "2 engineers, 3 months" → re-scope Quick Win to something achievable in 1 sprint |
+| Skipping Logic Consistency check because ambiguity is low | CRITICAL | Step 3.6 HARD-GATE: clarity ≠ consistency. A 90% clarity spec can still contain pairwise contradictions (scope IN/OUT overlap, rules with no enforcement, orphan ACs) |
+| Handing off to plan with unresolved 🔴 consistency fails | CRITICAL | Step 3.6 gate: 1+ 🔴 = BLOCK. 🟡 allowed only when logged as Risk in requirements.md |
+| Producing only requirements.md, skipping mermaid and tasks.md | HIGH | Step 7 is a triad — plan's contract expects all 3. Sequence diagram is always produced; state machine only if stateful; tasks.md always produced |
+| Mermaid diagram unrelated to actual user stories (decorative only) | MEDIUM | Sequence must trace AC-1.1 of US-1; state machine nodes must map to state-bearing ACs. Auditable by pattern-match |
+| tasks.md as flat list instead of layered | MEDIUM | Derivation rules enforce 1 US → Interface task, 1 rule → Logic + Unit test, 1 AC → Test task, 1 NFR → verification. Skipping layers loses plan's backbone structure |
 
 ## Done When
 
@@ -518,8 +580,9 @@ Known failure modes for this skill. Check these before declaring done.
 - Scope defined (in/out/assumptions/dependencies)
 - User stories with testable acceptance criteria produced
 - Non-functional requirements assessed (relevant ones only)
+- Logic Consistency Report produced — 0 🔴 before handoff (🟡 logged as Risks)
 - Tiered recommendations generated (Quick Win / Differentiation / Moat) — skip for Bug Fix/Refactor
-- Requirements Document saved to `.rune/features/<name>/requirements.md`
+- Artifact triad saved: `requirements.md` + `requirements.mermaid` + `tasks.md`
 - Handed off to `plan` for implementation planning
 
 ## Cost Profile
