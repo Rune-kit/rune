@@ -1,11 +1,9 @@
 {
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "rune-kit",
+  "description": "Less skills. Deeper connections. A lean, interconnected skill ecosystem for Claude Code — 62 skills, 5-layer mesh, runtime auto-discipline.",
   "owner": {
     "name": "Rune Contributors"
-  },
-  "metadata": {
-    "description": "Less skills. Deeper connections. A lean, interconnected skill ecosystem for Claude Code.",
-    "website": "https://rune-kit.github.io/rune"
   },
   "plugins": [
     {
