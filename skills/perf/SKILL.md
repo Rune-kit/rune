@@ -1,6 +1,6 @@
 ---
 name: perf
-description: Performance regression gate. Detects N+1 queries, sync-in-async, missing indexes, memory leaks, and bundle bloat before they reach production.
+description: "Performance regression gate. Detects N+1 queries, sync-in-async, missing indexes, memory leaks, and bundle bloat before they reach production."
 metadata:
   author: runedev
   version: "0.3.0"

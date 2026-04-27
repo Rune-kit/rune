@@ -1,6 +1,6 @@
 ---
 name: mcp-builder
-description: Build Model Context Protocol servers from specifications. Generates tool definitions, resource handlers, and test suites for MCP servers in TypeScript or Python (FastMCP).
+description: "Build Model Context Protocol servers from specifications. Use when creating an MCP server for a tool, resource, or service that AI agents should access. Generates tool definitions, resource handlers, and test suites in TypeScript or Python (FastMCP)."
 metadata:
   author: runedev
   version: "0.5.0"

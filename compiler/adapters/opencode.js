@@ -16,9 +16,21 @@
  *
  * @see https://opencode.ai/docs/skills/
  * @see https://opencode.ai/docs/agents/
+ *
+ * MODEL TIER MAPPING (v2.15+):
+ * OpenCode is provider-agnostic — emits semantic tier hints rather than
+ * concrete model names. Skill frontmatter `model: opus|sonnet|haiku` is
+ * translated to `tier:heavy|mid|light`. The OpenCode IDE resolves the
+ * tier to its configured provider model.
  */
 
 import { BRANDING_FOOTER } from '../transforms/branding.js';
+
+const MODEL_MAP = {
+  opus: 'tier:heavy',
+  sonnet: 'tier:mid',
+  haiku: 'tier:light',
+};
 
 const TOOL_MAP = {
   Read: 'read the file',
@@ -55,7 +67,11 @@ export default {
 
   generateHeader(skill) {
     const desc = (skill.description || '').replace(/"/g, '\\"');
-    return ['---', `name: rune-${skill.name}`, `description: "${desc}"`, '---', '', ''].join('\n');
+    const lines = ['---', `name: rune-${skill.name}`, `description: "${desc}"`];
+    const translatedModel = skill.model ? MODEL_MAP[skill.model] || skill.model : null;
+    if (translatedModel) lines.push(`model: ${translatedModel}`);
+    lines.push('---', '', '');
+    return lines.join('\n');
   },
 
   generateFooter() {

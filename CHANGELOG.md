@@ -3,6 +3,37 @@
 All notable changes to Rune are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.15.0] - 2026-04-27
+
+"Second Opinion + Cross-Provider + Routing Clarity" — extends the `agent.stuck` chain with a stateless second-model semantic pivot, adds an async escalation primitive so heavy-model calls don't block the primary agent, gates expensive context bundles with a token-cost preview, fixes the silent Anthropic bias in 5 non-Anthropic adapters, and improves skill discoverability with quoted descriptions + "Use when…" hints on 13 ambiguous-name skills.
+
+### Added
+
+- **`adversary` v0.2.0 — Mode: oracle** — triggered by `agent.stuck` from `debug` (3 disproved hypotheses) or `fix` (2+ failed attempts). Dispatches a stateless second-model pass with explicit "no prior context" framing to break confirmation-bias loops. Bundle format is regex-validated (`[SYSTEM]` / `[USER]` / `### File N`), token-capped (100k bundle, 4k per file, 12 files max), citation-required reply contract. Secrets auto-redacted before dispatch. 2 new reference docs (oracle-mode, context-bundle-format), 3 new evals.
+- **`session-bridge` v0.8.0 — Detach Mode** — async escalation protocol. When oracle-mode dispatches an opus-class second-opinion call, session-bridge writes `.rune/oracle-pending/<sessionId>.json` (pending record schema with idempotency hash, 10min default timeout, status state machine: pending → complete | failed). Primary agent (`cook` Phase 4 / `team` Phase 3) reattaches via filesystem poll between adjacent tasks instead of blocking. Cleanup of orphaned records (>24h) on every session start. 1 new reference doc (detach-protocol).
+- **`context-engine` v1.1.0 — Mode: preview** — pre-flight cost gate. Caller (adversary/team/review/audit) emits `context.preview` BEFORE bundle build with file list + estimated token count. context-engine resolves caller-specific threshold and returns action (`proceed | warn | block`). Per-caller defaults: adversary 50k/100k, team 30k/80k, review 40k/100k, audit 60k/120k. Env override via `RUNE_CONTEXT_THRESHOLDS_<CALLER>`. 1 new reference doc (preview-gate).
+- **Cross-provider model mapping** — 5 non-Anthropic adapters translate `model: opus|sonnet|haiku` to provider-correct names. codex → gpt-5-pro/gpt-5/gpt-5-mini. antigravity → gemini-3-pro/gemini-3-flash/gemini-3-flash-lite. opencode/openclaw/generic → tier:heavy/mid/light (provider-agnostic). claude/cursor/windsurf remain no-op (Anthropic backend understands native names).
+- **Routing clarity sweep** — 43 SKILL.md descriptions now double-quoted (YAML safety). 13 ambiguous-name skills got explicit "Use when…" routing hints: ba, completion-gate, constraint-check, doc-processor, integrity-check, logic-guardian, onboard, preflight, sentinel-env, watchdog, worktree, hallucination-guard, mcp-builder.
+- **4 new mesh signals**: `oracle.dispatched`, `oracle.response`, `oracle.failed`, `context.preview`. All registered in Signal Catalog with full emit/listen mapping.
+
+### Changed
+
+- **`debug` v1.1.0** — listens to `oracle.response`. After 3 disproved hypotheses, oracle-mode (semantic pivot) and scout zoom-out (structural pivot) fire in parallel. If `oracle.response` arrives with confidence=high + file:line citations, treated as new hypothesis H_oracle and tested directly (skip 3-cycle gate).
+- **`fix` v1.0.x** — listens to `oracle.response`. After 2+ same-file fix failures, oracle-mode dispatches in parallel with scout zoom-out. Recommendations applied through normal validation gates.
+- **`cook` Phase 4** — between tasks, glob `.rune/oracle-pending/*.json`; reattach pending dispatches to consume responses or continue with adjacent tasks.
+- **`team` Phase 3** — pre-merge oracle reattach sweep ensures no worker stream is blocked on a pending dispatch before coordination.
+- **5 adapters get MODEL_MAP**: codex.js, antigravity.js, opencode.js, openclaw.js, generic.js.
+
+### Tests
+
+- +71 tests across 5 new test files: `adapter-model-mapping.test.js` (18), `oracle-bundle-format.test.js` (19), `oracle-pending-schema.test.js` (16), `context-preview-signal.test.js` (13), `skill-description-quality.test.js` (5). Existing 1,260 tests remain green. Total: 1,331.
+
+### Docs
+
+- `docs/ARCHITECTURE.md` — new "Cross-Provider Model Mapping" subsection (tier mapping table, no-op rules, fallback behavior). Signal Catalog +4 (`oracle.dispatched`, `oracle.response`, `oracle.failed`, `context.preview`); `agent.stuck` listeners updated to include adversary.
+- `CLAUDE.md` — version reference updated.
+- `README.md` — What's New section for v2.15.0.
+
 ## [2.14.0] - 2026-04-27
 
 "Deep Modules" — interface as test surface. Adds the `improve-architecture` skill with controlled vocabulary + numeric depth/leverage/locality scoring, hardens TDD against horizontal slicing, persists rejected feature requests in `.out-of-scope/`, makes context-pack handoffs durable, forces real diversity in brainstorm parallel exploration, and adds zoom-out + explore-first micro-utilities.

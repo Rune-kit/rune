@@ -1,6 +1,6 @@
 ---
 name: docs-seeker
-description: Find documentation for APIs, libraries, and error messages. Looks up official docs, changelog entries, and migration guides.
+description: "Find documentation for APIs, libraries, and error messages. Looks up official docs, changelog entries, and migration guides."
 metadata:
   author: runedev
   version: "0.2.0"

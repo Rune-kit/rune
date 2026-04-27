@@ -1,6 +1,6 @@
 ---
 name: sentinel-env
-description: Environment-aware pre-flight check. Validates OS, runtime versions, installed tools, port availability, env vars, and disk space BEFORE coding starts. Prevents "works on my machine" failures. Like sentinel but for the environment, not the code.
+description: "Environment-aware pre-flight check. Use when starting work in a new environment, switching machines, or when 'works on my machine' bugs surface. Validates OS, runtime versions, installed tools, port availability, env vars, and disk space BEFORE coding starts. Like sentinel but for the environment, not the code."
 metadata:
   author: runedev
   version: "0.3.0"

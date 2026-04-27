@@ -1,6 +1,6 @@
 ---
 name: watchdog
-description: Post-deploy monitoring. Checks if deployed app is healthy — HTTP status, response times, error detection, and smoke test report.
+description: "Post-deploy monitoring. Use when verifying a deployed app is healthy after deploy or launch — auto-fires from launch/deploy. Checks HTTP status, response times, error detection, and smoke test report."
 metadata:
   author: runedev
   version: "0.2.0"

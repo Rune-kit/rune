@@ -1,6 +1,6 @@
 ---
 name: review
-description: Code quality review — patterns, security, performance, correctness. Finds bugs, suggests improvements, triggers fix for issues found. Escalates to opus for security-critical code.
+description: "Code quality review — patterns, security, performance, correctness. Finds bugs, suggests improvements, triggers fix for issues found. Escalates to opus for security-critical code."
 metadata:
   author: runedev
   version: "1.1.0"
@@ -9,7 +9,7 @@ metadata:
   group: development
   tools: "Read, Glob, Grep"
   emit: review.complete, review.issues
-  listen: code.changed, docs.updated
+  listen: code.changed, docs.updated, context.preview
 ---
 
 # review

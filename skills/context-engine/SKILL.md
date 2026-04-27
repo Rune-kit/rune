@@ -4,11 +4,12 @@ description: "Context window management. Auto-triggered when context is filling 
 user-invocable: false
 metadata:
   author: runedev
-  version: "1.0.0"
+  version: "1.1.0"
   layer: L3
   model: haiku
   group: state
   tools: "Read, Glob, Grep"
+  emit: context.preview
 ---
 
 # context-engine
@@ -49,6 +50,7 @@ Context-engine also manages **behavioral mode injection** via `contexts/` direct
 - `rescue` (L1): between refactoring sessions for state persistence
 - `context-pack` (L3): when packaging context for sub-agent handoff
 - `session-bridge` (L3): coordinates with context-engine for compaction timing
+- `adversary` (L2): (oracle-mode) emit `context.preview` before bundle build to gate token cost
 
 ## Execution
 
@@ -375,11 +377,90 @@ When Context Budget Warning fires, append to Context Health report:
 - **Recommendation**: Disable [server] to save ~[N]k tokens
 ```
 
+## Mode: preview (v1.1.0)
+
+Pre-flight cost check for expensive escalations. Caller (`adversary` oracle-mode, `team` workstream spawn, `review` multi-file, `audit` cross-pack) MUST emit `context.preview` BEFORE building the bundle, so context-engine can estimate token cost and gate the dispatch against a per-caller threshold.
+
+### Why
+
+Without preview, callers learn about budget overruns AFTER the bundle is built and dispatched — too late to prune. `team` parallel workstreams especially can blow $20 of Opus tokens in a single session if context bundles are unchecked.
+
+### Token Estimation (no tokenizer dep)
+
+```
+estimated_tokens = total_chars × 0.25
+```
+
+Char count includes the `[SYSTEM]` line, `[USER]` line, and all `### File N:` blocks per `references/preview-gate.md`. The 0.25 ratio is calibrated for English code/markdown — overestimates Japanese/Chinese, underestimates highly-repetitive content. Both error directions are safe (overestimate → over-cautious block; underestimate → caller still hits dispatch-time hard cap).
+
+### Threshold Defaults (per caller)
+
+| Caller | warn-at (tokens) | block-at (tokens) |
+|--------|------------------|-------------------|
+| `adversary` oracle-mode | 50k | 100k |
+| `team` parallel workstream (per worker) | 30k | 80k |
+| `review` multi-file | 40k | 100k |
+| `audit` cross-pack | 60k | 120k |
+
+Caller passes its identity in the preview request; context-engine resolves to the correct threshold.
+
+### Action Enum
+
+`context.preview` payload includes a single `action` field:
+
+| Action | Meaning | Caller behavior |
+|--------|---------|-----------------|
+| `proceed` | Under warn threshold | Continue without warning |
+| `warn` | Between warn and block | Log warning to user, continue |
+| `block` | At or over block threshold | Abort dispatch, emit caller-specific failure (e.g. `oracle.failed` reason=`context_budget_exceeded`) |
+
+### Signal Payload Schema
+
+```yaml
+context.preview:
+  caller: adversary | team | review | audit
+  estimated_tokens: <int>
+  file_count: <int>
+  top_5_files_by_size:
+    - { path: <string>, chars: <int> }
+  threshold:
+    warn_at: <int>
+    block_at: <int>
+  action: proceed | warn | block
+```
+
+### Step P1 — Receive request
+
+Caller invokes context-engine with: caller-id, file list (paths + char counts), prompt char count.
+
+### Step P2 — Estimate
+
+Sum total chars, multiply by 0.25, identify top 5 files by size.
+
+### Step P3 — Resolve threshold
+
+Look up caller in threshold table (defaults above; override via `RUNE_CONTEXT_THRESHOLDS_<CALLER>` env var).
+
+### Step P4 — Determine action
+
+```
+if estimated_tokens >= block_at: action = block
+elif estimated_tokens >= warn_at: action = warn
+else: action = proceed
+```
+
+### Step P5 — Emit
+
+Emit `context.preview` with full payload. Caller decides whether to proceed.
+
+See `references/preview-gate.md` for tunable points and integration with each caller.
+
 ## Constraints
 
 1. MUST preserve context fidelity — no summarizing away critical details
 2. MUST flag context conflicts between skills — never silently pick one
 3. MUST NOT inject stale context from previous sessions without marking it as historical
+4. (preview) MUST emit `context.preview` BEFORE bundle-building begins (not after) — late emission defeats the gate purpose
 
 ## Sharp Edges
 
@@ -394,6 +475,8 @@ Known failure modes for this skill. Check these before declaring done.
 | Not activating large-file adjustment on Python/Java codebases | MEDIUM | Track Read calls returning >500 lines; if ≥3 occur, switch to adjusted (0.8x) thresholds for the session |
 | Mid-loop compaction breaks tool_use/tool_result pair | CRITICAL | Always keep tool pairs together — splitting causes orphaned results and context corruption |
 | Mid-loop compaction without flushing state first | HIGH | session-bridge + neural-memory MUST run before compaction — losing unsaved decisions is worse than hitting context limit |
+| (preview) Caller bundles before requesting preview | HIGH | Constraint 4 enforces order; reject preview-after-build calls with explicit error |
+| (preview) Estimated tokens off by 2x for non-English content | LOW | Document calibration in `references/preview-gate.md`; safe both directions (block-too-eager or block-too-late but hard cap at dispatch saves us) |
 
 ## Done When
 
@@ -402,6 +485,7 @@ Known failure modes for this skill. Check these before declaring done.
 - Appropriate advisory emitted matching health level (no advisory for GREEN)
 - If RED: session-bridge called and confirmed saved before compaction signal
 - Context Health Report emitted with tool count, status, and recommendation
+- (preview-mode) `context.preview` emitted with `action` ∈ `proceed | warn | block` BEFORE caller builds its bundle
 
 ## Cost Profile
 

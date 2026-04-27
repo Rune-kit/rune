@@ -3,9 +3,20 @@
  *
  * For unknown or future platforms. Emits to .ai/rules/ directory.
  * Uses the most portable format possible.
+ *
+ * MODEL TIER MAPPING (v2.15+):
+ * Provider-agnostic — emits semantic tier hints in the markdown header.
+ * Skill frontmatter `model: opus|sonnet|haiku` is translated to
+ * `tier:heavy|mid|light`. The consuming platform resolves the tier.
  */
 
 import { BRANDING_FOOTER } from '../transforms/branding.js';
+
+const MODEL_MAP = {
+  opus: 'tier:heavy',
+  sonnet: 'tier:mid',
+  haiku: 'tier:light',
+};
 
 const TOOL_MAP = {
   Read: 'read the file',
@@ -37,7 +48,9 @@ export default {
   },
 
   generateHeader(skill) {
-    return `# rune-${skill.name}\n\n> Rune ${skill.layer} Skill | ${skill.group}\n\n`;
+    const translatedModel = skill.model ? MODEL_MAP[skill.model] || skill.model : null;
+    const modelSuffix = translatedModel ? ` | model: ${translatedModel}` : '';
+    return `# rune-${skill.name}\n\n> Rune ${skill.layer} Skill | ${skill.group}${modelSuffix}\n\n`;
   },
 
   generateFooter() {

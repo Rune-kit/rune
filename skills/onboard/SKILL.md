@@ -1,6 +1,6 @@
 ---
 name: onboard
-description: Auto-generate project context for AI sessions. Scans codebase, creates CLAUDE.md and .rune/ setup so every future session starts with full context.
+description: "Auto-generate project context for AI sessions. Use when starting on a new repo for the first time, or when CLAUDE.md / .rune/ context is missing or stale. Scans codebase and creates the setup so every future session starts with full context."
 metadata:
   author: runedev
   version: "0.4.0"

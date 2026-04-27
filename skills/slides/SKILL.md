@@ -1,6 +1,6 @@
 ---
 name: slides
-description: Generate Marp-compatible slide decks from structured JSON schema. Converts context into presentations for tech talks, sprint demos, and tutorials.
+description: "Generate Marp-compatible slide decks from structured JSON schema. Converts context into presentations for tech talks, sprint demos, and tutorials."
 metadata:
   author: runedev
   version: "0.1.0"

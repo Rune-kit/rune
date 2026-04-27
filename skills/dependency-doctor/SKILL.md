@@ -1,6 +1,6 @@
 ---
 name: dependency-doctor
-description: Dependency health management. Detects package manager, checks outdated packages and vulnerabilities, and produces a prioritized update plan.
+description: "Dependency health management. Detects package manager, checks outdated packages and vulnerabilities, and produces a prioritized update plan."
 metadata:
   author: runedev
   version: "0.2.0"

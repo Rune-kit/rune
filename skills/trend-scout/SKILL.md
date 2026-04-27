@@ -1,6 +1,6 @@
 ---
 name: trend-scout
-description: Scan market trends, competitor activity, and emerging patterns. Monitors Product Hunt, GitHub Trending, HackerNews, and social platforms.
+description: "Scan market trends, competitor activity, and emerging patterns. Monitors Product Hunt, GitHub Trending, HackerNews, and social platforms."
 metadata:
   author: runedev
   version: "0.2.0"

@@ -68,6 +68,23 @@ Override: budget constraint → downgrade
 Override: user preference   → manual in config
 ```
 
+### Cross-Provider Model Mapping (v2.15+)
+
+SKILL.md frontmatter uses Anthropic-native tier names (`opus`/`sonnet`/`haiku`) as the canonical authoring vocabulary. Adapters translate this hint to provider-correct model names so the field is meaningful in every compiled output:
+
+| Tier | claude / cursor / windsurf | codex | antigravity | opencode / openclaw / generic |
+|------|---------------------------|-------|-------------|------------------------------|
+| opus | claude-opus-4-7 (no-op) | gpt-5-pro | gemini-3-pro | tier:heavy |
+| sonnet | claude-sonnet-4-6 (no-op) | gpt-5 | gemini-3-flash | tier:mid |
+| haiku | claude-haiku-4-5 (no-op) | gpt-5-mini | gemini-3-flash-lite | tier:light |
+
+Rules:
+- Anthropic-backed adapters (claude/cursor/windsurf) understand the native names — adapter is no-op
+- Concrete-provider adapters (codex/antigravity) emit recognizable IDE model names
+- Provider-agnostic adapters (opencode/openclaw/generic) emit `tier:heavy|mid|light` semantic hints — the consuming runtime resolves to its configured provider model
+- Skills without `model:` produce no model field in any adapter
+- Unknown tier values pass through unchanged (forward-compatibility for new tiers)
+
 ### Parallel Execution
 
 | Context | Max Parallel | Reason |
@@ -199,7 +216,11 @@ Lowercase, dot-separated: `<domain>.<event>` (e.g. `code.changed`, `tests.failed
 | `architecture.shallow.flagged` | improve-architecture, audit | surgeon, review |
 | `architecture.deletion.passed` | improve-architecture | audit |
 | `outofscope.match` | ba | review-intake, cook, plan |
-| `agent.stuck` | fix, debug | scout |
+| `agent.stuck` | fix, debug | scout, adversary |
+| `oracle.dispatched` | adversary | session-bridge |
+| `oracle.response` | adversary | debug, fix |
+| `oracle.failed` | adversary, session-bridge | debug, fix |
+| `context.preview` | context-engine | adversary, team, review, audit |
 | `security.passed` | sentinel | deploy |
 | `security.blocked` | sentinel | fix, plan |
 | `review.complete` | review | cook |

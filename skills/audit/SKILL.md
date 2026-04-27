@@ -1,6 +1,6 @@
 ---
 name: audit
-description: Comprehensive project audit — security, dependencies, code quality, architecture, performance, infra, docs, and mesh analytics. Delegates to specialist skills and generates an 8-dimension health score.
+description: "Comprehensive project audit — security, dependencies, code quality, architecture, performance, infra, docs, and mesh analytics. Delegates to specialist skills and generates an 8-dimension health score."
 metadata:
   author: runedev
   version: "0.4.0"
@@ -9,6 +9,7 @@ metadata:
   group: quality
   tools: "Read, Bash, Glob, Grep"
   emit: audit.complete
+  listen: context.preview
 ---
 
 # audit

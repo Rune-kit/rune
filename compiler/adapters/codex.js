@@ -8,9 +8,20 @@
  * Codex project context: AGENTS.md (equivalent to CLAUDE.md)
  * Codex skills dir: .codex/skills/
  * Codex skill format: .codex/skills/{name}/SKILL.md
+ *
+ * MODEL TIER MAPPING (v2.15+):
+ * Skill frontmatter `model: opus|sonnet|haiku` (Anthropic naming) is
+ * translated to Codex/OpenAI provider-correct model names so the field
+ * is meaningful in the compiled output. Unknown tier values pass through.
  */
 
 import { BRANDING_FOOTER } from '../transforms/branding.js';
+
+const MODEL_MAP = {
+  opus: 'gpt-5-pro',
+  sonnet: 'gpt-5',
+  haiku: 'gpt-5-mini',
+};
 
 const TOOL_MAP = {
   Read: 'read the file',
@@ -47,7 +58,11 @@ export default {
 
   generateHeader(skill) {
     const desc = (skill.description || '').replace(/"/g, '\\"');
-    return ['---', `name: rune-${skill.name}`, `description: "${desc}"`, '---', '', ''].join('\n');
+    const lines = ['---', `name: rune-${skill.name}`, `description: "${desc}"`];
+    const translatedModel = skill.model ? MODEL_MAP[skill.model] || skill.model : null;
+    if (translatedModel) lines.push(`model: ${translatedModel}`);
+    lines.push('---', '', '');
+    return lines.join('\n');
   },
 
   generateFooter() {

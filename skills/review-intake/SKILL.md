@@ -1,6 +1,6 @@
 ---
 name: review-intake
-description: Use when receiving code review feedback, PR comments, or external suggestions before implementing any changes. Prevents blind implementation, enforces verification-first discipline.
+description: "Use when receiving code review feedback, PR comments, or external suggestions before implementing any changes. Prevents blind implementation, enforces verification-first discipline."
 metadata:
   author: runedev
   version: "1.2.0"

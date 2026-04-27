@@ -1,6 +1,6 @@
 ---
 name: fix
-description: Apply code changes and fixes. Writes implementation code, applies bug fixes, and verifies changes with tests. Core action hub in the development mesh.
+description: "Apply code changes and fixes. Writes implementation code, applies bug fixes, and verifies changes with tests. Core action hub in the development mesh."
 metadata:
   author: runedev
   version: "1.0.0"
@@ -9,7 +9,7 @@ metadata:
   group: development
   tools: "Read, Write, Edit, Bash, Glob, Grep"
   emit: code.changed, agent.stuck
-  listen: bug.diagnosed, review.issues, preflight.blocked, security.blocked
+  listen: bug.diagnosed, review.issues, preflight.blocked, security.blocked, oracle.response
 ---
 
 # fix
@@ -41,6 +41,7 @@ If unsure whether the test is wrong or the implementation is wrong → call `run
 - `hallucination-guard` (L3): verify imports after code changes
 - `scout` (L2): find related code before applying changes
 - `neural-memory` (L3): after fix verified — capture fix pattern (cause → solution)
+- `adversary` (L2): on `agent.stuck` after 2+ failed attempts — oracle-mode dispatches stateless second-model pass to break confirmation-bias loop
 
 ## Called By (inbound)
 
@@ -142,7 +143,7 @@ When fix is called repeatedly (e.g., by cook Phase 4, or iterative fix loops), t
 **Thresholds:**
 - **>20% WTF-likelihood**: STOP fixing. Report current state to cook/user with: "Quality decay detected — continued fixes risk introducing more bugs than they resolve. {N} fixes applied, {score}% risk. Recommend: commit current progress, re-assess remaining issues."
 - **Hard cap: 30 fixes per session** — regardless of score. After 30, STOP and report.
-- **2+ consecutive fixes on the same file all failed**: emit `agent.stuck` signal (listened by `scout` zoom-out mode). Receiving agents may zoom out to the surrounding module map to recover bigger-picture context.
+- **2+ consecutive fixes on the same file all failed**: emit `agent.stuck` signal. `scout` zoom-out mode (structural pivot) and `adversary` oracle-mode (semantic pivot via stateless second-model dispatch) both listen and fire in parallel. If `oracle.response` arrives with confidence=high, apply its recommended edit (still routes through normal validation gates).
 
 **Reset conditions:** WTF-likelihood resets to 0% when:
 - User explicitly says "continue fixing"

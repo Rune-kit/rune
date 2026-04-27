@@ -2,6 +2,10 @@
  * Claude Code Adapter (Passthrough)
  *
  * No transformation needed — source IS the output.
+ *
+ * MODEL TIER MAPPING (v2.15+):
+ * No-op. Claude Code's Anthropic backend understands `model: opus|sonnet|haiku`
+ * natively, so no translation is required (unlike codex/antigravity/opencode).
  */
 
 export default {

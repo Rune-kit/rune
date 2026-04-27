@@ -1,6 +1,6 @@
 ---
 name: docs
-description: Auto-generate and maintain project documentation. Creates README, API docs, architecture docs, changelogs, and keeps them in sync with code changes. The "docs are never outdated" skill.
+description: "Auto-generate and maintain project documentation. Creates README, API docs, architecture docs, changelogs, and keeps them in sync with code changes. The \"docs are never outdated\" skill."
 metadata:
   author: runedev
   version: "0.3.0"

@@ -384,6 +384,7 @@ If the coder model needs info from other phases, it's in the Cross-Phase Context
 4. Run tests after each significant change — if fail → debug and fix
    - **Python async** (if async-first flagged): no blocking calls in async functions — `time.sleep` → `asyncio.sleep`, `requests` → `httpx.AsyncClient`, use `asyncio.gather()` for parallel I/O
 5. If stuck → invoke `rune:debug` (max 3 debug↔fix loops). Fixes outside plan scope require user approval (R4).
+   - **Oracle reattach check** — between tasks, glob `.rune/oracle-pending/*.json`. For any record with `status=pending`, invoke `session-bridge --reattach <sessionId>`. If `complete` → consume the response (route to debug/fix per `sourceSkill`). If `pending` → continue with next independent task. If `failed` → continue without second opinion.
 6. **Re-plan check** — evaluate before Phase 5: max debug loops hit? out-of-scope files changed? new dep changes approach? user scope change? If any fire → invoke `rune:plan` with delta context, get user approval before resuming.
 7. **Approach Pivot Gate** — if re-plan ALSO fails:
 

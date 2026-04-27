@@ -11,6 +11,7 @@ metadata:
   group: orchestrator
   tools: "Read, Write, Edit, Bash, Glob, Grep"
   emit: phase.complete
+  listen: context.preview
 ---
 
 # team
@@ -284,6 +285,8 @@ Mark todo[1] `completed`.
 ### Phase 3 — COORDINATE
 
 Mark todo[2] `in_progress`.
+
+**3a-pre. Oracle reattach sweep.** Before merge coordination, glob `.rune/oracle-pending/*.json`. For any worker stream that emitted `oracle.dispatched` during Phase 2, invoke `session-bridge --reattach <sessionId>`. Worker streams with `status=pending` past their `timeoutAt` are unblocked via `oracle.failed` so coordination can proceed. Workers with `status=complete` consume the response before merge.
 
 **3a. Check for file conflicts.**
 

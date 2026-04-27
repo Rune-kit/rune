@@ -26,9 +26,21 @@
  *
  * Reference codex-imagen repo (darkamenosa/codex-imagen) documents the
  * de-facto in-the-wild convention this adapter formalizes.
+ *
+ * MODEL TIER MAPPING (v2.15+):
+ * OpenClaw is provider-agnostic — emits semantic tier hints in the
+ * markdown header. Skill frontmatter `model: opus|sonnet|haiku` is
+ * translated to `tier:heavy|mid|light`. The OpenClaw runtime resolves
+ * the tier to its configured provider model.
  */
 
 import { BRANDING_FOOTER } from '../transforms/branding.js';
+
+const MODEL_MAP = {
+  opus: 'tier:heavy',
+  sonnet: 'tier:mid',
+  haiku: 'tier:light',
+};
 
 const TOOL_MAP = {
   Read: 'read_file',
@@ -60,7 +72,9 @@ export default {
   },
 
   generateHeader(skill) {
-    return `# rune-${skill.name}\n\n> Rune ${skill.layer} Skill | ${skill.group}\n\n`;
+    const translatedModel = skill.model ? MODEL_MAP[skill.model] || skill.model : null;
+    const modelSuffix = translatedModel ? ` | model: ${translatedModel}` : '';
+    return `# rune-${skill.name}\n\n> Rune ${skill.layer} Skill | ${skill.group}${modelSuffix}\n\n`;
   },
 
   generateFooter() {

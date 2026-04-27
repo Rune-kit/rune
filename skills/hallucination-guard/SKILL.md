@@ -1,6 +1,6 @@
 ---
 name: hallucination-guard
-description: Verify AI-generated imports, API calls, and packages actually exist. Catches phantom functions, non-existent packages, and slopsquatting attacks.
+description: "Verify AI-generated imports, API calls, and packages actually exist. Use when finishing AI-generated code that introduces new imports or external API calls — auto-fires after fix/cook to catch phantom functions, non-existent packages, and slopsquatting attacks."
 metadata:
   author: runedev
   version: "0.3.0"

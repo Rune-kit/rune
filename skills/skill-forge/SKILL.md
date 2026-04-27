@@ -1,6 +1,6 @@
 ---
 name: skill-forge
-description: Use when creating new Rune skills, editing existing skills, or verifying skill quality before deployment. Applies TDD discipline to skill authoring — test before write, verify before ship.
+description: "Use when creating new Rune skills, editing existing skills, or verifying skill quality before deployment. Applies TDD discipline to skill authoring — test before write, verify before ship."
 metadata:
   author: runedev
   version: "1.8.0"

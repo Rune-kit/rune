@@ -3,11 +3,13 @@ name: adversary
 description: "Pre-implementation red-team analysis. Use when a plan is high-risk, critical path, or expensive to reverse. Challenges plans before code is written — finds edge cases, security holes, scalability bottlenecks, error propagation risks, and integration conflicts. Catches flaws at plan time (10x cheaper than post-implementation)."
 metadata:
   author: runedev
-  version: "0.1.0"
+  version: "0.2.0"
   layer: L2
   model: opus
   group: quality
   tools: "Read, Glob, Grep"
+  emit: oracle.dispatched, oracle.response, oracle.failed
+  listen: agent.stuck, context.preview
 ---
 
 # adversary
@@ -37,12 +39,16 @@ Every finding MUST reference the specific plan section, file, or assumption it c
 - `scout` (L2): find existing code that might conflict with planned changes
 - `docs-seeker` (L3): verify framework/API assumptions in the plan are correct and current
 - `hallucination-guard` (L3): verify that APIs, packages, or patterns referenced in the plan actually exist
+- `context-engine` (L3): (oracle-mode) emit `context.preview` before bundle build to gate token cost
+- `session-bridge` (L3): (oracle-mode) detach protocol when target model is opus-class for non-blocking dispatch
 
 ## Called By (inbound)
 
 - `cook` (L1): Phase 2.5 — after plan approval, before TDD
 - `plan` (L2): optional post-step for critical features
 - `team` (L1): when decomposing large tasks, adversary validates the decomposition
+- `debug` (L2): (oracle-mode) listens to `agent.stuck` from debug after 3 disproved hypotheses
+- `fix` (L2): (oracle-mode) listens to `agent.stuck` from fix after 2+ failed attempts
 - User: `/rune adversary` direct invocation
 
 ## Cross-Hub Connections
@@ -229,6 +235,54 @@ Trigger: plan modifies < 3 files AND no auth/payment/data logic.
 Steps 2 and 5 only (security + integration). Used when `sentinel` requests adversarial pre-analysis.
 Trigger: plan involves auth, crypto, payment, or user data handling.
 
+### Mode: oracle (v0.2.0)
+
+**Triggered by**: `agent.stuck` signal — emitted by `debug` (after 3 disproved hypotheses) or `fix` (after 2+ failed attempts on the same file).
+
+**Purpose**: Break confirmation-bias loops. The same agent that read `auth.ts` 3 times has formed a theory it cannot un-form. Oracle-mode dispatches a stateless second-model pass with explicit "no prior context" framing, breaking the semantic loop that `scout`'s zoom-out mode (structural pivot) cannot.
+
+**When NOT to use**:
+- Single hypothesis cycle — escalate only after 3 cycles in `debug` or 2 attempts in `fix`
+- Trivial single-file bugs — overhead exceeds value
+- When the user already knows the answer — they're trying to validate, not diagnose
+
+**Protocol**:
+
+1. **Pre-bundle gate** — emit `context.preview` to `context-engine` first; abort if action=block
+2. **Build context bundle** — see `references/context-bundle-format.md` for exact format
+3. **Dispatch** — emit `oracle.dispatched` signal; route via `session-bridge` detach if target model is opus-class (non-blocking)
+4. **Wait for response** — synchronous if model is sonnet-class, polled via `.rune/oracle-pending/<id>.json` if opus-class
+5. **Validate response** — every claim MUST cite file:line. Strip + warn on uncited claims (`oracle.failed` if all claims uncited)
+6. **Emit response** — `oracle.response` carries the validated diagnosis, consumed by `debug`/`fix` to override or refine their current hypothesis
+
+**Bundle format** (mandatory regex-validated):
+
+```
+[SYSTEM] You are Oracle, a focused one-shot problem solver. You have NO prior context — assume zero project knowledge. Cite file:line for every claim. Reject any claim you cannot ground in the provided files.
+
+[USER] <agent stuck after N hypothesis cycles. What is the most likely root cause not yet considered?>
+
+### File 1: <relative/path/to/file.ts>
+<file content, normalized whitespace, max 4k chars per file>
+
+### File 2: <...>
+<...>
+```
+
+**Hard caps**:
+- Bundle ≤ 100k tokens (estimated via char count × 0.25)
+- Per-file ≤ 4k chars (truncate with explicit `... [truncated]` marker)
+- Max 12 files per bundle (force caller to prune larger sets)
+
+**Response contract** — Oracle reply MUST contain:
+- A primary diagnosis (1-3 sentences)
+- At least 1 file:line citation per claim
+- An action recommendation (specific edit, additional file to read, hypothesis to test)
+
+Replies failing this contract are rejected — `oracle.failed` emitted, primary agent continues without second opinion.
+
+See `references/oracle-mode.md` for the full protocol and integration with `debug`/`fix`.
+
 ## Constraints
 
 1. MUST challenge every plan — no rubber-stamping. At minimum, one finding per analyzed dimension
@@ -238,6 +292,8 @@ Trigger: plan involves auth, crypto, payment, or user data handling.
 5. MUST use concrete attack scenarios, not vague warnings ("could be a problem" is NOT a finding)
 6. MUST NOT block on MEDIUM/LOW findings — only CRITICAL and HIGH trigger REVISE verdict
 7. MUST include Strength Notes — adversary finds weaknesses AND acknowledges what's well-designed
+8. (oracle-mode) MUST emit `context.preview` BEFORE building the bundle — abort if context-engine action=block
+9. (oracle-mode) MUST validate every Oracle reply citation against the provided files — reject uncited claims as `oracle.failed`
 
 ## Mesh Gates
 
@@ -256,6 +312,9 @@ Trigger: plan involves auth, crypto, payment, or user data handling.
 | Missing context — challenging plan without understanding existing codebase | HIGH | Step 0 MUST load existing code context via scout before challenging |
 | Scope creep — reviewing existing code quality instead of plan quality | MEDIUM | Adversary reviews THE PLAN, not the codebase. Existing code is context only |
 | Redundancy with review/preflight — duplicating post-implementation checks | MEDIUM | Adversary operates PRE-implementation only. Never run adversary on existing code |
+| (oracle-mode) Bundle exceeds token cap — caller didn't prune | HIGH | Caller MUST run `context.preview` first; adversary fails fast with `oracle.failed` instead of silently truncating signal |
+| (oracle-mode) Oracle reply has no citations — model improvised | CRITICAL | Reject reply with `oracle.failed`. Primary agent continues without second opinion (better than acting on hallucination) |
+| (oracle-mode) Loop: oracle reply triggers another `agent.stuck` | HIGH | Cap at 1 oracle dispatch per primary-agent stuck cycle. Subsequent stucks must escalate to user |
 
 ## Done When
 
@@ -265,6 +324,7 @@ Trigger: plan involves auth, crypto, payment, or user data handling.
 - Verdict rendered: REVISE, HARDEN, or PROCEED
 - Findings formatted for consumption by cook Phase 3 (if PROCEED) or plan (if REVISE)
 - Strength Notes section acknowledges well-designed aspects of the plan
+- (oracle-mode) If dispatched: response cited file:line for each claim, or `oracle.failed` emitted with rejection reason
 
 ## Returns
 

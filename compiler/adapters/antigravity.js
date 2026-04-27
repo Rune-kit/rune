@@ -8,9 +8,21 @@
  * Antigravity project context: AGENTS.md (+ CLAUDE.md fallback)
  * Antigravity skills dir: .agents/skills/
  * Antigravity skill format: .agents/skills/{name}/SKILL.md
+ *
+ * MODEL TIER MAPPING (v2.15+):
+ * Skill frontmatter `model: opus|sonnet|haiku` (Anthropic naming) is
+ * translated to Gemini provider-correct model names. Antigravity supports
+ * both Gemini and Claude — defaulting to Gemini family since it is the
+ * native model. Unknown tier values pass through.
  */
 
 import { BRANDING_FOOTER } from '../transforms/branding.js';
+
+const MODEL_MAP = {
+  opus: 'gemini-3-pro',
+  sonnet: 'gemini-3-flash',
+  haiku: 'gemini-3-flash-lite',
+};
 
 const TOOL_MAP = {
   Read: 'read the file',
@@ -46,7 +58,11 @@ export default {
 
   generateHeader(skill) {
     const desc = (skill.description || '').replace(/"/g, '\\"');
-    return ['---', `name: rune-${skill.name}`, `description: "${desc}"`, '---', '', ''].join('\n');
+    const lines = ['---', `name: rune-${skill.name}`, `description: "${desc}"`];
+    const translatedModel = skill.model ? MODEL_MAP[skill.model] || skill.model : null;
+    if (translatedModel) lines.push(`model: ${translatedModel}`);
+    lines.push('---', '', '');
+    return lines.join('\n');
   },
 
   generateFooter() {

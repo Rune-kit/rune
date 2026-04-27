@@ -83,17 +83,25 @@ _Methodology: Claude Code CLI headless mode (`claude -p --output-format json`), 
 
 ---
 
-## What's New (v2.14.0 — Deep Modules)
+## What's New (v2.15.0 — Second Opinion + Cross-Provider + Routing Clarity)
 
-- **`improve-architecture` skill (NEW L2, opus)** — surfaces deepening opportunities with controlled vocabulary (Module / Interface / Implementation / Depth / Seam / Adapter / Leverage / Locality), numeric depth-leverage-locality scoring (1–5 each), 4 dependency categories that drive test strategy, and structured proposal payloads `surgeon` consumes programmatically. Ban-listed aliases ("boundary", "component", "service", "layer") enforced by compiler test.
-- **TDD vertical-slicing HARD-GATE** — `test` v1.3.0 catches "horizontal slicing" (5 tests written before any GREEN) with a `bulk_test_count <= 1` rule, mandates commit-pair audit trail (`test:` + `feat:` per cycle) verified by `completion-gate`, flags shape-words in test names ("returns", "has property", "is defined") as candidates for behavior-verb rewrite.
-- **`.out-of-scope/` knowledge base** — `ba` v0.11.0 reads it on intake (lexical similarity matching, ≥0.8 confidence surfaces prior rejections), `review-intake` v1.2.0 writes/appends it on every OUT OF SCOPE verdict. Stops the "agent re-litigates a rejected feature next session" failure mode. YAML frontmatter for machine parsing + Markdown body for humans.
-- **CONTEXT.md inline-sharpen + ADR 3-criteria gate** — `ba` builds the project glossary as terms emerge; cross-references user assertions against the codebase via grep before recording. `journal` v0.4.0 only opens an ADR when `reversibility + surprisingness + tradeoff_strength >= 11` AND each axis ≥ 3, with a counter-test (rejected alternative) that can't be faked. Filename includes the score: `ADR-007-postgres-write-model-s13.md`.
-- **Agent Brief durability** — `context-pack` v0.2.0 adds mandatory `### Out of scope` and `### Type Surface (durable)` sections, runs regex smell tests pre-emit (BLOCK on file:line / "line N" / narrative paths; WARN on bare `src/` mentions), enforces behavioral-verb whitelist on Acceptance Criteria. Stops handoff briefs from rotting when files get renamed.
-- **Design-It-Twice mode** — `brainstorm` v0.6.0 spawns 3-4 parallel subagents, each pinned to one constraint (minimize / maximize-flexibility / optimize-common-case / ports-and-adapters), computes diversity score across feature vectors (Jaccard-based, floor 0.4), re-spawns once if too similar, presents sequentially with an opinionated recommendation. "It depends" is BLOCKED.
-- **Zoom-out + explore-first micro-utilities** — `scout` v0.4.0 listens for `agent.stuck` (emitted by `fix` after 2 failed attempts and `debug` after 3 disproved hypotheses), produces a 3-layer Mermaid map (target / siblings / callers, capped at 8 each). `ba` v0.11.0 explore-first HARD-GATE: every elicitation question requires prior tool-call evidence (Read/Glob/Grep) — no more asking "what stack?" when `package.json` answers it.
-- **5 new mesh signals** — `tdd.horizontal.violation`, `architecture.shallow.flagged`, `architecture.deletion.passed`, `outofscope.match`, `agent.stuck`.
-- **1,260 tests** — +81 from v2.13.0 across 7 new test files covering schema validation, vocabulary discipline, ADR scoring, smell-test regex, diversity formula, zoom-out output.
+- **`adversary` v0.2.0 — Mode: oracle** — when `agent.stuck` fires from `debug` (3 disproved hypotheses) or `fix` (2+ failed attempts), oracle-mode dispatches a stateless second-model pass with explicit "no prior context" framing. Bundle format is regex-validated (`[SYSTEM]` invariant role-priming + `[USER]` template + `### File N`), token-capped (100k bundle, 4k per file, 12 files max), citation-required reply contract. Secrets auto-redacted. Breaks the confirmation-bias loop that scout's zoom-out (structural pivot) cannot.
+- **`session-bridge` v0.8.0 — Detach Mode** — async escalation primitive. Heavy-model second-opinion calls (1-10 min wall time) no longer block the primary agent. `.rune/oracle-pending/<sessionId>.json` is the rendezvous file; idempotent dispatch (bundleHash-keyed); 10min default timeout; 24h orphan cleanup on session start. `cook` Phase 4 and `team` Phase 3 reattach via filesystem poll between adjacent tasks.
+- **`context-engine` v1.1.0 — Mode: preview** — pre-flight cost gate. Caller emits `context.preview` BEFORE bundle build with file list + estimated tokens (chars × 0.25). Per-caller thresholds: adversary 50k/100k, team 30k/80k (per worker), review 40k/100k, audit 60k/120k. Action enum `proceed | warn | block`. Override via `RUNE_CONTEXT_THRESHOLDS_<CALLER>`. Stops `team` parallel workstreams from silently blowing $20 of Opus tokens.
+- **Cross-provider model mapping** — 5 non-Anthropic adapters now translate `model: opus|sonnet|haiku` to provider-correct names. **codex** → gpt-5-pro / gpt-5 / gpt-5-mini. **antigravity** → gemini-3-pro / gemini-3-flash / gemini-3-flash-lite. **opencode / openclaw / generic** → tier:heavy / tier:mid / tier:light (provider-agnostic). claude / cursor / windsurf remain no-op (Anthropic backend understands native names).
+- **Routing clarity sweep** — all 63 SKILL.md descriptions now double-quoted (YAML safety). 13 ambiguous-name skills got explicit "Use when…" routing hints so skill-router doesn't have to guess: ba, completion-gate, constraint-check, doc-processor, integrity-check, logic-guardian, onboard, preflight, sentinel-env, watchdog, worktree, hallucination-guard, mcp-builder.
+- **4 new mesh signals** — `oracle.dispatched`, `oracle.response`, `oracle.failed`, `context.preview`. All registered in Signal Catalog with full emit/listen mapping. `agent.stuck` listeners updated to include adversary in addition to scout.
+- **1,331 tests** — +71 from v2.14.0 across 5 new test files: adapter-model-mapping (18), oracle-bundle-format (19), oracle-pending-schema (16), context-preview-signal (13), skill-description-quality (5).
+
+### Previous (v2.14.0 — Deep Modules)
+
+- **`improve-architecture` skill (NEW L2, opus)** — controlled vocabulary (Module / Interface / Implementation / Depth / Seam / Adapter / Leverage / Locality), numeric depth-leverage-locality scoring (1–5 each), 4 dependency categories, structured proposal payloads.
+- **TDD vertical-slicing HARD-GATE** — `test` v1.3.0 catches "horizontal slicing" (5 tests before any GREEN), commit-pair audit trail, shape-test smell detector.
+- **`.out-of-scope/` knowledge base** — `ba` v0.11.0 reads, `review-intake` v1.2.0 writes. Stops re-litigation of rejected features.
+- **CONTEXT.md inline-sharpen + ADR 3-criteria gate** — `journal` v0.4.0 only opens an ADR when sum ≥ 11 + each axis ≥ 3.
+- **Agent Brief durability** — `context-pack` v0.2.0 regex smell tests block stale paths/line numbers.
+- **Design-It-Twice mode** — `brainstorm` v0.6.0 with constraint-pinned parallel subagents + diversity score gate.
+- **Zoom-out + explore-first micro-utilities** — `scout` v0.4.0 listens for `agent.stuck`; `ba` Step 2.0 HARD-GATE requires tool-call evidence.
 
 ### Previous (v2.13.0 — Script Contract + Media Pack)
 

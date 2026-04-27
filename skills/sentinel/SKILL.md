@@ -1,6 +1,6 @@
 ---
 name: sentinel
-description: Automated security gatekeeper. Blocks unsafe code before commit — secret scanning, OWASP top 10, dependency audit, permission checks. A GATE, not a suggestion.
+description: "Automated security gatekeeper. Blocks unsafe code before commit — secret scanning, OWASP top 10, dependency audit, permission checks. A GATE, not a suggestion."
 metadata:
   author: runedev
   version: "1.0.0"

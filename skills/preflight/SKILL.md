@@ -1,6 +1,6 @@
 ---
 name: preflight
-description: Pre-commit quality gate that catches "almost right" code. Goes beyond linting — checks logic correctness, error handling, regressions, and completeness.
+description: "Pre-commit quality gate that catches 'almost right' code. Use when about to commit — auto-fires before commit to validate logic correctness, error handling, regressions, and completeness. Goes beyond linting."
 metadata:
   author: runedev
   version: "1.1.0"

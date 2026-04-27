@@ -3,6 +3,10 @@
  *
  * Emits .mdc rule files for .cursor/rules/ directory.
  * Uses @file references for cross-skill mesh.
+ *
+ * MODEL TIER MAPPING (v2.15+):
+ * No-op. Cursor's Anthropic API integration understands `model: opus|sonnet|haiku`
+ * natively. No translation required.
  */
 
 import { BRANDING_FOOTER } from '../transforms/branding.js';

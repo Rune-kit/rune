@@ -1,6 +1,6 @@
 ---
 name: ba
-description: Business Analyst agent. Deeply understands user requirements before any planning or coding begins. Asks probing questions, identifies hidden requirements, maps stakeholders, defines scope boundaries, and produces a structured Requirements Document that plan and cook consume.
+description: "Business Analyst agent. Use when starting a new feature requiring requirements elicitation BEFORE plan or cook. Asks probing questions, identifies hidden requirements, maps stakeholders, defines scope boundaries, and produces a structured Requirements Document that plan and cook consume."
 metadata:
   author: runedev
   version: "0.11.0"
