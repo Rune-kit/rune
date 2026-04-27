@@ -8,7 +8,7 @@ metadata:
   model: sonnet
   group: development
   tools: "Read, Write, Edit, Bash, Glob, Grep"
-  emit: code.changed
+  emit: code.changed, agent.stuck
   listen: bug.diagnosed, review.issues, preflight.blocked, security.blocked
 ---
 
@@ -142,6 +142,7 @@ When fix is called repeatedly (e.g., by cook Phase 4, or iterative fix loops), t
 **Thresholds:**
 - **>20% WTF-likelihood**: STOP fixing. Report current state to cook/user with: "Quality decay detected — continued fixes risk introducing more bugs than they resolve. {N} fixes applied, {score}% risk. Recommend: commit current progress, re-assess remaining issues."
 - **Hard cap: 30 fixes per session** — regardless of score. After 30, STOP and report.
+- **2+ consecutive fixes on the same file all failed**: emit `agent.stuck` signal (listened by `scout` zoom-out mode). Receiving agents may zoom out to the surrounding module map to recover bigger-picture context.
 
 **Reset conditions:** WTF-likelihood resets to 0% when:
 - User explicitly says "continue fixing"

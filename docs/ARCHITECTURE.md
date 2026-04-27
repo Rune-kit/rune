@@ -6,7 +6,7 @@
 |-------|------|-------|----------|----------|-------|
 | **L0** | **Router** | **1** | **L1-L3 (routing)** | **Every message** | **Stateless (rule-based)** |
 | L1 | Orchestrators | 5 | L2, L3 | L0, User | Stateful (workflow) |
-| L2 | Workflow Hubs | 29 | L2 (cross-hub), L3 | L1, L2 | Stateful (task) |
+| L2 | Workflow Hubs | 30 | L2 (cross-hub), L3 | L1, L2 | Stateful (task) |
 | L3 | Utilities | 27 | Nothing (pure)* | L1, L2 | Stateless |
 | L4 | Extension Packs | 14 free + 5 pro + 4 business | L3 | L2 (domain match) | Config-based |
 
@@ -195,6 +195,11 @@ Lowercase, dot-separated: `<domain>.<event>` (e.g. `code.changed`, `tests.failed
 | `code.changed` | fix | test, sentinel, review, preflight, verification |
 | `tests.passed` | test | deploy |
 | `tests.failed` | test | debug |
+| `tdd.horizontal.violation` | test | completion-gate, preflight |
+| `architecture.shallow.flagged` | improve-architecture, audit | surgeon, review |
+| `architecture.deletion.passed` | improve-architecture | audit |
+| `outofscope.match` | ba | review-intake, cook, plan |
+| `agent.stuck` | fix, debug | scout |
 | `security.passed` | sentinel | deploy |
 | `security.blocked` | sentinel | fix, plan |
 | `review.complete` | review | cook |

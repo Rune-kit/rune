@@ -361,12 +361,12 @@ If the coder model needs info from other phases, it's in the Cross-Phase Context
 
 1. Mark Phase 3 as `in_progress`
 2. **Eval definitions** (Full/Critical rigor only): Before writing tests, define capability evals (pass@k) and regression evals (pass^k) in `.rune/evals/<feature>.md`. Capability evals test "can the system do this new thing?" — regression evals test "did we break existing behavior?" Skip for Fast/Standard rigor levels.
-3. Write test files based on the plan — cover primary use case + edge cases; tests MUST be runnable
+3. Write ONE test for the next behavior — vertical slicing required, see `rune:test` `references/vertical-tdd.md`. Bulk-writing tests = horizontal violation, blocks Phase 4
 4. **Python async pre-check** (if async-first Python flagged in Phase 1): verify `pytest-asyncio` is installed and `asyncio_mode = "auto"` is in `pyproject.toml` — if missing, warn user before writing async tests
-5. Run tests to verify they FAIL — expected: RED because implementation doesn't exist yet
-6. Mark Phase 3 as `completed`
+5. Run the test to verify it FAILS — expected: RED because implementation doesn't exist yet
+6. Mark Phase 3 as `completed` (one cycle); Phase 4 implements that one cycle, then loop returns here for the next test
 
-**Gate**: Tests MUST exist and MUST fail. If tests pass without implementation → tests are wrong, rewrite them.
+**Gate**: Test MUST exist and MUST fail. If test passes without implementation → test is wrong, rewrite. If 2+ tests staged before any GREEN → `tdd.horizontal.violation` signal, unwind to one test.
 
 ## Phase 4: IMPLEMENT (TDD Green)
 

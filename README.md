@@ -83,13 +83,24 @@ _Methodology: Claude Code CLI headless mode (`claude -p --output-format json`), 
 
 ---
 
-## What's New (v2.13.0 — Script Contract + Media Pack)
+## What's New (v2.14.0 — Deep Modules)
 
-- **`@rune-pro/media` pack v1.0.0** — new Pro pack: raster image generation across 5 providers (Codex CLI, DALL-E, Replicate, Stability AI, local SD), prompt engineering with 4-gate safety check (trademark, public-figure, prompt-injection, uncanny-precondition), batch asset pipeline with multi-resolution variants + WebP/AVIF conversion + EXIF strip. Fills the raster gap left by `asset-creator` (SVG/HTML only) and `video-creator` (planning only).
-- **`sentinel-env` v0.3.0** — 9-tier binary detection for hard-dependency checks. Catches desktop-app bundles (macOS `.app`), npm-global on Windows (PATH oversight), platform release archives. Eliminates the "binary installed but not detected" failure class.
-- **`skill-forge` v1.8.0** — new Phase 5.25 "Script Contract" — helper scripts must follow stdout=paths / stderr=diagnostics / `--json` opt-in / `--debug` opt-in pattern, implement semantic exit codes (including `4` timeout-partial vs `124` timeout-zero), honor OpenClaw artifact-directory fallback chain. HARD-GATE on pre-ship verification.
-- **OpenClaw adapter** — `generateManifest` now declares `artifactConvention` (output-dir fallback order, output contract, exit-code vocabulary). Formalizes the de-facto in-the-wild convention from [codex-imagen](https://github.com/darkamenosa/codex-imagen).
-- **Skill-count scaling** — OpenClaw manifest description now scales with actual skill count rather than hardcoded.
+- **`improve-architecture` skill (NEW L2, opus)** — surfaces deepening opportunities with controlled vocabulary (Module / Interface / Implementation / Depth / Seam / Adapter / Leverage / Locality), numeric depth-leverage-locality scoring (1–5 each), 4 dependency categories that drive test strategy, and structured proposal payloads `surgeon` consumes programmatically. Ban-listed aliases ("boundary", "component", "service", "layer") enforced by compiler test.
+- **TDD vertical-slicing HARD-GATE** — `test` v1.3.0 catches "horizontal slicing" (5 tests written before any GREEN) with a `bulk_test_count <= 1` rule, mandates commit-pair audit trail (`test:` + `feat:` per cycle) verified by `completion-gate`, flags shape-words in test names ("returns", "has property", "is defined") as candidates for behavior-verb rewrite.
+- **`.out-of-scope/` knowledge base** — `ba` v0.11.0 reads it on intake (lexical similarity matching, ≥0.8 confidence surfaces prior rejections), `review-intake` v1.2.0 writes/appends it on every OUT OF SCOPE verdict. Stops the "agent re-litigates a rejected feature next session" failure mode. YAML frontmatter for machine parsing + Markdown body for humans.
+- **CONTEXT.md inline-sharpen + ADR 3-criteria gate** — `ba` builds the project glossary as terms emerge; cross-references user assertions against the codebase via grep before recording. `journal` v0.4.0 only opens an ADR when `reversibility + surprisingness + tradeoff_strength >= 11` AND each axis ≥ 3, with a counter-test (rejected alternative) that can't be faked. Filename includes the score: `ADR-007-postgres-write-model-s13.md`.
+- **Agent Brief durability** — `context-pack` v0.2.0 adds mandatory `### Out of scope` and `### Type Surface (durable)` sections, runs regex smell tests pre-emit (BLOCK on file:line / "line N" / narrative paths; WARN on bare `src/` mentions), enforces behavioral-verb whitelist on Acceptance Criteria. Stops handoff briefs from rotting when files get renamed.
+- **Design-It-Twice mode** — `brainstorm` v0.6.0 spawns 3-4 parallel subagents, each pinned to one constraint (minimize / maximize-flexibility / optimize-common-case / ports-and-adapters), computes diversity score across feature vectors (Jaccard-based, floor 0.4), re-spawns once if too similar, presents sequentially with an opinionated recommendation. "It depends" is BLOCKED.
+- **Zoom-out + explore-first micro-utilities** — `scout` v0.4.0 listens for `agent.stuck` (emitted by `fix` after 2 failed attempts and `debug` after 3 disproved hypotheses), produces a 3-layer Mermaid map (target / siblings / callers, capped at 8 each). `ba` v0.11.0 explore-first HARD-GATE: every elicitation question requires prior tool-call evidence (Read/Glob/Grep) — no more asking "what stack?" when `package.json` answers it.
+- **5 new mesh signals** — `tdd.horizontal.violation`, `architecture.shallow.flagged`, `architecture.deletion.passed`, `outofscope.match`, `agent.stuck`.
+- **1,260 tests** — +81 from v2.13.0 across 7 new test files covering schema validation, vocabulary discipline, ADR scoring, smell-test regex, diversity formula, zoom-out output.
+
+### Previous (v2.13.0 — Script Contract + Media Pack)
+
+- **`@rune-pro/media` pack v1.0.0** — new Pro pack: raster image generation across 5 providers (Codex CLI, DALL-E, Replicate, Stability AI, local SD), prompt engineering with 4-gate safety check (trademark, public-figure, prompt-injection, uncanny-precondition), batch asset pipeline with multi-resolution variants + WebP/AVIF conversion + EXIF strip.
+- **`sentinel-env` v0.3.0** — 9-tier binary detection for hard-dependency checks.
+- **`skill-forge` v1.8.0** — new Phase 5.25 "Script Contract" — helper scripts must follow stdout=paths / stderr=diagnostics / `--json` opt-in / semantic exit codes. HARD-GATE on pre-ship verification.
+- **OpenClaw adapter** — `generateManifest` now declares `artifactConvention`.
 
 ### Previous (v2.12.0 — Auto-Discipline)
 

@@ -3,11 +3,12 @@ name: review-intake
 description: Use when receiving code review feedback, PR comments, or external suggestions before implementing any changes. Prevents blind implementation, enforces verification-first discipline.
 metadata:
   author: runedev
-  version: "1.1.0"
+  version: "1.2.0"
   layer: L2
   model: sonnet
   group: quality
-  tools: "Read, Glob, Grep"
+  tools: "Read, Write, Edit, Glob, Grep"
+  listen: outofscope.match
 ---
 
 # review-intake
@@ -137,6 +138,24 @@ gh api repos/{owner}/{repo}/pulls/{pr}/comments/{id}/replies \
   -f body="Fixed — [description]"
 ```
 
+### Phase 4.5 — Rejection KB Write (when verdict = OUT OF SCOPE)
+
+For every item with verdict `OUT OF SCOPE`, write a durable record to `.out-of-scope/`. Oral-only rejections leave no trace and force re-litigation in future sessions.
+
+<HARD-GATE>
+Every OUT OF SCOPE verdict MUST produce a `.out-of-scope/<slug>.md` file (or append to an existing one).
+A rejection without a written record is a rejection that didn't happen.
+</HARD-GATE>
+
+**Procedure**:
+
+1. Generate `slug` from the rejected concept (kebab-case, lowercase, max 40 chars, recognizable without opening the file).
+2. Lexical-similarity check: `Glob` `.out-of-scope/*.md`, parse each frontmatter's `concept` + `aliases`, compute overlap with the new slug's tokens. If any existing concept has ≥0.7 overlap → APPEND to that file's `prior_requests` list instead of creating a new one.
+3. If new file: write the format from [`ba/references/out-of-scope-format.md`](../ba/references/out-of-scope-format.md) — YAML frontmatter (concept / aliases / decision: rejected / rejected_at / rejected_by: review-intake / prior_requests / revisit_if) + Markdown body (concept name, "Why out of scope" reasoning, "What would change our mind" signals).
+4. The reasoning MUST be substantive — not "we don't want this" but *why*. Reference project scope, technical constraints, or strategic decisions. Reject deferrals ("we're busy") — those don't belong here.
+
+Only **enhancement** rejections produce `.out-of-scope/` entries. Bug rejections (won't fix because already fixed / not reproducible / not a bug) get a comment on the issue, not a KB file.
+
 ### Phase 6 — IMPLEMENT
 
 Execute in priority order: P0 → P1 → P2 → P3 → P4.
@@ -223,6 +242,9 @@ How to push back:
 | Implementing 4/6 items, leaving 2 unclear | HIGH | HARD-GATE: all-or-nothing comprehension |
 | Performative agreement masking misunderstanding | MEDIUM | Banned phrases list + restate-in-own-words requirement |
 | Fixing tests instead of code to make review pass | HIGH | Defer to `fix` constraints: fix CODE, not TESTS |
+| OUT OF SCOPE verdict with no `.out-of-scope/` file written | HIGH | Phase 4.5 HARD-GATE — oral-only rejections force re-litigation in future sessions |
+| Writing a deferral ("busy this quarter") to `.out-of-scope/` | MEDIUM | Deferrals belong in backlog, not the rejection KB. KB entries must cite durable reasons (scope, tech constraint, strategy) |
+| Creating duplicate `.out-of-scope/` files for the same concept | MEDIUM | Lexical-similarity gate (≥0.7 overlap) — append to existing file's `prior_requests` instead of duplicating |
 
 ## Done When
 
@@ -231,6 +253,7 @@ How to push back:
 - Verdicts assigned (correct/pushback/yagni/defer)
 - Approved items implemented in priority order
 - Tests pass after each individual fix
+- Every OUT OF SCOPE verdict has produced a `.out-of-scope/<slug>.md` file (new or appended)
 - Review Intake Report emitted
 
 ## Returns

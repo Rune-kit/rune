@@ -3,12 +3,13 @@ name: scout
 description: "Fast codebase scanner. Use when any skill needs codebase context. Finds files, patterns, dependencies, project structure. Pure read-only — never modifies files."
 metadata:
   author: runedev
-  version: "0.3.0"
+  version: "0.4.0"
   layer: L2
   model: haiku
   group: creation
   tools: "Read, Glob, Grep"
   emit: codebase.scanned
+  listen: agent.stuck
 ---
 
 # scout
@@ -117,6 +118,36 @@ Scout's default is "max 10 file reads" — but the real question is whether addi
 3. Find existing tests with `Glob`: `**/*.test.*`, `**/*.spec.*`, `**/test_*`
 4. Determine test framework: `jest.config.*`, `vitest.config.*`, `pytest.ini`
 
+### Phase 4.5: Zoom-Out Mode
+
+Triggered by `mode="zoom-out"` from the caller, OR auto-triggered by listening on `agent.stuck` signal (emitted by `fix` after 2+ failed attempts on the same file, or by `debug` after 3+ disproved hypothesis cycles).
+
+When activated, scout produces a 3-layer ascent map:
+
+| Layer | What it includes | Cap |
+|-------|------------------|-----|
+| L0 (target) | The stuck file's symbols + immediate imports | unlimited |
+| L1 (siblings) | Files in the same directory + their public exports | 8 files |
+| L2 (callers/neighbors) | Modules that import L0's exports + neighboring modules in the same domain | 8 modules |
+
+Output is a Mermaid diagram, NOT just a file list — visual is the value-add when an agent is stuck.
+
+```mermaid
+graph LR
+  target[src/auth/login.ts]:::stuck
+  target --> dep1[crypto.compare]
+  target --> dep2[db.users.get]
+  caller1[src/routes/auth.ts] --> target
+  caller2[src/middleware/protect.ts] --> target
+  sibling1[src/auth/refresh.ts] -.same-dir.- target
+  sibling2[src/auth/logout.ts] -.same-dir.- target
+  classDef stuck fill:#ff6b6b
+```
+
+**Bounded** — L2 ascent caps at 8 modules. If exceeded, collapse to "showing top 8 by import-frequency". Never blow past the cap silently.
+
+After emitting the map, scout returns to its normal Phase 6 (Generate Report) with the zoom-out section as the primary output.
+
 ### Phase 5: Codebase Map (Optional)
 
 When called by `cook`, `team`, `onboard`, or `autopsy` (skills that need full project understanding), generate a structured codebase map:
@@ -204,6 +235,7 @@ None — pure scanner using Glob, Grep, Read, and Bash tools directly. Does not 
 - `docs` (L2): scan codebase structure for documentation generation
 - `logic-guardian` (L2): scan business logic modules for protection mapping
 - `adversary` (L2): scan codebase before red-team analysis
+- `improve-architecture` (L2): re-scan target module + callers when input context is stale
 
 ## Output Format
 

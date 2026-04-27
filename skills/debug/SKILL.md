@@ -8,7 +8,7 @@ metadata:
   model: sonnet
   group: development
   tools: "Read, Bash, Glob, Grep"
-  emit: bug.diagnosed
+  emit: bug.diagnosed, agent.stuck
   listen: tests.failed
 ---
 
@@ -21,6 +21,7 @@ Root cause analysis ONLY. Debug investigates — it does NOT fix. It traces erro
 <HARD-GATE>
 Do NOT fix the code. Debug investigates only. Any code change is out of scope.
 If root cause cannot be identified after 3 hypothesis cycles:
+- Emit `agent.stuck` signal — `scout` zoom-out mode may surface the broader module map that's hiding the root cause
 - Escalate to `rune:problem-solver` for structured 5-Whys or Fishbone analysis
 - Or escalate to `rune:sequential-thinking` for multi-variable analysis
 - Report escalation in the Debug Report with all evidence gathered so far

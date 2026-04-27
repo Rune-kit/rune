@@ -26,16 +26,31 @@ Incremental refactorer that operates on ONE module per session using proven refa
 ## Called By (inbound)
 
 - `rescue` (L1): Phase 2-N SURGERY — one surgery session per module
+- `improve-architecture` (L2): hand-off with proposal payload (depth/leverage/locality target + adapter list) — surgeon executes the deepening
 
 ## Calls (outbound)
 
 - `scout` (L2): understand module dependencies, consumers, and blast radius
 - `safeguard` (L2): if untested module found, build safety net first
+- `improve-architecture` (L2): if no proposal payload provided, request one before refactoring
 - `debug` (L2): when refactoring reveals hidden bugs
 - `fix` (L2): apply refactoring changes
-- `test` (L2): verify after each change
+- `test` (L2): verify after each change (REPLACE old shallow-module tests with deepened-interface tests, don't layer)
 - `review` (L2): quality check on refactored code
 - `journal` (L3): update rescue progress
+
+## Consuming proposal payloads
+
+When invoked by `improve-architecture`, surgeon receives a proposal payload (YAML) containing:
+- `module_path` — target
+- `current` / `target` scores (depth/leverage/locality)
+- `dependency_category` — informs test strategy
+- `suggested_seam` — name of the deepened interface
+- `adapters_planned` — at least 2 adapters means a real seam; surgeon implements all listed
+- `tests_to_replace` — old shallow-module tests; DELETE in same commit as new tests land
+- `tests_to_write_new` — at the deepened interface
+
+Honor the payload. If the payload's `adapters_planned` lists only 1 adapter, push back — single-adapter seam is indirection.
 
 ## Execution Steps
 

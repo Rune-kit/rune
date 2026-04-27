@@ -3,6 +3,35 @@
 All notable changes to Rune are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.14.0] - 2026-04-27
+
+"Deep Modules" — interface as test surface. Adds the `improve-architecture` skill with controlled vocabulary + numeric depth/leverage/locality scoring, hardens TDD against horizontal slicing, persists rejected feature requests in `.out-of-scope/`, makes context-pack handoffs durable, forces real diversity in brainstorm parallel exploration, and adds zoom-out + explore-first micro-utilities.
+
+### Added
+
+- **`improve-architecture` skill v0.1.0** (NEW L2, opus) — surfaces deepening opportunities with controlled vocabulary (Module/Interface/Implementation/Depth/Seam/Adapter/Leverage/Locality), numeric scoring (1-5 per axis), 4 dependency categories (in-process / local-substitutable / remote-owned / true-external), deletion-test verdicts (vanish/concentrate/redistribute), and structured YAML proposal payloads for `surgeon` to consume. 5 reference docs (language, deepening, interface-design, scoring, evals).
+- **`test` v1.3.0** — Vertical Slicing HARD-GATE blocks horizontal-test-batching (`bulk_test_count <= 1` enforced), commit-pair audit trail (`test:` + `feat:` per cycle) verified by completion-gate, shape-test smell detector (banned: returns/has property/is defined; required: accepts/rejects/produces/...). 3 new reference docs (vertical-tdd, mocking-policy, test-quality), 5 evals.
+- **`ba` v0.11.0** — Step 1.5 Out-of-Scope Match Check (≥0.8 confidence surfaces prior rejection), Step 2.0 Explore-First HARD-GATE (questions require prior tool-call evidence), Step 2.6 CONTEXT.md Cross-Reference Gate (grep verifies user assertions before recording), Step 7.5 Glossary Sharpen with conflict gate (≥0.7 overlap → user choice). 3 new reference docs (out-of-scope-format, context-md-format, explore-first).
+- **`journal` v0.4.0** — 3-criteria ADR scoring gate (reversibility + surprisingness + tradeoff_strength, sum >= 11, each axis >= 3), counter-test (rejected alternative required), score-bearing filename pattern `ADR-NNN-<slug>-s<score>.md`. 1 new reference doc (adr-criteria).
+- **`review-intake` v1.2.0** — Phase 4.5 Rejection KB Write — every OUT OF SCOPE verdict produces a durable `.out-of-scope/<concept>.md` (or appends to existing); lexical-similarity gate prevents duplicate concepts.
+- **`context-pack` v0.2.0** — v2 brief template with mandatory `### Out of scope` and `### Type Surface (durable)` sections, Phase 4.5 regex smell tests (BLOCK on file:line / "line N" / narrative paths; WARN on bare path mentions), behavioral-verb whitelist for Acceptance Criteria. 2 new reference docs (durability-rules, brief-template), 5 evals.
+- **`brainstorm` v0.6.0** — Design-It-Twice mode for parallel-subagent interface exploration, 4 standard constraints (C1 minimize / C2 maximize-flexibility / C3 optimize-common-case / C4 ports-and-adapters), diversity-score gate (Jaccard over feature vectors, floor 0.4, threshold 0.6), opt-in hybrid synthesis. 1 new reference doc (design-it-twice).
+- **`scout` v0.4.0** — Phase 4.5 Zoom-Out Mode triggered by `agent.stuck` signal; 3-layer ascent (target / siblings / callers) capped at 8 modules per layer, output is Mermaid map.
+- **`fix` v1.0.x** — emits `agent.stuck` after 2+ consecutive same-file fix failures.
+- **`debug` v1.1.x** — emits `agent.stuck` after 3 disproved hypothesis cycles.
+- **`surgeon`** — Calls/Called By updated to consume `improve-architecture.proposal` payloads; replace-don't-layer rule for tests after deepening.
+- **5 new mesh signals** registered in Signal Catalog: `tdd.horizontal.violation`, `architecture.shallow.flagged`, `architecture.deletion.passed`, `outofscope.match`, `agent.stuck`.
+
+### Tests
+
+- +81 tests across 6 new test files: `improve-architecture.test.js` (17), `out-of-scope-format.test.js` (9), `adr-scoring.test.js` (10), `context-md-format.test.js` (7), `context-pack-smell-tests.test.js` (13), `diversity-score.test.js` (11), `zoom-out-output.test.js` (8). Existing 1,179 tests remain green. Total: 1,260.
+
+### Docs
+
+- `docs/ARCHITECTURE.md` — Signal Catalog +5, skill counts updated (L2 29 → 30, total 62 → 63), Project Artifacts section adds `.out-of-scope/`, `CONTEXT.md`, score-bearing ADR filenames.
+- `CLAUDE.md` — skill counts updated, improve-architecture added to L2 list.
+- `README.md` — What's New section for v2.14.0.
+
 ## [2.13.0] - 2026-04-23
 
 Script Contract + @rune-pro/media pack. Formalizes the helper-script output contract across the ecosystem, adds 9-tier binary detection to sentinel-env, and ships the long-planned Media pack closing the raster-image gap in Pro.

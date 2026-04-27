@@ -3,7 +3,7 @@ name: journal
 description: Persistent state tracking and Architecture Decision Records across sessions. Use when recording a decision, ADR, or progress that must survive session boundaries. Manages progress state, module health, dependency graphs, and ADRs for any workflow.
 metadata:
   author: runedev
-  version: "0.3.0"
+  version: "0.4.0"
   layer: L3
   model: haiku
   group: state
@@ -38,6 +38,7 @@ None — pure L3 state management utility.
 - `skill-forge` (L2): record skill creation decisions and rationale
 - `graft` (L2): auto-log graft operations — source URL, mode, challenge score, files changed
 - `retro` (L2): record retrospective insights and decisions
+- `improve-architecture` (L2): record an ADR when the user rejects a deepening candidate with a load-bearing reason
 
 ## Files Managed
 
@@ -82,11 +83,32 @@ Use `Write` to save the updated `module-status.json`.
 
 Use `Edit` to update the relevant lines in `RESCUE-STATE.md` (current phase, current module, counts of completed vs pending).
 
-### Step 3 — Record decisions
+### Step 3 — Record decisions (gated by 3-criteria scoring)
 
 For each architectural decision or trade-off made during this session (applies to any workflow — feature development, deploy, rescue, audit):
 
-1. Generate an ADR filename: `.rune/adr/ADR-[NNN]-[slug].md` where NNN is the next sequential number
+#### Step 3.0 — Score the decision
+
+Compute three numeric scores (1–5 each) before opening any ADR file. See [references/adr-criteria.md](references/adr-criteria.md) for full rubric.
+
+| Axis | What it measures |
+|------|------------------|
+| `reversibility` | 1 = next-sprint reversible; 5 = practically irreversible |
+| `surprisingness` | 1 = obvious to any reader; 5 = future engineer would "fix" without context |
+| `tradeoff_strength` | 1 = no real alternative; 5 = genuinely difficult choice |
+
+```
+score = reversibility + surprisingness + tradeoff_strength    # range 3–15
+open_adr = (score >= 11) AND (each axis >= 3)
+```
+
+#### Step 3.1 — Counter-test (anti-fake)
+
+Before writing the ADR, fill in **at least one rejected alternative + why**. If no credible alternative was actually considered, the decision wasn't a real tradeoff — re-classify as a **convention** (record in CLAUDE.md or comment, not in `.rune/adr/`) and skip ADR creation.
+
+#### Step 3.2 — Open the ADR (if gate passed)
+
+1. Generate filename including the score: `.rune/adr/ADR-[NNN]-[slug]-s[score].md` where NNN is sequential and `score` is the 3–15 sum (e.g., `ADR-007-postgres-write-model-s13.md`)
 2. Use `Write` to create the ADR file with this format:
 
 ```markdown
@@ -96,6 +118,7 @@ For each architectural decision or trade-off made during this session (applies t
 **Status**: Accepted
 **Workflow**: [rescue | cook | deploy | audit | other]
 **Scope**: [affected module, feature, or system area]
+**Score**: reversibility=[1-5] / surprisingness=[1-5] / tradeoff_strength=[1-5] / total=[3-15]
 
 ## Context
 [Why this decision was needed — what problem or trade-off prompted it]
@@ -109,8 +132,8 @@ For each architectural decision or trade-off made during this session (applies t
 ## Consequences
 [Impact on files/modules/future work — include rollback path if relevant]
 
-## Rejected Alternatives
-[List what was considered but NOT chosen, and why. This prevents future sessions from re-visiting dead ends.]
+## Rejected Alternatives (counter-test — MUST have at least one)
+[List what was considered but NOT chosen, and why. This prevents future sessions from re-visiting dead ends. If you cannot fill in this section, the decision wasn't a real tradeoff — DO NOT open this ADR.]
 - **[Alternative A]**: Rejected because [specific reason — constraint, performance, complexity]
 - **[Alternative B]**: Rejected because [specific reason]. May reconsider if [condition changes].
 ```
@@ -226,10 +249,14 @@ Known failure modes for this skill. Check these before declaring done.
 | RESCUE-STATE.md initialized without content when called from non-rescue workflows | MEDIUM | If caller is not rescue/surgeon, skip RESCUE-STATE.md initialization — use progress.md instead |
 | Overwriting human-written ADR content on re-run | CRITICAL | MUST check if ADR-[NNN].md exists before writing — never overwrite, increment NNN |
 | Empty ADR Rationale field ("decided to use X") | MEDIUM | Constraint 1 blocks this — re-prompt for rationale before writing |
+| Opening an ADR for a decision that scores below threshold (sum < 11 or any axis < 3) | HIGH | Step 3.0 gate — if score fails, classify as "convention" and record in CLAUDE.md instead |
+| Score inflation to reach threshold | MEDIUM | Step 3.1 counter-test — must name a credible rejected alternative; cannot be faked |
+| ADR for a deferral ("we'll do X later") | MEDIUM | Deferrals are not decisions; route to backlog or `.out-of-scope/` (if rejection) |
 
 ## Done When
 
-- All decisions from the session recorded as ADR files with rationale
+- All decisions from the session that pass the 3-criteria gate (sum >= 11, each axis >= 3, counter-test filled) recorded as ADR files
+- Decisions failing the gate classified as conventions (logged in CLAUDE.md or code comment, NOT in `.rune/adr/`)
 - All identified risks recorded as RISK files with severity, mitigation, and trigger conditions
 - Progress state updated (module status, phase, or deploy event as appropriate)
 - Dependency graph updated if module relationships changed

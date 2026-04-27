@@ -3,7 +3,7 @@ name: test
 description: "TDD test writer. Writes failing tests FIRST (red), then verifies they pass after implementation (green). Covers unit, integration, and e2e tests."
 metadata:
   author: runedev
-  version: "1.2.0"
+  version: "1.3.0"
   layer: L2
   model: sonnet
   group: development
@@ -32,6 +32,15 @@ ROLE BOUNDARY: Test writes TEST FILES only. NEVER modify source/implementation f
 - Do NOT add missing exports to source files
 - If source needs changes → hand off to `rune:fix`. Test's job ends at the test file.
 This separation ensures test never writes code biased toward passing its own tests.
+
+VERTICAL SLICING (Iron Law extension): one test → GREEN → one test → GREEN. Never bulk.
+- bulk_test_count MUST stay <= 1 before the first GREEN in a session
+- After each GREEN, bulk_test_count resets to 0; writing 2+ tests before the next GREEN = HORIZONTAL VIOLATION
+- Each cycle MUST emit a commit pair: `test(scope): <behavior>` + `feat(scope): <behavior>`
+- Claim "I did TDD" is verified by `completion-gate` against `git log --oneline` — no paired commits = REJECTED
+- Horizontal slicing produces tests-of-imagination, not tests-of-behavior. See [references/vertical-tdd.md](references/vertical-tdd.md).
+- Emit signal `tdd.horizontal.violation` when triggered; preflight blocks merge until cycles are unwound.
+Exceptions (narrow, must be documented in test header): retrofitting characterization tests for legacy untested code; spec-driven scaffolding where the contract is external (OpenAPI, wire protocol).
 </HARD-GATE>
 
 ## Instructions
@@ -118,6 +127,34 @@ When writing tests for async Python code:
    - Tests that `pass` without `await` — they run but don't execute the async path
    - Missing `pytest-asyncio` makes `async def test_*` silently pass as empty coroutines
    - Mixing sync and async fixtures can cause event loop errors
+
+### Phase 3.5: Cycle Discipline (Vertical Slicing Gate)
+
+Before running the new test in Phase 4, count what's about to be added to the working tree:
+
+```
+bulk_test_count = (test files staged + test files unstaged but new) since the last GREEN commit
+```
+
+**Gate**: `bulk_test_count` MUST be exactly 1.
+
+| State | Action |
+|-------|--------|
+| `bulk_test_count == 1` | Proceed to Phase 4 (run RED). |
+| `bulk_test_count >= 2` AND no prior GREEN this session | HORIZONTAL VIOLATION — pause, keep one test, defer the rest. |
+| `bulk_test_count >= 2` AND last GREEN exists in `git log` | HORIZONTAL VIOLATION — same. |
+| `bulk_test_count == 0` | No test to run; this phase is a no-op. |
+
+**Cycle audit log** — append to TEST.md (or create) one line per cycle:
+
+```
+cycle 1 — RED: test_validates_email_rejects_empty | GREEN: validateEmail handles empty | commit: 4f3a1c
+cycle 2 — RED: test_validates_email_requires_at_sign | GREEN: validateEmail checks @ | commit: a92e0d
+```
+
+The audit log is the receipt. `completion-gate` reads it.
+
+When the violation fires, do NOT delete tests automatically — surface to the calling agent: "horizontal slicing detected (N tests before first GREEN). Recommend keeping test K, deferring N-1 to subsequent cycles."
 
 ### Phase 4: Run Tests — Verify They FAIL (RED)
 
@@ -350,6 +387,8 @@ Save eval files as `skills/<name>/evals.md`. Each eval is a numbered scenario (E
 | "It's about spirit not ritual" | Violating the letter IS violating the spirit. Write the test first. |
 | "I mentally tested it" | Mental testing is not testing. Run the command, show the output. |
 | "This is different because..." | It's not. Write the test first. |
+| "I'll batch the tests since they're related" | Batched tests = tests of imagination. Each cycle reacts to the prior. Write one, GREEN it, then the next. |
+| "All five tests are already written, let me just review them with you" | Same fallacy as code-before-test. Keep the first one, defer the others to subsequent cycles. |
 
 ## Advanced: Oracle-Injection E2E Testing
 
@@ -466,6 +505,8 @@ If you catch yourself with ANY of these, delete implementation code and restart 
 8. MUST delete implementation code written before tests — Iron Law, no exceptions
 9. MUST show RED phase output (actual failure) — "I confirmed they fail" without output is REJECTED
 10. MUST NOT modify source/implementation files — test writes test files ONLY, hand off source changes to rune:fix
+11. MUST NOT write a 2nd test until the 1st test reaches GREEN — vertical slicing only, bulk_test_count <= 1 enforced
+12. MUST emit commit pair per cycle (`test:` then `feat:`) — git log is the audit trail for "I did TDD" claims
 
 ## Mesh Gates
 
@@ -590,6 +631,10 @@ Known failure modes for this skill. Check these before declaring done.
 | Introducing a new test framework instead of using existing one | MEDIUM | Constraint 6: detect framework first, use project's existing one always |
 | Modifying source files to make tests work | HIGH | Role boundary: test writes test files ONLY — source changes go to rune:fix |
 | Test-only methods leaking into production code | MEDIUM | Anti-Pattern 2 gate: if method only called by tests → move to test utilities |
+| Bulk test writing before first GREEN (horizontal slicing) | CRITICAL | Phase 3.5 gate — bulk_test_count <= 1, defer additional tests to subsequent cycles |
+| Test names describe shape (`returns boolean`, `has property`) instead of behavior | MEDIUM | Scan names for shape-words; rewrite to behavior verbs (accepts/rejects/produces). See [references/test-quality.md](references/test-quality.md) |
+| Mocking internal collaborators in same module | HIGH | System-boundary rule from [references/mocking-policy.md](references/mocking-policy.md) — mock only what you don't own |
+| Layering old shallow-module tests on top of new deepened-interface tests | MEDIUM | After improve-architecture deepens a module, REPLACE tests don't ADD them; one interface = one test surface |
 
 ## Self-Validation
 
@@ -612,6 +657,8 @@ SELF-VALIDATION (run before emitting Test Report):
 - Coverage ≥80% verified via verification
 - Test Report emitted with framework, test count, RED/GREEN status, and coverage
 - Self-Validation: all checks passed
+- Cycle audit trail intact — every RED has a paired GREEN in `git log`, no orphan tests pre-first-GREEN
+- Test names use behavior-words (accepts/rejects/produces/...) not shape-words (returns/has property/is defined)
 
 ## Cost Profile
 

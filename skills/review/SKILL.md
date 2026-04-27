@@ -60,6 +60,7 @@ Every review MUST cite at least one specific concern, suggestion, or explicit ap
 - `review` → `test` — untested edge case found → test writes it
 - `review` → `fix` — bug found during review → fix applies correction
 - `review` → `scout` — needs more context → scout finds related code
+- `review` → `improve-architecture` — when reviewer flag mentions "shallow", "wrapper", "indirection", or pass-through pattern
 - `review` ← `fix` — complex fix requests self-review
 - `review` → `sentinel` — security-critical code → sentinel deep scan
 

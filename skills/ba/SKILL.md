@@ -3,11 +3,12 @@ name: ba
 description: Business Analyst agent. Deeply understands user requirements before any planning or coding begins. Asks probing questions, identifies hidden requirements, maps stakeholders, defines scope boundaries, and produces a structured Requirements Document that plan and cook consume.
 metadata:
   author: runedev
-  version: "0.8.0"
+  version: "0.11.0"
   layer: L2
   model: opus
   group: creation
   tools: "Read, Glob, Grep"
+  emit: outofscope.match
 ---
 
 # ba
@@ -71,6 +72,58 @@ If Bug Fix → skip BA, route to cook/debug directly.
 If Refactor → light version (Step 1 + Step 4 only). Skip Steps 2, 2.5, 3, 5, 6.
 
 If existing codebase → invoke `rune:scout` for context before proceeding.
+
+### Step 1.5 — Out-of-Scope Match Check
+
+Before any elicitation, check whether the request matches a concept previously rejected.
+
+1. `Glob` `.out-of-scope/*.md` — if directory absent, skip silently.
+2. For each file, parse YAML frontmatter (`concept`, `aliases`).
+3. Build a token map (lowercased, split on `-` and whitespace).
+4. Tokenize the user's request the same way.
+5. Compute lexical overlap per concept; keep the top match's `confidence` (0.0–1.0).
+
+**Action by confidence**:
+
+| Confidence | Verdict | Action |
+|------------|---------|--------|
+| ≥ 0.8 | exact-match | Surface to user: *"This matches a prior rejection (`.out-of-scope/<slug>.md`) — closed because [body's "Why out of scope" first sentence]. Do you still feel the same way?"* Pause for user response before continuing. |
+| 0.5 – 0.79 | similar | Mention inline: *"This is similar to a prior rejection (`<slug>`). Would you like to review it before we proceed?"* Continue regardless of answer. |
+| < 0.5 | no-match | Continue silently, no user-facing mention. |
+
+Emit `outofscope.match` signal with `{concept, confidence, verdict}` so downstream skills (cook, plan) inherit the context.
+
+If verdict is exact-match AND user says "yes I still want it" → record their override reason in the Requirements Document `## Risks` section AND mark `priority_to_revisit: high` in the existing `.out-of-scope/<slug>.md` (do NOT delete the file). The override forces the candidate up the revisit ladder; it doesn't erase the prior decision.
+
+If verdict is exact-match AND user accepts the prior rejection → end the BA session with a one-line summary referencing the file. No further questions.
+
+Format reference: [references/out-of-scope-format.md](references/out-of-scope-format.md).
+
+### Step 2.0 — Explore-First Pre-Check (HARD-GATE)
+
+Before emitting ANY of the 5 elicitation questions, run the 4-item pre-check on each intended question:
+
+1. Is the answer in `package.json` / `pyproject.toml` / `Cargo.toml` / `go.mod` / `pom.xml`?
+2. Is the answer in `README.md` / `CLAUDE.md` / `docs/`?
+3. Is it inferable from file extensions, directory structure, or config files?
+4. Has the user answered it earlier in this conversation?
+
+<HARD-GATE>
+For every question Q the agent intends to ask, there MUST be prior tool-call evidence in the same session:
+- At least 1 Read / Glob / Grep related to Q's domain, OR
+- Explicit declaration: "Q cannot be answered from project artifacts because [specific reason]."
+Without one of these, Q is BLOCKED — re-route to inference.
+</HARD-GATE>
+
+The gate is "tried to infer" — not "must succeed in inferring." If the file genuinely doesn't have the answer, the attempt itself is the gate.
+
+Cache inferred answers in the requirements doc:
+```
+**Inferred from package.json**: TypeScript 5.4, Next.js 14.2, React 18.3
+**Inferred from .github/workflows/**: CI runs on PRs targeting main
+```
+
+Worked examples + edge cases: [references/explore-first.md](references/explore-first.md).
 
 ### Step 2 — Requirement Elicitation (the "5 Questions")
 
@@ -197,6 +250,23 @@ Clarity Score: [100 - ambiguity]%
   Status: ACCEPTABLE (ambiguity 23%) — proceeding with noted gaps
 ```
 
+### Step 2.6 — CONTEXT.md Cross-Reference Gate
+
+After elicitation, before hidden-requirement discovery, scan the user's answers for assertions about *current behavior* — phrasings like "the system X", "the code does X", "we already X", "right now it X".
+
+For each such assertion:
+
+1. `Grep` the codebase for evidence (function names, route handlers, schema definitions matching the asserted behavior).
+2. Compare grep results to the user's claim.
+
+| Outcome | Action |
+|---------|--------|
+| Grep confirms claim | Proceed; record term in CONTEXT.md if domain-relevant |
+| Grep contradicts claim | <HARD-GATE>Surface the conflict immediately. *"You said the system does X, but the code path I see does Y. Which is canonical?"* Pause until resolved.</HARD-GATE> |
+| Grep returns nothing | Note as unverified; ask user for the file/function name; do not record in CONTEXT.md until verified |
+
+This gate prevents the agent from silently transcribing user-asserted behavior that contradicts code — a common source of "the docs say X but the code does Y" drift.
+
 ### Step 3 — Hidden Requirement Discovery
 
 After the 5 questions, analyze for requirements the user DIDN'T mention:
@@ -262,6 +332,7 @@ Run each, label verdict 🟢 pass / 🟡 warn / 🔴 fail:
 | 5 | Dependencies (Step 4) ⊂ Constraints acknowledged (Q5) | Dependency never mentioned in constraints | All deps covered |
 | 6 | NFRs measurable against at least one AC | NFR has no test hook | Every NFR → testable AC |
 | 7 | Hidden requirements (Step 3) resolved in/out | Silent inclusion | User confirmed inclusion or exclusion |
+| 0 | Prior rejection check (Step 1.5) — exact-match resolved with explicit override or session ended | Silent re-litigation of rejected concept | User chose: override (priority bumped) OR accept prior decision (session ends) |
 
 #### Output Format
 
@@ -502,6 +573,23 @@ Derivation rules:
 
 Emit signal to `plan` with paths to all three artifacts. Plan MUST read all three before producing phase files — the triad is the contract.
 
+### Step 7.5 — Glossary Sharpen (CONTEXT.md update)
+
+After the artifact triad is saved, append/update the project glossary `CONTEXT.md` with any domain terms that were sharpened during this session.
+
+1. Determine glossary location:
+   - If `CONTEXT-MAP.md` exists at root → multi-context; pick the right per-context CONTEXT.md
+   - Else if root `CONTEXT.md` exists → use it
+   - Else if any term needs recording → create root `CONTEXT.md` lazily
+   - Else → skip silently (no-op when no terms emerged)
+2. For each new term, add a row to the **Language** table (term, definition, aliases-to-avoid, status).
+3. For each user-asserted relationship, add to the **Relationships** section.
+4. For each ambiguity surfaced during elicitation, add to **Flagged ambiguities**.
+
+**Conflict gate** — if a new term has ≥0.7 token overlap with an existing one, surface to user (merge / rename / keep distinct). NEVER silently re-define an existing term.
+
+Format reference: [references/context-md-format.md](references/context-md-format.md).
+
 ## Output Format
 
 Triad of artifacts under `.rune/features/<feature-name>/`:
@@ -570,6 +658,13 @@ Known failure modes for this skill. Check these before declaring done.
 | Producing only requirements.md, skipping mermaid and tasks.md | HIGH | Step 7 is a triad — plan's contract expects all 3. Sequence diagram is always produced; state machine only if stateful; tasks.md always produced |
 | Mermaid diagram unrelated to actual user stories (decorative only) | MEDIUM | Sequence must trace AC-1.1 of US-1; state machine nodes must map to state-bearing ACs. Auditable by pattern-match |
 | tasks.md as flat list instead of layered | MEDIUM | Derivation rules enforce 1 US → Interface task, 1 rule → Logic + Unit test, 1 AC → Test task, 1 NFR → verification. Skipping layers loses plan's backbone structure |
+| Re-litigating a previously rejected concept without surfacing it | HIGH | Step 1.5 HARD-GATE: scan `.out-of-scope/` first; exact match (≥0.8) MUST be surfaced before elicitation begins |
+| Skipping Step 1.5 because `.out-of-scope/` directory looks empty | MEDIUM | Empty directory is silent-skip OK; directory absent entirely is silent-skip OK; never skip due to "I don't think this matches anything" — let the matcher decide |
+| User asserts behavior; agent records user's version without grep verification | HIGH | Step 2.6 HARD-GATE: every "the system does X" assertion gets grep'd; conflicts surface to user before recording |
+| Silently re-defining an existing CONTEXT.md term | HIGH | Step 7.5 conflict gate: ≥0.7 overlap → user chooses merge/rename/keep-distinct |
+| Auto-creating an empty CONTEXT.md when no terms emerged | LOW | Lazy creation rule: only write when there's a non-trivial term to record |
+| Asking inferable questions ("what stack are you using?") without first checking package.json | HIGH | Step 2.0 HARD-GATE — every question requires prior tool-call evidence (Read/Glob/Grep) or explicit unavailability declaration |
+| Re-asking a question already answered earlier in the conversation | MEDIUM | Step 2.0 check 4 — cache and reuse, never re-ask |
 
 ## Done When
 
@@ -583,6 +678,7 @@ Known failure modes for this skill. Check these before declaring done.
 - Logic Consistency Report produced — 0 🔴 before handoff (🟡 logged as Risks)
 - Tiered recommendations generated (Quick Win / Differentiation / Moat) — skip for Bug Fix/Refactor
 - Artifact triad saved: `requirements.md` + `requirements.mermaid` + `tasks.md`
+- Out-of-scope match check completed (verdict logged: no-match | similar | exact-match-overridden | exact-match-accepted)
 - Handed off to `plan` for implementation planning
 
 ## Cost Profile
