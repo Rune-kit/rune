@@ -5,7 +5,7 @@
 <p align="center">
   <strong>Less skills. Deeper connections.</strong><br>
   A lean, interconnected skill ecosystem for AI coding assistants.<br>
-  62 skills · 215+ mesh connections · 8 platforms · MIT
+  63 skills · 215+ mesh connections · 8 platforms · MIT
 </p>
 
 <p align="center">
@@ -23,7 +23,7 @@
 
 Most skill ecosystems are either **too many isolated skills** (540+ that don't talk to each other) or **rigid pipelines** (A → B → C, if B fails everything stops).
 
-Rune is a **mesh** — 62 skills with 215+ connections across a 5-layer architecture. Skills call each other bidirectionally, forming resilient workflows that adapt when things go wrong.
+Rune is a **mesh** — 63 skills with 215+ connections across a 5-layer architecture. Skills call each other bidirectionally, forming resilient workflows that adapt when things go wrong.
 
 ```
 Pipeline:  A → B → C → D         (B fails = stuck)
@@ -169,7 +169,7 @@ cook ───emit:phase.complete────→ session-bridge
 
 ## What Rune Is (and Isn't)
 
-Rune started as a **Claude Code plugin** and now compiles to **every major AI IDE**. Same 62 skills, same mesh connections, same workflows — zero knowledge loss across platforms.
+Rune started as a **Claude Code plugin** and now compiles to **every major AI IDE**. Same 63 skills, same mesh connections, same workflows — zero knowledge loss across platforms.
 
 | | Rune Provides | Claude Code Provides |
 |---|---|---|
@@ -221,7 +221,7 @@ npx @rune-kit/rune init --platform windsurf
 npx @rune-kit/rune init --platform antigravity
 ```
 
-This compiles all 62 skills into your IDE's rules format. Same knowledge, same workflows.
+This compiles all 63 skills into your IDE's rules format. Same knowledge, same workflows.
 
 ### Platform Comparison
 
@@ -572,7 +572,7 @@ See [docs/MULTI-PLATFORM.md](docs/MULTI-PLATFORM.md) for the full architecture.
 | Doc | What's inside |
 |-----|---------------|
 | [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md) | Your first 5 minutes with Rune — install to first `/rune cook` |
-| [`docs/SKILLS.md`](docs/SKILLS.md) | All 62 skills, searchable by intent and layer |
+| [`docs/SKILLS.md`](docs/SKILLS.md) | All 63 skills, searchable by intent and layer |
 | [`docs/SIGNALS.md`](docs/SIGNALS.md) | Canonical signal inventory — 25 events, emit/listen graph |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | 5-layer mesh architecture reference |
 | [`docs/VISION.md`](docs/VISION.md) | Philosophy — what Rune is and isn't |
@@ -588,7 +588,7 @@ See [docs/MULTI-PLATFORM.md](docs/MULTI-PLATFORM.md) for the full architecture.
 Core Skills:       62 (L0: 1 │ L1: 5 │ L2: 29 │ L3: 27)
 Extension Packs:   14 free + 5 pro + 4 business
 Mesh Connections:  215+ cross-references
-Mesh Signals:      25 signals across 62 skills (emit/listen graph)
+Mesh Signals:      25 signals across 63 skills (emit/listen graph)
 Connections/Skill: 3.4 avg
 Platforms:         8 (Claude Code, Cursor, Windsurf, Antigravity, Codex, OpenCode, OpenClaw, Generic)
 Compiler:          ~1400 LOC (parser + 8 transforms + 8 adapters + CLI)

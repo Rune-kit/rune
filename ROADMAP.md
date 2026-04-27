@@ -1,6 +1,6 @@
 # Rune Roadmap
 
-> Last updated: April 2026 | Version: 2.13.0
+> Last updated: April 2026 | Version: 2.14.0
 
 ---
 
@@ -18,7 +18,7 @@ These principles guide every roadmap decision:
 
 ---
 
-## Current State (v2.13.0 — "Script Contract + Media")
+## Current State (v2.14.0 — "Deep Modules")
 
 | Layer | Count | Status |
 |-------|-------|--------|
