@@ -12,10 +12,12 @@
 
 import assert from 'node:assert';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { describe, test } from 'node:test';
+import { fileURLToPath } from 'node:url';
 
-const SKILLS_DIR = resolve(import.meta.dirname, '../..', 'skills');
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const SKILLS_DIR = resolve(__dirname, '../..', 'skills');
 
 function listSkills() {
   return readdirSync(SKILLS_DIR).filter((name) => {
