@@ -19,7 +19,12 @@ function seedFixture(version, { withRoadmapTitle = true, withMarketplace = true 
   mkdirSync(join(root, '.claude-plugin'), { recursive: true });
   mkdirSync(join(root, 'scripts'), { recursive: true });
 
-  writeFileSync(join(root, 'package.json'), JSON.stringify({ name: '@rune-kit/rune', version }, null, 2));
+  // type: module required so the ESM bump-version.js can be executed from this fixture root
+  // (Node walks up to the nearest package.json; without "type": "module" it treats import as CJS and SyntaxError-s).
+  writeFileSync(
+    join(root, 'package.json'),
+    JSON.stringify({ name: '@rune-kit/rune', version, type: 'module' }, null, 2),
+  );
   writeFileSync(join(root, '.claude-plugin', 'plugin.json'), JSON.stringify({ name: 'rune', version }, null, 2));
   if (withMarketplace) {
     writeFileSync(
