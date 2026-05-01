@@ -4,12 +4,12 @@ description: "Context window management. Auto-triggered when context is filling 
 user-invocable: false
 metadata:
   author: runedev
-  version: "1.1.0"
+  version: "1.2.0"
   layer: L3
   model: haiku
   group: state
   tools: "Read, Glob, Grep"
-  emit: context.preview
+  emit: context.preview, output.density.set
 ---
 
 # context-engine
@@ -103,9 +103,11 @@ Emit recommendation to the calling orchestrator:
 
 Identify the next safe boundary (end of current loop iteration, end of current file being processed) and flag it.
 
+**Auto-activate Caveman Output Mode** (see `references/caveman-mode.md`) — emit `output.density.set` with `mode=caveman, scope=session, source=context-orange`. Reduces output token cost ~75% with no information loss; persists until /compact returns context to GREEN. Manual override (`/caveman` or "stop caveman") always wins.
+
 ### Step 5 — If RED
 
-Immediately trigger state save via `rune:session-bridge` (Save Mode) before any compaction occurs.
+Immediately trigger state save via `rune:session-bridge` (Save Mode) before any compaction occurs. If caveman mode was not already active from ORANGE, emit `output.density.set` with `mode=caveman, scope=session, source=context-red` now.
 
 Pass to session-bridge:
 - Current task and phase description
@@ -377,6 +379,33 @@ When Context Budget Warning fires, append to Context Health report:
 - **Recommendation**: Disable [server] to save ~[N]k tokens
 ```
 
+## Output Density Mode (Caveman)
+<MUST-READ path="references/caveman-mode.md" trigger="when context reaches ORANGE/RED OR user says 'caveman'/'be brief'/'less tokens'"/>
+
+Caveman is a terse output mode that strips filler, articles, hedging, and pleasantries while preserving full technical accuracy. ~75% output token reduction with no information loss when applied per the rules in `references/caveman-mode.md`.
+
+### Activation triggers
+
+| Trigger | Source | Persistence |
+|---------|--------|-------------|
+| Context health = ORANGE or RED | Auto from Step 4-5 above | Until `/compact` returns to GREEN |
+| User says "caveman" / "/caveman" / "be brief" / "less tokens" | Explicit user signal | Until "stop caveman" / "normal mode" |
+| Per-workstream override (e.g., `team` worker exceeds output budget) | Per-workstream scope | Scoped to that workstream only |
+
+Auto-activation emits `output.density.set` signal carrying `{mode: caveman, scope, source}`. Orchestrators (cook, team, rescue) honor the signal for the duration of their session.
+
+### Auto-clarity exceptions (revert ONE response, then resume)
+
+- Security warnings (data loss, credential exposure)
+- Confirmations of irreversible actions (`rm -rf`, force-push, drop table, prod deploy)
+- Multi-step sequences where fragment ordering risks misreading
+- User says "explain" / "clarify" / repeats the same question
+- Root-cause diagnosis where cause-and-effect chains need grammatical structure
+
+### Anti-pattern
+
+Caveman in the FIRST response of a task. The user can't calibrate severity from a single output yet — verbose first response is fine. Caveman starts on response 2+.
+
 ## Mode: preview (v1.1.0)
 
 Pre-flight cost check for expensive escalations. Caller (`adversary` oracle-mode, `team` workstream spawn, `review` multi-file, `audit` cross-pack) MUST emit `context.preview` BEFORE building the bundle, so context-engine can estimate token cost and gate the dispatch against a per-caller threshold.
@@ -477,6 +506,10 @@ Known failure modes for this skill. Check these before declaring done.
 | Mid-loop compaction without flushing state first | HIGH | session-bridge + neural-memory MUST run before compaction — losing unsaved decisions is worse than hitting context limit |
 | (preview) Caller bundles before requesting preview | HIGH | Constraint 4 enforces order; reject preview-after-build calls with explicit error |
 | (preview) Estimated tokens off by 2x for non-English content | LOW | Document calibration in `references/preview-gate.md`; safe both directions (block-too-eager or block-too-late but hard cap at dispatch saves us) |
+| Caveman activated in first response of a task | MEDIUM | First response = user calibration baseline. Verbose first; caveman from response 2+ (see `references/caveman-mode.md`) |
+| Caveman compresses code blocks or error messages | CRITICAL | Caveman strips filler ONLY. Code, errors, paths, technical terms stay verbatim. Compression of those = wrong fix |
+| Caveman drift back to verbose mid-session | MEDIUM | Once activated, persists every response until explicit deactivation. Drift defeats the token savings |
+| Caveman during destructive-action confirmation | HIGH | Auto-clarity exception: revert ONE response for security/irreversible-action confirmations, then resume |
 
 ## Done When
 

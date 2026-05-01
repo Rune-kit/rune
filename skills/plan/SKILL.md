@@ -3,7 +3,7 @@ name: plan
 description: "Create structured implementation plans from requirements. Produces master plan + phase files for enterprise-scale project management. Master plan = overview (<80 lines). Phase files = execution detail (<150 lines each). Each session handles 1 phase. Uses opus for deep reasoning."
 metadata:
   author: runedev
-  version: "1.5.0"
+  version: "1.6.0"
   layer: L2
   model: opus
   group: creation
@@ -149,8 +149,11 @@ If ANY "Master + Phase Files" criterion is true → produce master plan + phase 
 
 ### Step 3 — Decompose into Phases
 <MUST-READ path="references/wave-planning.md" trigger="when writing wave-structured task lists inside any phase"/>
+<MUST-READ path="references/vertical-slice.md" trigger="when decomposing a feature into tasks/issues — ALWAYS prefer vertical (end-to-end) slices over horizontal (single-layer) ones"/>
 
 Group work into phases. Each phase: completable in one session, clear "done when", produces testable output, independent enough to run without other phases loaded.
+
+**Vertical slices over horizontal layers**: each task within a phase MUST be a tracer-bullet slice (schema + API + UI + test, end-to-end), NOT a single-layer chunk. Horizontal slicing ("all models → all APIs → all UI") looks organized but blocks on the slowest layer. See `references/vertical-slice.md` for slice rules, AFK vs HITL classification, and the per-task slice template.
 
 <HARD-GATE>
 Each phase MUST be completable by ANY coder model (including Haiku) with ONLY the phase file loaded.
@@ -163,7 +166,7 @@ Phase decomposition rules:
 - **Dependencies before consumers**: create what's imported before the importer
 - **Test alongside**: each phase includes its own test tasks
 - **Max 5-7 tasks per phase**: if more, split the phase
-- **Vertical slices over horizontal layers**: prefer "auth end-to-end" over "all models → all APIs → all UI"
+- **Vertical slices over horizontal layers**: prefer "auth end-to-end" over "all models → all APIs → all UI" (see `references/vertical-slice.md` for tracer-bullet template, AFK/HITL labels, granularity rules)
 
 Tasks within each phase MUST be organized into waves (parallel-safe groupings). See `references/wave-planning.md`.
 
@@ -346,7 +349,7 @@ Append to plan output when invoked standalone. Suppress when called as sub-skill
 ```yaml
 chain_metadata:
   skill: "rune:plan"
-  version: "1.5.0"
+  version: "1.6.0"
   status: "[DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED]"
   domain: "[area planned]"
   files_changed:
@@ -385,7 +388,9 @@ chain_metadata:
 | Phase with zero test tasks | CRITICAL | HARD-GATE rejects it |
 | 10+ phases overwhelming the master plan | MEDIUM | Max 8 phases — split into sub-projects if more |
 | Task without File path or Verify command | HIGH | Every task MUST have File + Test + Verify + Commit fields — no vague "implement the feature" tasks |
-| Horizontal layer planning (all models → all APIs → all UI) | HIGH | Vertical slices parallelize better. Use wave-based grouping: independent tasks in same wave, dependent tasks in later waves |
+| Horizontal layer planning (all models → all APIs → all UI) | HIGH | Vertical slices parallelize better. Use wave-based grouping AND vertical-slice template (`references/vertical-slice.md`): each task = end-to-end path through schema/API/UI/test, demoable on its own |
+| Slice not demoable on its own ("just the migration", "just the UI shell") | HIGH | Per `references/vertical-slice.md` — every slice produces a verifiable outcome. Layer-only fragments block downstream slices and hide partial completion |
+| HITL slices marked liberally to enable "review" friction | MEDIUM | HITL is for hard blockers (OAuth setup, design decision, paid third-party access), not soft preferences. Default to AFK; use post-merge review for soft signals |
 | Tasks without `depends_on` in Wave 2+ | MEDIUM | Implicit dependencies break parallel dispatch. Every Wave 2+ task MUST declare `depends_on` |
 | Plan ignores locked Decisions from BA | CRITICAL | Decision Compliance section cross-checks requirements.md — locked decisions are non-negotiable |
 | Complex feature missing Workflow Registry — components planned but never wired | HIGH | Step 4.5: 4-view registry catches orphaned components, unphased workflows, and missing state transitions before phase files are written |

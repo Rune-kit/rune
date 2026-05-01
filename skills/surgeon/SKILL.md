@@ -93,6 +93,8 @@ Use `Edit` for all code changes. Rules:
 - Never change more than 5 files total in this session
 - If a change reveals a hidden bug, stop and call `rune:debug` before continuing
 
+**Multi-layer refactors**: when the deepening or extraction touches 2+ layers within the module (e.g., types + logic + interface), decompose into **vertical-slice tracer-bullet edits** rather than horizontal layer passes. Each slice = one end-to-end edit chain that produces a verifiable outcome (one Edit per layer, immediately tested). See `plan/references/vertical-slice.md` for slice rules and granularity. Horizontal "all-types-then-all-logic-then-all-interface" passes are forbidden inside surgeon — they break the "test after each Edit" discipline (Step 4) by leaving intermediate states untestable.
+
 For **Strangler Fig**: Create the new module file first, then update one consumer at a time.
 
 For **Branch by Abstraction**: Create the interface first (commit), wrap legacy (commit), build new impl (commit), switch (commit). Four commits minimum.

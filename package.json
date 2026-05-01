@@ -1,6 +1,6 @@
 {
   "name": "@rune-kit/rune",
-  "version": "2.15.0",
+  "version": "2.16.0",
   "description": "63-skill mesh for AI coding assistants — runtime auto-discipline via native hooks (Claude/Cursor/Windsurf/Antigravity), 5-layer architecture, 215+ connections, multi-platform compiler.",
   "type": "module",
   "bin": {
@@ -16,6 +16,7 @@
     "format": "biome format --write .",
     "ci": "biome check . && node --test compiler/__tests__/*.test.js scripts/__tests__/*.test.js && node compiler/bin/rune.js doctor",
     "version-check": "node scripts/version-sync-check.js",
+    "version-bump": "node scripts/bump-version.js",
     "prepublishOnly": "node scripts/version-sync-check.js"
   },
   "keywords": [

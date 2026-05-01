@@ -3,7 +3,7 @@ name: debug
 description: "Root cause analysis for bugs and unexpected behavior. Traces errors through code, uses structured reasoning, and hands off to fix when cause is found. Core of the debug↔fix mesh."
 metadata:
   author: runedev
-  version: "1.1.0"
+  version: "1.2.0"
   layer: L2
   model: sonnet
   group: development
@@ -62,6 +62,17 @@ If root cause cannot be identified after 3 hypothesis cycles:
 - `debug` ← `test` — test fails → debug investigates
 
 ## Execution
+
+### Step 0: Build a Feedback Loop (the actual skill)
+<MUST-READ path="references/feedback-loop-ladder.md" trigger="when current repro is not a single command returning pass/fail in <5s, or when bug is intermittent/multi-component"/>
+
+**The loop is the speed limit.** A fast, deterministic, agent-runnable pass/fail signal turns debugging into mechanical bisection. Without one, hypotheses just consume noise.
+
+Skip Step 0 only if the existing repro is already one command, deterministic, and runs in < 5s.
+
+Otherwise, before Step 1: pick the highest viable rung from `references/feedback-loop-ladder.md` (10-rank ladder: failing test → curl → CLI snapshot → headless browser → trace replay → throwaway harness → fuzz → bisection → differential → HITL script). Construct it. Verify it currently FAILS (proves it measures the bug, not noise). Only then proceed.
+
+If loop construction takes > 10 minutes, that itself is the diagnosis: the bug surface is too large or the system too coupled. Trigger the 3-Fix Escalation Rule (Step 6) — architecture is the problem, not the bug.
 
 ### Step 1: Reproduce
 
@@ -349,6 +360,7 @@ ALL of these mean: STOP. Return to Step 2 (Gather Evidence).
 7. MUST NOT say "I know what's wrong" without citing file:line evidence
 8. For deep stack errors: MUST use backward tracing (Step 2) — never fix at the crash site
 9. For multi-component systems: MUST instrument boundaries before hypothesizing
+10. MUST run Step 0 (Build Feedback Loop) before forming hypotheses on non-trivial bugs — skipping the loop = guessing
 
 ## Output Format
 
@@ -415,7 +427,7 @@ Append to Debug Report when invoked standalone. Suppress when called as sub-skil
 ```yaml
 chain_metadata:
   skill: "rune:debug"
-  version: "1.1.0"
+  version: "1.2.0"
   status: "[DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED]"
   domain: "[area debugged]"
   files_changed: []  # debug never changes files
@@ -449,6 +461,8 @@ chain_metadata:
 | Debug report recommends touching 5+ unrelated files | HIGH | Symptom of fixing at crash sites instead of source. Backward trace (Step 2) to find origin. If truly 5+ files → likely architectural issue → escalate via 3-Fix Rule |
 | Re-investigating known error patterns from scratch | MEDIUM | Step 2d: match error against Known Error Pattern Catalog first — skip hypothesis cycling for recognized patterns |
 | Same error fingerprint across cycles treated as different errors | MEDIUM | Step 2d: normalize line numbers, paths, variable names before comparison — same fingerprint = same error |
+| Forming hypotheses with a slow / non-deterministic / manual repro | CRITICAL | Step 0: build a fast deterministic pass/fail signal first — see `references/feedback-loop-ladder.md` 10-rank ladder. Hypothesis testing on a slow loop wastes 10x the cycles |
+| Skipping loop construction "to save time" on non-trivial bugs | HIGH | The loop IS the time-saver. 10 min on the loop saves hours of cycling. If construction takes > 10 min, escalate via 3-Fix Rule — bug is architectural |
 
 ## Done When
 

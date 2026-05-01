@@ -1,6 +1,6 @@
 # Rune Roadmap
 
-> Last updated: April 2026 | Version: 2.15.0
+> Last updated: May 2026 | Version: 2.16.0
 
 ---
 
@@ -18,7 +18,7 @@ These principles guide every roadmap decision:
 
 ---
 
-## Current State (v2.15.0 — "Second Opinion + Cross-Provider + Routing Clarity")
+## Current State (v2.16.0 — "Skill Enrichment + Triage Workflow + Output Modes")
 
 | Layer | Count | Status |
 |-------|-------|--------|

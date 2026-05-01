@@ -35,6 +35,10 @@ When `debug` finishes and emits `bug.diagnosed`, the mesh routes the event to ev
 | `project.onboarded` | onboard | plan | First-session setup done |
 | `invariants.seeded` | onboard | *(logic-guardian cross-tier)* | `.rune/INVARIANTS.md` populated |
 | `invariants.loaded` | session-bridge | logic-guardian | Invariants read at session start |
+| `output.density.set` | context-engine | *(orchestrators dynamically)* | Output mode set (e.g. caveman) — orchestrators (cook/team/rescue) honor for session/workstream scope |
+| `triage.classified` | review-intake | *(observability)* | Issue triaged into state machine (ready-for-agent / ready-for-human / needs-info / wontfix) |
+| `agent.brief.ready` | review-intake | *(external — issue tracker)* | AGENT-BRIEF generated and posted to issue tracker comment for AFK pickup |
+| `outofscope.recorded` | ba (Step 1.6), review-intake (Phase 4.5) | *(observability — discovered via file scan, not listen)* | New `.out-of-scope/<slug>.md` written; future ba/review-intake invocations find it via Step 1.5 lexical match |
 
 ### Code change cycle
 

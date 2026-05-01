@@ -25,6 +25,21 @@ const SIGNAL_NAME_PATTERN = /^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*)+$/;
  */
 export const INTENTIONAL_BROADCAST_SIGNALS = new Set([
   'autopilot.downgraded', // Pro autopilot → observability (no Free listener)
+  'output.density.set', // context-engine → orchestrators consume dynamically (cook/team/rescue), not via static listen:
+  'triage.classified', // review-intake (Issue Triage Mode) → observability + downstream maintainer dashboards (no skill listens)
+  'agent.brief.ready', // review-intake (Issue Triage Mode) → posts AGENT-BRIEF to issue tracker (external, not in-mesh consumer)
+  'outofscope.recorded', // ba (Step 1.6) → observability; downstream BA sessions discover via Step 1.5 file scan, not signal listen
+]);
+
+/**
+ * External trigger signals — listened by skills but emitted by users/orchestrators
+ * from OUTSIDE the skill mesh (manual invocation, CLI commands, hook fires).
+ * These are entry-points into the mesh, not internal chain steps. Skipping the
+ * orphan-listener check for these is intentional — there's no skill that emits them.
+ */
+export const EXTERNAL_TRIGGER_SIGNALS = new Set([
+  'marketing.campaign.start', // niche-finder entry point (user-initiated growth campaign)
+  'business.context.loaded', // consulting-analysis entry point (loaded by user via .rune/business/context.md)
 ]);
 
 /**
@@ -173,9 +188,9 @@ export function validateSignals(skillsDir, { proDirs = [], tierLabels = [] } = {
     }
   }
 
-  // Check: every listen signal must have at least one emitter
+  // Check: every listen signal must have at least one emitter (unless whitelisted as external trigger)
   for (const [signal, listenerList] of listeners) {
-    if (!emitters.has(signal)) {
+    if (!emitters.has(signal) && !EXTERNAL_TRIGGER_SIGNALS.has(signal)) {
       issues.push(`orphan listener: "${signal}" listened by [${listenerList.join(', ')}] but no skill emits it`);
     }
   }

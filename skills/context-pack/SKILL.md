@@ -4,7 +4,7 @@ description: "Creates structured handoff briefings between agents. Use when dele
 user-invocable: false
 metadata:
   author: runedev
-  version: "0.2.0"
+  version: "0.3.0"
   layer: L3
   model: haiku
   group: state
@@ -134,6 +134,24 @@ When a parent agent delegates work to a subagent, critical context gets lost —
 
 Full template + worked examples: [references/brief-template.md](references/brief-template.md).
 
+## Variant: Agent Brief (Async / Durable Handoff)
+<MUST-READ path="references/agent-brief.md" trigger="when handing off to an AFK agent, an issue tracker queue, autopilot, or any receiver that may execute hours/days later"/>
+
+The standard packet (above) is for **immediate** sub-agent dispatch in the same session. When the handoff target is async — issue tracker, scheduled cron agent, `rune:autopilot` (Pro) for multi-session work, or any receiver that may execute hours or days later — switch to the **agent brief** variant.
+
+Agent brief adds two durability principles on top of the standard packet:
+
+1. **Durability over precision** — describe interfaces, types, and behavioral contracts. NEVER reference line numbers in narrative. File paths only in `### Files Touched` (locator-only, may rename).
+2. **Behavioral, not procedural** — describe WHAT the system should do, not HOW to implement it. The async agent will explore the codebase fresh.
+
+Additional BLOCK-tier checks for agent briefs (on top of the standard smell tests):
+- `**Category:**` line present (`bug` / `enhancement` / `refactor`)
+- Both `**Current behavior:**` and `**Desired behavior:**` sections present
+- Acceptance criteria are independently testable (each pass/fail alone)
+- `**Key interfaces:**` names types/functions, not file paths
+
+Full template + worked examples: [references/agent-brief.md](references/agent-brief.md).
+
 ## Returns
 
 | Field | Type | Description |
@@ -169,6 +187,9 @@ Full template + worked examples: [references/brief-template.md](references/brief
 | Missing Type Surface section for non-trivial task | HIGH | Mandatory for tasks >= 300 tokens; the durable spine is what survives file moves |
 | Missing Out of scope section | HIGH | Always required (even "(none)"); completion-gate rejects briefs without it |
 | Acceptance Criteria using shape verbs ("is defined", "has property") | MEDIUM | Rewrite to behavior verbs from the whitelist |
+| Async handoff (issue tracker / autopilot / scheduled run) emitted as standard packet | HIGH | Switch to agent-brief variant (`references/agent-brief.md`) — standard packet rots when receiver runs hours/days later. Brief adds durability rules: behavioral not procedural, no line numbers in narrative |
+| Agent brief with file:line references in narrative ("change `auth.ts:42`") | CRITICAL | Brief BLOCK gate — line numbers go stale on first edit. Reference type names, function signatures, contracts instead. File paths only in `### Files Touched` |
+| Agent brief without `**Current behavior:**` AND `**Desired behavior:**` split | HIGH | Brief BLOCK gate — without the delta explicit, async agent cannot verify when work is done |
 
 ## Self-Validation
 

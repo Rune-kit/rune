@@ -68,6 +68,22 @@ Override: budget constraint → downgrade
 Override: user preference   → manual in config
 ```
 
+### Behavioral Modes (v2.16+)
+
+Mode-based execution variants that activate inside existing skills based on signals or input context. Modes do NOT add new skills — they expand the behavior surface of existing skills.
+
+| Mode | Skill | Activation | Behavior |
+|------|-------|------------|----------|
+| **Caveman Output** | `context-engine` (broadcast) | Auto on context ORANGE / RED, manual via `/caveman` / "be brief" | Strips filler / articles / hedging while preserving full technical accuracy. ~75% output reduction. Auto-clarity exception for security warnings, irreversible-action confirmations, multi-step sequences. |
+| **Synthesis** | `ba` (Step 1.4) | Pasted spec > 200 words, conversation > 1000 words, continuation session, filled issue template, explicit "synthesize" | Extract Requirements Document from existing context with mandatory source citations, then confirm instead of re-interview. Skip 5-question elicitation if all 5 dimensions filled. |
+| **Vertical Slice** | `plan` (Step 3) | Default for any feature with 3+ phases | Tracer-bullet task decomposition: each task = end-to-end path through schema + API + UI + test, demoable on its own. AFK / HITL classification. Replaces horizontal layer planning. |
+| **Feedback Loop (Step 0)** | `debug` | Repro is slow / non-deterministic / multi-component / intermittent | Construct fast deterministic pass/fail signal from 10-rank ladder BEFORE forming hypotheses. Skip if existing repro is one command, deterministic, < 5s. > 10 min construction → 3-Fix Escalation (architecture, not bug). |
+| **Issue Triage** | `review-intake` | Input is issue tracker item (not PR comment), `--inbox` flag, or "triage" / "process the inbox" | State machine (needs-triage → needs-info / ready-for-agent / ready-for-human / wontfix). Repro-first HARD-GATE for bugs. AGENT-BRIEF emission for `ready-for-agent`. Wontfix-enhancement writes `.out-of-scope/<slug>.md`. |
+| **Agent Brief Variant** | `context-pack` | Async / durable handoff (issue tracker queue, autopilot, scheduled cron, > 1 hour delay) | Behavioral over procedural; type names over file:line; survives codebase drift between handoff and execution. Adds Category / Current behavior / Desired behavior / Out of scope sections. |
+| **Out-of-Scope WRITE (Step 1.6)** | `ba` | Mid-elicitation explicit rejection ("scrap it", "drop it") | HARD-GATE writes `.out-of-scope/<slug>.md` before session end. Confirms durable rejection vs deferral. Lexical-similarity gate appends to existing files. Closes the read/write loop on `.out-of-scope/` records (Step 1.5 reads them). |
+
+Mode discovery is automatic via signals + input pattern matching. Cook / team / rescue do NOT need to manually select modes — the called skill detects activation conditions and switches behavior.
+
 ### Cross-Provider Model Mapping (v2.15+)
 
 SKILL.md frontmatter uses Anthropic-native tier names (`opus`/`sonnet`/`haiku`) as the canonical authoring vocabulary. Adapters translate this hint to provider-correct model names so the field is meaningful in every compiled output:
@@ -243,12 +259,19 @@ Lowercase, dot-separated: `<domain>.<event>` (e.g. `code.changed`, `tests.failed
 | `media.prompt.optimized` | @rune-pro/media: prompt-engineer | @rune-pro/media: image-generator |
 | `media.image.generated` | @rune-pro/media: image-generator | @rune-pro/media: asset-pipeline |
 | `media.assets.processed` | @rune-pro/media: asset-pipeline | @rune-pro/growth: landing-builder, slides |
+| `output.density.set` | context-engine | *(orchestrators dynamically — cook, team, rescue)* |
+| `triage.classified` | review-intake | *(observability)* |
+| `agent.brief.ready` | review-intake | *(external — issue tracker)* |
+| `outofscope.recorded` | ba, review-intake | *(observability — discovered via .out-of-scope/ file scan)* |
 
 ### Validation
 
 - `node scripts/validate-signals.js` — checks all signals for consistency
 - Every `listen` must have a matching `emit` (hard error)
 - Unlistened emitters generate warnings (acceptable for external consumers)
+- Two whitelists for intentional exceptions:
+  - `INTENTIONAL_BROADCAST_SIGNALS` — emitted but no skill listens (observability, cross-tier, dynamically-consumed by orchestrators). Examples: `output.density.set`, `triage.classified`, `agent.brief.ready`, `outofscope.recorded`, `autopilot.downgraded`.
+  - `EXTERNAL_TRIGGER_SIGNALS` — listened but no skill emits (entry points fired by users / orchestrators / hooks from outside the mesh). Examples: `marketing.campaign.start`, `business.context.loaded`.
 - Signal graph compiled into `skill-index.json` under the `signals` key
 
 ### Design Principles

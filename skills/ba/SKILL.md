@@ -3,12 +3,12 @@ name: ba
 description: "Business Analyst agent. Use when starting a new feature requiring requirements elicitation BEFORE plan or cook. Asks probing questions, identifies hidden requirements, maps stakeholders, defines scope boundaries, and produces a structured Requirements Document that plan and cook consume."
 metadata:
   author: runedev
-  version: "0.11.0"
+  version: "0.13.0"
   layer: L2
   model: opus
   group: creation
-  tools: "Read, Glob, Grep"
-  emit: outofscope.match
+  tools: "Read, Write, Glob, Grep"
+  emit: outofscope.match, outofscope.recorded
 ---
 
 # ba
@@ -73,7 +73,26 @@ If Refactor → light version (Step 1 + Step 4 only). Skip Steps 2, 2.5, 3, 5, 6
 
 If existing codebase → invoke `rune:scout` for context before proceeding.
 
-### Step 1.5 — Out-of-Scope Match Check
+### Step 1.4 — Synthesis Trigger Check
+<MUST-READ path="references/synthesis-mode.md" trigger="when prior conversation already contains rich requirement context (pasted spec, > 1000 words discussion, continuation session, filled issue template)"/>
+
+Before proceeding to elicitation, check whether the requirements are **already in context**. Re-asking what the user already told you is the second-most expensive bug.
+
+Activate **Synthesis Mode** instead of standard elicitation if ANY of:
+
+| Signal | Threshold |
+|--------|-----------|
+| User pasted a spec / PRD / brief | > 200 words describing the feature |
+| Conversation has > 1000 words on this feature | Sufficient context already gathered |
+| User said "synthesize" / "I already explained" / "just write the spec" | Explicit synthesis request |
+| Continuation — `.rune/features/<name>/requirements.md` exists with prior answers | Re-elicitation would duplicate |
+| Issue tracker has filled-in template (problem, story, acceptance criteria) | Source already structured |
+
+In Synthesis Mode: extract answers from existing context, draft the Requirements Document with **source citations** for every section, then **confirm** rather than re-interview. Ask follow-ups ONLY on the 1-2 dimensions with genuine gaps. Skip steps 2, 2.5 if all 5 dimensions are filled or partial-but-acceptable.
+
+Workflow detail + anti-patterns: [references/synthesis-mode.md](references/synthesis-mode.md).
+
+### Step 1.5 — Out-of-Scope Match Check (READ)
 
 Before any elicitation, check whether the request matches a concept previously rejected.
 
@@ -98,6 +117,50 @@ If verdict is exact-match AND user says "yes I still want it" → record their o
 If verdict is exact-match AND user accepts the prior rejection → end the BA session with a one-line summary referencing the file. No further questions.
 
 Format reference: [references/out-of-scope-format.md](references/out-of-scope-format.md).
+
+### Step 1.6 — Mid-Elicitation Reject WRITE Path
+
+If the user **explicitly rejects** the feature at any point during elicitation (Steps 2-3) — common phrases: "scrap it", "actually nah, don't build this", "we won't do this", "kill the feature", "drop it" — STOP elicitation and **write a `.out-of-scope/<slug>.md` record** before ending the session.
+
+Without this WRITE path, oral rejections vanish — the next session re-asks the same questions and the user has to re-reject. Step 1.5 (READ) only catches matches against existing files; Step 1.6 (WRITE) is what produces those files in the first place.
+
+<HARD-GATE>
+Mid-elicitation rejection MUST produce a `.out-of-scope/<slug>.md` file before session end.
+A rejection without a written record is a rejection that didn't happen.
+</HARD-GATE>
+
+**Procedure**:
+
+1. **Confirm rejection is durable, not deferral**. Ask one clarifier:
+   > "Just to record this correctly: is this **out of scope** (project doesn't want this), or **deferred** (not now but maybe later)? Out-of-scope gets recorded so we don't re-litigate; deferred goes to backlog instead."
+
+   - If **deferred** → route to backlog (no `.out-of-scope/` write), end session with a one-line note
+   - If **out-of-scope** → continue to step 2
+
+2. **Capture the durable reason**. Ask:
+   > "What's the reason this is out of scope? (project scope, technical constraint, strategic decision — not a temporary circumstance)"
+
+   If the user gives a temporary reason ("we're busy"), reframe: "That's a deferral — should I route to backlog instead?"
+
+3. **Generate slug** (kebab-case, ≤40 chars, recognizable without opening the file).
+
+4. **Lexical-similarity check**: `Glob` `.out-of-scope/*.md`, parse each frontmatter's `concept` + `aliases`, compute overlap. If any existing concept has ≥0.7 overlap → APPEND to that file's `prior_requests` list and mark `rejected_by: ba` for this round. Do NOT create a duplicate.
+
+5. **Write the file** using the format in [`references/out-of-scope-format.md`](references/out-of-scope-format.md):
+   - YAML frontmatter (`concept`, `aliases`, `decision: rejected`, `rejected_at`, `rejected_by: ba`, `prior_requests`, optional `revisit_if`)
+   - Markdown body: concept name, "Why out of scope" (substantive reasoning from step 2), "What would change our mind" (if user volunteered signals)
+
+6. **Emit `outofscope.recorded`** signal carrying `{slug, rejected_by: ba, prior_requests_count}` so downstream skills know a new rejection landed.
+
+7. **End BA session** with one-line summary:
+   > "Recorded as out of scope in `.out-of-scope/<slug>.md`. Future similar requests will surface this. Override anytime by editing the file."
+
+**When NOT to write**:
+
+- User merely defers ("not now") → backlog, not `.out-of-scope/`
+- User rejects a single requirement within a larger feature → adjust requirements doc Boundaries section, don't write a whole rejection file (the feature is still in scope)
+- Bug rejections (already fixed, not reproducible) → not BA's job; route to incident or close the issue
+- The match was already exact (≥0.8) and Step 1.5 surfaced it — user accepting the prior rejection just appends to `prior_requests` of the existing file (handled in Step 1.5 path)
 
 ### Step 2.0 — Explore-First Pre-Check (HARD-GATE)
 
@@ -663,6 +726,11 @@ Known failure modes for this skill. Check these before declaring done.
 | User asserts behavior; agent records user's version without grep verification | HIGH | Step 2.6 HARD-GATE: every "the system does X" assertion gets grep'd; conflicts surface to user before recording |
 | Silently re-defining an existing CONTEXT.md term | HIGH | Step 7.5 conflict gate: ≥0.7 overlap → user chooses merge/rename/keep-distinct |
 | Auto-creating an empty CONTEXT.md when no terms emerged | LOW | Lazy creation rule: only write when there's a non-trivial term to record |
+| Mid-elicitation rejection ("scrap it") that ends the session without writing `.out-of-scope/` | CRITICAL | Step 1.6 HARD-GATE: explicit rejection MUST produce `.out-of-scope/<slug>.md` before session end — oral rejections vanish, force re-litigation next session |
+| Writing `.out-of-scope/` for a deferral instead of routing to backlog | MEDIUM | Step 1.6 procedure step 1: confirm "out of scope" vs "deferred" — temporary reasons go to backlog, not the rejection KB |
+| Running 5-question elicitation when conversation already contains rich context | HIGH | Step 1.4: synthesis-trigger check fires before Step 2 — pasted spec / >1000 words / continuation / explicit "synthesize" → switch to Synthesis Mode (extract + cite + confirm), don't re-interview |
+| Synthesizing requirements without source citations | HIGH | Synthesis Mode requires citing source for every dimension (user message N, pasted doc, continuation file). User cannot verify interpretation without citations |
+| Auto-handoff to plan after synthesis without explicit user "go"/"locked" confirmation | HIGH | Synthesis is interpretation, not transcription. Without explicit confirmation, drift becomes a downstream bug |
 | Asking inferable questions ("what stack are you using?") without first checking package.json | HIGH | Step 2.0 HARD-GATE — every question requires prior tool-call evidence (Read/Glob/Grep) or explicit unavailability declaration |
 | Re-asking a question already answered earlier in the conversation | MEDIUM | Step 2.0 check 4 — cache and reuse, never re-ask |
 

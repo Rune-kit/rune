@@ -286,6 +286,8 @@ Mark todo[1] `completed`.
 
 Mark todo[2] `in_progress`.
 
+**3a-pre0. Output density honoring.** During Phase 2 dispatch, any worker that hits context ORANGE / RED has emitted `output.density.set` with `mode=caveman, scope=workstream` (auto from `rune:context-engine`). Coordination output respects per-workstream density: when summarizing a caveman-active worker's report into the merge plan, preserve its terse format rather than re-expanding to verbose. If 3+ workers are caveman-active simultaneously, the team-level summary itself should adopt caveman until merge completes (announce to user once: "Team output in caveman mode — N workers under context pressure"). Reverts to normal after Phase 5.
+
 **3a-pre. Oracle reattach sweep.** Before merge coordination, glob `.rune/oracle-pending/*.json`. For any worker stream that emitted `oracle.dispatched` during Phase 2, invoke `session-bridge --reattach <sessionId>`. Worker streams with `status=pending` past their `timeoutAt` are unblocked via `oracle.failed` so coordination can proceed. Workers with `status=complete` consume the response before merge.
 
 **3a. Check for file conflicts.**

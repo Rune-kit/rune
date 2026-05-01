@@ -83,7 +83,19 @@ _Methodology: Claude Code CLI headless mode (`claude -p --output-format json`), 
 
 ---
 
-## What's New (v2.15.0 — Second Opinion + Cross-Provider + Routing Clarity)
+## What's New (v2.16.0 — Skill Enrichment + Triage Workflow + Output Modes)
+
+- **`debug` v1.2.0 — Step 0: Build Feedback Loop** — 10-rank ladder (failing test → curl → CLI snapshot → headless browser → trace replay → throwaway harness → fuzz → bisection → differential → HITL script). Codifies "the loop is the speed limit" — a fast deterministic pass/fail signal turns debugging into mechanical bisection. Skip if repro is already < 5s and deterministic; > 10 min loop construction triggers 3-Fix Escalation (architecture is the problem).
+- **`plan` v1.6.0 — Vertical Slice Mode** — tracer-bullet task decomposition. Each task = end-to-end path through schema + API + UI + test, demoable on its own. AFK / HITL classification. Stops "horizontal layer" planning that blocks on the slowest layer.
+- **`context-engine` v1.2.0 — Caveman Output Mode** — auto-activates on context ORANGE / RED (or `/caveman`). Strips filler / articles / hedging / pleasantries while preserving full technical accuracy (~75% output reduction). Auto-clarity exceptions for security warnings, destructive-action confirmations, multi-step sequences, root-cause diagnosis.
+- **`ba` v0.13.0 — Synthesis Mode + Out-of-Scope WRITE** — when prior conversation has rich context (pasted spec, > 1000 words, continuation session), extract Requirements Document with source citations and confirm instead of re-interviewing. Step 1.6 closes the `.out-of-scope/` write loop: explicit mid-elicitation rejections produce a durable `.out-of-scope/<slug>.md` record so future sessions don't re-litigate.
+- **`context-pack` v0.3.0 — Agent Brief Variant** — durable handoff format for AFK agents (issue tracker queues, autopilot multi-session work). Behavioral over procedural; type names over file:line. Survives codebase drift between handoff and execution.
+- **`review-intake` v1.3.0 — Issue Triage Mode** — new mode for issue tracker items (PR Review remains default). State machine: needs-triage → needs-info / ready-for-agent / ready-for-human / wontfix. Repro-first HARD-GATE for bugs (calls `debug` Step 0 if multi-component). Vague issues route to `ba` Synthesis Mode for grilling. AGENT-BRIEF emission for `ready-for-agent`.
+- **5 new mesh signals** — `output.density.set`, `triage.classified`, `agent.brief.ready`, `outofscope.recorded` + `EXTERNAL_TRIGGER_SIGNALS` whitelist concept (symmetric to `INTENTIONAL_BROADCAST_SIGNALS`).
+- **Validator cleanups** — `validate-skills.js` Done-When regex relaxed (scope-aware, supports mode-based subsections); 9 pre-existing validation errors cleaned. `validate-signals.js` gained `EXTERNAL_TRIGGER_SIGNALS` set.
+- **Provenance** — second graft pass from [`mattpocock/skills`](https://github.com/mattpocock/skills) (MIT). Round 1 had silently grafted 7 patterns (improve-architecture, CONTEXT.md, design-it-twice, zoom-out, oracle-mode, grill, out-of-scope); Round 2 + 2b documented + extended.
+
+### Previous (v2.15.0 — Second Opinion + Cross-Provider + Routing Clarity)
 
 - **`adversary` v0.2.0 — Mode: oracle** — when `agent.stuck` fires from `debug` (3 disproved hypotheses) or `fix` (2+ failed attempts), oracle-mode dispatches a stateless second-model pass with explicit "no prior context" framing. Bundle format is regex-validated (`[SYSTEM]` invariant role-priming + `[USER]` template + `### File N`), token-capped (100k bundle, 4k per file, 12 files max), citation-required reply contract. Secrets auto-redacted. Breaks the confirmation-bias loop that scout's zoom-out (structural pivot) cannot.
 - **`session-bridge` v0.8.0 — Detach Mode** — async escalation primitive. Heavy-model second-opinion calls (1-10 min wall time) no longer block the primary agent. `.rune/oracle-pending/<sessionId>.json` is the rendezvous file; idempotent dispatch (bundleHash-keyed); 10min default timeout; 24h orphan cleanup on session start. `cook` Phase 4 and `team` Phase 3 reattach via filesystem poll between adjacent tasks.

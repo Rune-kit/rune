@@ -217,7 +217,7 @@ Auto-trigger: no `.rune/` dir (first run) OR build just failed with env-looking 
 
 1. Create TodoWrite with all applicable phases for this task
 2. Mark Phase 1 as `in_progress`
-3. **BA gate**: Feature Request / Integration / Greenfield → invoke `rune:ba`. Task > 50 words or business terms (users, revenue, workflow) → invoke `rune:ba`. Bug Fix / simple Refactor → skip. BA produces `.rune/features/<name>/requirements.md` for Phase 2.
+3. **BA gate**: Feature Request / Integration / Greenfield → invoke `rune:ba`. Task > 50 words or business terms (users, revenue, workflow) → invoke `rune:ba`. Bug Fix / simple Refactor → skip. BA produces `.rune/features/<name>/requirements.md` for Phase 2. **Synthesis-mode auto-trigger**: if user pasted a spec > 200 words, conversation has > 1000 words on this feature, `.rune/features/<name>/requirements.md` already exists (continuation), or user said "synthesize"/"just write the spec" → BA Step 1.4 activates Synthesis Mode (extract + cite sources + confirm), skipping the 5-question elicitation. Cook does NOT need to choose mode — BA detects automatically.
 4. **Decision enforcement**: `Glob` for `.rune/decisions.md`; if exists, `Read` + extract constraints for Phase 2. Plan MUST NOT contradict active decisions without explicit user override.
 4b. **Contract enforcement**: If `.rune/contract.md` was loaded in Phase 0.6, list applicable contract sections for this task (e.g., `contract.security` for auth work, `contract.data` for database changes). These rules constrain Phase 2 planning and Phase 4 implementation.
 
@@ -766,7 +766,7 @@ Mentally track tool call fingerprints. 3 identical calls → WARN. 5 identical c
 | 5 | `scope-guard` | L3 | Verify changed files match approved plan scope (flag out-of-scope files before commit) |
 | 5 | `perf` | L2 | Performance regression check (optional) |
 | 5 | `audit` | L2 | Project health audit when scope warrants |
-| 5 | `review-intake` | L2 | Structured review intake for complex PRs |
+| 5 | `review-intake` | L2 | Structured review intake for complex PRs OR Issue Triage Mode for issue tracker items (state machine: needs-triage / needs-info / ready-for-agent / ready-for-human / wontfix). When external feedback source is an issue (not PR comment), review-intake auto-detects and runs Issue Triage Mode — emits `triage.classified` + `agent.brief.ready` (for AFK pickup) |
 | 5 | `sast` | L3 | Static analysis security testing |
 | 5d | `completion-gate` | L3 | Validate agent claims against evidence trail |
 | 5 | `constraint-check` | L3 | Audit HARD-GATE compliance across workflow |

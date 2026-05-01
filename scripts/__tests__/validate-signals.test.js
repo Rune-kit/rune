@@ -4,7 +4,12 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { afterEach, beforeEach, describe, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { INTENTIONAL_BROADCAST_SIGNALS, parseSignals, validateSignals } from '../validate-signals.js';
+import {
+  EXTERNAL_TRIGGER_SIGNALS,
+  INTENTIONAL_BROADCAST_SIGNALS,
+  parseSignals,
+  validateSignals,
+} from '../validate-signals.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -237,6 +242,96 @@ metadata:
       assert.ok(skillCount >= 50, `Expected 50+ skills, got ${skillCount}`);
       assert.ok(signalCount >= 10, `Expected 10+ signals, got ${signalCount}`);
       assert.strictEqual(issues.length, 0, `Signal issues found: ${issues.join(', ')}`);
+    });
+  });
+
+  describe('whitelist membership (v2.16+ behavioral-mode signals)', () => {
+    test('output.density.set is registered as intentional broadcast', () => {
+      assert.ok(
+        INTENTIONAL_BROADCAST_SIGNALS.has('output.density.set'),
+        'context-engine emits output.density.set; orchestrators consume dynamically — must be whitelisted',
+      );
+    });
+
+    test('triage.classified is registered as intentional broadcast', () => {
+      assert.ok(
+        INTENTIONAL_BROADCAST_SIGNALS.has('triage.classified'),
+        'review-intake (Issue Triage Mode) emits this for observability — must be whitelisted',
+      );
+    });
+
+    test('agent.brief.ready is registered as intentional broadcast', () => {
+      assert.ok(
+        INTENTIONAL_BROADCAST_SIGNALS.has('agent.brief.ready'),
+        'review-intake emits this for external issue tracker — must be whitelisted',
+      );
+    });
+
+    test('outofscope.recorded is registered as intentional broadcast', () => {
+      assert.ok(
+        INTENTIONAL_BROADCAST_SIGNALS.has('outofscope.recorded'),
+        'ba/review-intake emit this; downstream skills discover via .out-of-scope/ file scan, not signal listen — must be whitelisted',
+      );
+    });
+
+    test('marketing.campaign.start is registered as external trigger', () => {
+      assert.ok(
+        EXTERNAL_TRIGGER_SIGNALS.has('marketing.campaign.start'),
+        'niche-finder listens; emitted by user/orchestrator from outside the mesh — must be whitelisted',
+      );
+    });
+
+    test('business.context.loaded is registered as external trigger', () => {
+      assert.ok(
+        EXTERNAL_TRIGGER_SIGNALS.has('business.context.loaded'),
+        'consulting-analysis listens; emitted by user via .rune/business/context.md from outside the mesh — must be whitelisted',
+      );
+    });
+  });
+
+  describe('orphan-listener gate respects EXTERNAL_TRIGGER_SIGNALS', () => {
+    test('whitelisted external trigger does NOT raise orphan-listener error', () => {
+      const skillDir = join(tempDir, 'consumes-external');
+      mkdirSync(skillDir);
+      writeFileSync(
+        join(skillDir, 'SKILL.md'),
+        `---
+name: consumes-external
+metadata:
+  layer: L2
+  listen: marketing.campaign.start
+---
+# consumes-external
+`,
+      );
+
+      const { issues } = validateSignals(tempDir);
+      assert.ok(
+        !issues.some((i) => i.includes('marketing.campaign.start')),
+        'External-trigger signals must be skipped by the orphan-listener check',
+      );
+    });
+
+    test('non-whitelisted unmatched listen still raises orphan-listener error', () => {
+      const skillDir = join(tempDir, 'consumes-ghost');
+      mkdirSync(skillDir);
+      writeFileSync(
+        join(skillDir, 'SKILL.md'),
+        `---
+name: consumes-ghost
+metadata:
+  layer: L2
+  listen: ghost.signal.fired
+---
+# consumes-ghost
+`,
+      );
+
+      const { issues } = validateSignals(tempDir);
+      assert.ok(
+        issues.some((i) => i.includes('ghost.signal.fired')),
+        'Non-whitelisted orphan listen must still error',
+      );
     });
   });
 });

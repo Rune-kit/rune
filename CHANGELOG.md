@@ -3,6 +3,43 @@
 All notable changes to Rune are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.16.0] - 2026-05-01
+
+"Skill Enrichment + Triage Workflow + Output Modes" — second graft pass from `mattpocock/skills` (MIT). Five workflow skills enriched with new behavioral patterns (feedback-loop ladder, vertical-slice planning, caveman output mode, synthesis-mode for BA, agent-brief variant for AFK handoff). Two skills extended into a triage workflow (review-intake Issue Triage Mode + ba Step 1.6 out-of-scope WRITE) — closes the read/write loop on `.out-of-scope/` records and adds a state machine for issue tracker intake. Zero new skills (62 → 62 free), honoring the "less skills, deeper connections" axis.
+
+### Added
+
+- **`debug` v1.2.0 — Step 0: Build Feedback Loop** — new `references/feedback-loop-ladder.md` with a 10-rank ladder (failing test → curl → CLI snapshot → headless browser → trace replay → throwaway harness → fuzz → bisection → differential → HITL script). Step 0 fires before hypothesis formation when repro is slow / non-deterministic / multi-component. Skip if existing repro is already one command, deterministic, < 5s. If loop construction takes > 10 min → triggers 3-Fix Escalation (architecture is the problem, not the bug). Codifies "the loop is the speed limit" — fast deterministic pass/fail signal turns debugging into mechanical bisection.
+- **`plan` v1.6.0 — Vertical Slice Mode** — new `references/vertical-slice.md` with tracer-bullet decomposition rules, AFK / HITL slice classification, granularity rules (3-7 files / 1 acceptance criterion / fits in one phase file), per-task slice template. MUST-READ wired in Step 3 (Decompose into Phases). Each task = end-to-end path through schema + API + UI + test, demoable on its own. Stops "horizontal layer" planning that blocks on the slowest layer.
+- **`context-engine` v1.2.0 — Caveman Output Mode** — new `references/caveman-mode.md`. Auto-activates on context ORANGE / RED via new `output.density.set` signal; manual trigger via "/caveman" / "be brief" / "less tokens". Strips filler, articles, hedging, pleasantries while preserving full technical accuracy (~75% reduction). Auto-clarity exceptions (revert ONE response, then resume): security warnings, irreversible-action confirmations, multi-step sequences, "explain"/"clarify" requests, root-cause diagnosis. First-response exemption (verbose first, caveman from response 2+).
+- **`ba` v0.13.0 — Synthesis Mode (Step 1.4) + Out-of-Scope WRITE (Step 1.6)** — two complementary additions:
+  - **Step 1.4 Synthesis Mode** (new `references/synthesis-mode.md`) — when prior conversation contains rich context (pasted spec > 200 words, > 1000 words discussion, continuation session, filled issue template), extract Requirements Document with **mandatory source citations**, then **confirm** instead of re-interview. Skip elicitation if all 5 dimensions filled. Re-asking what the user already told you is the second-most expensive bug.
+  - **Step 1.6 Mid-Elicitation Reject WRITE** — complement to existing Step 1.5 READ. When user explicitly rejects a feature mid-elicitation ("scrap it", "drop it", "won't do this"), HARD-GATE writes `.out-of-scope/<slug>.md` before session end. Confirms durable rejection vs. deferral (deferrals route to backlog, not the rejection KB). Lexical-similarity gate (≥0.7 overlap) appends to existing files instead of duplicating. New emit `outofscope.recorded`. +1 tool (`Write`).
+- **`context-pack` v0.3.0 — Agent Brief Variant** — new `references/agent-brief.md` for **async / durable handoff** (issue tracker queues, autopilot multi-session work, scheduled cron agents). Adds two principles on top of the standard packet: **durability over precision** (no line numbers in narrative, file paths only in Files Touched) and **behavioral, not procedural** (describe WHAT not HOW). Extra BLOCK-tier smell tests: Category line, Current/Desired behavior split, independently-testable acceptance criteria, type-named Key interfaces.
+- **`review-intake` v1.3.0 — Issue Triage Mode** — new `references/issue-triage.md`. Modes split: PR Review (default) vs Issue Triage. State machine: needs-triage → needs-info / ready-for-agent / ready-for-human / wontfix. HARD-GATE: bugs MUST attempt reproduction before `ready-for-agent` (calls `rune:debug` Step 0 if multi-component or intermittent). Vague issues route to `rune:ba` Synthesis Mode for grilling. AGENT-BRIEF emission via `rune:context-pack` agent-brief variant. Wontfix-enhancement reuses Phase 4.5 (existing) `.out-of-scope/` write. Local-only fallback for users without `gh` / Linear MCP. New emits `triage.classified`, `agent.brief.ready`. +1 tool (`Bash`).
+- **5 new mesh signals** — `output.density.set` (context-engine → orchestrators), `triage.classified` + `agent.brief.ready` (review-intake → observability + external issue tracker), `outofscope.recorded` (ba / review-intake → observability — discovered downstream via `.out-of-scope/` file scan, not signal listen). All registered in Signal Catalog.
+- **`EXTERNAL_TRIGGER_SIGNALS` whitelist** — new validation concept in `validate-signals.js`. External-trigger signals are listened by skills but emitted by users / orchestrators from outside the mesh (entry points like `marketing.campaign.start`, `business.context.loaded`). Symmetrical to existing `INTENTIONAL_BROADCAST_SIGNALS` (emitted but no listener). Both whitelists are intentional skip-lists.
+
+### Changed
+
+- **`debug` Constraints** — added rule 10: MUST run Step 0 (Build Feedback Loop) before forming hypotheses on non-trivial bugs.
+- **`plan` Sharp Edges** — added 3 entries: horizontal layer planning, slice-not-demoable, HITL marked liberally.
+- **`context-engine` Step 4-5** — emit `output.density.set` to auto-activate caveman on ORANGE / RED.
+- **`ba` Step 1.5** — relabeled "(READ)" to clarify split from new Step 1.6 "(WRITE)".
+- **`context-pack` Output Format** — added "Variant: Agent Brief" section linking the new reference.
+- **`review-intake` description** — broadened from "PR comments / external suggestions" to "PR comments OR issue tracker items"; Modes section added.
+- **`marketing-psych` (Pro pack)** — removed `emit: null` / `listen: null` from frontmatter. The skill is reference-only and doesn't participate in the signal mesh; explicit nulls were producing validator errors.
+- **`validate-skills.js` Done When check** — regex relaxed from line-anchored (`## Done When[^\n]*\n\n- `) to scope-aware (extract section, test for `\n- ` anywhere within). Fixes false-positive errors on skills using mode-based subsections (cook, doc-processor, docs, git, neural-memory).
+- **`docs/SIGNALS.md`** — added 4 new signals to Workflow Lifecycle section.
+
+### Tests
+
+- 1331/1331 tests pass. No new test files added in this batch — enrichments hook into existing skill workflows. Two follow-up test additions queued for next minor: Done-When-with-parens regression test and INTENTIONAL_BROADCAST_SIGNALS membership assertions.
+
+### Provenance
+
+Patterns adapted from [`mattpocock/skills`](https://github.com/mattpocock/skills) (MIT). Round 1 (silent graft, undated): improve-architecture skill, CONTEXT.md format, design-it-twice, scout zoom-out, oracle-mode, grill one-at-a-time, out-of-scope-format. Round 2 (this release): the 5 enriched skills above. Round 2b (this release): triage workflow into review-intake + ba.
+
 ## [2.15.0] - 2026-04-27
 
 "Second Opinion + Cross-Provider + Routing Clarity" — extends the `agent.stuck` chain with a stateless second-model semantic pivot, adds an async escalation primitive so heavy-model calls don't block the primary agent, gates expensive context bundles with a token-cost preview, fixes the silent Anthropic bias in 5 non-Anthropic adapters, and improves skill discoverability with quoted descriptions + "Use when…" hints on 13 ambiguous-name skills.

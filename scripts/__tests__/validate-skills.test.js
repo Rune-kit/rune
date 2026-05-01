@@ -150,6 +150,66 @@ describe('validate-skills', () => {
       assert.strictEqual(issues.length, 1);
       assert.ok(issues[0].includes('Cannot read SKILL.md'));
     });
+
+    test('Done When section accepts mode-based subsections (### Mode\\n- bullet)', () => {
+      const skillPath = join(tempDir, 'SKILL.md');
+      const modeBased = VALID_SKILL.replace(
+        '## Done When\n\n- Task is complete\n- Tests pass',
+        '## Done When\n\n### Save Mode\n\n- State persisted\n\n### Recall Mode\n\n- Context loaded',
+      );
+      writeFileSync(skillPath, modeBased);
+
+      const issues = validateSkill(skillPath, 'mode-based');
+      assert.ok(
+        !issues.some((i) => i.includes('Done When section exists but has no bullet points')),
+        'Done When with ### subsections should not be flagged as bullet-less',
+      );
+    });
+
+    test('Done When section accepts lead paragraph + bullets (cook style)', () => {
+      const skillPath = join(tempDir, 'SKILL.md');
+      const paragraphLead = VALID_SKILL.replace(
+        '## Done When\n\n- Task is complete\n- Tests pass',
+        '## Done When\n\nAll applicable phases complete + Self-Validation passed:\n- User approved plan\n- Tests pass',
+      );
+      writeFileSync(skillPath, paragraphLead);
+
+      const issues = validateSkill(skillPath, 'paragraph-lead');
+      assert.ok(
+        !issues.some((i) => i.includes('Done When section exists but has no bullet points')),
+        'Done When with paragraph lead before bullets should not be flagged',
+      );
+    });
+
+    test('Done When section with parenthetical title and bullets', () => {
+      const skillPath = join(tempDir, 'SKILL.md');
+      const parenTitle = VALID_SKILL.replace(
+        '## Done When\n\n- Task is complete\n- Tests pass',
+        '## Done When (Save Mode)\n\n- State persisted\n- Hash recorded',
+      );
+      writeFileSync(skillPath, parenTitle);
+
+      const issues = validateSkill(skillPath, 'paren-title');
+      assert.ok(
+        !issues.some((i) => i.includes('Done When section exists but has no bullet points')),
+        'Done When with parenthetical title and bullets should not be flagged',
+      );
+    });
+
+    test('Done When section with NO bullets is still flagged as error', () => {
+      const skillPath = join(tempDir, 'SKILL.md');
+      const noBullets = VALID_SKILL.replace(
+        '## Done When\n\n- Task is complete\n- Tests pass',
+        '## Done When\n\nAll done.',
+      );
+      writeFileSync(skillPath, noBullets);
+
+      const issues = validateSkill(skillPath, 'no-bullets');
+      assert.ok(
+        issues.some((i) => i.includes('Done When section exists but has no bullet points')),
+        'Done When without ANY bullets must still error',
+      );
+    });
   });
 
   describe('validateAllSkills', () => {

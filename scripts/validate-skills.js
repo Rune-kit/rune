@@ -108,10 +108,14 @@ export function validateSkill(skillPath, skillName) {
     issues.push(`${skillName}: Sharp Edges section exists but has no table rows`);
   }
 
-  // Check Done When has at least one bullet (handles variants like "## Done When (Save Mode)")
-  const doneWhenMatch = content.match(/## Done When[^\n]*\n\n- /);
-  if (content.includes('## Done When') && !doneWhenMatch) {
-    issues.push(`${skillName}: Done When section exists but has no bullet points`);
+  // Check Done When has at least one bullet anywhere within the section
+  // (handles variants: "## Done When (Save Mode)", subsections via "### Mode", lead paragraph then bullets)
+  if (content.includes('## Done When')) {
+    const doneWhenSection = content.match(/## Done When[\s\S]*?(?=\n## |$)/);
+    const hasBullet = doneWhenSection && /\n- \S/.test(doneWhenSection[0]);
+    if (!hasBullet) {
+      issues.push(`${skillName}: Done When section exists but has no bullet points`);
+    }
   }
 
   // Check Cost Profile has content

@@ -51,7 +51,9 @@ if (pkg.version === plugin.version) {
 const versionFiles = [
   { path: 'docs/index.html', pattern: /v(\d+\.\d+\.\d+)\s*&mdash;/ },
   { path: 'ROADMAP.md', pattern: /Version:\s*(\d+\.\d+\.\d+)/ },
-  { path: 'README.md', pattern: /What's New \(v(\d+\.\d+\.\d+)\)/ },
+  { path: 'ROADMAP.md', pattern: /## Current State \(v(\d+\.\d+\.\d+)/ },
+  { path: 'README.md', pattern: /What's New \(v(\d+\.\d+\.\d+)/ },
+  { path: 'CHANGELOG.md', pattern: /^## \[(\d+\.\d+\.\d+)\]/m },
 ];
 
 for (const { path, pattern } of versionFiles) {
@@ -65,6 +67,26 @@ for (const { path, pattern } of versionFiles) {
     fail(`${path}: shows v${match[1]}, expected v${pkg.version}`);
   } else {
     pass(`${path}: v${match[1]}`);
+  }
+}
+
+// 1b2. Workspace-level dashboard.html (lives at D:/Project/Rune/dashboard.html when workspace exists)
+const dashboardPath = join(ROOT, '..', 'dashboard.html');
+if (existsSync(dashboardPath)) {
+  const dash = readFileSync(dashboardPath, 'utf8');
+  const skillsDir3 = join(ROOT, 'skills');
+  if (existsSync(skillsDir3)) {
+    const actualSkillCount2 = readdirSync(skillsDir3, { withFileTypes: true }).filter(
+      (d) => d.isDirectory() && existsSync(join(skillsDir3, d.name, 'SKILL.md')),
+    ).length;
+    const m = dash.match(/Free core gives you (\d+) skills/);
+    if (!m) {
+      warn('dashboard.html: no skill count pattern found');
+    } else if (parseInt(m[1], 10) !== actualSkillCount2) {
+      fail(`dashboard.html: shows ${m[1]} skills, actual is ${actualSkillCount2}`);
+    } else {
+      pass(`dashboard.html: ${m[1]} skills`);
+    }
   }
 }
 
@@ -96,7 +118,10 @@ if (existsSync(skillsDir2)) {
     { path: 'docs/index.html', pattern: /(\d+) core skills \(L0/ },
     { path: 'docs/index.html', pattern: /Core dev skills \((\d+)\)/ },
     { path: 'README.md', pattern: /^\s*(\d+) skills · \d+\+ mesh/m },
+    { path: 'README.md', pattern: /Rune is a \*\*mesh\*\* — (\d+) skills/ },
     { path: 'CLAUDE.md', pattern: /(\d+) core skills built/ },
+    { path: 'docs/VISION.md', pattern: /Rune = (\d+) skills × \d+\+ bidirectional/ },
+    // dashboard.html lives at workspace root, not Free root — checked separately below
   ];
 
   for (const { path, pattern } of skillCountFiles) {
