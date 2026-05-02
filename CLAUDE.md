@@ -90,7 +90,7 @@ When the user's intent matches a skill, invoke it BEFORE writing any code or ana
 - Validate build: `node compiler/bin/rune.js doctor`
 - Project dashboard: `node compiler/bin/rune.js status` (tiered neofetch)
 - Mesh visualizer: `node compiler/bin/rune.js visualize` (interactive graph)
-- Run tests: `npm test` (1,152 tests — compiler + signals + hooks + tier-hooks + scripts + status + visualizer)
+- Run tests: `npm test` (1,349 tests — compiler + signals + hooks + tier-hooks + scripts + status + visualizer)
 - Install runtime hooks: `node compiler/bin/rune.js hooks install --preset gentle` (add `--tier pro` / `--tier business` to stack paid tiers)
 - Run tests with coverage: `npm run test:coverage` (c8 + lcov)
 - Lint: `npm run lint` (Biome)
@@ -99,7 +99,7 @@ When the user's intent matches a skill, invoke it BEFORE writing any code or ana
 
 ## Current Wave
 
-63 core skills built (v2.15.0 — "Second Opinion + Cross-Provider + Routing Clarity").
+63 core skills built (v2.16.0 — "Skill Enrichment + Triage Workflow + Output Modes").
 
 Runtime layer: `rune hooks install` wires preflight / sentinel / completion-gate / dependency-doctor as native hooks on Claude Code, Cursor, Windsurf, Antigravity. Tier-tagged manifest pattern (`$<TIER>_ROOT/hooks/manifest.json`) lets Pro/Business stack on top via `--tier pro --tier business`. Free compiler stays tier-agnostic.
 

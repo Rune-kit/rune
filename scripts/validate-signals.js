@@ -29,6 +29,10 @@ export const INTENTIONAL_BROADCAST_SIGNALS = new Set([
   'triage.classified', // review-intake (Issue Triage Mode) → observability + downstream maintainer dashboards (no skill listens)
   'agent.brief.ready', // review-intake (Issue Triage Mode) → posts AGENT-BRIEF to issue tracker (external, not in-mesh consumer)
   'outofscope.recorded', // ba (Step 1.6) → observability; downstream BA sessions discover via Step 1.5 file scan, not signal listen
+  'oracle.failed', // adversary + session-bridge → observability event (oracle-mode invariant breach, dashboard-only)
+  'architecture.shallow.flagged', // improve-architecture → terminal review output, no in-mesh consumer
+  'architecture.deletion.passed', // improve-architecture → terminal review output, no in-mesh consumer
+  'invariants.seeded', // onboard → one-shot bootstrap event after first invariant capture, no chain consumer
 ]);
 
 /**
