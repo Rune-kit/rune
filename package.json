@@ -1,6 +1,6 @@
 {
   "name": "@rune-kit/rune",
-  "version": "2.16.0",
+  "version": "2.16.1",
   "description": "63-skill mesh for AI coding assistants — runtime auto-discipline via native hooks (Claude/Cursor/Windsurf/Antigravity), 5-layer architecture, 215+ connections, multi-platform compiler.",
   "type": "module",
   "bin": {

@@ -3,7 +3,7 @@ name: ba
 description: "Business Analyst agent. Use when starting a new feature requiring requirements elicitation BEFORE plan or cook. Asks probing questions, identifies hidden requirements, maps stakeholders, defines scope boundaries, and produces a structured Requirements Document that plan and cook consume."
 metadata:
   author: runedev
-  version: "0.13.0"
+  version: "1.0.0"
   layer: L2
   model: opus
   group: creation

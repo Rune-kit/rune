@@ -3,6 +3,22 @@
 All notable changes to Rune are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.16.1] - 2026-05-02
+
+Maturity + housekeeping patch. No new features. Promotes `ba` to its first stable major (v1.0.0) after 10+ months and 13 minor cycles of production use across Pro autopilot multi-session handoffs and the v2.16 Synthesis Mode + Out-of-Scope WRITE workflow. Cleans 4 stale doc lines + 4 dead-signal warnings.
+
+### Changed
+
+- **`ba` v0.13.0 → v1.0.0** — first stable major. No functional changes. The skill has shipped 13 minor releases since first introduced (v0.1.0 → v0.13.0 covering Logic Consistency Check, Artifact Triad, Decision Stop-Loss, Synthesis Mode, Out-of-Scope WRITE, Step 1.5/1.6 read+write loop). Production-stable across BA solo runs, plan-handoff chain, autopilot Pro multi-session handoff, and review-intake Issue Triage Mode → BA grilling fork. Doctor `version maturity` warning now resolves.
+- **`Free/CLAUDE.md`** — "Current Wave" caption synced to v2.16.0 (was stale at v2.15.0); test count line synced to 1,349 (was 1,152).
+- **`scripts/validate-signals.js`** — added 4 Free-tier terminal-observability signals to `INTENTIONAL_BROADCAST_SIGNALS`: `oracle.failed`, `architecture.shallow.flagged`, `architecture.deletion.passed`, `invariants.seeded`. Cuts CI signal warnings from 30 to 26 (remaining 26 are paid-pack terminals that may gain future listeners — leaving as warnings preserves the dead-signal detector).
+
+### Tests
+
+- 1349 / 1349 pass, doctor clean (zero warnings — `ba` no longer flagged), mesh integrity ✓.
+
+---
+
 ## [2.16.0] - 2026-05-01
 
 "Skill Enrichment + Triage Workflow + Output Modes" — second graft pass from `mattpocock/skills` (MIT). Five workflow skills enriched with new behavioral patterns (feedback-loop ladder, vertical-slice planning, caveman output mode, synthesis-mode for BA, agent-brief variant for AFK handoff). Two skills extended into a triage workflow (review-intake Issue Triage Mode + ba Step 1.6 out-of-scope WRITE) — closes the read/write loop on `.out-of-scope/` records and adds a state machine for issue tracker intake. Zero new skills (62 → 62 free), honoring the "less skills, deeper connections" axis.

@@ -1,6 +1,6 @@
 # Rune Roadmap
 
-> Last updated: May 2026 | Version: 2.16.0
+> Last updated: May 2026 | Version: 2.16.1
 
 ---
 
@@ -18,7 +18,7 @@ These principles guide every roadmap decision:
 
 ---
 
-## Current State (v2.16.0 — "Skill Enrichment + Triage Workflow + Output Modes")
+## Current State (v2.16.1 — "Skill Enrichment + Triage Workflow + Output Modes")
 
 | Layer | Count | Status |
 |-------|-------|--------|
