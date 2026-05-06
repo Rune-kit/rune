@@ -13,6 +13,7 @@
 
 import { existsSync } from 'node:fs';
 import { readFile, writeFile } from 'node:fs/promises';
+import os from 'node:os';
 import path from 'node:path';
 import { createInterface } from 'node:readline';
 import { fileURLToPath } from 'node:url';
@@ -25,6 +26,7 @@ import { uninstallHooks } from '../commands/hooks/uninstall.js';
 import { generateDashboardHTML } from '../dashboard.js';
 import { checkMeshIntegrity, formatDoctorResults, formatMeshResults, runDoctor } from '../doctor.js';
 import { checkHookDrift, formatHookDriftResult } from '../commands/hooks/drift.js';
+import { runSetup, formatSetupResult } from '../commands/setup.js';
 import { buildAll } from '../emitter.js';
 import { collectStats, renderStatus, renderStatusJson } from '../status.js';
 import { collectGraphData, generateMeshHTML } from '../visualizer.js';
@@ -303,6 +305,45 @@ async function cmdDoctor(projectRoot, args) {
   if (!results.healthy) process.exit(1);
 }
 
+async function cmdSetup(projectRoot, args) {
+  log('');
+  log('  Rune Setup Wizard');
+  log('  ──────────────────');
+  log(`  Free version:    ${await readVersion()} (cached)`);
+
+  // Print detected tiers banner
+  const { detectTiers } = await import('../commands/setup.js');
+  const detected = detectTiers(projectRoot);
+  if (detected.pro) {
+    log(`  Pro detected:    ${detected.pro.source} (v${detected.pro.version})`);
+  } else {
+    log('  Pro:             not detected');
+  }
+  if (detected.business) {
+    log(`  Business:        ${detected.business.source} (v${detected.business.version})`);
+  } else {
+    log('  Business:        not detected');
+  }
+
+  try {
+    const result = await runSetup({ projectRoot, runeRoot: RUNE_ROOT, args });
+    log(formatSetupResult(result));
+  } catch (err) {
+    log('');
+    log(`  ✗ Setup failed: ${err.message}`);
+    process.exit(1);
+  }
+}
+
+async function readVersion() {
+  try {
+    const pkg = JSON.parse(await readFile(path.join(RUNE_ROOT, 'package.json'), 'utf-8'));
+    return pkg.version;
+  } catch {
+    return 'unknown';
+  }
+}
+
 async function cmdStatus(projectRoot, args) {
   const config = await readConfig(projectRoot);
   const tierSources = resolveTierSources(config?.tiers, projectRoot);
@@ -467,10 +508,13 @@ async function cmdHooks(projectRoot, args, subcommand) {
   switch (subcommand) {
     case 'install': {
       const tierArg = parseTierFlag(args.tier);
-      const result = await installHooks(projectRoot, {
+      // --global writes to ~/.claude/settings.json (covers every Claude Code session)
+      const targetRoot = args.global ? os.homedir() : projectRoot;
+      const platform = args.global ? 'claude' : args.platform;
+      const result = await installHooks(targetRoot, {
         preset: args.preset,
         dry: args.dry,
-        platform: args.platform,
+        platform,
         tier: tierArg,
       });
       log('');
@@ -645,6 +689,9 @@ async function main() {
     case 'doctor':
       await cmdDoctor(projectRoot, args);
       break;
+    case 'setup':
+      await cmdSetup(projectRoot, args);
+      break;
     case 'status':
       await cmdStatus(projectRoot, args);
       break;
@@ -673,7 +720,9 @@ async function main() {
       log('  Rune CLI — Skill mesh for AI coding assistants');
       log('');
       log('  Commands:');
-      log('    init     Interactive setup (auto-detects platform)');
+      log('    setup    Interactive wizard — auto-detect tiers, pick scope, install hooks (recommended for first-time)');
+      log('             [--here|--global] [--tier pro,business] [--preset gentle|strict] [--dry]');
+      log('    init     Interactive setup for build pipeline (auto-detects platform)');
       log('    build    Compile skills for configured platform');
       log('    doctor   Validate compiled output + mesh integrity');
       log('             --mesh   Mesh integrity only (reciprocals, versions, sections)');
@@ -684,7 +733,7 @@ async function main() {
       log('    analytics  Usage analytics dashboard (Business tier)');
       log('    hooks      Install/uninstall/status for multi-platform auto-discipline');
       log(
-        '               hooks install [--preset gentle|strict|off] [--platform claude|cursor|windsurf|antigravity|all]',
+        '               hooks install [--preset gentle|strict|off] [--platform claude|cursor|windsurf|antigravity|all] [--global]',
       );
       log('               hooks uninstall [--platform <name>|all]');
       log('               hooks status [--platform <name>|all]');

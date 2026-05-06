@@ -64,7 +64,7 @@
       <canvas id="mesh-canvas"></canvas>
     </div>
     <div class="hero-content">
-      <p class="hero-badge">v2.17.0 &mdash; 64 skills &bull; behavioral modes + triage &bull; MIT</p>
+      <p class="hero-badge">v2.17.1 &mdash; 64 skills &bull; one-command setup wizard &bull; MIT</p>
       <h1>Less skills.<br><span class="accent">Deeper connections.</span></h1>
       <p class="hero-sub">A mesh ecosystem for AI coding assistants. Skills call each other bidirectionally, forming resilient workflows that adapt when things go wrong.</p>
       <div class="hero-actions">
@@ -329,12 +329,15 @@ D &harr; E &harr; F
         <div class="install-card">
           <h3>Claude Code</h3>
           <p class="install-badge">Native Plugin</p>
-          <pre class="code-block"><code># Add marketplace (one-time)
+          <pre class="code-block"><code># 1. Add marketplace (one-time)
 claude plugin marketplace add rune-kit/rune
 
-# Install plugin
-claude plugin install rune</code></pre>
-          <p>Full mesh: subagents, hooks, adaptive routing, analytics.</p>
+# 2. Install plugin
+claude plugin install rune
+
+# 3. Wire hooks (interactive — pick scope, tiers, preset)
+npx @rune-kit/rune setup</code></pre>
+          <p>Full mesh: subagents, hooks, adaptive routing, analytics. The wizard auto-detects Pro/Business if installed.</p>
         </div>
         <div class="install-card">
           <h3>Cursor / Windsurf / Any IDE</h3>

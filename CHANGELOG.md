@@ -3,6 +3,38 @@
 All notable changes to Rune are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.17.1] - 2026-05-06
+
+UX patch — `rune setup` interactive wizard replaces the multi-step `cd <project> && export RUNE_PRO_ROOT && rune hooks install --preset gentle --tier pro` workflow with one command. Source: bro flagged the v2.17.0 install flow as "rắc rối" (complicated) and asked for "one-click chọn scope > finish" UX.
+
+### Added
+
+- **`rune setup`** (new top-level command) — interactive wizard. Auto-detects Pro/Business tiers across 3 paths in priority order: env var → monorepo sibling → well-known paths (`D:/Project/Rune/Pro`, `~/rune-pro`, `~/Project/Rune/Pro`). Asks 3 questions: scope (current/global) → tiers (free/pro/business) → preset (gentle/strict). Non-interactive mode via `--here` / `--global` / `--tier` / `--preset` / `--dry` flags for CI / scripting.
+- **`rune hooks install --global`** — new flag. Writes Rune-managed entries to `~/.claude/settings.json` (every Claude Code session, regardless of project) instead of the default per-project `<cwd>/.claude/settings.json`. Implementation passes `os.homedir()` as projectRoot to existing claude adapter — no new emission infrastructure. Forces `--platform claude` (cursor/windsurf/antigravity rule files are inherently per-project).
+- **`compiler/commands/setup.js`** — exports `runSetup()`, `detectTiers()`, `formatSetupResult()`, `WELL_KNOWN_TIER_PATHS`. `detectTiers()` accepts `{ wellKnownPaths }` opt for test isolation (so the maintainer's `D:/Project/Rune/Pro` doesn't pollute test runs on the same machine).
+- **9 new tests** in `compiler/__tests__/setup.test.js` — detectTiers (env var precedence, sibling, business), runSetup (--here, --tier, --dry), formatSetupResult (current/global scope rendering).
+
+### Documentation
+
+- **`README.md`** — new "One-Command Setup (recommended)" section above existing Install/Quick Start. Sample wizard transcript inline. Non-interactive mode examples for CI.
+- **`docs/HOOKS.md`** — major restructure. New "Quick start (recommended)" → `rune setup`. Existing flag docs moved to "Manual flags" section. New `rune setup` section with full transcript example, scope comparison table, tier auto-detection priority, non-interactive mode flags.
+- **`docs/index.html`** — Install card "Claude Code" updated with 3-step flow (marketplace → install → setup). Wizard mention in subtitle.
+- **`CLAUDE.md`** — Commands list now leads with `rune setup`. Mandatory Skill Routing table adds row: "set up rune / install hooks / wire hooks / configure rune / first-time setup" → tell user to run `npx @rune-kit/rune setup`.
+
+### Why the wizard, not just a sleeker flag combo
+
+Bro's v2.17.0 install pain points (paraphrased): "rắc rối" (complicated) — multiple flags to remember, env var to set, must `cd` per project. The wizard collapses 4 decision points (scope / tier / preset / platform) into 3 prompts with sensible defaults + auto-detection. Operators new to Rune get a working setup in 30 seconds without reading docs first; CI scripts get the same flags they had before plus `--here` / `--global` toggle for scope.
+
+Anti-paywall placement: lives in **Free** repo, NOT Pro/Business. Tier-agnostic infrastructure UX shouldn't be paywalled — even free-only users need scope/preset picker. Auto-detect logic lives where tier resolution code already lives (`compiler/commands/hooks/tiers.js`).
+
+### Tests
+
+- **1376 / 1376 pass** (was 1367 — added 9 setup-wizard tests).
+- `node compiler/bin/rune.js doctor`: 64 skills, 203 connections, 40 signals, mesh healthy.
+- `node compiler/bin/rune.js doctor --hooks`: clean.
+
+---
+
 ## [2.17.0] - 2026-05-06
 
 "Quarantine + Hook Drift Reporter" — graft pass from `criznguyen/skills-pack` (operator-owned, Apache 2.0). Adds two diagnostic-focused additions: (1) a Rune-native L3 prompt-injection advisory hook for untrusted external content (MCP user-content, WebFetch, upload Reads), and (2) a hook-drift reporter that compares actual `.claude/settings.json` Rune-managed entries against canonical `buildPreset()` output. Both deliberately scoped as advisories / reporters — neither blocks workflow. One new free skill (63 → 64), 2 new mesh signals, 1 new doctor flag (`--hooks`). Pro pack ships autopilot v1.4.0 split-counter circuit breaker (auto-engages in autopilot mode only — silent in interactive cook).

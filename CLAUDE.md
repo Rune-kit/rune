@@ -62,6 +62,7 @@ When the user's intent matches a skill, invoke it BEFORE writing any code or ana
 | Large task (5+ files, 3+ modules) | `rune:team` | Sequential cook on parallel-eligible work |
 | Legacy cleanup (health <40) | `rune:rescue` | Ad-hoc refactoring without safety nets |
 | "graft", "port from repo", "copy from repo" | `rune:graft` | Manual copy-paste from GitHub without challenge gate |
+| "set up rune", "install hooks", "wire hooks", "configure rune", "first-time setup" | Tell user: run `npx @rune-kit/rune setup` (interactive wizard) | Manually editing settings.json or chaining `cd && rune hooks install --tier pro` per project |
 
 **Workflow chains are enforced by each skill's Step 0 prerequisite check:**
 - `cook` → checks for approved plan (invokes `plan` if missing)
@@ -81,6 +82,7 @@ When the user's intent matches a skill, invoke it BEFORE writing any code or ana
 
 ## Commands
 
+- **One-command setup (recommended for first-time)**: `npx @rune-kit/rune setup` — interactive wizard auto-detects Pro/Business tiers, asks for scope (current project / global) + preset, installs hooks
 - Validate plugin: `claude plugin validate .`
 - Test locally: `claude --plugin-dir .`
 - Build for Cursor: `node compiler/bin/rune.js build --platform cursor --output <project-dir>`
@@ -88,10 +90,11 @@ When the user's intent matches a skill, invoke it BEFORE writing any code or ana
 - Build for Codex: `node compiler/bin/rune.js build --platform codex --output <project-dir>`
 - Build for OpenCode: `node compiler/bin/rune.js build --platform opencode --output <project-dir>`
 - Validate build: `node compiler/bin/rune.js doctor`
+- Hook drift report: `node compiler/bin/rune.js doctor --hooks` (compares installed vs canonical preset)
 - Project dashboard: `node compiler/bin/rune.js status` (tiered neofetch)
 - Mesh visualizer: `node compiler/bin/rune.js visualize` (interactive graph)
-- Run tests: `npm test` (1,349 tests — compiler + signals + hooks + tier-hooks + scripts + status + visualizer)
-- Install runtime hooks: `node compiler/bin/rune.js hooks install --preset gentle` (add `--tier pro` / `--tier business` to stack paid tiers)
+- Run tests: `npm test` (1,376 tests — compiler + signals + hooks + tier-hooks + scripts + status + visualizer + setup wizard)
+- Install runtime hooks (manual): `node compiler/bin/rune.js hooks install --preset gentle [--global]` (add `--tier pro` / `--tier business` to stack paid tiers)
 - Run tests with coverage: `npm run test:coverage` (c8 + lcov)
 - Lint: `npm run lint` (Biome)
 - Lint + fix: `npm run lint:fix`

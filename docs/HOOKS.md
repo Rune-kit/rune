@@ -1,14 +1,26 @@
 # Rune Hooks — Multi-Platform Auto-Discipline
 
-Rune skills are libraries by default. `rune hooks install` turns them into a **runtime**: your IDE auto-invokes `preflight`, `sentinel`, `dependency-doctor`, and `completion-gate` at the right moments — before you commit insecure code, before you forget to run tests, before you ship a half-finished change.
+Rune skills are libraries by default. `rune hooks install` turns them into a **runtime**: your IDE auto-invokes `preflight`, `sentinel`, `dependency-doctor`, `completion-gate`, and `quarantine` at the right moments — before you commit insecure code, before you forget to run tests, before you ship a half-finished change, before you trust an untrusted external content blob.
 
 Different AI IDEs expose different primitives. This doc explains what "auto-fire" actually means on each platform so you know what you're getting.
 
-## Quick start
+## Quick start (recommended)
+
+```bash
+# One command — interactive wizard auto-detects Pro/Business, asks scope/preset
+rune setup
+```
+
+The wizard handles 95% of cases. Use the explicit flags below only for CI / scripting / advanced multi-platform setups.
+
+## Manual flags
 
 ```bash
 # Auto-detect platforms (.claude/, .cursor/, .windsurf/, .antigravity/)
 rune hooks install --preset gentle
+
+# Install GLOBALLY — every Claude Code session, regardless of project
+rune hooks install --preset gentle --global
 
 # Target a specific platform (force-creates the platform dir if missing)
 rune hooks install --preset strict --platform cursor
@@ -24,6 +36,90 @@ rune hooks uninstall
 
 # Inspect wiring
 rune hooks status --platform all
+
+# Drift report — does installed match the canonical preset?
+rune doctor --hooks
+```
+
+## `rune setup` — interactive wizard
+
+Run once per machine (or per project) to wire everything in one shot:
+
+```
+$ rune setup
+
+  Rune Setup Wizard
+  ──────────────────
+  Free version:    2.17.0 (cached)
+  Pro detected:    sibling (../Pro) (v1.1.0)
+  Business:        not detected
+
+  Where to install hooks?
+    [c] Current project — D:/MyProject/.claude/settings.json
+    [g] Global          — ~/.claude/settings.json
+         (every Claude Code session, regardless of project)
+
+  Scope [c/g] (default c): g
+
+  Which tiers to install?
+    [x] Free (always — required)
+    [?] Pro      — detected sibling (../Pro) (v1.1.0)
+
+  Install Pro tier? [Y/n]: y
+
+  Preset:
+    [g] gentle — advisory mode, hooks warn but never block (recommended)
+    [s] strict — hooks BLOCK on violations (CI/AFK use)
+
+  Preset [g/s] (default g): g
+
+  Rune Setup Complete
+  ──────────────────
+  Scope:     GLOBAL (~/.claude/settings.json)
+  Tiers:     Free + pro
+  Preset:    gentle
+  Platforms: claude
+
+  Verify:
+    rune doctor --hooks   # check drift
+    rune hooks status     # show wired skills
+```
+
+### Wizard scope options
+
+| Choice    | Writes to                     | Use when                                                    |
+|-----------|-------------------------------|-------------------------------------------------------------|
+| `current` | `<cwd>/.claude/settings.json` | Project-specific config — different rules per project       |
+| `global`  | `~/.claude/settings.json`     | One-shot for all Claude Code sessions, regardless of cwd    |
+
+**Global mode** is what most users want for first-time setup. Smart hooks self-disable when context doesn't fit (e.g., `loop-circuit-breaker` only fires when `.rune/autopilot-state.json` exists in the active project — silent in personal scratch projects).
+
+### Wizard tier auto-detection
+
+The wizard searches for tier manifests in this order:
+
+1. `$RUNE_PRO_ROOT/hooks/manifest.json` (env var)
+2. `<cwd>/../Pro/hooks/manifest.json` (monorepo sibling — typical for Rune dev clones)
+3. Well-known paths: `D:/Project/Rune/Pro`, `~/rune-pro`, `~/Project/Rune/Pro`
+
+Same logic for `--tier business`. If detected, the wizard pre-fills the prompt with the detected version.
+
+### Non-interactive mode (CI / scripts)
+
+Pass flags to skip prompts:
+
+```bash
+# Project install with Pro tier, gentle preset
+rune setup --here --tier pro --preset gentle
+
+# Global install with both tiers, strict preset
+rune setup --global --tier pro,business --preset strict
+
+# Free-only, no tiers
+rune setup --here --no-tier --preset gentle
+
+# Dry-run (preview without writing)
+rune setup --here --dry
 ```
 
 Presets:

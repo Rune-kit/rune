@@ -83,9 +83,13 @@ _Methodology: Claude Code CLI headless mode (`claude -p --output-format json`), 
 
 ---
 
-## What's New (v2.17.0 — Quarantine)
+## What's New (v2.17.1 — One-Command Setup Wizard)
 
-> **v2.17.0 (2026-05-06):** New L3 skill `quarantine` ships a PostToolUse advisory hook for untrusted external content (MCP user-content, WebFetch, upload Reads). Honest scope: hook lands `[QUARANTINE-NOTICE]` in next-turn `additionalContext`, biasing the model to treat prior external content as data — NOT structural defense. Layered against `permissions.deny` (egress) + `integrity-check` (state). Default trusted-MCP allowlist (linear / github / jira / atlassian / Drive / neural-memory) skips advisory; operator extends at `~/.claude/quarantine.d/trusted-mcp-allowlist.txt`. Per-session disable via `QUARANTINE_DISABLE=1`. Wired into `rune hooks install --preset gentle|strict`. CI 1355/1355.
+> **v2.17.1 (2026-05-06):** New `rune setup` interactive wizard collapses the multi-step `cd <project> && export RUNE_PRO_ROOT && rune hooks install --preset gentle --tier pro` workflow into one command — auto-detects Pro/Business tiers across env var / sibling / well-known paths, asks for scope (current project / global) + preset, installs hooks. New `--global` flag on `rune hooks install` writes to `~/.claude/settings.json` (every Claude Code session, regardless of project). Non-interactive mode via `--here` / `--global` / `--tier` / `--preset` / `--dry` flags. Anti-paywall — wizard ships in Free, NOT Pro/Business (tier-agnostic infrastructure UX). Doc sweep: README "One-Command Setup", HOOKS.md restructure, agent skill-routing row for "set up rune". CI 1376/1376.
+
+### Previous (v2.17.0 — Quarantine + Hook Drift Reporter)
+
+> **v2.17.0 (2026-05-06):** New L3 skill `quarantine` ships a PostToolUse advisory hook for untrusted external content (MCP user-content, WebFetch, upload Reads). Honest scope: hook lands `[QUARANTINE-NOTICE]` in next-turn `additionalContext`, biasing the model to treat prior external content as data — NOT structural defense. Layered against `permissions.deny` (egress) + `integrity-check` (state). Default trusted-MCP allowlist (linear / github / jira / atlassian / Drive / neural-memory) skips advisory; operator extends at `~/.claude/quarantine.d/trusted-mcp-allowlist.txt`. Per-session disable via `QUARANTINE_DISABLE=1`. Wired into `rune hooks install --preset gentle|strict`. New `rune doctor --hooks` drift reporter. CI 1367/1367.
 
 ### Previous (v2.16.1 — Skill Enrichment + Triage Workflow + Output Modes)
 
@@ -226,6 +230,46 @@ Rune started as a **Claude Code plugin** and now compiles to **every major AI ID
 
 ## Install
 
+### One-Command Setup (recommended)
+
+After installing the plugin, run the wizard once to wire hooks the way you want them — pick scope, pick tiers, done:
+
+```bash
+npx @rune-kit/rune setup
+```
+
+The wizard auto-detects what you have:
+
+```
+Rune Setup Wizard
+──────────────────
+Free version:    2.17.1 (cached)
+Pro detected:    sibling (../Pro) (v1.1.0)
+Business:        not detected
+
+Where to install hooks?
+  [c] Current project — D:/MyProject/.claude/settings.json
+  [g] Global          — ~/.claude/settings.json
+       (every Claude Code session, regardless of project)
+
+Scope [c/g] (default c): g
+Install Pro tier? [Y/n]: y
+Preset [g/s] (default g): g
+
+✓ Wired 5 hooks to ~/.claude/settings.json
+  Verify: rune doctor --hooks
+```
+
+**What does the wizard do?** It writes Rune-managed entries to `.claude/settings.json` (project-local OR global) so Claude Code auto-fires `preflight`, `sentinel`, `dependency-doctor`, `completion-gate`, and `quarantine` at the right moments. With `--tier pro`, it also wires `loop-circuit-breaker` (auto-engages only in autopilot sessions).
+
+**Non-interactive mode** (CI / scripted):
+
+```bash
+npx @rune-kit/rune setup --here --preset gentle --tier pro
+npx @rune-kit/rune setup --global --preset strict --tier pro,business
+npx @rune-kit/rune setup --here --no-tier --dry      # preview without writing
+```
+
 ### Claude Code (Native Plugin)
 
 ```bash
@@ -235,7 +279,7 @@ claude plugin add rune-kit/rune
 
 Or add manually in `~/.claude/settings.json` under `installed_plugins`.
 
-Full mesh: subagents, hooks, adaptive routing, mesh analytics.
+Full mesh: subagents, hooks, adaptive routing, mesh analytics. **Run `npx @rune-kit/rune setup` afterward to wire hooks** (see One-Command Setup above).
 
 ### Cursor / Windsurf / Antigravity / Any IDE
 

@@ -1,6 +1,6 @@
 # Rune Roadmap
 
-> Last updated: May 2026 | Version: 2.17.0
+> Last updated: May 2026 | Version: 2.17.1
 
 ---
 
@@ -18,7 +18,7 @@ These principles guide every roadmap decision:
 
 ---
 
-## Current State (v2.17.0 — "Quarantine")
+## Current State (v2.17.1 — "Setup Wizard")
 
 | Layer | Count | Status |
 |-------|-------|--------|
