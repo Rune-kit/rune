@@ -222,7 +222,9 @@ export function formatSetupResult(result) {
   lines.push('');
   lines.push('  Rune Setup Complete');
   lines.push('  ──────────────────');
-  lines.push(`  Scope:     ${result.scope === 'global' ? 'GLOBAL (~/.claude/settings.json)' : `current project (${result.targetRoot})`}`);
+  lines.push(
+    `  Scope:     ${result.scope === 'global' ? 'GLOBAL (~/.claude/settings.json)' : `current project (${result.targetRoot})`}`,
+  );
   lines.push(`  Tiers:     Free${result.tiers.length > 0 ? ` + ${result.tiers.join(' + ')}` : ''}`);
   lines.push(`  Preset:    ${result.preset}`);
   lines.push(`  Platforms: ${(result.platforms || []).join(', ') || '—'}`);

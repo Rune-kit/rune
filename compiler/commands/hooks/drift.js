@@ -62,7 +62,8 @@ export async function checkHookDrift(projectRoot) {
         platform: id,
         event: null,
         status: 'mixed-preset',
-        message: 'settings.json contains both gentle and strict Rune entries — re-run `rune hooks install --preset <gentle|strict>` to converge',
+        message:
+          'settings.json contains both gentle and strict Rune entries — re-run `rune hooks install --preset <gentle|strict>` to converge',
       });
     }
 
@@ -159,7 +160,9 @@ export function formatHookDriftResult(result) {
   }
 
   lines.push('');
-  lines.push(`  Summary: ${result.summary.drifted} drifted, ${result.summary.missing} missing, ${result.summary.errors} error(s).`);
+  lines.push(
+    `  Summary: ${result.summary.drifted} drifted, ${result.summary.missing} missing, ${result.summary.errors} error(s).`,
+  );
   lines.push('  Resolution: re-run `rune hooks install --preset <gentle|strict>` to re-converge.');
   lines.push('  This is a reporter — operator decides what to do with the findings.');
 

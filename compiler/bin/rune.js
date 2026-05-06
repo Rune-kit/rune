@@ -20,13 +20,13 @@ import { fileURLToPath } from 'node:url';
 import { getAdapter, listPlatforms } from '../adapters/index.js';
 import { getAllAnalytics } from '../analytics.js';
 import { dispatchHook } from '../commands/hook-dispatch.js';
+import { checkHookDrift, formatHookDriftResult } from '../commands/hooks/drift.js';
 import { installHooks } from '../commands/hooks/install.js';
 import { hookStatus } from '../commands/hooks/status.js';
 import { uninstallHooks } from '../commands/hooks/uninstall.js';
+import { formatSetupResult, runSetup } from '../commands/setup.js';
 import { generateDashboardHTML } from '../dashboard.js';
 import { checkMeshIntegrity, formatDoctorResults, formatMeshResults, runDoctor } from '../doctor.js';
-import { checkHookDrift, formatHookDriftResult } from '../commands/hooks/drift.js';
-import { runSetup, formatSetupResult } from '../commands/setup.js';
 import { buildAll } from '../emitter.js';
 import { collectStats, renderStatus, renderStatusJson } from '../status.js';
 import { collectGraphData, generateMeshHTML } from '../visualizer.js';
@@ -720,7 +720,9 @@ async function main() {
       log('  Rune CLI — Skill mesh for AI coding assistants');
       log('');
       log('  Commands:');
-      log('    setup    Interactive wizard — auto-detect tiers, pick scope, install hooks (recommended for first-time)');
+      log(
+        '    setup    Interactive wizard — auto-detect tiers, pick scope, install hooks (recommended for first-time)',
+      );
       log('             [--here|--global] [--tier pro,business] [--preset gentle|strict] [--dry]');
       log('    init     Interactive setup for build pipeline (auto-detects platform)');
       log('    build    Compile skills for configured platform');
