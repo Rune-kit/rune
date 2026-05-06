@@ -25,6 +25,7 @@ const SIGNAL_NAME_PATTERN = /^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*)+$/;
  */
 export const INTENTIONAL_BROADCAST_SIGNALS = new Set([
   'autopilot.downgraded', // Pro autopilot → observability (no Free listener)
+  'autopilot.budget.exceeded', // Pro autopilot → observability (Step 8.7 circuit-breaker breach, no in-mesh consumer)
   'output.density.set', // context-engine → orchestrators consume dynamically (cook/team/rescue), not via static listen:
   'triage.classified', // review-intake (Issue Triage Mode) → observability + downstream maintainer dashboards (no skill listens)
   'agent.brief.ready', // review-intake (Issue Triage Mode) → posts AGENT-BRIEF to issue tracker (external, not in-mesh consumer)
@@ -44,6 +45,7 @@ export const INTENTIONAL_BROADCAST_SIGNALS = new Set([
 export const EXTERNAL_TRIGGER_SIGNALS = new Set([
   'marketing.campaign.start', // niche-finder entry point (user-initiated growth campaign)
   'business.context.loaded', // consulting-analysis entry point (loaded by user via .rune/business/context.md)
+  'external.content.received', // quarantine entry point (PostToolUse runtime hook on mcp__/WebFetch/upload-Read)
 ]);
 
 /**

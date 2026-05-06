@@ -263,6 +263,8 @@ Lowercase, dot-separated: `<domain>.<event>` (e.g. `code.changed`, `tests.failed
 | `triage.classified` | review-intake | *(observability)* |
 | `agent.brief.ready` | review-intake | *(external — issue tracker)* |
 | `outofscope.recorded` | ba, review-intake | *(observability — discovered via .out-of-scope/ file scan)* |
+| `quarantine.notice.emitted` | quarantine | sentinel, integrity-check |
+| `external.content.received` | *(external — runtime hook on `mcp__*` / WebFetch / upload-Read)* | quarantine |
 
 ### Validation
 

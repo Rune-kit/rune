@@ -81,6 +81,16 @@ export function buildPreset(preset) {
             },
           ],
         },
+        {
+          matcher: 'mcp__.*|WebFetch|Read',
+          hooks: [
+            {
+              type: 'command',
+              command: `${DISPATCH_CMD} quarantine${flag}`,
+              async: true,
+            },
+          ],
+        },
       ],
       Stop: [
         {
@@ -101,7 +111,7 @@ export function buildPreset(preset) {
 /**
  * Skills wired by presets — used by `rune hooks status` to verify skill existence.
  */
-export const WIRED_SKILLS = ['preflight', 'sentinel', 'dependency-doctor', 'completion-gate'];
+export const WIRED_SKILLS = ['preflight', 'sentinel', 'dependency-doctor', 'completion-gate', 'quarantine'];
 
 /**
  * Detect if a hook command entry is Rune-managed.

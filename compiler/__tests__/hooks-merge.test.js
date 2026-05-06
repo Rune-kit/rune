@@ -169,10 +169,11 @@ describe('summarizeRuneHooks', () => {
   test('extracts skill names per event', () => {
     const merged = mergePreset({}, buildPreset('gentle'));
     const summary = summarizeRuneHooks(merged);
-    assert.strictEqual(summary.total, 4);
+    assert.strictEqual(summary.total, 5);
     assert.ok(summary.events.PreToolUse.includes('preflight'));
     assert.ok(summary.events.PreToolUse.includes('sentinel'));
     assert.ok(summary.events.PostToolUse.includes('dependency-doctor'));
+    assert.ok(summary.events.PostToolUse.includes('quarantine'));
     assert.ok(summary.events.Stop.includes('completion-gate'));
   });
 

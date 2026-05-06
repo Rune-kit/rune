@@ -9,6 +9,7 @@ metadata:
   model: haiku
   group: validation
   tools: "Read, Glob, Grep"
+  listen: quarantine.notice.emitted
 ---
 
 # integrity-check
@@ -25,6 +26,7 @@ Based on "Agents of Chaos" (arXiv:2602.20021) threat model: agents that read per
 - Called by `team` before merging cook reports (Phase 3a)
 - Called by `session-bridge` on load mode (Step 1.5)
 - `/rune integrity` — manual integrity scan of `.rune/` directory
+- Signal: `quarantine.notice.emitted` (from `rune:quarantine`) — bias toward stricter scanning of any state file that incorporated quarantined external content
 
 ## Calls (outbound)
 

@@ -5,7 +5,7 @@
 <p align="center">
   <strong>Less skills. Deeper connections.</strong><br>
   A lean, interconnected skill ecosystem for AI coding assistants.<br>
-  63 skills · 215+ mesh connections · 8 platforms · MIT
+  64 skills · 215+ mesh connections · 8 platforms · MIT
 </p>
 
 <p align="center">
@@ -23,7 +23,7 @@
 
 Most skill ecosystems are either **too many isolated skills** (540+ that don't talk to each other) or **rigid pipelines** (A → B → C, if B fails everything stops).
 
-Rune is a **mesh** — 63 skills with 215+ connections across a 5-layer architecture. Skills call each other bidirectionally, forming resilient workflows that adapt when things go wrong.
+Rune is a **mesh** — 64 skills with 215+ connections across a 5-layer architecture. Skills call each other bidirectionally, forming resilient workflows that adapt when things go wrong.
 
 ```
 Pipeline:  A → B → C → D         (B fails = stuck)
@@ -83,7 +83,11 @@ _Methodology: Claude Code CLI headless mode (`claude -p --output-format json`), 
 
 ---
 
-## What's New (v2.16.1 — Skill Enrichment + Triage Workflow + Output Modes)
+## What's New (v2.17.0 — Quarantine)
+
+> **v2.17.0 (2026-05-06):** New L3 skill `quarantine` ships a PostToolUse advisory hook for untrusted external content (MCP user-content, WebFetch, upload Reads). Honest scope: hook lands `[QUARANTINE-NOTICE]` in next-turn `additionalContext`, biasing the model to treat prior external content as data — NOT structural defense. Layered against `permissions.deny` (egress) + `integrity-check` (state). Default trusted-MCP allowlist (linear / github / jira / atlassian / Drive / neural-memory) skips advisory; operator extends at `~/.claude/quarantine.d/trusted-mcp-allowlist.txt`. Per-session disable via `QUARANTINE_DISABLE=1`. Wired into `rune hooks install --preset gentle|strict`. CI 1355/1355.
+
+### Previous (v2.16.1 — Skill Enrichment + Triage Workflow + Output Modes)
 
 > **v2.16.1 patch (2026-05-02):** `ba` v0.13.0 → v1.0.0 first stable major (no functional changes — maturity stamp). Doc/signal hygiene: CLAUDE.md "Current Wave" synced; 4 terminal-observability signals whitelisted in `validate-signals.js`. CI 1349/1349.
 
@@ -193,7 +197,7 @@ cook ───emit:phase.complete────→ session-bridge
 
 ## What Rune Is (and Isn't)
 
-Rune started as a **Claude Code plugin** and now compiles to **every major AI IDE**. Same 63 skills, same mesh connections, same workflows — zero knowledge loss across platforms.
+Rune started as a **Claude Code plugin** and now compiles to **every major AI IDE**. Same 64 skills, same mesh connections, same workflows — zero knowledge loss across platforms.
 
 | | Rune Provides | Claude Code Provides |
 |---|---|---|
@@ -245,7 +249,7 @@ npx @rune-kit/rune init --platform windsurf
 npx @rune-kit/rune init --platform antigravity
 ```
 
-This compiles all 63 skills into your IDE's rules format. Same knowledge, same workflows.
+This compiles all 64 skills into your IDE's rules format. Same knowledge, same workflows.
 
 ### Platform Comparison
 
@@ -596,7 +600,7 @@ See [docs/MULTI-PLATFORM.md](docs/MULTI-PLATFORM.md) for the full architecture.
 | Doc | What's inside |
 |-----|---------------|
 | [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md) | Your first 5 minutes with Rune — install to first `/rune cook` |
-| [`docs/SKILLS.md`](docs/SKILLS.md) | All 63 skills, searchable by intent and layer |
+| [`docs/SKILLS.md`](docs/SKILLS.md) | All 64 skills, searchable by intent and layer |
 | [`docs/SIGNALS.md`](docs/SIGNALS.md) | Canonical signal inventory — 25 events, emit/listen graph |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | 5-layer mesh architecture reference |
 | [`docs/VISION.md`](docs/VISION.md) | Philosophy — what Rune is and isn't |
@@ -612,7 +616,7 @@ See [docs/MULTI-PLATFORM.md](docs/MULTI-PLATFORM.md) for the full architecture.
 Core Skills:       62 (L0: 1 │ L1: 5 │ L2: 29 │ L3: 27)
 Extension Packs:   14 free + 5 pro + 4 business
 Mesh Connections:  215+ cross-references
-Mesh Signals:      25 signals across 63 skills (emit/listen graph)
+Mesh Signals:      25 signals across 64 skills (emit/listen graph)
 Connections/Skill: 3.4 avg
 Platforms:         8 (Claude Code, Cursor, Windsurf, Antigravity, Codex, OpenCode, OpenClaw, Generic)
 Compiler:          ~1400 LOC (parser + 8 transforms + 8 adapters + CLI)

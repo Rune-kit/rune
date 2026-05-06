@@ -3,7 +3,7 @@
 ## Overview
 
 Rune is an interconnected skill ecosystem for AI coding assistants.
-63 core skills | 5-layer mesh architecture | 215+ connections | Multi-platform.
+64 core skills | 5-layer mesh architecture | 215+ connections | Multi-platform.
 Philosophy: "Less skills. Deeper connections."
 
 Works on: Claude Code (native plugin) · Cursor · Windsurf · Google Antigravity · OpenAI Codex · OpenCode · any AI IDE.
@@ -99,7 +99,7 @@ When the user's intent matches a skill, invoke it BEFORE writing any code or ana
 
 ## Current Wave
 
-63 core skills built (v2.16.0 — "Skill Enrichment + Triage Workflow + Output Modes").
+64 core skills built (v2.17.0 — "Quarantine — prompt-injection advisory hook for untrusted external content").
 
 Runtime layer: `rune hooks install` wires preflight / sentinel / completion-gate / dependency-doctor as native hooks on Claude Code, Cursor, Windsurf, Antigravity. Tier-tagged manifest pattern (`$<TIER>_ROOT/hooks/manifest.json`) lets Pro/Business stack on top via `--tier pro --tier business`. Free compiler stays tier-agnostic.
 

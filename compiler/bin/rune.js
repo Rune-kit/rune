@@ -24,6 +24,7 @@ import { hookStatus } from '../commands/hooks/status.js';
 import { uninstallHooks } from '../commands/hooks/uninstall.js';
 import { generateDashboardHTML } from '../dashboard.js';
 import { checkMeshIntegrity, formatDoctorResults, formatMeshResults, runDoctor } from '../doctor.js';
+import { checkHookDrift, formatHookDriftResult } from '../commands/hooks/drift.js';
 import { buildAll } from '../emitter.js';
 import { collectStats, renderStatus, renderStatusJson } from '../status.js';
 import { collectGraphData, generateMeshHTML } from '../visualizer.js';
@@ -240,6 +241,14 @@ async function cmdBuild(projectRoot, args) {
 
 async function cmdDoctor(projectRoot, args) {
   const config = await readConfig(projectRoot);
+
+  // --hooks flag: run hook drift report only (reporter, exit 0 always)
+  if (args.hooks) {
+    log('');
+    const driftResult = await checkHookDrift(projectRoot);
+    log(formatHookDriftResult(driftResult));
+    return;
+  }
 
   // --mesh flag: run mesh integrity check only
   if (args.mesh) {
@@ -668,6 +677,7 @@ async function main() {
       log('    build    Compile skills for configured platform');
       log('    doctor   Validate compiled output + mesh integrity');
       log('             --mesh   Mesh integrity only (reciprocals, versions, sections)');
+      log('             --hooks  Hook drift report — compare installed vs canonical preset (reporter, exit 0)');
       log('             --strict Fail on warnings (for CI)');
       log('    status   Project dashboard (skills, signals, packs, health)');
       log('    visualize  Interactive mesh graph (opens in browser)');

@@ -3,6 +3,52 @@
 All notable changes to Rune are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.17.0] - 2026-05-06
+
+"Quarantine + Hook Drift Reporter" — graft pass from `criznguyen/skills-pack` (operator-owned, Apache 2.0). Adds two diagnostic-focused additions: (1) a Rune-native L3 prompt-injection advisory hook for untrusted external content (MCP user-content, WebFetch, upload Reads), and (2) a hook-drift reporter that compares actual `.claude/settings.json` Rune-managed entries against canonical `buildPreset()` output. Both deliberately scoped as advisories / reporters — neither blocks workflow. One new free skill (63 → 64), 2 new mesh signals, 1 new doctor flag (`--hooks`). Pro pack ships autopilot v1.4.0 split-counter circuit breaker (auto-engages in autopilot mode only — silent in interactive cook).
+
+### Added
+
+- **`quarantine` (L3, new) v0.1.0** — PostToolUse advisory on `mcp__.*|WebFetch|Read` of `**/uploads/**`. Emits `[QUARANTINE-NOTICE: tool_name=… untrusted_surface=true source=…]` into next-turn `hookSpecificOutput.additionalContext`. Default trusted-MCP allowlist (linear, github, jira, atlassian, claude_ai_Google_Drive, neural-memory) skips advisory; operator extends at `~/.claude/quarantine.d/trusted-mcp-allowlist.txt` (read fresh every call — no daemon restart). Per-session disable via `QUARANTINE_DISABLE=1`. Telemetry: 1 JSONL line per matched call to `~/.claude/telemetry.jsonl` — privacy invariant logs only `tool_name + decision + source + session_id` (NEVER tool_input or tool_response body). Hard self-timeout 5000 ms; advisory mode never blocks tool dispatch (always exit 0). Two reference docs: `trusted-mcp-allowlist.md` (default trusted list + customization rules), `quarantine-discipline.md` (`<UNTRUSTED>` author-time pedagogy + layered defense pattern + honest framing of advisory-only nature).
+- **`Free/hooks/quarantine/index.cjs`** — Node hook implementation. Reads stdin event JSON, applies tool/path matcher logic (mcp__ namespace check, WebFetch always, Read only for `**/uploads/**` segment match), emits PostToolUse `additionalContext`, appends telemetry. No LLM spawn (independence-of-reviewer principle — hook scans data destined for the LLM, calling LLM from hook collapses audit chain).
+- **2 new mesh signals** — `quarantine.notice.emitted` (quarantine → sentinel, integrity-check), `external.content.received` (runtime hook → quarantine, registered in `EXTERNAL_TRIGGER_SIGNALS` whitelist as the entry-point fired by Claude Code's PostToolUse, not by an in-mesh skill).
+- **`HOOK_CONSTRAINTS` quarantine entry** — `compiler/transforms/hooks.js` adds inline MUST instruction for non-Claude platforms (cursor / windsurf / antigravity / codex / opencode / generic) attached to skills that use `Read` or `WebFetch` — gives cross-platform fidelity since those platforms have no PostToolUse equivalent.
+
+### Changed
+
+- **`presets.js`** — `WIRED_SKILLS` extended (4 → 5) to include `quarantine`. `buildPreset()` adds PostToolUse block on matcher `mcp__.*|WebFetch|Read` calling `npx @rune-kit/rune hook-dispatch quarantine`. `rune hooks install --preset gentle|strict` now wires quarantine alongside preflight / sentinel / dependency-doctor / completion-gate.
+- **`Free/hooks/hooks.json`** — registers Claude Code native plugin path PostToolUse matcher `mcp__.*|WebFetch|Read` → `run-hook.cjs quarantine`.
+- **`sentinel` SKILL.md** — listens `quarantine.notice.emitted` (escalate when same untrusted MCP namespace quarantined ≥5× in session — suggests prompt-injection attempt).
+- **`integrity-check` SKILL.md** — listens `quarantine.notice.emitted` (bias toward stricter scanning of state files that incorporated quarantined external content).
+- **`docs/ARCHITECTURE.md`** — Signal Catalog adds `quarantine.notice.emitted` and `external.content.received` rows.
+- **`scripts/validate-signals.js`** — `external.content.received` added to `EXTERNAL_TRIGGER_SIGNALS` whitelist (entry point from PostToolUse runtime hook, not in-mesh emitter).
+
+### Added (Hook Drift Reporter)
+
+- **`rune doctor --hooks`** — new CLI flag. Reads `.claude/settings.json`, compares Rune-managed Free-preset entries against canonical `buildPreset(detectedPreset).hooks`, reports missing canonical entries (preset wired more than installed) + drifted entries (installed command shape differs from canonical). Tier-emitted entries (`${RUNE_PRO_ROOT}` / `${RUNE_BUSINESS_ROOT}`) filtered out — those are tier-managed and have separate check paths. Exit 0 always (reporter, not gate — operator decides what to do with findings). Use case: diagnostic before users file "skill is broken" issues; local drift is a common cause of unexplained hook behavior.
+- **`compiler/commands/hooks/drift.js`** — new module exporting `checkHookDrift(projectRoot)` + `formatHookDriftResult(result)`. Sniffs preset from existing `detectPreset()`, falls back to gentle on mixed-preset (with explicit warning).
+- **12 new tests** in `compiler/__tests__/hooks-drift.test.js` — clean preset, drift detection, missing entry detection, tier-entry filtering, parse-error handling, mixed-preset warning.
+
+### Pro Pack (separate repo, separate version)
+
+- **`@rune-pro/autopilot v1.3.0 → v1.4.0`** ships in parallel — new Step 8.7 ITERATION BUDGET AUDIT with split read-class (cap 600) / write-class (cap 150) circuit breaker. Auto-engages only when `.rune/autopilot-state.json` is present and unblocked — interactive cook sessions get a single existsSync no-op (~1ms) per tool call. Pro hooks manifest 1.0.1 → 1.1.0, `minFreeVersion: 2.17.0`. See `Pro/CHANGELOG.md` `autopilot-v1.4.0` entry.
+
+### Tests
+
+- 1367 / 1367 pass (was 1355 — added 12 hook-drift tests).
+- `node compiler/bin/rune.js doctor`: 64 skills, 203 connections, mesh healthy, 0 errors.
+- `node compiler/bin/rune.js doctor --hooks`: drift reporter clean on canonical install.
+- `node scripts/validate-signals.js`: 108 signals, all signals valid.
+
+### Honesty Constraints
+
+- Advisory-only — hook fires AFTER model ingested raw `tool_response` body. An attacker who lands directive-shaped content in MCP output, fetched HTML, or uploaded markdown CAN still influence the model's first-turn behavior. The `[QUARANTINE-NOTICE]` only constrains turn 2 onward.
+- NOT a replacement for `permissions.deny` egress control. The complete defense is layered: egress (deny) + content advisory (quarantine) + state validation (integrity-check). All three orthogonal — none replaces another.
+- `<UNTRUSTED>...</UNTRUSTED>` markers are author-time pedagogy only. Adversarial close-tag spoofing in payloads defeats them as structural defense. Document call-out in `references/quarantine-discipline.md`.
+- Structural quarantine (rewrite `tool_response` at boundary before model sees it) is NOT implementable in user-space until Anthropic ships a `PreToolResultCommit` hook. This skill upgrades to structural rewrite when that ships; until then, advisory + egress + state-scan is the honest stack.
+
+---
+
 ## [2.16.1] - 2026-05-02
 
 Maturity + housekeeping patch. No new features. Promotes `ba` to its first stable major (v1.0.0) after 10+ months and 13 minor cycles of production use across Pro autopilot multi-session handoffs and the v2.16 Synthesis Mode + Out-of-Scope WRITE workflow. Cleans 4 stale doc lines + 4 dead-signal warnings.

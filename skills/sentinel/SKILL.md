@@ -9,7 +9,7 @@ metadata:
   group: quality
   tools: "Read, Bash, Glob, Grep"
   emit: security.passed, security.blocked
-  listen: code.changed
+  listen: code.changed, quarantine.notice.emitted
 ---
 
 # sentinel
@@ -29,6 +29,7 @@ If status is BLOCK, output the report and STOP. Do not hand off to commit. The c
 - Called by `deploy` before deployment
 - `/rune sentinel` — manual security scan
 - Auto-trigger: when `.env`, auth files, or security-critical code is modified
+- Signal: `quarantine.notice.emitted` (from `rune:quarantine`) — escalate when the same untrusted MCP namespace is quarantined ≥5× in a session (suggests prompt-injection attempt)
 
 ## Calls (outbound)
 
