@@ -105,7 +105,7 @@ export default {
       id: 'rune',
       name: 'Rune',
       kind: 'skills',
-      description: `${skills.length}-skill mesh for AI coding assistants. Routes all code tasks through specialized skills. 215+ connections, 14 extension packs.`,
+      description: `${skills.length}-skill mesh for AI coding assistants. Routes all code tasks through specialized skills. 203 sync connections + 40 async signals, 14 extension packs.`,
       version: pluginJson.version || '0.0.0',
       skills: ['./skills'],
       artifactConvention: {

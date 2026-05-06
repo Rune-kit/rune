@@ -5,7 +5,7 @@
 <p align="center">
   <strong>Less skills. Deeper connections.</strong><br>
   A lean, interconnected skill ecosystem for AI coding assistants.<br>
-  64 skills · 215+ mesh connections · 8 platforms · MIT
+  64 skills · 203 connections · 40 signals · 8 platforms · MIT
 </p>
 
 <p align="center">
@@ -23,7 +23,7 @@
 
 Most skill ecosystems are either **too many isolated skills** (540+ that don't talk to each other) or **rigid pipelines** (A → B → C, if B fails everything stops).
 
-Rune is a **mesh** — 64 skills with 215+ connections across a 5-layer architecture. Skills call each other bidirectionally, forming resilient workflows that adapt when things go wrong.
+Rune is a **mesh** — 64 skills with 203 connections + 40 signals across a 5-layer architecture. Skills call each other bidirectionally, forming resilient workflows that adapt when things go wrong.
 
 ```
 Pipeline:  A → B → C → D         (B fails = stuck)
@@ -205,7 +205,7 @@ Rune started as a **Claude Code plugin** and now compiles to **every major AI ID
 | **Quality Gates** | preflight + sentinel + review + completion-gate (parallel) | None built-in |
 | **Domain Knowledge** | 14 extension packs (trading, SaaS, mobile, etc.) | General-purpose |
 | **Cross-Session State** | .rune/ directory (decisions, conventions, progress) | Conversation only |
-| **Mesh Resilience** | 215+ skill connections, fail-loud-route-around | Linear execution |
+| **Mesh Resilience** | 203 skill connections + 40 mesh signals, fail-loud-route-around | Linear execution |
 | **Cost Optimization** | Auto model selection (haiku/sonnet/opus per task) | Single model |
 | | | |
 | **Sandbox & Permissions** | — | Claude Code handles this |
@@ -255,8 +255,8 @@ This compiles all 64 skills into your IDE's rules format. Same knowledge, same w
 
 | Feature | Claude Code | Cursor / Windsurf / Others |
 |---------|-------------|---------------------------|
-| Skills available | 61/61 | 61/61 |
-| Mesh connections | 215+ (programmatic) | 215+ (rule references) |
+| Skills available | 64/64 | 64/64 |
+| Mesh connections | 203 sync + 40 signals (programmatic) | 203 sync + 40 signals (rule references) |
 | Workflows & HARD-GATEs | Full | Full |
 | Extension packs | 14 | 14 |
 | Subagent parallelism | Native | Sequential fallback |
@@ -613,11 +613,11 @@ See [docs/MULTI-PLATFORM.md](docs/MULTI-PLATFORM.md) for the full architecture.
 ## Numbers
 
 ```
-Core Skills:       62 (L0: 1 │ L1: 5 │ L2: 29 │ L3: 27)
-Extension Packs:   14 free + 5 pro + 4 business
-Mesh Connections:  215+ cross-references
-Mesh Signals:      25 signals across 64 skills (emit/listen graph)
-Connections/Skill: 3.4 avg
+Core Skills:       64 (L0: 1 │ L1: 5 │ L2: 30 │ L3: 28)
+Extension Packs:   14 free + 6 pro + 4 business
+Mesh Connections:  203 sync calls (rune doctor)
+Mesh Signals:      40 signals · 50 emit/listen edges (rune doctor)
+Connections/Skill: 3.2 avg
 Platforms:         8 (Claude Code, Cursor, Windsurf, Antigravity, Codex, OpenCode, OpenClaw, Generic)
 Compiler:          ~1400 LOC (parser + 8 transforms + 8 adapters + CLI)
 Tests:             1,152+ (compiler + signals + status + visualizer + hooks + scripts + tier-hooks)
