@@ -223,6 +223,11 @@ describe('integration: real skills', () => {
     // Should find connections
     assert.ok(results.stats.connections > 100, `Should find 100+ connections, got ${results.stats.connections}`);
 
+    // Should find signals (emit/listen mesh — separate from sync calls)
+    // Free core scan only — Pro/Business packs scanned separately by validate-signals.js
+    assert.ok(results.stats.signals > 20, `Should find 20+ signals, got ${results.stats.signals}`);
+    assert.ok(results.stats.signalEdges > 0, `Should find signal edges, got ${results.stats.signalEdges}`);
+
     // Should not have errors
     assert.strictEqual(results.errors.length, 0, `Should have no errors: ${results.errors.join(', ')}`);
   });

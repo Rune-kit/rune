@@ -597,7 +597,7 @@ export async function checkMeshIntegrity(runeRoot) {
     checks: [],
     warnings: [],
     errors: [],
-    stats: { skills: 0, connections: 0, missingReciprocals: 0 },
+    stats: { skills: 0, connections: 0, signals: 0, signalEdges: 0, missingReciprocals: 0 },
   };
 
   const skillsDir = path.join(runeRoot, 'skills');
@@ -642,6 +642,30 @@ export async function checkMeshIntegrity(runeRoot) {
     }
     results.stats.connections += skill.calls.length;
   }
+
+  // Step 2.5: Count async signal mesh (emit/listen pairs) — separate from sync calls
+  const emitters = new Map(); // signal → Set<skill>
+  const listeners = new Map(); // signal → Set<skill>
+  for (const [name, skill] of skills) {
+    for (const sig of skill.emit) {
+      if (!emitters.has(sig)) emitters.set(sig, new Set());
+      emitters.get(sig).add(name);
+    }
+    for (const sig of skill.listen) {
+      if (!listeners.has(sig)) listeners.set(sig, new Set());
+      listeners.get(sig).add(name);
+    }
+  }
+  const allSignals = new Set([...emitters.keys(), ...listeners.keys()]);
+  results.stats.signals = allSignals.size;
+  // Edges = sum over each signal of (emitter_count × listener_count)
+  let edges = 0;
+  for (const sig of allSignals) {
+    const emCount = emitters.get(sig)?.size || 0;
+    const liCount = listeners.get(sig)?.size || 0;
+    edges += emCount * liCount;
+  }
+  results.stats.signalEdges = edges;
 
   results.stats.missingReciprocals = missingReciprocals.length;
 
@@ -726,12 +750,30 @@ function parseSkillConnections(content, skillName) {
     version: null,
     sections: [],
     hasAllSections: false,
+    emit: [],
+    listen: [],
   };
 
   // Extract version from frontmatter
   const versionMatch = content.match(/version:\s*["']?([\d.]+)["']?/);
   if (versionMatch) {
     result.version = versionMatch[1];
+  }
+
+  // Extract emit/listen from frontmatter (comma-separated values on a single line)
+  const emitMatch = content.match(/^\s*emit:\s*(.+)$/m);
+  if (emitMatch) {
+    result.emit = emitMatch[1]
+      .split(',')
+      .map((s) => s.trim().replace(/^["']|["']$/g, ''))
+      .filter((s) => s.length > 0);
+  }
+  const listenMatch = content.match(/^\s*listen:\s*(.+)$/m);
+  if (listenMatch) {
+    result.listen = listenMatch[1]
+      .split(',')
+      .map((s) => s.trim().replace(/^["']|["']$/g, ''))
+      .filter((s) => s.length > 0);
   }
 
   // Extract Calls section
@@ -791,7 +833,11 @@ function parseSkillConnections(content, skillName) {
 export function formatMeshResults(results) {
   const lines = [];
   lines.push(`\n  Mesh Integrity Check`);
-  lines.push(`  Skills: ${results.stats.skills} | Connections: ${results.stats.connections}`);
+  const sig = results.stats.signals ?? 0;
+  const edges = results.stats.signalEdges ?? 0;
+  lines.push(
+    `  Skills: ${results.stats.skills} | Connections: ${results.stats.connections} | Signals: ${sig} (${edges} edges)`,
+  );
   lines.push('');
 
   for (const check of results.checks) {
