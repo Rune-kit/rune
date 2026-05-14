@@ -259,6 +259,30 @@ Lowercase, dot-separated: `<domain>.<event>` (e.g. `code.changed`, `tests.failed
 | `media.prompt.optimized` | @rune-pro/media: prompt-engineer | @rune-pro/media: image-generator |
 | `media.image.generated` | @rune-pro/media: image-generator | @rune-pro/media: asset-pipeline |
 | `media.assets.processed` | @rune-pro/media: asset-pipeline | @rune-pro/growth: landing-builder, slides |
+| `growth.activation.audited` | @rune-pro/growth: activation-cro | @rune-pro/growth: experiment-designer, cro-analyst |
+| `growth.experiment.designed` | @rune-pro/growth: experiment-designer | @rune-pro/growth: cro-analyst (post-test feedback) |
+| `growth.acquisition.loop.designed` | @rune-pro/growth: acquisition-loops | @rune-pro/growth: launch-playbook, post-writer, landing-builder |
+| `growth.launch.phase.shipped` | @rune-pro/growth: launch-playbook | @rune-pro/growth: activation-cro, post-writer, landing-builder, cro-analyst |
+| `growth.paid.campaign.planned` | @rune-pro/growth: paid-acquisition | @rune-pro/growth: post-writer, experiment-designer; @rune-pro/media: asset-pipeline |
+| `business.pricing.band.set` | @rune-pro/finance: pricing-architect | @rune-pro/growth: paid-acquisition |
+
+> **Cross-pack signal payload schemas** (versioned for safe evolution):
+>
+> `business.pricing.band.set` (v1) — first cross-TIER signal (Business → Pro):
+> ```yaml
+> signal_version: v1
+> arpu_usd: float                    # ARPU at recommended tier (typically "Better")
+> margin_rate: float                 # gross margin rate
+> payback_months: int                # informational — Pro consumer uses its own operator-input payback target
+> churn_delta_pp: float              # projected churn impact from any price change (informational)
+> pmc: float                         # Van Westendorp PMC
+> pme: float                         # Van Westendorp PME
+> opp: float                         # Van Westendorp OPP
+> idp: float                         # Van Westendorp IDP
+> n_respondents: int                 # PSM sample size (≥ 50 minimum)
+> recommended_tier_prices: [float]   # Good / Better / Best
+> ```
+> Schema changes require version bump + listener-compatibility shim. Listeners (paid-acquisition) read fields by name; missing fields fall back to cost-floor.
 | `output.density.set` | context-engine | *(orchestrators dynamically — cook, team, rescue)* |
 | `triage.classified` | review-intake | *(observability)* |
 | `agent.brief.ready` | review-intake | *(external — issue tracker)* |
