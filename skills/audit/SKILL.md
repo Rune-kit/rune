@@ -3,7 +3,7 @@ name: audit
 description: "Comprehensive project audit — security, dependencies, code quality, architecture, performance, infra, docs, and mesh analytics. Delegates to specialist skills and generates an 8-dimension health score."
 metadata:
   author: runedev
-  version: "0.4.0"
+  version: "0.5.0"
   layer: L2
   model: sonnet
   group: quality
@@ -129,6 +129,24 @@ grep -rn "\.unwrap()" src/ --include="*.rs"
 ```
 
 Merge autopsy report + supplementary findings.
+
+**3.5 Zombie Code Detection**
+
+Identify code that is effectively dead but hasn't been formally removed. Zombie code increases surface area, confuses contributors, and accumulates security debt.
+
+| Signal | Detection Method | Severity |
+|--------|-----------------|----------|
+| No commits in 6+ months | `git log --since="6 months ago" -- <file>` returns empty | MEDIUM |
+| No test coverage | File not imported by any test file (Grep for filename in `**/*.test.*` / `**/*.spec.*`) | MEDIUM |
+| No owner | File not in CODEOWNERS, no author active in last 6 months | LOW |
+| Failing tests referencing the module | Test suite has skipped/failing tests for this module | HIGH |
+| Unpatched CVEs in dependencies only this module uses | Cross-reference dependency-doctor CVE list with per-file imports | HIGH |
+| Orphaned docs | README/docs reference files or APIs that no longer exist | LOW |
+
+**Zombie Code Verdict:**
+- 3+ signals on same file/module → flag as **ZOMBIE** in audit report
+- Recommend: archive (move to `_deprecated/`), delete, or assign owner
+- Do NOT auto-delete — present zombie list to user for decision
 
 ---
 

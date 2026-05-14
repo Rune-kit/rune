@@ -4,7 +4,7 @@ description: "Deploy application to target platform. Use when user explicitly sa
 disable-model-invocation: true
 metadata:
   author: runedev
-  version: "0.4.0"
+  version: "0.5.0"
   layer: L2
   model: sonnet
   group: delivery
@@ -155,6 +155,24 @@ curl -o /dev/null -s -w "%{http_code}" <deployed-url>
 If status is not 200 → flag as WARNING, do not treat as hard failure unless 5xx.
 
 If `rune:browser-pilot` is available, call it to take a screenshot of the deployed URL for visual confirmation.
+
+### Step 4.5 — Post-Deploy Health Thresholds
+
+After deploy is live, compare metrics against pre-deploy baseline for a 15-minute observation window:
+
+| Metric | ADVANCE (healthy) | HOLD & INVESTIGATE | ROLLBACK IMMEDIATELY |
+|--------|--------------------|--------------------|----------------------|
+| Error rate | ≤ 10% above baseline | 10–100% above baseline | > 2× baseline |
+| Latency (p95) | ≤ 20% above baseline | 20–100% above baseline | > 2× baseline |
+| Availability | ≥ 99.5% | 98–99.5% | < 98% |
+
+**Decision rules:**
+- ANY metric hits ROLLBACK → execute rollback plan immediately, invoke `rune:incident`
+- ANY metric hits HOLD → extend monitoring to 30 minutes, alert user with specific metric
+- ADVANCE only when ALL metrics are healthy for the full observation window
+- If no baseline exists (first deploy), use absolute thresholds: error rate < 1%, p95 < 2s, availability > 99%
+
+For progressive rollouts (feature-flag mode), apply the tighter thresholds defined in the Progressive Rollout Chain section instead.
 
 ### Step 5 — Monitor
 

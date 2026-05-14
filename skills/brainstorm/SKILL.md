@@ -3,7 +3,7 @@ name: brainstorm
 description: "Creative ideation and solution exploration. Generates multiple approaches with trade-offs, uses structured frameworks (SCAMPER, First Principles), and hands off to plan for structuring."
 metadata:
   author: runedev
-  version: "0.6.0"
+  version: "0.7.0"
   layer: L2
   model: opus
   group: creation
@@ -357,11 +357,29 @@ Option D (Hybrid C1 + C4):
 
 The hybrid is the recommended default in many cases. Be opinionated.
 
+### Step 4.75 — Not Doing List (MANDATORY)
+
+After selecting a recommendation, explicitly document what was **rejected** and why. This prevents scope creep later when someone asks "why didn't we do X?"
+
+For each rejected option, state:
+- **Option name**: the rejected approach
+- **Why not**: 1-sentence trade-off rationale (not "it's worse" — the specific cost that made it lose)
+- **Revisit if**: the condition under which this option becomes viable again
+
+```
+### Not Doing
+- **[Option B name]** — [specific trade-off, e.g., "adds 2 weeks for a 10% perf gain we don't need at current scale"]. Revisit if [condition, e.g., "user count exceeds 100k"].
+- **[Option C name]** — [specific trade-off]. Revisit if [condition].
+```
+
+The "Revisit if" clause is critical — it turns a rejection into a future trigger, not a permanent dismissal.
+
 ### Step 5 — Return to Plan
 Pass the recommended approach back to `rune:plan` for structuring into an executable implementation plan. Include:
 - The chosen option name
 - Key constraints to honor in the plan
 - Any risks identified that the plan must mitigate
+- The Not Doing list (so plan knows what's explicitly out of scope)
 
 If the user rejects the recommendation, return to Step 2 with adjusted constraints and regenerate.
 
@@ -408,6 +426,10 @@ If the user rejects the recommendation, return to Step 2 with adjusted constrain
 Option A — [one-line primary reason].
 Choose Option B if [specific hedge condition].
 
+### Not Doing
+- **[Option B name]** — [trade-off rationale]. Revisit if [condition].
+- **[Option C name]** — [trade-off rationale]. Revisit if [condition].
+
 ### Next Step
 Proceeding to rune:plan with Option A. Constraints to honor: [list].
 ```
@@ -435,6 +457,7 @@ Known failure modes for this skill. Check these before declaring done.
 | [Rescue] All approaches are "clean/proper" — no hacky option | MEDIUM | At least 1 must be unconventional — wrappers, reverse-engineering, debug mode abuse, proxy layers |
 | Calling plan directly instead of presenting options first | CRITICAL | Steps 2-3 are mandatory — present options, get approval, THEN call plan |
 | "Creative" options that ignore stated constraints | MEDIUM | Every option must satisfy the constraints declared in Step 1 |
+| Missing "Not Doing" list — rejected options not documented | MEDIUM | Step 4.75 is MANDATORY — every rejected option needs trade-off rationale + "Revisit if" condition |
 | [Design-It-Twice] Single agent producing N options instead of N parallel subagents | HIGH | Step 2.5 — constraint pinning happens at spawn, not in a loop. Each constraint = one Task call |
 | [Design-It-Twice] Diversity score below 0.4 ignored | HIGH | Step 3.5 gate — re-spawn once; if still low, present with explicit "low-diversity" warning |
 | [Design-It-Twice] "It depends" recommendation | HIGH | Step 4 — must pick one with a hedge; if genuinely tied, propose hybrid (Step 4.5) and recommend that |

@@ -6,7 +6,7 @@ agent: general-purpose
 disable-model-invocation: true
 metadata:
   author: runedev
-  version: "0.3.0"
+  version: "0.4.0"
   layer: L1
   model: sonnet
   group: orchestrator
@@ -198,6 +198,16 @@ Error recovery:
     → Do NOT proceed to Phase 4
     → Present screenshot + error log to user
 ```
+
+**3a.5. Apply post-deploy health thresholds.**
+
+Use the metric-based rollback decision matrix defined in `rune:deploy` Step 4.5. Compare error rate, latency (p95), and availability against pre-deploy baseline for 15 minutes:
+
+- ALL metrics ADVANCE → proceed to Phase 4
+- ANY metric HOLD → extend monitoring to 30 minutes, alert user before proceeding
+- ANY metric ROLLBACK → stop pipeline, invoke `rune:incident`, do NOT proceed to marketing
+
+This step bridges deploy's numeric thresholds into the launch pipeline — launch must not proceed to marketing while the deployment is unhealthy.
 
 **3b. Setup monitoring.**
 

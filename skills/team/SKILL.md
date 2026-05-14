@@ -5,7 +5,7 @@ context: fork
 agent: general-purpose
 metadata:
   author: runedev
-  version: "1.0.0"
+  version: "1.1.0"
   layer: L1
   model: opus
   group: orchestrator
@@ -165,8 +165,34 @@ GATE CHECK — before proceeding:
   [ ] Total streams ≤ 3
   [ ] Change Stacking check: no file appears in touches[] of 2+ parallel streams
   [ ] Every stream's requires[] is satisfied by a prior stream's provides[] or existing code
+  [ ] Shared Contract Gate: if 2+ parallel streams consume the same interface/type/API, the contract MUST be defined before any stream starts (see below)
 
 If any check fails → re-invoke plan with conflict notes.
+
+**Shared Contract Gate:**
+
+When parallel streams both depend on a shared interface (types, API contract, database schema), that contract must be locked before streams start. Otherwise two agents may independently define incompatible versions.
+
+```
+Detection:
+  → Grep each stream's file list for shared imports (types, interfaces, API clients)
+  → If stream A and stream B both import from the same module:
+      EITHER: move that module to a dependency stream (depends_on: [])
+      OR: define the contract inline in the NEXUS Handoff as "Code Contracts" section
+
+Contract format in NEXUS Handoff:
+  ### Code Contracts (locked — do not modify)
+  ```typescript
+  // Shared interface — both streams consume this, neither owns it
+  interface OrderResult {
+    orderId: string;
+    status: 'pending' | 'filled' | 'cancelled';
+    filledAt?: Date;
+  }
+  ```
+  Streams may consume this contract but MUST NOT modify it.
+  If a stream discovers the contract is insufficient → status = NEEDS_CONTEXT, not silent modification.
+```
 ```
 
 **1d. Question Gate (non-trivial tasks only).**
