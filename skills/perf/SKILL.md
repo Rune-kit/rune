@@ -1,9 +1,9 @@
 ---
 name: perf
-description: "Performance regression gate. Detects N+1 queries, sync-in-async, missing indexes, memory leaks, and bundle bloat before they reach production."
+description: "Performance regression gate. Detects N+1 queries, sync-in-async, missing indexes, memory leaks, and bundle bloat before they reach production. Ranks findings by Cost Impact Hierarchy (architecture > data transfer > compute > DB > caching) so fix priority maps to actual unit-cost reduction."
 metadata:
   author: runedev
-  version: "0.3.0"
+  version: "0.4.0"
   layer: L2
   model: sonnet
   group: quality
@@ -138,6 +138,30 @@ def get(key):
     return cache[key]
 ```
 Finding: `UNBOUNDED_CACHE — [file:line] — dict grows indefinitely — add LRU eviction or TTL`
+
+**Closure-captured arrays:**
+```javascript
+// BAD: closure retains entire `items` even after only `id` is needed
+function makeHandler(items) {
+  return (e) => items.find(x => x.id === e.id);  // items array retained
+}
+// GOOD: extract minimum data
+function makeHandler(items) {
+  const ids = new Set(items.map(x => x.id));
+  return (e) => ids.has(e.id);
+}
+```
+Finding: `CLOSURE_RETAIN — [file:line] — closure captures full collection — extract needed fields only`
+
+**Timer / interval without clear:**
+- `setInterval` / `setTimeout` callback referencing component state without cleanup on unmount
+- Finding: `LEAK_TIMER — [file:line] — interval not cleared — add clearInterval in cleanup`
+
+**Cost framing — memory leak = cost driver:**
+
+Unbounded caches + forgotten listeners + closure-captured arrays produce a chain reaction in production: memory grows → process exceeds container limit → orchestrator kills + cold-starts → cold-start latency spike → autoscaler provisions more replicas → bill climbs 20-40% versus a leak-free baseline. The leak finding is also a COST finding. When tagging severity, escalate any leak in a long-running process (worker, daemon, queue consumer) to **BLOCK** even if heap profile is currently under threshold — the slope, not the absolute, determines OOM timing.
+
+Cross-link to `debug` when a leak surfaces during diagnosis: `debug` finds the cause, `perf` quantifies the cost driver and recommends scope (LRU vs WeakRef vs explicit lifecycle).
 
 ### Step 5 — Bundle Analysis (frontend only)
 
@@ -276,6 +300,69 @@ Total estimated monthly                                  $X.XX
 
 **Key insight**: The most impactful optimization is often **model selection per operation** — using a cheaper model for background tasks (summarization, classification, metadata extraction) while reserving expensive models for primary user-facing interactions. A 10x cost reduction on 60% of calls = 6x overall savings.
 
+### Step 8.6 — Observability Cost Control
+
+Logging, tracing, and metrics infrastructure is often the **second-largest cloud bill line after compute** for production workloads. Most observability cost is self-inflicted — high-cardinality labels, unsampled traces, or 100% INFO log retention. Scan for the four common patterns:
+
+**Sampling discipline:**
+| Layer | Healthy default | Anti-pattern |
+|---|---|---|
+| INFO logs | 5-10% sample, 100% on warn/error | 100% retention on all levels |
+| Distributed traces | 5-10% normal, 100% on errors or > p95 latency | Head-based 100% sampling |
+| Metrics | Pre-aggregated at agent (no per-event metrics) | Per-event metrics emission |
+| Debug logs | Off in prod; on-demand via runtime flag | Always-on debug retention |
+
+**Findings to emit:**
+
+| Pattern | Finding | Cost impact |
+|---|---|---|
+| Log line emits unique IDs (`user_id`, `request_id`, `trace_id`) AS A METRIC LABEL | `HIGH_CARDINALITY_METRIC — [file:line] — label [name] is unbounded — move to log/trace, not metric` | Metric stores explode 100x+ ingestion cost |
+| No sampling on INFO logs | `LOG_NO_SAMPLE — [file:line] — INFO logged at 100% — add sampling (10% INFO, 100% warn+)` | 10x log volume = 10x bill |
+| Trace sampling head-based at 100% | `TRACE_NO_SAMPLE — [file:line] — head sampling 100% — switch to tail-based 5-10% with always-on for errors/slow` | 20x trace volume |
+| `console.log` in production hot path | `LOG_HOT_PATH — [file:line] — log emitted per request in tight loop — gate behind LOG_LEVEL or remove` | Logs dominate IOPS; throttles real traffic |
+| Sentry / OTel SDK with no scrubbing config | `OBS_NO_SCRUB — [file:line] — payloads emitted unscrubbed — risk PII + cost (large payloads)` | Compliance + ingestion cost |
+
+**Cost framing**: same project, same business logic; the observability cost line moves 5-20x depending on whether sampling is disciplined. Especially severe in serverless/edge runtimes where every invocation pays cold-start log ingestion overhead.
+
+## Cost Impact Hierarchy
+
+Not every perf finding has the same cost impact. When the report has multiple findings competing for engineering attention, rank them by where they sit in this hierarchy — fixes higher up the tree deliver more $ per engineering hour than fixes lower down.
+
+```
+Tier 1 — Architecture choices (10x impact)
+  • Hot loop running on wrong runtime (serverless cold-start per call vs warm container)
+  • N+1 queries that fan out to upstream rate limit (compounds with retries)
+  • Single-region for global users (egress + latency cost)
+
+Tier 2 — Data transfer (3-5x impact)
+  • Cross-AZ chatter (per-GB egress)
+  • Uncompressed responses (gzip = 70-90% reduction)
+  • Image format (WebP/AVIF = 25-50% reduction over JPEG/PNG)
+  • Log/trace volume (see Step 8.6)
+
+Tier 3 — Compute right-sizing (2-3x impact)
+  • Oversized instance types
+  • Over-provisioned autoscaler floor
+  • Always-on workers for bursty traffic
+
+Tier 4 — DB optimization (1.5-2x impact)
+  • Missing index on hot query
+  • N+1 within a single DB connection (cheaper than cross-service N+1)
+  • Connection pool sizing
+  • Query result caching
+
+Tier 5 — Caching layer (1.2-1.5x impact)
+  • CDN cache hit rate
+  • Application-level memoization
+  • Read-through cache for hot reads
+```
+
+**Reporting rule**: when verdict is BLOCK or WARN, group findings by tier in the report. Operator should NOT optimize Tier 5 caching when a Tier 1 architecture mismatch is sitting unaddressed — the Tier 1 fix subsumes the Tier 5 gain.
+
+**Unit economics anchor**: where possible, attach a unit-cost delta to each finding (e.g., `LOG_NO_SAMPLE` → `~$X/mo per 10k req` based on operator's current observability vendor pricing). If unit-cost data unavailable, flag the finding with the tier-based multiplier band instead of leaving impact blank.
+
+**Cost-allocation precondition**: a perf report's cost claims are only auditable if cloud resources have allocation tags (Environment, Team, Service). If `deploy` artifacts show untagged resources, raise a WARN `COST_UNATTRIBUTED — resources lack allocation tags — anomaly detection blind; tag-first then optimize`.
+
 ## Output Format
 
 ```
@@ -321,6 +408,10 @@ Known failure modes for this skill. Check these before declaring done.
 | Skipping framework checks because framework not detected | MEDIUM | If scout returns unknown framework, run generic checks + note in report |
 | Calling browser-pilot on backend-only project | LOW | Check project type in Step 1 — browser-pilot only for frontend/fullstack |
 | Reporting WARN as BLOCK (severity inflation) | MEDIUM | BLOCK = measurable regression on hot path; WARN = pattern that could be slow |
+| Memory leak found, severity left as MEDIUM | HIGH | Leak in long-running process = cost driver (OOM restart loop → autoscaler spend). Escalate to BLOCK when process lifetime > 1 hour |
+| High-cardinality label silently added as metric tag | HIGH | `user_id` / `request_id` / `trace_id` as METRIC label explodes ingestion cost 100x. Move to log/trace, never metric |
+| Findings reported without tier ranking when multiple compete | MEDIUM | Cost Impact Hierarchy groups by tier (1-5). Tier 1 fix subsumes Tier 5 gain; operator otherwise optimizes wrong target |
+| Cost claim made without cloud tag prerequisite | MEDIUM | Untagged resources = anomaly detection blind. Pair perf findings with WARN `COST_UNATTRIBUTED` when cloud tags missing |
 
 ## Done When
 

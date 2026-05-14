@@ -1,10 +1,10 @@
 ---
 name: deploy
-description: "Deploy application to target platform. Use when user explicitly says 'deploy', 'push to production', 'ship it'. Handles Vercel, Netlify, AWS, GCP, DigitalOcean, and VPS with pre-deploy verification and health checks."
+description: "Deploy application to target platform. Use when user explicitly says 'deploy', 'push to production', 'ship it'. Handles Vercel, Netlify, AWS, GCP, DigitalOcean, and VPS with pre-deploy verification and health checks. Enforces cost allocation tags + Managed-vs-Self-Host crossover decisions so deploy choices map to actual unit economics, not hand-waved 'we'll optimize later'."
 disable-model-invocation: true
 metadata:
   author: runedev
-  version: "0.5.0"
+  version: "0.6.0"
   layer: L2
   model: sonnet
   group: delivery
@@ -242,6 +242,54 @@ if (FEATURE_X) { /* new path */ } else { /* old path */ }
 - Static site deploy with no user-state impact
 - Non-production deploy (staging, preview)
 
+## Managed vs Self-Host Crossover
+
+Production deploys frequently default to "managed" (Vercel, Cloudflare Workers, Supabase, etc.) for speed-of-setup, then quietly bleed budget as scale grows. The opposite mistake — self-hosting at 10K MAU "to save money" — wastes more engineering time than the bill it saves. The crossover point is workload-dependent. Defaults below are heuristic; verify against operator's actual bill before recommending a switch.
+
+| Workload | Stay managed until ~ | Self-host above | Reason |
+|---|---|---|---|
+| **Auth (Clerk, Auth0, Supabase auth)** | 200K MAU | 200K+ MAU AND auth-customization needs | Per-MAU pricing kicks 5-10× at scale; OSS alternatives (better-auth, Keycloak) have mature implementations |
+| **Search (Algolia, Typesense Cloud)** | 500K records OR 100K queries/mo | Beyond either | Per-record + per-query stacks; OpenSearch/Meilisearch self-host crosses over at this volume |
+| **Database (managed Postgres — Supabase, Neon, RDS)** | $500/mo bill | $500+ bill AND ops capacity exists | Below $500 the on-call burden of self-host dominates; above $500 the savings cover an engineer's bandwidth |
+| **Object storage (S3, R2, Backblaze)** | Almost never self-host | Petabyte-scale + bandwidth-heavy use | S3-class storage is hard to beat below 10PB; cross-region egress is usually the real cost lever |
+| **Email (SendGrid, Resend, Postmark)** | Almost never self-host | Compliance-driven requirement only | SMTP reputation + deliverability take years to build; running mail server for cost is false economy |
+| **CDN (Cloudflare, Fastly)** | Almost never self-host | Edge-compute customization + > 100TB/mo egress | Cloudflare free tier alone covers most projects; CDN self-host is rarely the right answer |
+| **Compute (Vercel/Netlify/Workers)** | $300-500/mo bill | $500+/mo AND traffic stable | Below $500 the operational overhead of K8s/Fly/VPS dominates; above, dedicated container hosting wins |
+| **Vector DB (Pinecone, Weaviate Cloud)** | $200/mo OR < 10M vectors | $200+ AND vectors > 10M | Self-hosted Qdrant/Milvus crosses over at moderate scale |
+| **Queue (SQS, Cloud Tasks)** | Almost never self-host | Latency-critical sub-5ms only | Per-message pricing is low; self-host (RabbitMQ, NATS) only when latency SLO < 5ms |
+
+**Operator decision rule**: do NOT migrate to self-host purely on bill size. Verify all three:
+1. **Bill threshold crossed** (per table above)
+2. **Ops bandwidth exists** (someone on-call who can run the service)
+3. **Customization need exists** (the managed service blocks something specific)
+
+If only (1) is true, recommend WARN `MANAGED_OK_AT_SCALE — bill above crossover but ops bandwidth not validated — keep managed; revisit when (2)+(3) also true`.
+
+**Reverse scenario**: prematurely self-hosting at < 10K MAU costs more engineering time than the managed bill it avoids. Flag with `PREMATURE_SELFHOST — [resource] self-hosted at [N] usage — managed equivalent < $X/mo + zero ops burden — strong recommendation: migrate to managed unless customization (3) is blocking`.
+
+**Cost-allocation precondition**: even within managed services, ALL cloud resources must carry allocation tags (Environment, Team, Service, CostCenter). Without tags, anomaly detection is impossible and any "managed is expensive" claim is unfalsifiable. Step 1 pre-deploy check should add:
+
+```bash
+# Verify cost allocation tags exist on managed resources
+# AWS: aws resourcegroupstaggingapi get-resources --tag-filters Key=Environment
+# GCP: gcloud asset search-all-resources --query='labels:environment'
+# Vercel: project settings → check team/project tagging
+# If untagged → BLOCK with COST_UNATTRIBUTED finding
+```
+
+## Observability Cost in Deploys
+
+Production observability (Datadog, Sentry, New Relic, Honeycomb, Logtail) bills can rival compute bills if shipped with default config. Verify before first prod deploy:
+
+| Layer | Default that bleeds money | Correct config |
+|---|---|---|
+| Log retention | 30+ days at INFO | 7 days INFO, 30 days WARN+, archive cold for compliance |
+| Trace sampling | Head-based 100% | Tail-based 5-10% normal + 100% on error/slow |
+| Metrics | High-cardinality custom dims (user_id, trace_id) | Pre-aggregate at agent; per-event = log not metric |
+| RUM (Real User Monitoring) | 100% session capture | 10-20% sample + 100% on rage-click/error |
+
+This overlaps with `perf` Step 8.6 (Observability Cost Control). `perf` finds the code patterns that emit overheavy telemetry; `deploy` ensures the platform-side ingestion + retention defaults are configured before the first prod release where the bill compounds.
+
 ## Output Format
 
 Deploy Report with platform, status (success/failed/rollback), deployed URL, build time, and checks (tests, security, HTTP, visual, monitoring). See Step 6 Report above for full template.
@@ -277,6 +325,10 @@ Known failure modes for this skill. Check these before declaring done.
 | HTTP 5xx on live URL treated as non-critical | HIGH | 5xx = deployment likely failed — report FAILED, do not proceed to monitoring/marketing |
 | Not setting up watchdog monitoring after deploy | MEDIUM | Step 5 is mandatory — post-deploy monitoring is part of deploy, not optional |
 | Deploy metadata not logged (version, commit hash) | LOW | Constraint 5: log version + timestamp + commit hash in report |
+| Resources deployed without cost-allocation tags | HIGH | Step 1 pre-deploy MUST verify Environment/Team/Service tags. Untagged = unfalsifiable cost claims downstream |
+| Self-host migration recommended on bill threshold alone | HIGH | Crossover rule requires ALL 3 conditions: bill + ops bandwidth + customization need. Single-criterion recommendations produce engineering-debt swap |
+| Defaults shipped on observability stack | MEDIUM | Verify retention + sampling + cardinality config BEFORE first prod deploy; defaults often bleed > compute bill |
+| Premature self-host (< 10K MAU) | MEDIUM | Flag `PREMATURE_SELFHOST` — managed equivalent at this scale is cheaper than engineering time spent operating |
 
 ## Done When
 

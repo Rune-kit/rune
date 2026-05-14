@@ -1,9 +1,9 @@
 ---
 name: debug
-description: "Root cause analysis for bugs and unexpected behavior. Traces errors through code, uses structured reasoning, and hands off to fix when cause is found. Core of the debug↔fix mesh."
+description: "Root cause analysis for bugs and unexpected behavior. Traces errors through code, uses structured reasoning, and hands off to fix when cause is found. Core of the debug↔fix mesh. When the diagnosed cause is a memory leak in a long-running process, escalates to perf for cost-impact framing (leaks drive OOM-restart → cold-start → autoscaler spend, often 20-40% bill inflation)."
 metadata:
   author: runedev
-  version: "1.2.0"
+  version: "1.3.0"
   layer: L2
   model: sonnet
   group: development
@@ -463,6 +463,8 @@ chain_metadata:
 | Same error fingerprint across cycles treated as different errors | MEDIUM | Step 2d: normalize line numbers, paths, variable names before comparison — same fingerprint = same error |
 | Forming hypotheses with a slow / non-deterministic / manual repro | CRITICAL | Step 0: build a fast deterministic pass/fail signal first — see `references/feedback-loop-ladder.md` 10-rank ladder. Hypothesis testing on a slow loop wastes 10x the cycles |
 | Skipping loop construction "to save time" on non-trivial bugs | HIGH | The loop IS the time-saver. 10 min on the loop saves hours of cycling. If construction takes > 10 min, escalate via 3-Fix Rule — bug is architectural |
+| Memory leak diagnosed without cost-impact framing | HIGH | Long-running process leak = production cost driver. Memory growth → OOM kill → cold start → autoscaler provisions extra replicas → 20-40% bill inflation vs leak-free baseline. Diagnosed leaks MUST flag this in Debug Report and hand off to `perf` for tier-ranked recommendation (LRU vs WeakRef vs explicit lifecycle). Slope of memory growth matters more than absolute heap at diagnosis time |
+| Recurring OOM/restart treated as infra issue, not code bug | HIGH | Repeated container restarts with memory pressure = code leak, not "needs bigger instance". Verify via heap profile + retained-references analysis BEFORE recommending vertical scale. Vertical scale on a leak buys days, not fix |
 
 ## Done When
 
