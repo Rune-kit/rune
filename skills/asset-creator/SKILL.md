@@ -1,6 +1,6 @@
 ---
 name: asset-creator
-description: "Creates code-based visual assets — SVG icons, OG image HTML templates, social banners, and icon sets. Outputs files with usage instructions."
+description: "Creates code-based visual assets — SVG icons, OG image HTML templates, social banners, and icon sets. Use when generating visuals as code (vector/HTML), NOT raster images — for raster generation see @rune-pro/media. Outputs files with usage instructions."
 metadata:
   author: runedev
   version: "0.2.0"

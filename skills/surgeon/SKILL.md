@@ -1,6 +1,6 @@
 ---
 name: surgeon
-description: "Incremental refactorer. Use within a rescue workflow after safeguard has set up safety nets. Refactors ONE module per session using proven patterns — Strangler Fig, Branch by Abstraction, Expand-Migrate-Contract."
+description: "Incremental refactorer. Use when refactoring ONE module at a time within a rescue workflow after safeguard has set up safety nets — never as a standalone refactor for greenfield code. Applies proven patterns: Strangler Fig, Branch by Abstraction, Expand-Migrate-Contract."
 metadata:
   author: runedev
   version: "0.2.0"

@@ -1,6 +1,6 @@
 ---
 name: marketing
-description: "Create marketing assets and execute launch strategy. Generates landing copy, social banners, SEO meta, blog posts, and video scripts."
+description: "Create marketing assets and execute launch strategy. Use when crafting landing copy, social banners, SEO meta, blog posts, or video scripts — coordinates with launch (deploy + announce) and the @rune-pro/growth pack (research / content / CRO)."
 metadata:
   author: runedev
   version: "0.6.0"

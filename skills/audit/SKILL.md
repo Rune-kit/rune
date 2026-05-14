@@ -1,6 +1,6 @@
 ---
 name: audit
-description: "Comprehensive project audit — security, dependencies, code quality, architecture, performance, infra, docs, and mesh analytics. Delegates to specialist skills and generates an 8-dimension health score."
+description: "Comprehensive project audit — security, dependencies, code quality, architecture, performance, infra, docs, and mesh analytics. Use when needing a full 8-dimension health-score snapshot before a major release, M&A diligence, or quarterly review. Delegates to specialist skills (sentinel, dependency-doctor, perf, autopsy, etc.)."
 metadata:
   author: runedev
   version: "0.5.0"

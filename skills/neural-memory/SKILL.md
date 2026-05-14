@@ -1,6 +1,6 @@
 ---
 name: neural-memory
-description: "Cross-session cognitive persistence via Neural Memory MCP. Captures decisions, patterns, errors, and insights with rich semantic links. Provides recall, hypothesis tracking, and evidence-based reasoning across projects."
+description: "Cross-session cognitive persistence via Neural Memory MCP. Use when needing semantic recall of past decisions / errors / insights across projects — distinct from session-bridge (file-based, project-scoped). Provides hypothesis tracking, evidence chains, and graph-based associative memory."
 metadata:
   author: rune-kit
   version: 0.1.0
