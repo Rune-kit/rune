@@ -48,11 +48,11 @@ jobs:
           clawhub login --token "$CLAWHUB_TOKEN" --no-browser
           TAG="${GITHUB_REF#refs/tags/}"
           CHANGELOG=$(git log "$(git tag --sort=-v:refname | grep '^v' | sed -n '2p')..${TAG}" --pretty=format:"• %s" --no-merges | head -10)
-          clawhub package publish .openclaw/rune \
+          clawhub publish .openclaw/rune \
             --slug rune-kit \
             --name "Rune" \
             --version "${TAG#v}" \
-            --changelog "${CHANGELOG}" || echo "⚠️ ClawHub publish failed — check log; manual retry: clawhub package publish .openclaw/rune --slug rune-kit --version ${TAG#v}"
+            --changelog "${CHANGELOG}" || echo "⚠️ ClawHub CLI returned non-zero — usually a timeout response; verify via 'clawhub inspect rune-kit' since the server-side publish typically still succeeds"
 
       - name: Generate changelog
         id: changelog
