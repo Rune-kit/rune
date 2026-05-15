@@ -83,7 +83,11 @@ _Methodology: Claude Code CLI headless mode (`claude -p --output-format json`), 
 
 ---
 
-## What's New (v2.17.1 — One-Command Setup Wizard)
+## What's New (v2.18.0 — Cross-Platform Reach + Discipline Tightening)
+
+> **v2.18.0 (2026-05-15):** Compiler grew from 8 → 13 platforms with five new adapters: **Aider** (per-skill `aider/rules/` + auto-generated `.aider.conf.yml` `read:` array), **GitHub Copilot CLI** (`.github/instructions/*.instructions.md` w/ documented `applyTo` YAML), **Gemini CLI** (bundled `GEMINI.md` for single-file context), **Qoder** (`.qoder/rules/` + AGENTS.md), **Qwen Coder** (`qwen/skills/` + `QWEN.md` with `@import`). New `adapter.generateExtraFiles()` hook with path-traversal guard + frozen stats snapshot — replaces ad-hoc adapter special-cases (codex AGENTS.md migrated). Discipline tightening: `design` v0.6.0 adds Step 2.9 Rules 4/5/6 (measurable constraints, no #000/#fff/lorem ipsum, CJK-first font stack); `skill-forge` v1.9.0 adds soft `examples/` convention for output-format skills; `sentinel-env` v0.4.0 expands Tier 8 binary detection (Bun, Cargo, Deno, Volta, asdf, proto). New `CONTRIBUTING.md` "What we don't accept" non-goals section. Source: graft from `nexu-io/html-anything` (Apache-2.0). CI 1435/1435.
+
+### Previous (v2.17.1 — One-Command Setup Wizard)
 
 > **v2.17.1 (2026-05-06):** New `rune setup` interactive wizard collapses the multi-step `cd <project> && export RUNE_PRO_ROOT && rune hooks install --preset gentle --tier pro` workflow into one command — auto-detects Pro/Business tiers across env var / sibling / well-known paths, asks for scope (current project / global) + preset, installs hooks. New `--global` flag on `rune hooks install` writes to `~/.claude/settings.json` (every Claude Code session, regardless of project). Non-interactive mode via `--here` / `--global` / `--tier` / `--preset` / `--dry` flags. Anti-paywall — wizard ships in Free, NOT Pro/Business (tier-agnostic infrastructure UX). Doc sweep: README "One-Command Setup", HOOKS.md restructure, agent skill-routing row for "set up rune". CI 1376/1376.
 
@@ -243,7 +247,7 @@ The wizard auto-detects what you have:
 ```
 Rune Setup Wizard
 ──────────────────
-Free version:    2.17.1 (cached)
+Free version:    2.18.0 (cached)
 Pro detected:    sibling (../Pro) (v1.1.0)
 Business:        not detected
 

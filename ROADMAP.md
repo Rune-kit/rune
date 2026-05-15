@@ -1,6 +1,6 @@
 # Rune Roadmap
 
-> Last updated: May 2026 | Version: 2.17.1
+> Last updated: May 2026 | Version: 2.18.0
 
 ---
 
@@ -13,12 +13,12 @@ These principles guide every roadmap decision:
 - **Depth over breadth** — one enriched skill beats three shallow ones. Connections matter more than skill count.
 - **Mesh-first** — new skills must wire into existing L1/L2 orchestrators. Isolated skills don't ship.
 - **Community-driven quality** — community packs go through the same depth and connection review as core skills.
-- **Platform parity** — every core feature must work across all 8 supported platforms.
+- **Platform parity** — every core feature must work across all 13 supported platforms.
 - **Earn the paid tiers** — Pro/Business packs must demonstrably outperform free alternatives for their domain.
 
 ---
 
-## Current State (v2.17.1 — "Setup Wizard")
+## Current State (v2.18.0 — "Cross-Platform Reach + Discipline Tightening")
 
 | Layer | Count | Status |
 |-------|-------|--------|
