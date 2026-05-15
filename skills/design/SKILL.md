@@ -3,7 +3,7 @@ name: design
 description: "Design system reasoning. Maps product domain to style, palette, typography, and platform-specific patterns. Generates .rune/design-system.md as the shared design contract for all UI-generating skills."
 metadata:
   author: runedev
-  version: "0.5.0"
+  version: "0.6.0"
   layer: L2
   model: sonnet
   group: creation
@@ -145,7 +145,7 @@ Why: Every menu option dilutes commitment. A single confident default gets commi
 
 These rules apply regardless of domain, mood, or platform. Every generated design system MUST comply.
 
-**Enforcement**: `rune:review` v1.1.0+ reads `.rune/design-system.md` § Scale Minimums and flags violations of all 3 rules below as MEDIUM/HIGH findings. Design defines, review enforces — this is the contract.
+**Enforcement**: `rune:review` v1.1.0+ reads `.rune/design-system.md` § Scale Minimums and flags violations of Rules 1–3 below as MEDIUM/HIGH findings. Rules 4–6 (Measurable Constraints, No-Pure-No-Lorem, CJK-First) are design-time guidance — added in design v0.6.0, review enforcement forthcoming. Design defines, review enforces — this is the contract.
 
 #### Rule 1 — Scale Minimums
 
@@ -202,6 +202,41 @@ When the design needs a darker hover, lighter surface, or tinted state, **derive
 Why: HSL shading distorts perceived brightness at different hues. oklch() keeps perceptual lightness consistent, so derived states look intentional rather than "kinda close." Write derived tokens to `.rune/design-system.md` — downstream skills reuse these, not re-derive.
 
 Bonus: use `text-wrap: pretty` on headings to prevent widow words. One line, zero ceremony.
+
+#### Rule 4 — Measurable Constraints, Not Vague Directives
+
+Every design rule written into `.rune/design-system.md` MUST be measurable. Vague directives are not constraints — they are decoration. A reviewer cannot enforce "use modern typography"; they CAN enforce "Inter 96/64/40/24/16 px on an 8 px grid."
+
+| Vague (reject) | Measurable (accept) |
+|---|---|
+| "Use modern typography" | "Inter 96/64/40/24/16 px on an 8 px grid" |
+| "Subtle shadows" | "0 1px 2px rgba(0,0,0,0.05) (sm), 0 4px 6px rgba(0,0,0,0.07) (md)" |
+| "Brand-aligned color" | "Accent: oklch(65% 0.2 255); hover: oklch(from var(--accent) calc(l - 0.08) c h)" |
+| "Good contrast" | "All text/bg pairs ≥ 4.5:1 (WCAG AA), large text ≥ 3:1" |
+| "Tasteful spacing" | "8 px grid: every margin, padding, line-height a multiple of 8" |
+| "Real content, not lorem ipsum" | "Use the user's actual data; if missing, ship a labelled `[ PLACEHOLDER: content-type ]` block" |
+
+#### Rule 5 — No Pure Black, No Pure White, No Lorem Ipsum
+
+Three small forbids that catch the highest-frequency AI tells:
+
+1. **No `#000` or `#fff`** for any default text or background. Both crush perceived depth and read as "default browser styles." Use `oklch(98% 0 0)` / `oklch(8% 0 0)` (or domain-appropriate neutrals) and derive surfaces from them.
+2. **No lorem ipsum / "Lorem ipsum dolor"** anywhere in shipped output. Either use the user's real data, or ship a labelled `[ PLACEHOLDER: hero-headline ]` block (same pattern as Rule 2 SVG placeholder). Lorem ipsum is the #2 AI tell after malformed SVG.
+3. **No `outline: none` without a `:focus-visible` replacement.** Already covered by Pre-Delivery Checklist; restated here so it lives next to the other two highest-impact forbids.
+
+#### Rule 6 — CJK-First Font Stack (Multi-Language Products Only)
+
+If the product ships in Chinese / Japanese / Korean (or mixes CJK with Latin), the font stack MUST list a CJK-capable family FIRST, with Latin as fallback:
+
+```css
+/* GOOD: CJK-first, Latin fallback */
+font-family: "Noto Sans SC", "Source Han Sans SC", "Inter", system-ui, sans-serif;
+
+/* BAD: Latin-first — Chinese characters render in browser fallback (PingFang, Heiti) and break rhythm */
+font-family: "Inter", "Noto Sans SC", system-ui;
+```
+
+For prose / serif: `"Noto Serif SC" / "Source Han Serif SC" / "Manrope"`. For monospace: `"JetBrains Mono" / "Sarasa Mono SC"` (Sarasa unifies CJK + Latin metrics). Skip this rule entirely if the product is Latin-only — listing CJK fonts you don't need slows first-paint.
 
 ### Step 3 — Apply Domain Reasoning Rules
 
@@ -429,7 +464,7 @@ sm: 6px | md: 8px | lg: 12px | xl: 16px | full: 9999px
 ## Pre-Delivery Checklist
 - [ ] Color contrast ≥ 4.5:1 for all text
 - [ ] Focus-visible ring on ALL interactive elements (never outline-none alone)
-- [ ] Touch targets ≥ 24×24px with 8px gap between targets
+- [ ] Touch targets ≥ 44×44px on mobile / ≥ 24×24px on desktop, with 8px gap between targets (matches Step 2.9 Rule 1)
 - [ ] All icon-only buttons have aria-label
 - [ ] All inputs have associated <label> or aria-label
 - [ ] Empty state, error state, loading state for all async data
@@ -437,6 +472,9 @@ sm: 6px | md: 8px | lg: 12px | xl: 16px | full: 9999px
 - [ ] prefers-reduced-motion respected for all animations
 - [ ] Dark mode support (or explicit reasoning why not)
 - [ ] Responsive tested at 375px / 768px / 1024px / 1440px
+- [ ] No pure #000 or #fff in semantic tokens (use oklch neutrals)
+- [ ] No lorem ipsum / placeholder copy in shipped output (use real data or labelled `[ PLACEHOLDER: ... ]` blocks)
+- [ ] If multi-language: CJK-capable font listed FIRST in stack (`"Noto Sans SC", "Inter", ...`)
 ```
 
 ### Step 5.5 — UI Design Contract (UI-SPEC.md)
@@ -614,6 +652,9 @@ Trading/Fintech — Data-Dense Dark — Web
 8. MUST enforce Scale Minimums (hero ≥48px, body ≥16px, touch targets ≥44px) in every design system (Step 2.9 Rule 1)
 9. MUST use Phosphor/Huge icons or boxed placeholders — NEVER generate custom SVG for standard iconography (Step 2.9 Rule 2)
 10. MUST derive accent variants via `oklch(from var(--accent) ...)` — NEVER hand-shade hex values (Step 2.9 Rule 3)
+11. MUST write measurable rules into design-system.md — never vague directives like "modern typography" or "tasteful spacing" (Step 2.9 Rule 4)
+12. MUST NOT use pure `#000` / `#fff` for default text or background, MUST NOT ship lorem ipsum (Step 2.9 Rule 5)
+13. MUST list CJK-capable font FIRST in stack if product targets Chinese/Japanese/Korean (Step 2.9 Rule 6)
 
 ## Mesh Gates (L1/L2 only)
 
@@ -627,6 +668,8 @@ Trading/Fintech — Data-Dense Dark — Web
 | Scale-Minimums Gate | Hero ≥48px, body ≥16px, touch ≥44px written into design-system.md | Emit minimums block in output |
 | SVG-Placeholder Gate | No hand-rolled SVG for standard icons — Phosphor/Huge or placeholder | Swap to icon library or `[ ICON: name ]` box |
 | oklch-Derivation Gate | All accent variants derived via `oklch(from ...)` | Rewrite manual hex shades as relative oklch |
+| Measurable-Constraints Gate | Every rule in design-system.md is testable (concrete units, hex/oklch, ratios) | Rewrite vague directives as measurable specs (Step 2.9 Rule 4 table) |
+| No-Pure-No-Lorem Gate | No `#000`/`#fff` in semantic tokens; no lorem ipsum in output | Swap to oklch neutrals; replace lorem with real data or labelled placeholder |
 
 ## Returns
 
@@ -659,6 +702,10 @@ Known failure modes for this skill. Check these before declaring done.
 | Hand-rolled SVG for dashboard/menu/close icons (malformed geometry) | HIGH | Step 2.9 Rule 2 — Phosphor/Huge Icons or `[ ICON: name ]` placeholder, never custom |
 | Accent variants shaded by eyeball (inconsistent perceived brightness) | MEDIUM | Step 2.9 Rule 3 — `oklch(from var(--accent) calc(l - 0.1) c h)` |
 | Missing `text-wrap: pretty` on headings (widow words) | LOW | One-line CSS — add to base heading styles |
+| Vague directive in design-system.md ("modern typography", "tasteful spacing") | HIGH | Step 2.9 Rule 4 — rewrite as measurable spec a reviewer can enforce |
+| Pure `#000` background or `#fff` body bg in semantic tokens | MEDIUM | Step 2.9 Rule 5 — `oklch(98% 0 0)` / `oklch(8% 0 0)` neutrals |
+| Lorem ipsum text shipped in production output | HIGH | Step 2.9 Rule 5 — use real user data or labelled `[ PLACEHOLDER ]` block |
+| CJK product with Latin-first font stack (Chinese chars fall back to OS default, break rhythm) | MEDIUM | Step 2.9 Rule 6 — `"Noto Sans SC", "Inter", system-ui` |
 
 ## Done When
 

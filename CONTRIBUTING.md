@@ -170,6 +170,23 @@ Adding or changing a signal:
 
 ---
 
+## What We Don't Accept
+
+A short, explicit non-goals list. PRs in these shapes will be closed without merge — not because they're bad ideas, but because they conflict with Rune's design philosophy.
+
+- **Skills without measurable Done-When criteria.** "Done when the code looks good" is not measurable. "Done when `npm test` passes 0 failures and `node compiler/bin/rune.js doctor` reports 0 errors" is. Every skill ships a `Done When` section a reviewer can verify mechanically.
+- **New L0 / L1 skills without an ADR.** Rune's mesh has 1 router (L0) and 5 orchestrators (L1) — adding either changes how every other skill routes. Open an architecture discussion (Issue with `arch:` prefix) BEFORE the PR; ship the ADR in `docs/adr/` alongside the skill.
+- **Vague constraints.** Rules like "use modern typography" are decoration, not constraints. Submit measurable replacements: "Inter 96/64/40/24/16 px on an 8 px grid." See `skills/design/SKILL.md` Step 2.9 Rule 4 for the rejection table.
+- **Bypass / `--no-verify` in CI gates.** If a hook or test blocks your PR, fix the underlying issue — don't disable the gate. Rune's value IS the discipline; bypassing it inverts the product.
+- **XLabs / internal-tooling coupling in core.** Free-tier Rune stays platform-agnostic and globally installable. Internal-only orchestrators belong in private repos, not core. See [`feedback_no_xlabs_coupling`].
+- **Discipline-heavy grafts.** Rune already has 100+ HARD-GATEs. New imported patterns should default to advisory / diagnostic mode, not another enforced checklist. Hard-gate a rule only if you've shown it catches a real failure that costs the user time. See [`feedback_no_discipline_heavy_grafts`].
+- **Source attribution lines in SKILL.md.** No `> From Repo: foo/bar` or `> Source: ...` lines in shipped skill files — credit belongs in CHANGELOG entries and pack `references/`, not in the skill body. See [`feedback_no_source_attribution`].
+- **Skills without working examples (output-format skills only — recommended, not blocking).** If your skill produces a rendered artifact (HTML, slides, social card, video script), shipping `examples/<scenario>.html` (or equivalent) gives the AI a literal copy target — far stronger than describing the desired output. See `skills/skill-forge/SKILL.md` Phase 6.25.
+
+When in doubt: open an issue first and we'll route it.
+
+---
+
 ## Review Process
 
 1. **CI must pass** — lint + test + doctor on Node 18/20/22

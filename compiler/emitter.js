@@ -700,11 +700,44 @@ export async function buildAll({
   await writeFile(path.join(outputDir, 'skill-index.json'), `${JSON.stringify(skillIndex, null, 2)}\n`, 'utf-8');
   stats.files.push('skill-index.json');
 
-  // Generate AGENTS.md for Codex (OpenAI convention — not used by other platforms)
-  if (adapter.name === 'codex') {
-    const agentsMdContent = generateAgentsMd(stats, adapter);
-    await writeFile(path.join(outputRoot, 'AGENTS.md'), agentsMdContent, 'utf-8');
-    stats.files.push('AGENTS.md');
+  // Generic extra-files hook: any adapter can emit additional index/bundle files
+  // alongside per-skill files (e.g. aider's .aider.conf.yml, qwen's QWEN.md, gemini's GEMINI.md bundle).
+  // Hook contract: paths MUST be relative to outputRoot — absolute paths are rejected to prevent
+  // accidental writes outside the project tree. Adapters receive a frozen stats snapshot so reads
+  // are deterministic regardless of where the hook fires relative to other emit steps.
+  if (typeof adapter.generateExtraFiles === 'function') {
+    const frozenStats = Object.freeze({ ...stats, files: Object.freeze([...stats.files]) });
+    const extras = await adapter.generateExtraFiles({
+      parsedSkills,
+      stats: frozenStats,
+      runeRoot,
+      outputRoot,
+      outputDir,
+    });
+    if (Array.isArray(extras)) {
+      const outputRootResolved = path.resolve(outputRoot);
+      for (const extra of extras) {
+        if (!extra || !extra.path || extra.content == null) continue;
+        if (path.isAbsolute(extra.path)) {
+          stats.errors.push({
+            adapter: adapter.name,
+            error: `generateExtraFiles must return relative paths, got absolute: ${extra.path}`,
+          });
+          continue;
+        }
+        const fullPath = path.resolve(outputRootResolved, extra.path);
+        if (fullPath !== outputRootResolved && !fullPath.startsWith(outputRootResolved + path.sep)) {
+          stats.errors.push({
+            adapter: adapter.name,
+            error: `generateExtraFiles path escapes outputRoot: ${extra.path}`,
+          });
+          continue;
+        }
+        await mkdir(path.dirname(fullPath), { recursive: true });
+        await writeFile(fullPath, extra.content, 'utf-8');
+        stats.files.push(path.relative(outputRoot, fullPath).replaceAll('\\', '/'));
+      }
+    }
   }
 
   // OpenClaw adapter: generate manifest + TypeScript entry point
@@ -770,42 +803,6 @@ function generateIndex(stats, adapter) {
   }
 
   lines.push('---', '> Rune Skill Mesh — https://github.com/rune-kit/rune');
-
-  return lines.join('\n');
-}
-
-/**
- * Generate AGENTS.md for Codex (OpenAI convention)
- * Uses dynamic counts from build stats — no hardcoded skill lists
- */
-function generateAgentsMd(stats, adapter) {
-  const lines = [
-    '# Rune — Project Configuration',
-    '',
-    '## Overview',
-    '',
-    'Rune is an interconnected skill ecosystem for AI coding assistants.',
-    `${stats.skillCount} core skills | 5-layer mesh architecture | ${stats.crossRefsResolved} connections | Multi-platform.`,
-    'Philosophy: "Less skills. Deeper connections."',
-    '',
-    `Platform: ${adapter.name}`,
-    '',
-    '## Skills',
-    '',
-    `**${stats.skillCount} core skills** + **${stats.packCount} extension packs**`,
-    '',
-    '## Usage',
-    '',
-    'Reference skills using the `Skill` tool or delegate to subagents using the `Agent` tool.',
-    '',
-    '## Skills Directory',
-    '',
-    `Skills are located in: ${adapter.outputDir}/`,
-    '',
-    '---',
-    '> Rune Skill Mesh — https://github.com/rune-kit/rune',
-    '',
-  ];
 
   return lines.join('\n');
 }

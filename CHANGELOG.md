@@ -3,6 +3,40 @@
 All notable changes to Rune are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.18.0] - 2026-05-15
+
+Cross-platform reach + discipline tightening — adopted a curated subset of patterns from `nexu-io/html-anything` (Apache-2.0). Five new compiler adapters (gemini / copilot / aider / qoder / qwen) lift platform coverage from 8 → 13. Anti-AI-slop discipline tightened in `design` (vague directives become measurable) and `skill-forge` (literal-example convention for output-format skills). Sentinel-env's binary detection learned about Bun / Cargo / Deno / Volta / asdf / proto. CONTRIBUTING got an explicit non-goals section.
+
+### Added — Compiler Adapters (13 total)
+
+- **`gemini`** — bundled `GEMINI.md` at project root with all 64 skills + 14 packs concatenated under `## rune-<name>` H2 sections. Per-skill files staged at `gemini/skills/` for forward-compat if Gemini CLI adds `@import` support. Model map: opus→gemini-2.5-pro, sonnet→gemini-2.5-flash, haiku→gemini-2.0-flash-lite.
+- **`copilot`** — per-skill `.github/instructions/rune-<name>.instructions.md` with documented `applyTo: "**"` YAML frontmatter (description + tier-hint moved to body — only `applyTo` is a documented Copilot frontmatter key). Plus `.github/copilot-instructions.md` index + `AGENTS.md`.
+- **`aider`** — per-skill `aider/rules/rune-<name>.md` plus auto-generated `.aider.conf.yml` with `read:` array listing every rule file. Aider auto-loads them per session. Plus `CONVENTIONS.md` summary.
+- **`qoder`** — per-skill `.qoder/rules/rune-<name>.md` with YAML frontmatter (model: tier:heavy/mid/light) + `AGENTS.md` (open AGENTS.md standard).
+- **`qwen`** — per-skill `qwen/skills/rune-<name>.md` plus root `QWEN.md` with `@qwen/skills/...` import lines (Qwen Code's hierarchical loader). Model map: opus→qwen3-coder-plus, sonnet→qwen3-coder, haiku→qwen3-coder-flash.
+
+### Added — Compiler Architecture
+
+- **`adapter.generateExtraFiles({ parsedSkills, stats, runeRoot, outputRoot, outputDir }) → Array<{path, content}>`** — generic emitter hook for adapters that need to emit additional context / index / bundle files alongside per-skill files. Replaces ad-hoc `if (adapter.name === 'codex')` special-casing. Path-traversal-safe (rejects absolute paths, asserts containment within `outputRoot`), receives a frozen `stats` snapshot for deterministic reads.
+- **codex AGENTS.md migrated to `generateExtraFiles`** — retired the emitter's hardcoded codex special-case. Codex still emits the same AGENTS.md, now via the generic hook. Adapter logic is fully self-contained.
+
+### Added — Discipline Tightening
+
+- **`design` v0.6.0** — three new universal anti-AI rules under Step 2.9: **Rule 4 Measurable Constraints** (vague vs measurable rejection table — "use modern typography" → "Inter 96/64/40/24/16 px on an 8 px grid"), **Rule 5 No-Pure-No-Lorem** (no `#000` / `#fff` defaults, no lorem ipsum, no `outline:none` without `:focus-visible`), **Rule 6 CJK-First Font Stack** (multi-language products list CJK-capable family first). Constraints #11-13, two new Mesh Gates, four new Sharp Edges. Pre-Delivery Checklist expanded.
+- **`skill-forge` v1.9.0** — new **Phase 6.25 EXAMPLES** convention. Output-format skills (design, asset-creator, slides, marketing, video-creator, doc-processor) SHOULD ship `examples/<scenario>.html` (or domain-equivalent) so the agent has a literal copy target. Soft recommendation, not HARD-GATE — per Rune's no-discipline-heavy-grafts policy.
+- **`sentinel-env` v0.4.0** — Tier 8 binary detection learned modern PATH locations: Unix `~/.bun/bin`, `~/.cargo/bin`, `~/.deno/bin`, `~/.volta/bin`, `~/.asdf/shims`, `~/.proto/bin`, `/usr/local/bin`. Windows `%USERPROFILE%\.bun\bin`, `%USERPROFILE%\.cargo\bin`, `%USERPROFILE%\.deno\bin`. Catches Bun / Cargo / Deno / Volta / asdf / proto users that the prior 8-tier list missed.
+
+### Added — Tests + Docs
+
+- **62 new tests** — adapter contract per platform (5 adapters × shape + extra-files), model mapping per platform, codex `generateExtraFiles` migration, and a path-traversal guard test that exercises every adapter's hook for absolute-path returns. 1,435 tests pass (was 1,376).
+- **`docs/ARCHITECTURE.md`** — new "Cross-Platform Adapter Coverage" table documenting all 13 adapters, their output paths, frontmatter format, extra files, and source documentation links. Cross-Provider Model Mapping table extended with the 5 new adapters.
+- **`README.md` + `CLAUDE.md`** — platform list updated to 13.
+- **`CONTRIBUTING.md`** — new "What We Don't Accept" section with 8 explicit non-goals (no skills without measurable Done-When, no L0/L1 without ADR, no vague constraints, no `--no-verify` bypasses, no XLabs coupling, no discipline-heavy grafts, no source attribution lines, no missing examples for output-format skills).
+
+### Source
+
+- Pattern adapted from [`nexu-io/html-anything`](https://github.com/nexu-io/html-anything) (Apache-2.0). Rune adapts the file-convention philosophy and discipline patterns; `html-anything`'s CLI invocation / SSE rendering / WeChat export pipelines are out of Rune's scope.
+
 ## [2.17.1] - 2026-05-06
 
 UX patch — `rune setup` interactive wizard replaces the multi-step `cd <project> && export RUNE_PRO_ROOT && rune hooks install --preset gentle --tier pro` workflow with one command. Source: bro flagged the v2.17.0 install flow as "rắc rối" (complicated) and asked for "one-click chọn scope > finish" UX.

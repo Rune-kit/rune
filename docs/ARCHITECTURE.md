@@ -88,18 +88,41 @@ Mode discovery is automatic via signals + input pattern matching. Cook / team / 
 
 SKILL.md frontmatter uses Anthropic-native tier names (`opus`/`sonnet`/`haiku`) as the canonical authoring vocabulary. Adapters translate this hint to provider-correct model names so the field is meaningful in every compiled output:
 
-| Tier | claude / cursor / windsurf | codex | antigravity | opencode / openclaw / generic |
-|------|---------------------------|-------|-------------|------------------------------|
-| opus | claude-opus-4-7 (no-op) | gpt-5-pro | gemini-3-pro | tier:heavy |
-| sonnet | claude-sonnet-4-6 (no-op) | gpt-5 | gemini-3-flash | tier:mid |
-| haiku | claude-haiku-4-5 (no-op) | gpt-5-mini | gemini-3-flash-lite | tier:light |
+| Tier | claude / cursor / windsurf | codex | antigravity | opencode / openclaw / generic / qoder | qwen | gemini | aider / copilot |
+|------|---------------------------|-------|-------------|---------------------------------------|------|--------|------------------|
+| opus | claude-opus-4-7 (no-op) | gpt-5-pro | gemini-3-pro | tier:heavy | qwen3-coder-plus | gemini-2.5-pro | tier-hint inline |
+| sonnet | claude-sonnet-4-6 (no-op) | gpt-5 | gemini-3-flash | tier:mid | qwen3-coder | gemini-2.5-flash | tier-hint inline |
+| haiku | claude-haiku-4-5 (no-op) | gpt-5-mini | gemini-3-flash-lite | tier:light | qwen3-coder-flash | gemini-2.0-flash-lite | tier-hint inline |
 
 Rules:
 - Anthropic-backed adapters (claude/cursor/windsurf) understand the native names — adapter is no-op
-- Concrete-provider adapters (codex/antigravity) emit recognizable IDE model names
-- Provider-agnostic adapters (opencode/openclaw/generic) emit `tier:heavy|mid|light` semantic hints — the consuming runtime resolves to its configured provider model
+- Concrete-provider adapters (codex/antigravity/qwen/gemini) emit recognizable provider model names
+- Provider-agnostic adapters (opencode/openclaw/generic/qoder) emit `tier:heavy|mid|light` semantic hints — the consuming runtime resolves to its configured provider model
+- Hint-only adapters (aider/copilot) embed the tier as a comment / inline text — those CLIs read model from their own config, not from rule files
 - Skills without `model:` produce no model field in any adapter
 - Unknown tier values pass through unchanged (forward-compatibility for new tiers)
+
+### Cross-Platform Adapter Coverage (v2.18+)
+
+Rune compiles core skills + extension packs into 13 platform-native formats. Each adapter targets a documented file convention; Rune emits the files, the platform's native loader picks them up.
+
+| Adapter | Output | Skill Format | Extra Files | Source Doc |
+|---------|--------|--------------|-------------|------------|
+| **claude** | (passthrough) | native SKILL.md | — | Anthropic Claude Code |
+| **cursor** | `.cursor/rules/rune-<n>.mdc` | YAML frontmatter (alwaysApply for L0) | — | Cursor Rules |
+| **windsurf** | `.windsurf/workflows/...` + rules | workflow + rule pairs | — | Windsurf Cascade |
+| **antigravity** | `.antigravity/rules/...` | Gemini-flavored rules | — | Google Antigravity |
+| **codex** | `.codex/skills/rune-<n>/SKILL.md` | dir-per-skill, OpenAI tier | `AGENTS.md` | OpenAI Codex |
+| **opencode** | `.opencode/skills/rune-<n>/SKILL.md` | dir-per-skill, tier hints | — | opencode.ai/docs |
+| **openclaw** | `.openclaw/.../SKILL.md` | bundled with manifest + TS entry | `openclaw.plugin.json`, `src/index.ts` | OpenClaw |
+| **generic** | `.ai/rules/rune-<n>.md` | portable markdown | — | (fallback) |
+| **aider** | `aider/rules/rune-<n>.md` | flat markdown + tier inline | `.aider.conf.yml` (read[]), `CONVENTIONS.md` | aider.chat |
+| **copilot** | `.github/instructions/rune-<n>.instructions.md` | YAML w/ `applyTo: "**"` | `.github/copilot-instructions.md`, `AGENTS.md` | GitHub Copilot CLI |
+| **gemini** | `gemini/skills/rune-<n>.md` (staged) + bundled `GEMINI.md` | bundled H2 sections | `GEMINI.md` (single-file context) | Gemini CLI |
+| **qoder** | `.qoder/rules/rune-<n>.md` | YAML w/ tier:* | `AGENTS.md` | docs.qoder.com |
+| **qwen** | `qwen/skills/rune-<n>.md` | YAML + Qwen model hint | `QWEN.md` (with `@import` lines) | qwenlm.github.io |
+
+Adapters with `generateExtraFiles()` emit additional context files alongside per-skill rules — this generic hook (added v2.18) replaces ad-hoc `if (adapter.name === ...)` special cases in the emitter.
 
 ### Parallel Execution
 

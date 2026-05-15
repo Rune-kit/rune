@@ -6,12 +6,12 @@ Rune is an interconnected skill ecosystem for AI coding assistants.
 64 core skills | 5-layer mesh architecture | 203 connections + 40 signals | Multi-platform.
 Philosophy: "Less skills. Deeper connections."
 
-Works on: Claude Code (native plugin) · Cursor · Windsurf · Google Antigravity · OpenAI Codex · OpenCode · any AI IDE.
+Works on: Claude Code (native plugin) · Cursor · Windsurf · Google Antigravity · OpenAI Codex · OpenCode · Aider · GitHub Copilot CLI · Gemini CLI · Qoder · Qwen Coder · any AI IDE.
 
 ## Tech Stack
 
 - Claude Code Plugin System (native)
-- Multi-platform compiler (Node.js) — compiles to Cursor, Windsurf, Antigravity, Codex, OpenCode, generic
+- Multi-platform compiler (Node.js) — 13 adapters: Cursor, Windsurf, Antigravity, Codex, OpenCode, OpenClaw, Aider, GitHub Copilot CLI, Gemini CLI, Qoder, Qwen Coder, generic
 - Agent Skills SKILL.md format
 - Git for version control
 - Markdown + JSON for configuration
@@ -31,7 +31,7 @@ rune/
 │   ├── parser.js       # SKILL.md → IR
 │   ├── transformer.js  # Transform pipeline
 │   ├── emitter.js      # IR → platform files
-│   ├── adapters/       # Platform adapters (claude, cursor, windsurf, antigravity, codex, openclaw, opencode, generic)
+│   ├── adapters/       # Platform adapters (claude, cursor, windsurf, antigravity, codex, openclaw, opencode, generic, aider, copilot, gemini, qoder, qwen)
 │   └── transforms/     # Cross-refs, tool-names, frontmatter, subagents, hooks, branding
 ├── commands/           # Slash command definitions
 ├── agents/             # Subagent definitions

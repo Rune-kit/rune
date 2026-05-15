@@ -5,7 +5,7 @@
 <p align="center">
   <strong>Less skills. Deeper connections.</strong><br>
   A lean, interconnected skill ecosystem for AI coding assistants.<br>
-  64 skills · 203 connections · 40 signals · 8 platforms · MIT
+  64 skills · 203 connections · 40 signals · 13 platforms · MIT
 </p>
 
 <p align="center">
@@ -16,7 +16,7 @@
 </p>
 
 <p align="center">
-  <strong>Claude Code</strong> (native plugin) · <strong>Cursor</strong> · <strong>Windsurf</strong> · <strong>Google Antigravity</strong> · <strong>OpenAI Codex</strong> · <strong>OpenCode</strong> · any AI IDE
+  <strong>Claude Code</strong> (native plugin) · <strong>Cursor</strong> · <strong>Windsurf</strong> · <strong>Google Antigravity</strong> · <strong>OpenAI Codex</strong> · <strong>OpenCode</strong> · <strong>Aider</strong> · <strong>GitHub Copilot CLI</strong> · <strong>Gemini CLI</strong> · <strong>Qoder</strong> · <strong>Qwen Coder</strong> · any AI IDE
 </p>
 
 ## Why Rune?

@@ -130,7 +130,7 @@ npx @rune-kit/rune help
 
 ## Platforms
 
-Rune compiles to 8 platforms. Each gets skills in its native format.
+Rune compiles to 13 platforms. Each gets skills in its native format.
 
 | Platform | Output Directory | File Format | Detection Marker |
 |----------|-----------------|-------------|------------------|
@@ -138,10 +138,15 @@ Rune compiles to 8 platforms. Each gets skills in its native format.
 | Cursor | `.cursor/rules/` | `.mdc` | `.cursor/` |
 | Windsurf | `.windsurf/rules/` | `.md` | `.windsurf/` |
 | Antigravity | `.agent/rules/` | `.md` | `.agent/` |
-| Codex | `.codex/` | `.md` | `.codex/` |
-| OpenCode | `.opencode/rules/` | `.md` | `.opencode/` |
+| Codex | `.codex/skills/` | `.md` (dir-per-skill) + `AGENTS.md` | `.codex/` |
+| OpenCode | `.opencode/skills/` | `.md` (dir-per-skill) | `.opencode/` |
 | Generic | `.ai/rules/` | `.md` | _(fallback)_ |
-| OpenClaw | `.openclaw/rune/` | `.md` + manifest | `.openclaw/` |
+| OpenClaw | `.openclaw/rune/` | `.md` + manifest + TS entry | `.openclaw/` |
+| Aider | `aider/rules/` | `.md` + `.aider.conf.yml` (read array) | `.aider.conf.yml` |
+| GitHub Copilot CLI | `.github/instructions/` | `.instructions.md` (YAML `applyTo`) | `.github/copilot-instructions.md` |
+| Gemini CLI | bundled `GEMINI.md` + `gemini/skills/` (staged) | `.md` (single file context) | `GEMINI.md` |
+| Qoder | `.qoder/rules/` | `.md` + `AGENTS.md` | `.qoder/` |
+| Qwen Coder | `qwen/skills/` + `QWEN.md` (with `@import`) | `.md` (hierarchical) | `QWEN.md` |
 
 ### Claude Code
 

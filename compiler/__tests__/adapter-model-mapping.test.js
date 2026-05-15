@@ -131,6 +131,86 @@ describe('Anthropic-native adapters are no-op for model field', () => {
   });
 });
 
+describe('qoder adapter model mapping (provider-agnostic)', () => {
+  const qoder = getAdapter('qoder');
+
+  test('opus translates to tier:heavy', () => {
+    const header = qoder.generateHeader({ ...baseSkill, model: 'opus' });
+    assert.match(header, /model: tier:heavy/);
+  });
+
+  test('omitted model produces no model line', () => {
+    const header = qoder.generateHeader({ ...baseSkill });
+    assert.doesNotMatch(header, /model:/);
+  });
+});
+
+describe('copilot adapter model mapping (tier-hint comment)', () => {
+  const copilot = getAdapter('copilot');
+
+  test('opus emits tier-hint:tier:heavy as comment (Copilot ignores model field)', () => {
+    const header = copilot.generateHeader({ ...baseSkill, model: 'opus' });
+    assert.match(header, /tier-hint: tier:heavy/);
+  });
+
+  test('omitted model produces no tier-hint line', () => {
+    const header = copilot.generateHeader({ ...baseSkill });
+    assert.doesNotMatch(header, /tier-hint/);
+  });
+});
+
+describe('aider adapter model mapping (inline header)', () => {
+  const aider = getAdapter('aider');
+
+  test('opus appears as tier:heavy inline', () => {
+    const header = aider.generateHeader({ ...baseSkill, model: 'opus' });
+    assert.match(header, /tier:heavy/);
+  });
+
+  test('omitted model produces no tier line', () => {
+    const header = aider.generateHeader({ ...baseSkill });
+    assert.doesNotMatch(header, /tier:/);
+  });
+});
+
+describe('qwen adapter model mapping (Qwen family)', () => {
+  const qwen = getAdapter('qwen');
+
+  test('opus translates to qwen3-coder-plus', () => {
+    const header = qwen.generateHeader({ ...baseSkill, model: 'opus' });
+    assert.match(header, /qwen3-coder-plus/);
+  });
+
+  test('sonnet translates to qwen3-coder', () => {
+    const header = qwen.generateHeader({ ...baseSkill, model: 'sonnet' });
+    assert.match(header, /qwen3-coder(?!-)/);
+  });
+
+  test('haiku translates to qwen3-coder-flash', () => {
+    const header = qwen.generateHeader({ ...baseSkill, model: 'haiku' });
+    assert.match(header, /qwen3-coder-flash/);
+  });
+});
+
+describe('gemini adapter model mapping (Gemini family)', () => {
+  const gemini = getAdapter('gemini');
+
+  test('opus translates to gemini-2.5-pro', () => {
+    const header = gemini.generateHeader({ ...baseSkill, model: 'opus' });
+    assert.match(header, /gemini-2\.5-pro/);
+  });
+
+  test('sonnet translates to gemini-2.5-flash', () => {
+    const header = gemini.generateHeader({ ...baseSkill, model: 'sonnet' });
+    assert.match(header, /gemini-2\.5-flash/);
+  });
+
+  test('haiku translates to gemini-2.0-flash-lite', () => {
+    const header = gemini.generateHeader({ ...baseSkill, model: 'haiku' });
+    assert.match(header, /gemini-2\.0-flash-lite/);
+  });
+});
+
 describe('cross-adapter consistency', () => {
   test('all 5 non-Anthropic adapters emit a model line for opus skills', () => {
     const adapterNames = ['codex', 'antigravity', 'opencode', 'openclaw', 'generic'];

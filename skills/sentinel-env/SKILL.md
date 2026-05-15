@@ -3,7 +3,7 @@ name: sentinel-env
 description: "Environment-aware pre-flight check. Use when starting work in a new environment, switching machines, or when 'works on my machine' bugs surface. Validates OS, runtime versions, installed tools, port availability, env vars, and disk space BEFORE coding starts. Like sentinel but for the environment, not the code."
 metadata:
   author: runedev
-  version: "0.3.0"
+  version: "0.4.0"
   layer: L3
   model: haiku
   group: validation
@@ -130,7 +130,7 @@ Detect and verify tools the project depends on:
    | 5 | Platform desktop-app bundle (macOS `.app/Contents/Resources`, Windows `%LOCALAPPDATA%\Programs`, Linux `/opt`) | Desktop app users (~40% of population) |
    | 6 | PATH lookup (`which`/`where.exe`) | Standard shell users |
    | 7 | Package manager global bin (`npm config get prefix`, `pnpm`, `pipx --list`, `cargo install --root`) | npm-global on Windows (PATH oversight) |
-   | 8 | Platform common directories (`~/.local/bin`, `~/.npm-global/bin`, Homebrew, `%APPDATA%\npm`, `%LOCALAPPDATA%\Microsoft\WindowsApps`, `%ProgramFiles%\nodejs`) | Manual installers |
+   | 8 | Platform common directories — Unix: `~/.local/bin`, `~/.npm-global/bin`, `~/.bun/bin`, `~/.cargo/bin`, `~/.deno/bin`, `~/.volta/bin`, `~/.asdf/shims`, `~/.proto/bin`, `/opt/homebrew/bin`, `/usr/local/bin`. Windows: `%APPDATA%\npm`, `%USERPROFILE%\.bun\bin`, `%USERPROFILE%\.cargo\bin`, `%USERPROFILE%\.deno\bin`, `%LOCALAPPDATA%\Microsoft\WindowsApps`, `%ProgramFiles%\nodejs` | Bun / Cargo / Deno / Volta / asdf / proto users + manual installers |
    | 9 | Platform release archive names (e.g., `codex-x86_64-unknown-linux-musl`, `<tool>-aarch64-apple-darwin`) | Release-tarball downloaders |
 
    **Verdict:**

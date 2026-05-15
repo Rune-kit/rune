@@ -4,13 +4,18 @@
  * Central registry for all platform adapters.
  */
 
+import aider from './aider.js';
 import antigravity from './antigravity.js';
 import claude from './claude.js';
 import codex from './codex.js';
+import copilot from './copilot.js';
 import cursor from './cursor.js';
+import gemini from './gemini.js';
 import generic from './generic.js';
 import openclaw from './openclaw.js';
 import opencode from './opencode.js';
+import qoder from './qoder.js';
+import qwen from './qwen.js';
 import windsurf from './windsurf.js';
 
 const adapters = {
@@ -22,6 +27,11 @@ const adapters = {
   openclaw,
   codex,
   opencode,
+  aider,
+  copilot,
+  gemini,
+  qoder,
+  qwen,
 };
 
 /**

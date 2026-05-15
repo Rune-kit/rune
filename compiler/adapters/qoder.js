@@ -1,26 +1,27 @@
 /**
- * OpenAI Codex Adapter
+ * Qoder Adapter
  *
- * Emits SKILL.md files into .codex/skills/{name}/ directories.
- * Codex uses the same SKILL.md frontmatter format (name, description)
- * with markdown body — very close to Rune's native format.
+ * Emits per-skill rule files into .qoder/rules/ — Qoder's documented project-level
+ * rule directory. Qoder also reads AGENTS.md as its project-context file.
  *
- * Codex project context: AGENTS.md (equivalent to CLAUDE.md)
- * Codex skills dir: .codex/skills/
- * Codex skill format: .codex/skills/{name}/SKILL.md
+ * Qoder rules dir: .qoder/rules/
+ * Qoder rule file: .qoder/rules/rune-{name}.md (one file per skill)
+ * Qoder project context: AGENTS.md (open AGENTS.md standard)
  *
- * MODEL TIER MAPPING (v2.15+):
- * Skill frontmatter `model: opus|sonnet|haiku` (Anthropic naming) is
- * translated to Codex/OpenAI provider-correct model names so the field
- * is meaningful in the compiled output. Unknown tier values pass through.
+ * @see https://docs.qoder.com/user-guide/rules
+ * @see https://agents.md/
+ *
+ * MODEL TIER MAPPING (v2.18+):
+ * Qoder is provider-agnostic — emits semantic tier hints rather than concrete
+ * model names. Qoder IDE resolves the tier to its configured provider model.
  */
 
 import { BRANDING_FOOTER } from '../transforms/branding.js';
 
 const MODEL_MAP = {
-  opus: 'gpt-5-pro',
-  sonnet: 'gpt-5',
-  haiku: 'gpt-5-mini',
+  opus: 'tier:heavy',
+  sonnet: 'tier:mid',
+  haiku: 'tier:light',
 };
 
 const TOOL_MAP = {
@@ -31,24 +32,23 @@ const TOOL_MAP = {
   Grep: 'search file contents',
   Bash: 'run a shell command',
   TodoWrite: 'track task progress',
-  Skill: 'follow the referenced skill',
+  Skill: 'follow the referenced rune-{name} rule',
   Agent: 'execute the workflow',
 };
 
 export default {
-  name: 'codex',
-  outputDir: '.codex/skills',
+  name: 'qoder',
+  outputDir: '.qoder/rules',
   fileExtension: '.md',
   skillPrefix: 'rune-',
   skillSuffix: '',
 
-  // Codex uses directory-per-skill: .codex/skills/{name}/SKILL.md
-  useSkillDirectories: true,
-  skillFileName: 'SKILL.md',
+  // Qoder rules are flat .md files, not directory-per-skill
+  useSkillDirectories: false,
 
   transformReference(skillName, raw) {
     const isBackticked = raw.startsWith('`') && raw.endsWith('`');
-    const ref = `the rune-${skillName} skill`;
+    const ref = `the rune-${skillName} rule`;
     return isBackticked ? `\`${ref}\`` : ref;
   },
 
@@ -74,38 +74,24 @@ export default {
   },
 
   scriptsDir(skillName) {
-    return `rune-${skillName}/scripts`;
+    return `rune-${skillName}-scripts`;
   },
 
   postProcess(content) {
     return content.replace(/^context: fork\n/gm, '').replace(/^agent: general-purpose\n/gm, '');
   },
 
-  // Codex (and OpenAI's AGENTS.md convention generally) reads AGENTS.md at the
-  // project root for high-level context. Migrated from emitter.js v2.18.
+  // Qoder reads AGENTS.md at the project root as its high-level context file.
   generateExtraFiles({ stats }) {
     const agentsMd = [
       '# Rune — Project Configuration',
       '',
-      '## Overview',
-      '',
       'Rune is an interconnected skill ecosystem for AI coding assistants.',
-      `${stats.skillCount} core skills | 5-layer mesh architecture | ${stats.crossRefsResolved} connections | Multi-platform.`,
-      'Philosophy: "Less skills. Deeper connections."',
+      `${stats.skillCount} core skills + ${stats.packCount} extension packs.`,
       '',
-      'Platform: codex',
+      'Per-skill rules live under `.qoder/rules/rune-<name>.md`. Qoder loads them automatically.',
       '',
-      '## Skills',
-      '',
-      `**${stats.skillCount} core skills** + **${stats.packCount} extension packs**`,
-      '',
-      '## Usage',
-      '',
-      'Reference skills using the `Skill` tool or delegate to subagents using the `Agent` tool.',
-      '',
-      '## Skills Directory',
-      '',
-      'Skills are located in: .codex/skills/',
+      'Reference a skill by name (e.g. "follow the rune-cook rule") inside any chat — the rule file is auto-injected.',
       '',
       '---',
       '> Rune Skill Mesh — https://github.com/rune-kit/rune',

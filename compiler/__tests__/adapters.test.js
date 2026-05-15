@@ -4,9 +4,23 @@ import { getAdapter, listPlatforms } from '../adapters/index.js';
 
 // --- Adapter registry ---
 
-test('listPlatforms returns all 8 platform adapters', () => {
+test('listPlatforms returns all 13 platform adapters', () => {
   const adapters = listPlatforms();
-  const expected = ['claude', 'cursor', 'windsurf', 'antigravity', 'codex', 'opencode', 'openclaw', 'generic'];
+  const expected = [
+    'claude',
+    'cursor',
+    'windsurf',
+    'antigravity',
+    'codex',
+    'opencode',
+    'openclaw',
+    'generic',
+    'aider',
+    'copilot',
+    'gemini',
+    'qoder',
+    'qwen',
+  ];
   for (const name of expected) {
     assert.ok(adapters.includes(name), `missing adapter: ${name}`);
   }
@@ -35,7 +49,19 @@ const REQUIRED_METHODS = [
 
 const REQUIRED_PROPS = ['name', 'outputDir', 'fileExtension', 'skillPrefix', 'skillSuffix'];
 
-const ADAPTER_NAMES = ['cursor', 'windsurf', 'antigravity', 'codex', 'opencode', 'generic'];
+const ADAPTER_NAMES = [
+  'cursor',
+  'windsurf',
+  'antigravity',
+  'codex',
+  'opencode',
+  'generic',
+  'aider',
+  'copilot',
+  'gemini',
+  'qoder',
+  'qwen',
+];
 
 for (const adapterName of ADAPTER_NAMES) {
   describe(`${adapterName} adapter contract`, () => {
@@ -106,4 +132,90 @@ test('codex adapter uses skill directories', () => {
   const codex = getAdapter('codex');
   assert.strictEqual(codex.useSkillDirectories, true);
   assert.strictEqual(codex.skillFileName, 'SKILL.md');
+});
+
+// --- New v2.18 adapters: shape + generateExtraFiles contract ---
+
+test('qoder adapter targets .qoder/rules and emits AGENTS.md', async () => {
+  const qoder = getAdapter('qoder');
+  assert.strictEqual(qoder.outputDir, '.qoder/rules');
+  assert.strictEqual(qoder.useSkillDirectories, false);
+  assert.strictEqual(typeof qoder.generateExtraFiles, 'function');
+  const extras = await qoder.generateExtraFiles({ stats: { skillCount: 5, packCount: 1, files: [] } });
+  assert.ok(extras.some((e) => e.path === 'AGENTS.md' && e.content.includes('Rune')));
+});
+
+test('copilot adapter targets .github/instructions with .instructions.md ext', async () => {
+  const copilot = getAdapter('copilot');
+  assert.strictEqual(copilot.outputDir, '.github/instructions');
+  assert.strictEqual(copilot.fileExtension, '.instructions.md');
+  const header = copilot.generateHeader({ name: 'cook', layer: 'L1', group: 'orchestrator', description: 'Test' });
+  // Per docs.github.com Copilot CLI custom-instructions spec, only `applyTo` is a
+  // documented frontmatter field. Description and tier-hint must live in the body.
+  assert.ok(header.includes('applyTo: "**"'));
+  assert.ok(!/^description:/m.test(header.split('---')[1] || ''), 'description must NOT appear in frontmatter');
+  const extras = await copilot.generateExtraFiles({ stats: { skillCount: 5, packCount: 1, files: [] } });
+  assert.ok(extras.some((e) => e.path === '.github/copilot-instructions.md'));
+  assert.ok(extras.some((e) => e.path === 'AGENTS.md'));
+});
+
+test('codex adapter migrated to generateExtraFiles for AGENTS.md (no longer special-cased in emitter)', async () => {
+  const codex = getAdapter('codex');
+  assert.strictEqual(typeof codex.generateExtraFiles, 'function');
+  const extras = await codex.generateExtraFiles({
+    stats: { skillCount: 64, packCount: 14, crossRefsResolved: 287, files: [] },
+  });
+  const agentsMd = extras.find((e) => e.path === 'AGENTS.md');
+  assert.ok(agentsMd, 'codex must emit AGENTS.md via generateExtraFiles');
+  assert.ok(agentsMd.content.includes('Rune'));
+  assert.ok(agentsMd.content.includes('64 core skills'));
+});
+
+test('emitter rejects absolute paths from generateExtraFiles (path-traversal guard)', async () => {
+  // Smoke: verify both qoder and gemini return relative paths only (no absolute).
+  for (const name of ['qoder', 'copilot', 'aider', 'qwen', 'gemini', 'codex']) {
+    const adapter = getAdapter(name);
+    const extras = await adapter.generateExtraFiles({
+      stats: { skillCount: 1, packCount: 0, crossRefsResolved: 0, files: ['rune-cook.md'] },
+      outputDir: '/tmp/test',
+    });
+    for (const extra of extras || []) {
+      assert.ok(!extra.path.startsWith('/'), `${name} returned absolute path: ${extra.path}`);
+      assert.ok(!/^[A-Z]:[\\/]/.test(extra.path), `${name} returned Windows absolute path: ${extra.path}`);
+    }
+  }
+});
+
+test('aider adapter emits .aider.conf.yml with read array', async () => {
+  const aider = getAdapter('aider');
+  assert.strictEqual(aider.outputDir, 'aider/rules');
+  const extras = await aider.generateExtraFiles({
+    stats: { skillCount: 2, packCount: 0, files: ['rune-cook.md', 'rune-fix.md', 'index.md'] },
+  });
+  const conf = extras.find((e) => e.path === '.aider.conf.yml');
+  assert.ok(conf);
+  assert.ok(conf.content.includes('read:'));
+  assert.ok(conf.content.includes('aider/rules/rune-cook.md'));
+  assert.ok(conf.content.includes('aider/rules/rune-fix.md'));
+  // index.md must NOT be in the read array
+  assert.ok(!conf.content.includes('aider/rules/index.md'));
+});
+
+test('qwen adapter emits QWEN.md with @import lines', async () => {
+  const qwen = getAdapter('qwen');
+  assert.strictEqual(qwen.outputDir, 'qwen/skills');
+  const extras = await qwen.generateExtraFiles({
+    stats: { skillCount: 2, packCount: 0, files: ['rune-cook.md', 'rune-fix.md'] },
+  });
+  const qwenMd = extras.find((e) => e.path === 'QWEN.md');
+  assert.ok(qwenMd);
+  assert.ok(qwenMd.content.includes('@qwen/skills/rune-cook.md'));
+  assert.ok(qwenMd.content.includes('@qwen/skills/rune-fix.md'));
+});
+
+test('gemini adapter declares generateExtraFiles for bundled GEMINI.md', () => {
+  const gemini = getAdapter('gemini');
+  assert.strictEqual(gemini.outputDir, 'gemini/skills');
+  assert.strictEqual(typeof gemini.generateExtraFiles, 'function');
+  // Full bundle test happens in pipeline test (needs filesystem) — contract checked here.
 });
