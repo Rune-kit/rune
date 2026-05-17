@@ -83,7 +83,11 @@ _Methodology: Claude Code CLI headless mode (`claude -p --output-format json`), 
 
 ---
 
-## What's New (v2.18.0 — Cross-Platform Reach + Discipline Tightening)
+## What's New (v2.18.1 — Setup Installs Tier Skills, Not Just Hooks)
+
+> **v2.18.1 (2026-05-17):** Bug fix — `rune setup --tier pro|business` now copies the tier's `skills/` directories into the Free plugin's `skills/` folder. Before this fix, paid tiers shipped hooks only, so `rune:autopilot` (Pro) returned `Unknown skill: rune:autopilot` because the SKILL.md was at `Pro/skills/autopilot/` but invisible to the Claude Code plugin runtime. New `installTierSkills` in `compiler/commands/setup.js` runs after `installHooks`, copies each `<tierRoot>/skills/<name>/` into `<runeRoot>/skills/`, idempotent (skips existing — protects Free skills from clobber and user-edited Pro skills from stomp), with path-traversal guard + symlink rejection + partial-copy cleanup + version-drift detection. Paired with Pro `autopilot-v1.5.0` (Step 0 LOAD now reads user-message context for plan path — same pattern cook uses). 25/26 setup tests pass (1 skipped on Windows — symlink test needs admin/dev-mode). Full CI 1444 tests.
+
+### Previous (v2.18.0 — Cross-Platform Reach + Discipline Tightening)
 
 > **v2.18.0 (2026-05-15):** Compiler grew from 8 → 13 platforms with five new adapters: **Aider** (per-skill `aider/rules/` + auto-generated `.aider.conf.yml` `read:` array), **GitHub Copilot CLI** (`.github/instructions/*.instructions.md` w/ documented `applyTo` YAML), **Gemini CLI** (bundled `GEMINI.md` for single-file context), **Qoder** (`.qoder/rules/` + AGENTS.md), **Qwen Coder** (`qwen/skills/` + `QWEN.md` with `@import`). New `adapter.generateExtraFiles()` hook with path-traversal guard + frozen stats snapshot — replaces ad-hoc adapter special-cases (codex AGENTS.md migrated). Discipline tightening: `design` v0.6.0 adds Step 2.9 Rules 4/5/6 (measurable constraints, no #000/#fff/lorem ipsum, CJK-first font stack); `skill-forge` v1.9.0 adds soft `examples/` convention for output-format skills; `sentinel-env` v0.4.0 expands Tier 8 binary detection (Bun, Cargo, Deno, Volta, asdf, proto). New `CONTRIBUTING.md` "What we don't accept" non-goals section. Source: graft from `nexu-io/html-anything` (Apache-2.0). CI 1435/1435.
 

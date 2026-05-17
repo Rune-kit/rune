@@ -1,6 +1,6 @@
 # Rune Roadmap
 
-> Last updated: May 2026 | Version: 2.18.0
+> Last updated: May 2026 | Version: 2.18.1
 
 ---
 
@@ -18,7 +18,7 @@ These principles guide every roadmap decision:
 
 ---
 
-## Current State (v2.18.0 — "Cross-Platform Reach + Discipline Tightening")
+## Current State (v2.18.1 — "Fix: install tier skills into plugin cache")
 
 | Layer | Count | Status |
 |-------|-------|--------|

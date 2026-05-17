@@ -3,6 +3,34 @@
 All notable changes to Rune are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.18.1] - 2026-05-17
+
+Fix: `rune setup --tier pro|business` now also installs the tier's `skills/` directories into the Free plugin's `skills/` folder — previously only hooks were wired, which left paid-tier skills invisible to the Claude Code runtime (`rune:autopilot` returned `Unknown skill: rune:autopilot`).
+
+### Fixed — Tier skill installation
+
+- **New `installTierSkills` function** in `compiler/commands/setup.js`. Called by `runSetup` after `installHooks` succeeds. For each requested tier, resolves the manifest via existing `resolveTier`, derives the tier root from `manifest.source` (must be absolute — explicit guard), and copies every subdirectory under `<tierRoot>/skills/` into `<runeRoot>/skills/`. Idempotent: existing target directories are SKIPPED (protects Free skills from same-named-Pro-skill clobber AND protects user edits of previously-installed Pro skills from being stomped on re-run).
+- **Security hardening built into the copy loop**:
+  - Path-traversal guard rejects skill directory names containing `/`, `\\`, `..`, or `.` (covers `entry.name` adversarial cases not caught by `assertSafeTierName` in `tiers.js`, which only validates tier names).
+  - Symlink rejection — `entry.isSymbolicLink()` short-circuits with `rejected: symlink (would escape sandbox)` BEFORE `cp` runs. POSIX `cp` would otherwise recreate symlinks at `dst`, letting the runtime follow them outside `runeRoot/skills/` at read time.
+  - `cp({ recursive: true, dereference: true })` — belt-and-suspenders alongside the symlink-entry reject. Catches nested symlinks one level deep inside a legitimate skill dir.
+  - Partial-copy cleanup — `cp` is wrapped in try/catch; on failure, `rm(dst, { recursive: true, force: true })` removes the half-written directory so the next run isn't silently locked-out by `existsSync(dst)`.
+- **Version-drift detection**: when target already exists, `readSkillVersion` parses `metadata.version` from both source and installed `SKILL.md` (minimal regex scoped under `metadata:` block — no YAML dependency, immune to multiline description false positives). Skip messages distinguish `already present (v1.0.0)` from `stale: installed v1.0.0, source has v1.5.0 — delete target dir to upgrade`.
+- **`formatSetupResult` partitions skipped entries**: benign skips (`N already present`) vs security rejections (`M rejected`) reported in separate counts. Each rejection surfaces a `⚠ <skill>: <reason>` line so operators can audit a compromised tier repo.
+
+### Honesty Constraints
+
+- The fix lands tier skills into `<runeRoot>/skills/` at `rune setup --tier <tier>` time. If a user upgrades the Pro repo (new skill added at `Pro/skills/<new>/SKILL.md`) WITHOUT re-running `rune setup`, the new skill won't appear in the plugin cache. Re-run after pulling tier updates.
+- Existing skills are SKIPPED — no automatic upgrade. Version-drift detection only WARNS via the skip message; user must manually delete the target skill directory and re-run setup to apply an upgraded Pro skill. This is intentional (protects user edits) but may surprise users expecting auto-upgrade. A `--force-skills` flag is deferred to a future release.
+- When `runeRoot` resolves to the Free source repo itself (e.g. `node compiler/bin/rune.js setup` run inline from `D:/Project/Rune/Free/`), Pro skills get copied INTO `Free/skills/`. The maintainer would notice on `git status`. Production `npx @rune-kit/rune setup` resolves `runeRoot` to the plugin cache, not the source — pollution only happens in dev-mode direct invocation.
+
+### Verification
+
+- 26 setup-suite tests: 25 pass, 1 skipped on Windows (symlink test needs admin/dev-mode). All-platform suite at `npm test` 1444 total (1 pre-existing flaky perf test in `detect-invariants.test.js`, 5294ms > 5000ms threshold under load, passes 542ms in isolation — unrelated to this fix).
+- Paired with Pro autopilot v1.5.0 (`Pro/CHANGELOG.md` entry `[autopilot-v1.5.0]`) — autopilot SKILL.md Step 0 LOAD now reads user message context for plan path, closing the "args not picked up" symptom users saw before this fix.
+
+---
+
 ## [2.18.0] - 2026-05-15
 
 Cross-platform reach + discipline tightening — adopted a curated subset of patterns from `nexu-io/html-anything` (Apache-2.0). Five new compiler adapters (gemini / copilot / aider / qoder / qwen) lift platform coverage from 8 → 13. Anti-AI-slop discipline tightened in `design` (vague directives become measurable) and `skill-forge` (literal-example convention for output-format skills). Sentinel-env's binary detection learned about Bun / Cargo / Deno / Volta / asdf / proto. CONTRIBUTING got an explicit non-goals section.
