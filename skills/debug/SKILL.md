@@ -3,7 +3,7 @@ name: debug
 description: "Root cause analysis for bugs and unexpected behavior. Traces errors through code, uses structured reasoning, and hands off to fix when cause is found. Core of the debug↔fix mesh. When the diagnosed cause is a memory leak in a long-running process, escalates to perf for cost-impact framing (leaks drive OOM-restart → cold-start → autoscaler spend, often 20-40% bill inflation)."
 metadata:
   author: runedev
-  version: "1.3.0"
+  version: "1.4.0"
   layer: L2
   model: sonnet
   group: development
@@ -173,6 +173,8 @@ Language-appropriate equivalents:
 ALL diagnostic code added during debug MUST be wrapped in `#region agent-debug` markers.
 Unmarked instrumentation will be treated as stray code and removed prematurely.
 </HARD-GATE>
+
+**Observability gap as a finding.** If you had to add temporary `console.log` markers because the code emitted *nothing useful* about this path, that absence is itself a root-cause-adjacent signal: the bug was hard to diagnose because the system is blind here. When the fix lands, recommend converting the throwaway markers into **durable structured telemetry** (a stable event name + correlation ID, not prose) so the next occurrence is a query, not another archaeology session. This is advisory — note it in the report, don't block on it. Contract: `../deploy/references/observability.md`.
 
 ### Step 2c: Check Debug Knowledge Base
 
@@ -427,7 +429,7 @@ Append to Debug Report when invoked standalone. Suppress when called as sub-skil
 ```yaml
 chain_metadata:
   skill: "rune:debug"
-  version: "1.2.0"
+  version: "1.4.0"
   status: "[DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED]"
   domain: "[area debugged]"
   files_changed: []  # debug never changes files

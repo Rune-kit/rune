@@ -3,7 +3,7 @@ name: graft
 description: "Clone, port, or convert features from any GitHub repo into your project. Use when stealing patterns from external repos or porting proven code. Understand before copy, challenge before implement. 4 modes: port (rewrite), compare (analysis), copy (transplant), improve (copy + optimize)."
 metadata:
   author: runedev
-  version: "0.2.0"
+  version: "0.3.0"
   layer: L2
   model: sonnet
   group: creation
@@ -25,9 +25,10 @@ When you clone a repo you see hundreds of files. **That tree is a menu — optio
 - Read the README + the **2-5 files that implement the target feature**. Skip the rest.
 - If you cannot name the specific files you need before reading, you do not know what you want yet — go back to Step 0 and narrow scope.
 - `WebFetch` on raw GitHub URLs beats `git clone` whenever you know the exact files. Use clone only when discovery is genuinely needed.
-- A graft that reads >10 source files is almost always a scoping failure, not a thorough one.
 
-This rule applies to ALL modes. Copy mode is not an excuse to import a directory wholesale — you still select files deliberately.
+**Reading to understand is not grafting.** The discipline above caps the **graft scope** — the files you actually transplant, port, or improve into your codebase (2-5, hard-cap 10). It does NOT cap how many files you may *read to learn a pattern*. Studying a 24-skill library to extract one convention legitimately reads dozens of files but grafts almost none. Keep the two counts separate: a wide read with a narrow graft is thorough; a wide graft is the failure mode.
+
+This menu discipline applies to the **transplant modes** (port, copy, improve). Copy mode is not an excuse to import a directory wholesale — you still select files deliberately. **Compare mode and survey scope (`--deep`)** are exempt from the read cap by design: their job is breadth of understanding, not transplant. They still must NOT import code wholesale — wide reading, narrow (or zero) graft.
 
 <HARD-GATE>
 Challenge gate (Step 4) MUST complete before adaptation planning (Step 5).
@@ -67,6 +68,17 @@ Copy the feature, then refactor and optimize. Fix anti-patterns, add missing tes
 
 **`--fast` warning**: Skipping challenge gate means no license check, no quality assessment. User accepts full responsibility. Announce: "Fast mode: skipping challenge gate. You are responsible for license and quality review."
 
+## Scope Depth
+
+Orthogonal to mode and speed. Controls how widely you may read.
+
+| Scope | Read budget | Graft scope | When |
+|-------|-------------|-------------|------|
+| (default) | 2-5 files, hard-cap 10 | the feature's files | Transplant one feature/module |
+| `--deep` (survey) | unbounded reads, full clone OK | narrow — patterns extracted, not files copied | Study a whole repo/library to learn architecture or compare many components |
+
+**`--deep` is for understanding, not importing.** Use it when the goal is "what can I learn from this repo" rather than "port this function." Pairs naturally with `compare` mode. It relaxes the read cap and the scope-guard warning — but the transplant discipline still holds: extract the *pattern*, then graft narrowly (often into multiple existing skills/files rather than copying source files 1:1).
+
 ## Smart Intent Detection
 
 | Input Pattern | Detected Mode |
@@ -76,6 +88,7 @@ Copy the feature, then refactor and optimize. Fix anti-patterns, add missing tes
 | Contains "improve", "better", "adapt", "upgrade" | improve |
 | Contains "port", "convert", "rewrite", "migrate" | port |
 | URL points to specific file/dir (not repo root) | Auto-scope to that path |
+| Contains "survey", "study", "learn from", "what can I take", "deep dive" | compare + `--deep` |
 | (default — no keyword match) | port |
 
 ## Triggers
@@ -140,9 +153,9 @@ For specific files or small repos: use `WebFetch` on raw GitHub URLs instead of 
 3. package.json / pyproject.toml / Cargo.toml — dependencies and stack
 4. Tests for target feature — understand expected behavior
 
-**Scope guard**: If target feature spans >15 files or >2000 LOC → WARN user: "Feature is large. Suggest narrowing to [specific module]. Continue anyway?"
+**Scope guard**: If target feature spans >15 files or >2000 LOC → WARN user: "Feature is large. Suggest narrowing to [specific module]. Continue anyway?" (Suppressed under `--deep`/compare — breadth is the point there.)
 
-**Menu discipline**: Before reading file #6, pause and ask "do I actually need this, or am I eating the menu?" If the answer isn't a concrete reason tied to the target feature, stop reading and move to Step 2.
+**Menu discipline** (transplant modes): Before reading file #6, pause and ask "do I actually need this *to graft it*, or am I eating the menu?" If the answer isn't a concrete reason tied to the target feature, stop reading and move to Step 2. Under `--deep`/survey scope this gate is lifted — read as widely as understanding requires, but keep the graft scope narrow (Step 5).
 
 ### Step 2 — Analyze Source
 
@@ -203,6 +216,8 @@ Present challenge results to user:
 Wait for user approval (unless `--auto`).
 
 ### Step 5 — Plan Adaptation
+
+**Graft scope stays narrow regardless of how widely you read.** If this run used `--deep`/survey to study a library, the read cap was lifted — but the adaptation plan below still selects a small set of files/patterns to actually transplant. A wide survey legitimately feeds a `copy`/`improve` plan that grafts only the 2-5 best files; it does not license importing the surveyed tree.
 
 Based on mode, produce adaptation plan:
 
@@ -302,7 +317,7 @@ graft.complete:
 5. MUST respect local conventions — grafted code should look native, not foreign
 6. MUST NOT modify the source repository — read-only access only
 7. MUST NOT graft without scoping — always narrow to specific feature/module
-8. MUST treat the source file tree as a menu, not a meal — read the 2-5 files the feature actually needs, not every file you can see
+8. MUST treat the source file tree as a menu, not a meal for **transplant** — graft the 2-5 files the feature actually needs, not every file you can see. Reading widely to understand (esp. under `--deep`/compare) is allowed; grafting widely is not
 
 ## Mesh Gates
 
@@ -319,7 +334,8 @@ graft.complete:
 | Grafting GPL code into MIT project | CRITICAL | Challenge gate checks license — blocks incompatible |
 | Blindly copying code without understanding | CRITICAL | HARD-GATE: challenge before implement |
 | Context overflow from large source files | HIGH | Scope guard: >15 files or >2000 LOC triggers warning |
-| Reading the whole repo instead of the feature | HIGH | "Tree is a menu" rule — pause before file #6, justify each read |
+| Reading the whole repo instead of the feature | HIGH | "Tree is a menu" rule — pause before file #6, justify each read (transplant modes only) |
+| Forcing a pattern-study graft into the 10-file feature cap | MEDIUM | Use `--deep`/survey scope — wide read, narrow graft; cap counts grafted files, not reads |
 | Grafted code doesn't match local conventions | HIGH | Step 3 scans local patterns, Step 5 plans adaptation |
 | Stale source (abandoned repo) | MEDIUM | Maintenance dimension in challenge gate |
 | Private repo URL fails | MEDIUM | Fallback to WebFetch raw URLs or manual paste |
@@ -335,7 +351,7 @@ SELF-VALIDATION (run before emitting graft.complete):
 - [ ] License compatibility confirmed (or user override documented)
 - [ ] Temp clone directory cleaned up
 - [ ] Grafted code compiles/lints without new errors
-- [ ] Source files read count ≤10 (menu discipline) — if >10, document why in the output
+- [ ] **Graft scope** ≤10 files (files actually transplanted/ported/improved) — if >10, document why. This is NOT the read count: under `--deep`/compare you may read far more to understand, but the files you graft stay narrow.
 IF ANY check fails → fix before reporting done. Do NOT defer to completion-gate.
 ```
 

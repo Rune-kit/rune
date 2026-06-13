@@ -3,7 +3,7 @@ name: review
 description: "Code quality review — patterns, security, performance, correctness. Finds bugs, suggests improvements, triggers fix for issues found. Escalates to opus for security-critical code."
 metadata:
   author: runedev
-  version: "1.1.0"
+  version: "1.2.0"
   layer: L2
   model: sonnet
   group: development
@@ -180,6 +180,8 @@ Check for security-relevant issues.
 - Scan for: XSS vectors (unsanitized HTML output), CSRF exposure, open redirects
 - If any security-sensitive code found (auth logic, input handling, crypto, payment): call `rune:sentinel` for deep scan
 - Sentinel escalation is mandatory — do not skip it for auth or crypto code
+
+**Optional cross-model second opinion** (security-critical / opus-escalated reviews only): a same-family reviewer shares blind spots with the author. For genuinely irreversible or attacker-facing changes (auth, crypto, payment, data migration), you MAY *offer* the user a different-architecture second pass via an external CLI (Gemini/Codex). This is opt-in and interactive-only — **offer, never auto-invoke**; skip in non-interactive runs (CI, `/loop`, scheduled) and announce the skip. If the user accepts, follow the safe transport in `../adversary/references/cross-model-escalation.md` (per-call authorization, read-only sandbox, stdin not inline args), pass the diff + the security contract (not your verdict), and reconcile the reply as data — not a ruling.
 
 ### Step 4.5: API Pit-of-Success Check
 
@@ -619,7 +621,7 @@ Append to Code Review Report when invoked standalone. Suppress when called as su
 ```yaml
 chain_metadata:
   skill: "rune:review"
-  version: "1.0.0"
+  version: "1.2.0"
   status: "[DONE | DONE_WITH_CONCERNS]"
   domain: "[area reviewed]"
   files_changed: []  # review doesn't change files

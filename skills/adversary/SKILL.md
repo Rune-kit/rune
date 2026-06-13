@@ -3,7 +3,7 @@ name: adversary
 description: "Pre-implementation red-team analysis. Use when a plan is high-risk, critical path, or expensive to reverse. Challenges plans before code is written — finds edge cases, security holes, scalability bottlenecks, error propagation risks, and integration conflicts. Catches flaws at plan time (10x cheaper than post-implementation)."
 metadata:
   author: runedev
-  version: "0.2.0"
+  version: "0.3.0"
   layer: L2
   model: opus
   group: quality
@@ -250,7 +250,7 @@ Trigger: plan involves auth, crypto, payment, or user data handling.
 
 1. **Pre-bundle gate** — emit `context.preview` to `context-engine` first; abort if action=block
 2. **Build context bundle** — see `references/context-bundle-format.md` for exact format
-3. **Dispatch** — emit `oracle.dispatched` signal; route via `session-bridge` detach if target model is opus-class (non-blocking)
+3. **Dispatch** — emit `oracle.dispatched` signal; route via `session-bridge` detach if target model is opus-class (non-blocking). **For genuine architectural independence** (security-critical logic, irreversible ops, a loop the in-mesh model cannot break), prefer a **different-architecture external CLI** (Gemini/Codex) over another Claude instance — a same-family reviewer shares blind spots with the author. Invoke it via the safe transport in `references/cross-model-escalation.md`: explicit per-call user authorization, read-only sandbox, stdin not inline args, binary pre-flight. Never auto-invoke an external CLI in non-interactive contexts — skip and announce.
 4. **Wait for response** — synchronous if model is sonnet-class, polled via `.rune/oracle-pending/<id>.json` if opus-class
 5. **Validate response** — every claim MUST cite file:line. Strip + warn on uncited claims (`oracle.failed` if all claims uncited)
 6. **Emit response** — `oracle.response` carries the validated diagnosis, consumed by `debug`/`fix` to override or refine their current hypothesis
@@ -281,7 +281,7 @@ Trigger: plan involves auth, crypto, payment, or user data handling.
 
 Replies failing this contract are rejected — `oracle.failed` emitted, primary agent continues without second opinion.
 
-See `references/oracle-mode.md` for the full protocol and integration with `debug`/`fix`.
+See `references/oracle-mode.md` for the full protocol and integration with `debug`/`fix`. See `references/cross-model-escalation.md` for the safe external-CLI transport when the second opinion should come from a different model architecture.
 
 ## Constraints
 
@@ -315,6 +315,9 @@ See `references/oracle-mode.md` for the full protocol and integration with `debu
 | (oracle-mode) Bundle exceeds token cap — caller didn't prune | HIGH | Caller MUST run `context.preview` first; adversary fails fast with `oracle.failed` instead of silently truncating signal |
 | (oracle-mode) Oracle reply has no citations — model improvised | CRITICAL | Reject reply with `oracle.failed`. Primary agent continues without second opinion (better than acting on hallucination) |
 | (oracle-mode) Loop: oracle reply triggers another `agent.stuck` | HIGH | Cap at 1 oracle dispatch per primary-agent stuck cycle. Subsequent stucks must escalate to user |
+| (cross-model) External CLI invoked without authorization or in non-interactive run | CRITICAL | Per-call user authorization required; non-interactive → skip + announce. See `references/cross-model-escalation.md` |
+| (cross-model) Bundle interpolated into shell args — embedded `$(...)` executes | CRITICAL | Always pass via stdin from a temp file; read-only sandbox. Never inline `-p "<bundle>"` |
+| (cross-model) Rubber-stamping the external reviewer's verdict | MEDIUM | Reply is data, not ruling — reconcile against the artifact; classify each finding |
 
 ## Done When
 

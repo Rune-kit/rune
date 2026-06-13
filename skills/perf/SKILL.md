@@ -3,7 +3,7 @@ name: perf
 description: "Performance regression gate. Detects N+1 queries, sync-in-async, missing indexes, memory leaks, and bundle bloat before they reach production. Ranks findings by Cost Impact Hierarchy (architecture > data transfer > compute > DB > caching) so fix priority maps to actual unit-cost reduction."
 metadata:
   author: runedev
-  version: "0.4.0"
+  version: "0.5.0"
   layer: L2
   model: sonnet
   group: quality
@@ -43,6 +43,9 @@ Performance regression gate. Analyzes code changes for patterns that cause measu
 
 - `references/cost-reference.md` — Cost priority hierarchy, quick wins checklist, instance right-sizing, data transfer traps, serverless optimization, observability cost control, managed vs self-hosted matrix, unit economics tracking. Load when cost analysis or FinOps context detected.
 - `references/scalability-reference.md` — Bottleneck identification flow, performance thresholds, API patterns (cursor pagination, rate limiting, circuit breaker, graceful shutdown), caching strategies, queue-based load leveling, concurrency patterns, K8s HPA, CDN headers, load testing. Load when scaling or infrastructure optimization context detected.
+- `../deploy/references/observability.md` — Instrumentation discipline (RED/USE metrics, percentiles-not-averages, cardinality bounds, structured logs, correlation IDs). Load when establishing the *measurement basis* for an optimization — you cannot optimize what you do not measure.
+
+**Measure before optimizing.** A perf finding without a metric behind it is a guess. Before recommending a fix, confirm the hotpath actually emits the signal that proves it is slow: RED latency as a **histogram** (read p95/p99 — averages hide the slow tail), bounded label cardinality, and a correlation ID to tie a slow trace to its logs. If the instrumentation does not exist yet, that absence is itself a finding (`UNMEASURED_HOTPATH`). See `../deploy/references/observability.md` for the instrumentation contract.
 
 ## Executable Steps
 
