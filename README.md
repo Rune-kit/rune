@@ -588,7 +588,7 @@ How it works: `rune-pulse` (statusline) reads `context_window.used_percentage` f
 
 **Autopilot** — approve a plan, walk away. Autonomous multi-session execution with zero-HIGH-tolerance quality gates, baseline regression checks, cross-phase coherence review, and structured completion reports. `cook` gets the job done. `autopilot` gets it done while you sleep.
 
-**Department Packs** — 34 skills across 5 domains:
+**Pro Packs** — 9 domain packs:
 
 | Pack | What it does |
 |------|-------------|
@@ -596,7 +596,11 @@ How it works: `rune-pulse` (statusline) reads `context_window.used_percentage` f
 | **Sales** | Account research briefs, call prep with objection handling, outreach sequences, pipeline health review |
 | **Data Science** | SQL exploration → visualization → statistical testing → ML eval, all in one flow |
 | **Support** | Ticket triage with SLA routing, KB article generation, escalation playbooks, support metrics |
-| **Growth** | Niche research, content scouting, SEO architecture, landing page generation, content health monitoring, data moats, content quality scoring, CRO psychology analysis, 74 marketing mental models |
+| **Growth** | Niche research, content scouting, SEO architecture, landing pages, content health, data moats, quality scoring, CRO psychology, engagement ops (client intake + monthly retainer cycle), 74 marketing mental models |
+| **Media** | Raster image generation across 5 providers (Codex/DALL-E/Replicate/Stability/local SD), prompt-safety gates, batch asset pipeline with multi-resolution + WebP/AVIF |
+| **Personal Brand** | The operating system for founders/coaches/creators — brand identity → 12-month strategy → content engine (AI avatar video, podcast, long-form) → monetization ladder → community moat |
+| **E-commerce** | Full dropshipping pipeline — winning-product scorecard, supplier sourcing, Shopify + 10-ads/week creative, BE-ROAS pricing gate, scaling playbook, FTC/EU compliance |
+| **Vietnam** | VN market layer — Zalo/TikTok Shop/Shopee channel strategy, COD-dominant commerce + logistics (MoMo/VNPay/GHN/GHTK), content localization for the Tết-anchored sale calendar |
 
 All Pro packs plug into the core mesh — `cook` orchestrates them, `sentinel` gates them, `team` parallelizes them.
 
@@ -666,14 +670,14 @@ See [docs/MULTI-PLATFORM.md](docs/MULTI-PLATFORM.md) for the full architecture.
 
 ```
 Core Skills:       64 (L0: 1 │ L1: 5 │ L2: 30 │ L3: 28)
-Extension Packs:   14 free + 6 pro + 4 business
+Extension Packs:   14 free + 9 pro + 4 business
 Mesh Connections:  203 sync calls (rune doctor)
 Mesh Signals:      40 signals · 50 emit/listen edges (rune doctor)
 Connections/Skill: 3.2 avg
 Platforms:         8 (Claude Code, Cursor, Windsurf, Antigravity, Codex, OpenCode, OpenClaw, Generic)
 Compiler:          ~1400 LOC (parser + 8 transforms + 8 adapters + CLI)
 Tests:             1,152+ (compiler + signals + status + visualizer + hooks + scripts + tier-hooks)
-Pack Depth:        23 packs total (14 free + 5 pro + 4 business, all free packs rated Deep)
+Pack Depth:        27 packs total (14 free + 9 pro + 4 business, all free packs rated Deep)
 ```
 
 ## Acknowledgments

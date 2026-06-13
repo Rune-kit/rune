@@ -134,8 +134,8 @@ All layers complete. Repository: https://github.com/rune-kit/rune
 
 ### Rune Pro (Premium Extensions — separate private repo)
 Repository: https://github.com/rune-kit/rune-pro (private)
-@rune-pro/product (✅), @rune-pro/sales (✅), @rune-pro/data-science (✅), @rune-pro/support (✅), @rune-pro/growth (✅), @rune-pro/media (✅)
-Pricing: $49 lifetime (Pro), $149 lifetime (Business)
+@rune-pro/product (✅), @rune-pro/sales (✅), @rune-pro/data-science (✅), @rune-pro/support (✅), @rune-pro/growth (✅), @rune-pro/media (✅), @rune-pro/personal-brand (✅), @rune-pro/ecommerce (✅), @rune-pro/vietnam (✅)
+9 packs. Pricing: $49 lifetime (Pro), $149 lifetime (Business)
 Pro packs use same PACK.md format, install into `extensions/pro-*/`.
 
 ### Rune Business (Enterprise Extensions — separate private repo)
