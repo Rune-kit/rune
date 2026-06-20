@@ -12,6 +12,7 @@
       "**/scripts/__tests__/**/*.js",
       "!**/node_modules",
       "!**/builds",
+      "!**/.claude",
       "!**/*.md",
       "!**/*.json"
     ]

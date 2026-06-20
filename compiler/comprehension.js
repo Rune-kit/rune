@@ -553,6 +553,240 @@ tr:last-child td{border-bottom:none;}
 /* ── Understand graph canvas ── */
 #understand-canvas{width:100%;height:100%;display:block;cursor:crosshair;}
 
+/* ── Understand tab: Phase 4 additions ── */
+/* Filter panel */
+.u-layout{display:grid;grid-template-columns:200px 1fr;gap:16px;margin-top:12px;}
+.u-filters{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:var(--r-card);padding:14px;font-size:12px;
+  display:flex;flex-direction:column;gap:14px;
+}
+.u-filters h4{
+  font:600 11px var(--font-body);text-transform:uppercase;letter-spacing:.06em;
+  color:var(--text-tertiary);
+}
+.u-filter-group{display:flex;flex-direction:column;gap:5px;}
+.u-filter-group-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:4px;
+}
+.u-filter-group-label{
+  font:600 10px var(--font-body);text-transform:uppercase;letter-spacing:.06em;
+  color:var(--text-tertiary);
+}
+.u-quick-btns{display:flex;gap:4px;}
+.u-quick-btn{
+  font:500 9px var(--font-body);padding:2px 6px;border-radius:3px;
+  border:1px solid var(--border-strong);background:transparent;
+  color:var(--text-tertiary);cursor:pointer;
+}
+.u-quick-btn:hover{color:var(--text-primary);border-color:var(--accent);}
+.u-quick-btn:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+.u-check-row{
+  display:flex;align-items:center;gap:6px;
+  color:var(--text-secondary);cursor:pointer;
+}
+.u-check-row input[type=checkbox]{accent-color:var(--accent);cursor:pointer;}
+.u-check-label{font-size:11px;}
+.u-badge{
+  display:inline-block;min-width:16px;text-align:center;
+  font-family:var(--font-mono);font-size:9px;
+  background:var(--bg-elevated);border-radius:var(--r-pill);
+  padding:1px 4px;color:var(--text-tertiary);margin-left:auto;
+}
+/* Main panel */
+.u-main{display:flex;flex-direction:column;gap:12px;}
+/* Graph toolbar */
+.u-toolbar{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+}
+.u-search-wrap{flex:1;min-width:160px;position:relative;}
+.u-search{
+  width:100%;padding:7px 10px 7px 32px;
+  background:var(--bg-elevated);border:1px solid var(--border);
+  border-radius:var(--r-el);color:var(--text-primary);font-size:12px;
+  font-family:var(--font-body);
+}
+.u-search::placeholder{color:var(--text-tertiary);}
+.u-search:focus{outline:none;border-color:var(--accent);}
+.u-search-icon{
+  position:absolute;left:9px;top:50%;transform:translateY(-50%);
+  color:var(--text-tertiary);font-size:12px;pointer-events:none;
+}
+.u-toggle-btn{
+  font:500 11px var(--font-body);padding:7px 12px;
+  border:1px solid var(--border-strong);border-radius:var(--r-el);
+  background:transparent;color:var(--text-secondary);cursor:pointer;
+  transition:all var(--t-fast);white-space:nowrap;
+}
+.u-toggle-btn:hover{background:var(--bg-elevated);color:var(--text-primary);}
+.u-toggle-btn.active{background:rgba(45,212,191,.12);border-color:var(--accent);color:var(--accent);}
+.u-toggle-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+/* Export buttons */
+.u-export-group{display:flex;gap:6px;}
+.u-export-btn{
+  font:500 10px var(--font-body);padding:6px 10px;
+  border:1px solid var(--border-strong);border-radius:var(--r-el);
+  background:transparent;color:var(--text-tertiary);cursor:pointer;
+  transition:all var(--t-fast);
+}
+.u-export-btn:hover{background:var(--bg-elevated);color:var(--text-primary);}
+.u-export-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+/* Graph area (canvas) */
+.u-graph-wrap{
+  background:var(--bg-graph);border-radius:var(--r-el);
+  height:320px;position:relative;overflow:hidden;
+}
+/* Node inspector side panel */
+.u-inspector{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:var(--r-card);padding:14px;font-size:12px;display:none;
+}
+.u-inspector.visible{display:block;}
+.u-inspector h4{
+  font:600 13px var(--font-body);color:var(--text-primary);margin-bottom:10px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.u-inspector-close{
+  background:transparent;border:none;color:var(--text-tertiary);
+  cursor:pointer;font-size:14px;padding:2px 4px;
+}
+.u-inspector-close:hover{color:var(--text-primary);}
+.u-inspector-close:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+.u-insp-row{
+  display:flex;gap:8px;margin-bottom:7px;align-items:baseline;
+}
+.u-insp-label{
+  font:500 10px var(--font-body);text-transform:uppercase;letter-spacing:.05em;
+  color:var(--text-tertiary);min-width:72px;flex-shrink:0;
+}
+.u-insp-val{color:var(--text-secondary);line-height:1.4;font-size:11px;}
+.u-insp-summary{
+  margin:8px 0 0;padding:8px;background:var(--bg-elevated);
+  border-radius:var(--r-el);color:var(--text-secondary);
+  font-size:11px;line-height:1.55;
+}
+.u-insp-relations{margin-top:10px;}
+.u-insp-relations-label{
+  font:500 10px var(--font-body);text-transform:uppercase;letter-spacing:.05em;
+  color:var(--text-tertiary);margin-bottom:5px;
+}
+.u-rel-item{
+  display:flex;align-items:center;gap:5px;font-size:10px;
+  color:var(--text-secondary);padding:3px 0;border-bottom:1px solid var(--border);
+}
+.u-rel-item:last-child{border-bottom:none;}
+.u-rel-dir{
+  font-family:var(--font-mono);font-size:9px;color:var(--text-tertiary);
+  min-width:16px;text-align:center;
+}
+.u-complexity-badge{
+  display:inline-block;font-size:9px;font-weight:600;text-transform:uppercase;
+  padding:1px 6px;border-radius:var(--r-pill);letter-spacing:.04em;
+}
+.u-complexity-badge.simple{background:rgba(16,185,129,.15);color:var(--pass);}
+.u-complexity-badge.moderate{background:rgba(245,158,11,.15);color:var(--warn);}
+.u-complexity-badge.complex{background:rgba(239,68,68,.15);color:var(--fail);}
+/* Domain view */
+.u-domain-view{
+  display:grid;grid-auto-flow:column;grid-auto-columns:min(220px,80vw);
+  gap:12px;overflow-x:auto;padding-bottom:8px;
+}
+.u-domain-col{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:var(--r-card);padding:14px;
+  display:flex;flex-direction:column;gap:10px;
+}
+.u-domain-name{
+  font:700 12px var(--font-display);color:var(--accent);margin-bottom:4px;
+}
+.u-domain-summary{
+  font-size:10px;color:var(--text-tertiary);line-height:1.5;
+}
+.u-flow{
+  border-left:2px solid var(--border-strong);padding-left:10px;
+}
+.u-flow-name{
+  font:600 11px var(--font-body);color:var(--text-primary);margin-bottom:5px;
+}
+.u-step{
+  font-size:10px;color:var(--text-secondary);padding:3px 0;
+  border-bottom:1px dashed var(--border);display:flex;align-items:flex-start;gap:5px;
+}
+.u-step:last-child{border-bottom:none;}
+.u-step-num{
+  font-family:var(--font-mono);font-size:9px;color:var(--text-tertiary);
+  min-width:14px;margin-top:1px;
+}
+/* Tour panel */
+.u-tour-panel{
+  background:var(--bg-card);border:1px solid var(--border-accent);
+  border-radius:var(--r-card);padding:14px;font-size:12px;
+  display:none;
+}
+.u-tour-panel.visible{display:block;}
+.u-tour-header{
+  display:flex;align-items:center;gap:10px;margin-bottom:10px;
+  font:600 13px var(--font-body);color:var(--text-primary);
+}
+.u-tour-header span{flex:1;}
+.u-tour-close{
+  background:transparent;border:none;color:var(--text-tertiary);
+  cursor:pointer;font-size:14px;
+}
+.u-tour-close:hover{color:var(--text-primary);}
+.u-tour-close:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+.u-tour-body{display:flex;gap:12px;}
+.u-tour-steps{width:130px;flex-shrink:0;display:flex;flex-direction:column;gap:3px;}
+.u-tour-step-item{
+  font-size:10px;padding:5px 7px;border-radius:5px;cursor:pointer;
+  color:var(--text-tertiary);border:1px solid transparent;
+  transition:all var(--t-fast);
+}
+.u-tour-step-item:hover{color:var(--text-secondary);background:var(--bg-elevated);}
+.u-tour-step-item.active{
+  color:var(--accent);background:rgba(45,212,191,.1);
+  border-color:var(--accent-deep);
+}
+.u-tour-step-item:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+.u-tour-detail{flex:1;}
+.u-tour-step-label{
+  font:700 12px var(--font-body);color:var(--text-primary);margin-bottom:5px;
+}
+.u-tour-step-summary{
+  font-size:11px;color:var(--text-secondary);line-height:1.55;
+  background:var(--bg-elevated);padding:8px;border-radius:var(--r-el);
+}
+.u-tour-nav{display:flex;gap:6px;margin-top:10px;}
+.u-tour-nav-btn{
+  font:500 11px var(--font-body);padding:6px 14px;
+  border:1px solid var(--border-strong);border-radius:var(--r-el);
+  background:transparent;color:var(--text-secondary);cursor:pointer;
+  transition:all var(--t-fast);
+}
+.u-tour-nav-btn:hover{background:var(--bg-elevated);color:var(--text-primary);}
+.u-tour-nav-btn:disabled{opacity:.35;cursor:default;}
+.u-tour-nav-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+.u-tour-counter{font-family:var(--font-mono);font-size:11px;color:var(--text-tertiary);margin-left:auto;display:flex;align-items:center;}
+/* Graph legend (reused below canvas) */
+.u-legend{
+  display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;
+  font-size:11px;color:var(--text-secondary);
+}
+.u-legend i{
+  display:inline-block;width:9px;height:9px;border-radius:50%;
+  margin-right:4px;vertical-align:middle;
+}
+.u-search-match-count{font-size:11px;color:var(--text-tertiary);white-space:nowrap;}
+@media(max-width:880px){
+  .u-layout{grid-template-columns:1fr;}
+  .u-filters{display:grid;grid-template-columns:repeat(3,1fr);}
+}
+@media(max-width:540px){
+  .u-layout{grid-template-columns:1fr;}
+  .u-filters{grid-template-columns:1fr;}
+}
+
 /* ── Improve placeholder ── */
 .improve-placeholder{
   display:flex;flex-direction:column;align-items:center;
@@ -1288,7 +1522,8 @@ function renderMeasure(){
   container.appendChild(cols);
 }
 
-// ── Understand tab: module graph ──
+// ── Understand tab: module graph (Phase 4) ──
+// Features: filters, domain view, guided tour, node inspector, export, search
 let understandRendered=false;
 function renderUnderstandGraph(){
   if(understandRendered)return;
@@ -1297,157 +1532,926 @@ function renderUnderstandGraph(){
   const container=document.getElementById('understand-content');
   if(!container)return;
 
-  const modules=D.modules||[];
-  const edges=D.edges||[];
-  const layers=D.layers||[];
+  // ── Data normalisation ──
+  const rawModules=Array.isArray(D.modules)?D.modules:[];
+  const rawEdges=Array.isArray(D.edges)?D.edges:[];
+  const rawDomains=Array.isArray(D.domains)?D.domains:[];
   const skillMesh=D.skillMesh||{nodes:[],edges:[]};
 
-  // Prefer comprehension modules; fall back to skillMesh nodes
-  const useComprehension=modules.length>0;
-  const nodes=useComprehension
-    ? modules.map(m=>({id:m.id||m.name,name:m.name,layer:m.layer||'module',type:m.type||'module'}))
-    : (skillMesh.nodes||[]).map(n=>({id:n.id||n.name,name:n.id||n.name,layer:n.layer||'L3',type:'skill'}));
-  const rawEdges=useComprehension
-    ? edges.map(e=>({source:e.from,target:e.to}))
-    : (skillMesh.edges||[]).map(e=>({source:e.source,target:e.target}));
+  // Prefer comprehension modules; fall back to skillMesh nodes (labelled as Rune skill mesh)
+  const useComprehension=rawModules.length>0;
+  const isMeshFallback=!useComprehension;
 
-  // Panel wrapper
-  const panel=document.createElement('div');
-  panel.className='panel';
-  const title=document.createElement('h3');
-  title.innerHTML='Codebase Map <span class="pill">understand</span>';
-  panel.appendChild(title);
+  // Build canonical nodes/edges arrays
+  const allNodes=useComprehension
+    ? rawModules.map(m=>({
+        id:String(m.id||m.name||''),
+        name:String(m.name||m.id||''),
+        layer:String(m.layer||'module'),
+        type:String(m.type||'module'),
+        complexity:String(m.complexity||''),
+        summary:String(m.summary||''),
+        files:typeof m.files==='number'?m.files:null,
+      }))
+    : (skillMesh.nodes||[]).map(n=>({
+        id:String(n.id||n.name||''),
+        name:String(n.id||n.name||''),
+        layer:String(n.layer||'L3'),
+        type:'skill',
+        complexity:'',
+        summary:String(n.summary||''),
+        files:null,
+      }));
 
-  if(nodes.length===0){
+  const allRawEdges=useComprehension
+    ? rawEdges.map(e=>({source:String(e.from||''),target:String(e.to||''),category:String(e.category||'structural')}))
+    : (skillMesh.edges||[]).map(e=>({source:String(e.source||''),target:String(e.target||''),category:'structural'}));
+
+  // ── Schema-defined dimensions ──
+  const SCHEMA_TYPES=['file','function','class','module','service','table','endpoint','domain','flow','step','doc','config','skill'];
+  const SCHEMA_CATS=['structural','behavioral','data-flow','dependency','semantic','infrastructure','domain','knowledge'];
+  const SCHEMA_COMPLEXITY=['simple','moderate','complex'];
+
+  // Present values (only for toggles)
+  const presentTypes=[...new Set(allNodes.map(n=>n.type))].filter(t=>SCHEMA_TYPES.includes(t)||t==='skill');
+  const presentCats=[...new Set(allRawEdges.map(e=>e.category))].filter(c=>SCHEMA_CATS.includes(c));
+  const presentComplexity=[...new Set(allNodes.map(n=>n.complexity))].filter(c=>SCHEMA_COMPLEXITY.includes(c));
+
+  // ── Filter state (session-only, no persistence) ──
+  const filterTypes=new Set(presentTypes);
+  const filterCats=new Set(presentCats);
+  const filterComplexity=new Set(SCHEMA_COMPLEXITY); // all on by default (incl. empty/uncategorised)
+
+  // ── View state ──
+  let isDomainView=false;
+  let tourActive=false;
+  let tourStep=0;
+  let selectedNode=null;
+  let searchQuery='';
+  let searchMatches=new Set(); // node ids matching search
+
+  // ── Layer / type colour map ──
+  const NODE_COLORS={
+    file:'#2dd4bf',function:'#2dd4bf',class:'#60a5fa',module:'#2dd4bf',
+    service:'#60a5fa',table:'#a78bfa',endpoint:'#38bdf8',
+    domain:'#fbbf24',flow:'#f97316',step:'#f59e0b',
+    doc:'#f472b6',config:'#94a3b8',concept:'#34d399',skill:'#60a5fa',
+    // layer fallbacks
+    code:'#2dd4bf',data:'#a78bfa',docs:'#f472b6',infra:'#38bdf8',
+    api:'#60a5fa',
+    L0:'#fbbf24',L1:'#f97316',L2:'#60a5fa',L3:'#a78bfa',L4:'#34d399',
+  };
+  const EDGE_CAT_COLORS={
+    structural:'rgba(45,212,191,.35)',
+    behavioral:'rgba(96,165,250,.35)',
+    'data-flow':'rgba(167,139,250,.35)',
+    dependency:'rgba(148,163,184,.25)',
+    semantic:'rgba(244,114,182,.35)',
+    infrastructure:'rgba(56,189,248,.35)',
+    domain:'rgba(251,191,36,.35)',
+    knowledge:'rgba(52,211,153,.35)',
+  };
+  const COMPLEXITY_RADIUS={simple:5,moderate:7,complex:9,'':6};
+
+  // ── Compute node colour by type then layer ──
+  function nodeColor(n){return NODE_COLORS[n.type]||NODE_COLORS[n.layer]||'#94a3b8';}
+
+  // ── Topological sort for guided tour ──
+  function topoSort(nodes,edges){
+    const ids=nodes.map(n=>n.id);
+    const idSet=new Set(ids);
+    const indeg=new Map(ids.map(id=>[id,0]));
+    const adj=new Map(ids.map(id=>[id,[]]));
+    for(const e of edges){
+      if(idSet.has(e.source)&&idSet.has(e.target)){
+        adj.get(e.source).push(e.target);
+        indeg.set(e.target,(indeg.get(e.target)||0)+1);
+      }
+    }
+    const queue=ids.filter(id=>indeg.get(id)===0);
+    const result=[];
+    while(queue.length>0){
+      const cur=queue.shift();
+      result.push(cur);
+      for(const nb of (adj.get(cur)||[])){
+        const d=(indeg.get(nb)||1)-1;
+        indeg.set(nb,d);
+        if(d===0)queue.push(nb);
+      }
+    }
+    // Append any remaining (cycles)
+    for(const id of ids){if(!result.includes(id))result.push(id);}
+    return result.map(id=>nodes.find(n=>n.id===id)).filter(Boolean);
+  }
+
+  // ── Compute filtered views ──
+  function getFilteredNodes(){
+    return allNodes.filter(n=>{
+      if(presentTypes.length>0&&!filterTypes.has(n.type))return false;
+      const cx=n.complexity||'';
+      // If complexity filter active and node has a known complexity value, filter it
+      if(presentComplexity.length>0&&cx&&!filterComplexity.has(cx))return false;
+      // Search filter
+      if(searchQuery){
+        const q=searchQuery.toLowerCase();
+        return n.name.toLowerCase().includes(q)||n.summary.toLowerCase().includes(q)||n.type.toLowerCase().includes(q);
+      }
+      return true;
+    });
+  }
+  function getFilteredEdges(filteredNodeIds){
+    const idSet=new Set(filteredNodeIds);
+    return allRawEdges.filter(e=>{
+      if(!idSet.has(e.source)||!idSet.has(e.target))return false;
+      if(presentCats.length>0&&!filterCats.has(e.category))return false;
+      return true;
+    });
+  }
+
+  // ── Build full outer layout ──
+  const section=document.createElement('div');
+  section.className='panel';
+
+  // Title row
+  const titleRow=document.createElement('h3');
+  titleRow.innerHTML=(useComprehension
+    ?'Codebase Map'
+    :'Rune Skill Mesh'
+  )+' <span class="pill">understand</span>'
+  +(isMeshFallback?' <span class="pill" style="background:rgba(148,163,184,.1);color:var(--text-tertiary)">mesh fallback</span>':'');
+  section.appendChild(titleRow);
+
+  // Empty state
+  if(allNodes.length===0){
     const empty=document.createElement('div');
     empty.className='empty';
-    empty.innerHTML='<h4>No comprehension data</h4><p>Run <code>rune onboard</code> or <code>rune autopsy</code> on your project to generate comprehension.json and populate this graph.</p>';
-    panel.appendChild(empty);
-    container.appendChild(panel);
+    empty.innerHTML='<h4>No codebase graph yet</h4><p>Run <code>rune onboard</code> or <code>rune autopsy</code> to generate comprehension.json and populate this graph.</p>';
+    section.appendChild(empty);
+    container.appendChild(section);
     return;
   }
 
-  const graphWrap=document.createElement('div');
-  graphWrap.className='graph-wrap';
+  // Two-column layout: filters | main
+  const layout=document.createElement('div');
+  layout.className='u-layout';
+
+  // ── LEFT: Filter panel ──
+  const filters=document.createElement('aside');
+  filters.className='u-filters';
+  filters.setAttribute('aria-label','Graph filter controls');
+
+  function mkFilterGroup(label,items,stateSet,onChange){
+    const grp=document.createElement('div');
+    grp.className='u-filter-group';
+    const hdr=document.createElement('div');
+    hdr.className='u-filter-group-header';
+    const lbl=document.createElement('span');
+    lbl.className='u-filter-group-label';
+    lbl.textContent=label;
+    hdr.appendChild(lbl);
+    const btns=document.createElement('span');
+    btns.className='u-quick-btns';
+    const allBtn=document.createElement('button');
+    allBtn.className='u-quick-btn';
+    allBtn.textContent='All';
+    allBtn.setAttribute('aria-label','Select all '+label);
+    allBtn.addEventListener('click',()=>{items.forEach(v=>stateSet.add(v));onChange();renderCheckboxes();});
+    const noneBtn=document.createElement('button');
+    noneBtn.className='u-quick-btn';
+    noneBtn.textContent='None';
+    noneBtn.setAttribute('aria-label','Deselect all '+label);
+    noneBtn.addEventListener('click',()=>{stateSet.clear();onChange();renderCheckboxes();});
+    btns.appendChild(allBtn);btns.appendChild(noneBtn);
+    hdr.appendChild(btns);
+    grp.appendChild(hdr);
+
+    const checkWrap=document.createElement('div');
+    checkWrap.className='u-checks';
+
+    function renderCheckboxes(){
+      checkWrap.innerHTML='';
+      for(const v of items){
+        const row=document.createElement('label');
+        row.className='u-check-row';
+        const cb=document.createElement('input');
+        cb.type='checkbox';
+        cb.checked=stateSet.has(v);
+        cb.setAttribute('aria-label',v);
+        cb.addEventListener('change',()=>{
+          if(cb.checked)stateSet.add(v);else stateSet.delete(v);
+          onChange();
+        });
+        const span=document.createElement('span');
+        span.className='u-check-label';
+        span.textContent=v;
+        // Count badge
+        const badge=document.createElement('span');
+        badge.className='u-badge';
+        const cnt=label==='Node types'
+          ?allNodes.filter(n=>n.type===v).length
+          :label==='Edge types'
+          ?allRawEdges.filter(e=>e.category===v).length
+          :allNodes.filter(n=>n.complexity===v).length;
+        badge.textContent=String(cnt);
+        row.appendChild(cb);row.appendChild(span);row.appendChild(badge);
+        checkWrap.appendChild(row);
+      }
+    }
+    renderCheckboxes();
+    grp.appendChild(checkWrap);
+    // Store ref for external re-render
+    grp._renderCheckboxes=renderCheckboxes;
+    return grp;
+  }
+
+  const filterGroups=[];
+  if(presentTypes.length>0){
+    filterGroups.push(mkFilterGroup('Node types',presentTypes,filterTypes,applyFilters));
+  }
+  if(presentCats.length>0){
+    filterGroups.push(mkFilterGroup('Edge types',presentCats,filterCats,applyFilters));
+  }
+  if(presentComplexity.length>0){
+    filterGroups.push(mkFilterGroup('Complexity',presentComplexity,filterComplexity,applyFilters));
+  }
+  for(const g of filterGroups)filters.appendChild(g);
+  layout.appendChild(filters);
+
+  // ── RIGHT: Main panel ──
+  const main=document.createElement('div');
+  main.className='u-main';
+
+  // ── Toolbar ──
+  const toolbar=document.createElement('div');
+  toolbar.className='u-toolbar';
+
+  // Search
+  const searchWrap=document.createElement('div');
+  searchWrap.className='u-search-wrap';
+  const searchIcon=document.createElement('span');
+  searchIcon.className='u-search-icon';
+  searchIcon.setAttribute('aria-hidden','true');
+  searchIcon.textContent='⌕';
+  const searchInput=document.createElement('input');
+  searchInput.type='search';
+  searchInput.className='u-search';
+  searchInput.placeholder='Search nodes…';
+  searchInput.setAttribute('aria-label','Search nodes by name or type');
+  let searchDebounce=null;
+  searchInput.addEventListener('input',()=>{
+    clearTimeout(searchDebounce);
+    searchDebounce=setTimeout(()=>{
+      searchQuery=searchInput.value.trim();
+      applyFilters();
+    },200);
+  });
+  searchWrap.appendChild(searchIcon);
+  searchWrap.appendChild(searchInput);
+  toolbar.appendChild(searchWrap);
+
+  // Match count
+  const matchCount=document.createElement('span');
+  matchCount.className='u-search-match-count';
+  matchCount.setAttribute('aria-live','polite');
+  toolbar.appendChild(matchCount);
+
+  // Domain view toggle
+  const domainBtn=document.createElement('button');
+  domainBtn.className='u-toggle-btn';
+  domainBtn.textContent='Domain View';
+  domainBtn.setAttribute('aria-pressed','false');
+  domainBtn.addEventListener('click',()=>{
+    isDomainView=!isDomainView;
+    domainBtn.classList.toggle('active',isDomainView);
+    domainBtn.setAttribute('aria-pressed',isDomainView?'true':'false');
+    tourBtn.style.display=isDomainView?'none':'';
+    graphArea.style.display=isDomainView?'none':'';
+    legendWrap.style.display=isDomainView?'none':'';
+    domainViewEl.style.display=isDomainView?'':'none';
+    if(isDomainView)renderDomainView();
+  });
+  if(rawDomains.length===0)domainBtn.style.opacity='.4';
+  toolbar.appendChild(domainBtn);
+
+  // Tour button
+  const tourBtn=document.createElement('button');
+  tourBtn.className='u-toggle-btn';
+  tourBtn.textContent='Start Tour';
+  tourBtn.setAttribute('aria-label','Start guided dependency tour');
+  tourBtn.addEventListener('click',()=>{
+    tourPanel.classList.add('visible');
+    tourActive=true;
+    tourStep=0;
+    buildTour();
+    tourBtn.textContent='Exit Tour';
+    tourBtn.classList.add('active');
+  });
+  toolbar.appendChild(tourBtn);
+
+  // Export group
+  const exportGroup=document.createElement('div');
+  exportGroup.className='u-export-group';
+
+  const exportPng=document.createElement('button');
+  exportPng.className='u-export-btn';
+  exportPng.textContent='PNG';
+  exportPng.setAttribute('aria-label','Export graph as PNG image');
+  exportPng.addEventListener('click',()=>{
+    const c=document.getElementById('understand-canvas');
+    if(!c)return;
+    c.toBlob(blob=>{
+      if(!blob)return;
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(blob);
+      a.download='codebase-graph.png';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    },'image/png');
+  });
+
+  const exportSvg=document.createElement('button');
+  exportSvg.className='u-export-btn';
+  exportSvg.textContent='SVG';
+  exportSvg.setAttribute('aria-label','Export graph as SVG vector');
+  exportSvg.addEventListener('click',()=>exportAsSvg());
+
+  const exportJson=document.createElement('button');
+  exportJson.className='u-export-btn';
+  exportJson.textContent='JSON';
+  exportJson.setAttribute('aria-label','Export filtered graph data as JSON');
+  exportJson.addEventListener('click',()=>{
+    const filtered=getFilteredNodes();
+    const filteredEdges=getFilteredEdges(filtered.map(n=>n.id));
+    const blob=new Blob([JSON.stringify({modules:filtered,edges:filteredEdges},null,2)],{type:'application/json'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='codebase-graph.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  exportGroup.appendChild(exportPng);
+  exportGroup.appendChild(exportSvg);
+  exportGroup.appendChild(exportJson);
+  toolbar.appendChild(exportGroup);
+  main.appendChild(toolbar);
+
+  // ── Tour panel ──
+  const tourPanel=document.createElement('div');
+  tourPanel.className='u-tour-panel';
+  tourPanel.setAttribute('role','region');
+  tourPanel.setAttribute('aria-label','Guided tour');
+  let tourNodes=[];
+  let tourStepListEl=null;
+  let tourDetailEl=null;
+  let tourCounterEl=null;
+  let tourPrevBtn=null;
+  let tourNextBtn=null;
+
+  function buildTour(){
+    const filtered=getFilteredNodes();
+    const filteredEdges=getFilteredEdges(filtered.map(n=>n.id));
+    tourNodes=topoSort(filtered,filteredEdges);
+    tourPanel.innerHTML='';
+    if(tourNodes.length===0){
+      tourPanel.innerHTML='<p style="color:var(--text-tertiary);font-size:12px">No nodes to tour with current filters.</p>';
+      return;
+    }
+    const hdr=document.createElement('div');
+    hdr.className='u-tour-header';
+    const title=document.createElement('span');
+    title.textContent='Guided Tour';
+    hdr.appendChild(title);
+    const closeBtn=document.createElement('button');
+    closeBtn.className='u-tour-close';
+    closeBtn.textContent='✕';
+    closeBtn.setAttribute('aria-label','Close tour');
+    closeBtn.addEventListener('click',closeTour);
+    hdr.appendChild(closeBtn);
+    tourPanel.appendChild(hdr);
+
+    const body=document.createElement('div');
+    body.className='u-tour-body';
+
+    tourStepListEl=document.createElement('div');
+    tourStepListEl.className='u-tour-steps';
+    tourStepListEl.setAttribute('role','list');
+    tourNodes.forEach((n,i)=>{
+      const item=document.createElement('button');
+      item.className='u-tour-step-item'+(i===0?' active':'');
+      item.textContent=(i+1)+'. '+n.name.slice(0,18);
+      item.setAttribute('role','listitem');
+      item.setAttribute('tabindex','0');
+      item.addEventListener('click',()=>{tourStep=i;updateTourStep();});
+      item.setAttribute('aria-label','Step '+(i+1)+': '+n.name);
+      tourStepListEl.appendChild(item);
+    });
+    body.appendChild(tourStepListEl);
+
+    tourDetailEl=document.createElement('div');
+    tourDetailEl.className='u-tour-detail';
+    body.appendChild(tourDetailEl);
+    tourPanel.appendChild(body);
+
+    const nav=document.createElement('div');
+    nav.className='u-tour-nav';
+    tourPrevBtn=document.createElement('button');
+    tourPrevBtn.className='u-tour-nav-btn';
+    tourPrevBtn.textContent='← Prev';
+    tourPrevBtn.setAttribute('aria-label','Previous step');
+    tourPrevBtn.addEventListener('click',()=>{if(tourStep>0){tourStep--;updateTourStep();}});
+    tourNextBtn=document.createElement('button');
+    tourNextBtn.className='u-tour-nav-btn';
+    tourNextBtn.textContent='Next →';
+    tourNextBtn.setAttribute('aria-label','Next step');
+    tourNextBtn.addEventListener('click',()=>{if(tourStep<tourNodes.length-1){tourStep++;updateTourStep();}});
+    tourCounterEl=document.createElement('span');
+    tourCounterEl.className='u-tour-counter';
+    nav.appendChild(tourPrevBtn);nav.appendChild(tourNextBtn);nav.appendChild(tourCounterEl);
+    tourPanel.appendChild(nav);
+    updateTourStep();
+  }
+
+  function updateTourStep(){
+    if(!tourNodes.length||!tourDetailEl)return;
+    const n=tourNodes[tourStep];
+    // Update step list highlight
+    if(tourStepListEl){
+      Array.from(tourStepListEl.children).forEach((el,i)=>{
+        el.classList.toggle('active',i===tourStep);
+      });
+    }
+    // Detail
+    tourDetailEl.innerHTML='';
+    const lbl=document.createElement('div');
+    lbl.className='u-tour-step-label';
+    lbl.textContent=esc(n.name);
+    const summary=document.createElement('div');
+    summary.className='u-tour-step-summary';
+    summary.textContent=n.summary||('A '+esc(n.type)+' in the '+esc(n.layer)+' layer.');
+    tourDetailEl.appendChild(lbl);
+    tourDetailEl.appendChild(summary);
+    // Meta chips
+    if(n.type||n.complexity){
+      const meta=document.createElement('div');
+      meta.style.cssText='margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;';
+      if(n.type){
+        const chip=document.createElement('span');
+        chip.className='pill';
+        chip.textContent=esc(n.type);
+        meta.appendChild(chip);
+      }
+      if(n.complexity){
+        const c=document.createElement('span');
+        c.className='u-complexity-badge '+n.complexity;
+        c.textContent=esc(n.complexity);
+        meta.appendChild(c);
+      }
+      tourDetailEl.appendChild(meta);
+    }
+    if(tourPrevBtn)tourPrevBtn.disabled=tourStep===0;
+    if(tourNextBtn)tourNextBtn.disabled=tourStep===tourNodes.length-1;
+    if(tourCounterEl)tourCounterEl.textContent=(tourStep+1)+' / '+tourNodes.length;
+    // Highlight node on canvas
+    highlightNode(n.id);
+  }
+
+  function closeTour(){
+    tourPanel.classList.remove('visible');
+    tourActive=false;
+    tourBtn.textContent='Start Tour';
+    tourBtn.classList.remove('active');
+    highlightNode(null);
+  }
+
+  // Esc to exit tour
+  document.addEventListener('keydown',function onKey(e){
+    if(e.key==='Escape'){
+      if(tourActive)closeTour();
+      if(selectedNode!==null){selectedNode=null;inspectorPanel.classList.remove('visible');highlightNode(null);}
+    }
+  });
+
+  main.appendChild(tourPanel);
+
+  // ── Graph canvas area ──
+  const graphArea=document.createElement('div');
+  graphArea.className='u-graph-wrap';
   const canvas=document.createElement('canvas');
   canvas.id='understand-canvas';
   canvas.setAttribute('role','img');
-  canvas.setAttribute('aria-label','Module dependency graph with '+nodes.length+' nodes');
-  graphWrap.appendChild(canvas);
-  panel.appendChild(graphWrap);
+  canvas.setAttribute('aria-label','Module dependency graph');
+  graphArea.appendChild(canvas);
+  main.appendChild(graphArea);
 
-  // Legend
-  const LAYER_COLORS={
-    code:'#2dd4bf',service:'#60a5fa',data:'#a78bfa',
-    domain:'#fbbf24',docs:'#f472b6',infra:'#38bdf8',concept:'#34d399',
-    L0:'#fbbf24',L1:'#f97316',L2:'#60a5fa',L3:'#a78bfa',L4:'#34d399',
-    module:'#2dd4bf',skill:'#60a5fa',
-  };
-  const usedLayers=[...new Set(nodes.map(n=>n.layer))].slice(0,6);
-  const legendEl=document.createElement('div');
-  legendEl.className='legend';
-  legendEl.setAttribute('aria-label','Graph legend');
-  for(const l of usedLayers){
-    const color=LAYER_COLORS[l]||'#94a3b8';
-    legendEl.innerHTML+='<span aria-label="'+esc(l)+' layer"><i style="background:'+color+'" aria-hidden="true"></i>'+esc(l)+'</span>';
-  }
-  panel.appendChild(legendEl);
-  container.appendChild(panel);
+  // ── Legend ──
+  const legendWrap=document.createElement('div');
+  legendWrap.className='u-legend';
+  legendWrap.setAttribute('aria-label','Graph legend');
+  main.appendChild(legendWrap);
 
-  // Draw graph after DOM insertion
-  requestAnimationFrame(()=>{
-    const LAYER_C=LAYER_COLORS;
-    const W=canvas.offsetWidth||600;
-    const H=canvas.offsetHeight||280;
-    const dpr=window.devicePixelRatio||1;
-    canvas.width=W*dpr;canvas.height=H*dpr;
-
-    // Layout: circular placement
-    const N=nodes.length;
-    const cx=W/2,cy=H/2;
-    const r=Math.min(W,H)*0.36;
-
-    // Position nodes in a circle, cluster by layer
-    const layerOrder=[...new Set(nodes.map(n=>n.layer))];
-    nodes.forEach((n,i)=>{
-      const angle=(i/N)*Math.PI*2 - Math.PI/2;
-      n.x=cx+Math.cos(angle)*r*(0.7+Math.random()*0.3);
-      n.y=cy+Math.sin(angle)*r*(0.7+Math.random()*0.3);
-      n.color=LAYER_C[n.layer]||'#94a3b8';
-      n.radius=6+Math.random()*4;
-    });
-
-    // Build adjacency for hover highlight
-    const nodeMap=new Map(nodes.map((n,i)=>[n.id,i]));
-    const edgeList=rawEdges
-      .filter(e=>nodeMap.has(e.source)&&nodeMap.has(e.target))
-      .map(e=>({si:nodeMap.get(e.source),ti:nodeMap.get(e.target)}));
-
-    let hovered=null;
-    const ctx=canvas.getContext('2d');
-
-    function draw(ts){
-      ctx.save();ctx.scale(dpr,dpr);
-      ctx.clearRect(0,0,W,H);
-      const t=(ts||0)*0.001;
-
-      // Draw edges
-      for(const e of edgeList){
-        const a=nodes[e.si],b=nodes[e.ti];
-        const hi=hovered!=null&&(e.si===hovered||e.ti===hovered);
-        ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);
-        ctx.strokeStyle=hi?'rgba(45,212,191,.45)':'rgba(148,163,184,.12)';
-        ctx.lineWidth=hi?1.5:0.8;ctx.stroke();
-      }
-
-      // Draw nodes
-      for(let i=0;i<nodes.length;i++){
-        const n=nodes[i];
-        const isH=hovered===i;
-        const isC=hovered!=null&&!isH&&edgeList.some(e=>(e.si===hovered&&e.ti===i)||(e.ti===hovered&&e.si===i));
-        const dim=hovered!=null&&!isH&&!isC;
-        const pulse=isH?1.2:(1+0.08*Math.sin(t*0.8+i*1.1));
-        const rad=n.radius*pulse;
-
-        if(!dim){
-          // Glow
-          const grd=ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,rad*2.8);
-          grd.addColorStop(0,n.color+(isH?'40':'18'));
-          grd.addColorStop(1,n.color+'00');
-          ctx.fillStyle=grd;ctx.beginPath();ctx.arc(n.x,n.y,rad*2.8,0,Math.PI*2);ctx.fill();
-        }
-
-        ctx.globalAlpha=dim?0.25:0.9;
-        ctx.fillStyle=dim?'#334155':n.color;
-        ctx.beginPath();ctx.arc(n.x,n.y,rad,0,Math.PI*2);ctx.fill();
-        ctx.globalAlpha=1;
-
-        // Label for hovered or large nodes
-        if(isH||n.radius>9){
-          ctx.font='500 9px var(--font-body)';
-          ctx.fillStyle=dim?'transparent':'#cbd5e1';
-          ctx.textAlign='center';
-          ctx.fillText(n.name.slice(0,14),n.x,n.y+rad+11);
-        }
-      }
-      ctx.restore();
-      requestAnimationFrame(draw);
+  function renderLegend(nodes){
+    legendWrap.innerHTML='';
+    const usedTypes=[...new Set(nodes.map(n=>n.type))].slice(0,8);
+    for(const t of usedTypes){
+      const color=NODE_COLORS[t]||'#94a3b8';
+      legendWrap.innerHTML+='<span aria-label="'+esc(t)+' nodes"><i style="background:'+color+'" aria-hidden="true"></i>'+esc(t)+'</span>';
     }
-    requestAnimationFrame(draw);
+  }
 
-    // Hover
-    canvas.addEventListener('mousemove',(ev)=>{
-      const rect=canvas.getBoundingClientRect();
-      const mx=ev.clientX-rect.left,my=ev.clientY-rect.top;
-      hovered=null;
-      for(let i=0;i<nodes.length;i++){
-        const dx=mx-nodes[i].x,dy=my-nodes[i].y;
-        if(dx*dx+dy*dy<(nodes[i].radius+6)**2){hovered=i;break;}
-      }
-      canvas.title=hovered!=null?nodes[hovered].name:'';
+  // ── Node inspector panel ──
+  const inspectorPanel=document.createElement('div');
+  inspectorPanel.className='u-inspector';
+  inspectorPanel.setAttribute('role','complementary');
+  inspectorPanel.setAttribute('aria-label','Node inspector');
+  main.appendChild(inspectorPanel);
+
+  function showInspector(node,filtEdges){
+    inspectorPanel.innerHTML='';
+    inspectorPanel.classList.add('visible');
+    const hdr=document.createElement('h4');
+    hdr.textContent=esc(node.name);
+    const close=document.createElement('button');
+    close.className='u-inspector-close';
+    close.textContent='✕';
+    close.setAttribute('aria-label','Close inspector');
+    close.addEventListener('click',()=>{
+      inspectorPanel.classList.remove('visible');
+      selectedNode=null;
+      highlightNode(null);
     });
-    canvas.addEventListener('mouseleave',()=>{hovered=null;canvas.title='';});
+    hdr.appendChild(close);
+    inspectorPanel.appendChild(hdr);
+
+    function row(label,val){
+      if(!val&&val!==0)return;
+      const d=document.createElement('div');
+      d.className='u-insp-row';
+      const l=document.createElement('span');l.className='u-insp-label';l.textContent=label;
+      const v=document.createElement('span');v.className='u-insp-val';v.textContent=String(val);
+      d.appendChild(l);d.appendChild(v);
+      inspectorPanel.appendChild(d);
+    }
+    row('Type',node.type);
+    row('Layer',node.layer);
+    row('Files',node.files!=null?node.files:null);
+    // Complexity badge
+    if(node.complexity){
+      const d=document.createElement('div');d.className='u-insp-row';
+      const l=document.createElement('span');l.className='u-insp-label';l.textContent='Complexity';
+      const b=document.createElement('span');b.className='u-complexity-badge '+node.complexity;b.textContent=node.complexity;
+      d.appendChild(l);d.appendChild(b);
+      inspectorPanel.appendChild(d);
+    }
+    if(node.summary){
+      const s=document.createElement('div');
+      s.className='u-insp-summary';
+      s.textContent=esc(node.summary);
+      inspectorPanel.appendChild(s);
+    }
+    // Relationships
+    const rels=filtEdges.filter(e=>e.source===node.id||e.target===node.id);
+    if(rels.length>0){
+      const relSec=document.createElement('div');
+      relSec.className='u-insp-relations';
+      const rLbl=document.createElement('div');
+      rLbl.className='u-insp-relations-label';
+      rLbl.textContent='Relationships ('+rels.length+')';
+      relSec.appendChild(rLbl);
+      for(const e of rels.slice(0,12)){
+        const isOut=e.source===node.id;
+        const otherId=isOut?e.target:e.source;
+        const other=allNodes.find(n=>n.id===otherId);
+        const item=document.createElement('div');
+        item.className='u-rel-item';
+        const dir=document.createElement('span');
+        dir.className='u-rel-dir';
+        dir.setAttribute('aria-label',isOut?'outgoing':'incoming');
+        dir.textContent=isOut?'→':'←';
+        const name=document.createElement('span');
+        name.textContent=esc(other?other.name:otherId);
+        name.style.flex='1';
+        const cat=document.createElement('span');
+        cat.style.cssText='font-size:9px;color:var(--text-tertiary);';
+        cat.textContent=esc(e.category);
+        item.appendChild(dir);item.appendChild(name);item.appendChild(cat);
+        relSec.appendChild(item);
+      }
+      if(rels.length>12){
+        const more=document.createElement('div');
+        more.style.cssText='font-size:10px;color:var(--text-tertiary);padding:4px 0;';
+        more.textContent='+'+(rels.length-12)+' more…';
+        relSec.appendChild(more);
+      }
+      inspectorPanel.appendChild(relSec);
+    }
+  }
+
+  // ── Domain view ──
+  const domainViewEl=document.createElement('div');
+  domainViewEl.className='u-domain-view';
+  domainViewEl.style.display='none';
+  main.appendChild(domainViewEl);
+
+  function renderDomainView(){
+    domainViewEl.innerHTML='';
+    if(rawDomains.length===0){
+      const empty=document.createElement('div');
+      empty.className='empty';
+      empty.style.gridColumn='1/-1';
+      empty.innerHTML='<h4>No domain data</h4><p>Run <code>rune onboard</code> to generate domain/flow/step structure.</p>';
+      domainViewEl.appendChild(empty);
+      return;
+    }
+    for(const domain of rawDomains){
+      const col=document.createElement('div');
+      col.className='u-domain-col';
+      const dName=document.createElement('div');
+      dName.className='u-domain-name';
+      dName.textContent=esc(domain.name||'');
+      col.appendChild(dName);
+      if(domain.summary){
+        const dSum=document.createElement('div');
+        dSum.className='u-domain-summary';
+        dSum.textContent=esc(domain.summary);
+        col.appendChild(dSum);
+      }
+      const flows=Array.isArray(domain.flows)?domain.flows:[];
+      for(const flow of flows){
+        const flowEl=document.createElement('div');
+        flowEl.className='u-flow';
+        const fName=document.createElement('div');
+        fName.className='u-flow-name';
+        fName.textContent=esc(flow.name||'');
+        flowEl.appendChild(fName);
+        const steps=Array.isArray(flow.steps)?flow.steps:[];
+        steps.forEach((step,si)=>{
+          const stepEl=document.createElement('div');
+          stepEl.className='u-step';
+          const num=document.createElement('span');
+          num.className='u-step-num';
+          num.textContent=(si+1)+'.';
+          const txt=document.createElement('span');
+          txt.textContent=esc(String(step));
+          stepEl.appendChild(num);stepEl.appendChild(txt);
+          flowEl.appendChild(stepEl);
+        });
+        col.appendChild(flowEl);
+      }
+      domainViewEl.appendChild(col);
+    }
+  }
+
+  layout.appendChild(main);
+  section.appendChild(layout);
+  container.appendChild(section);
+
+  // ── Canvas graph renderer ──
+  let animFrameId=null;
+  let graphNodes=[];
+  let graphEdges=[];
+  let hovered=null;
+  let highlighted=null; // node id to highlight (tour / inspector)
+  const ctx=canvas.getContext('2d');
+  const reducedMotion=matchMedia('(prefers-reduced-motion:reduce)').matches;
+
+  function layoutNodes(nodes,W,H){
+    const N=nodes.length;
+    if(N===0)return;
+    const cx=W/2,cy=H/2;
+    // Layer-clustered circular layout
+    const layerGroups=new Map();
+    for(const n of nodes){
+      const l=n.layer||'module';
+      if(!layerGroups.has(l))layerGroups.set(l,[]);
+      layerGroups.get(l).push(n);
+    }
+    const layerList=[...layerGroups.keys()];
+    const rBase=Math.min(W,H)*0.34;
+    let globalIdx=0;
+    layerList.forEach((layer,li)=>{
+      const members=layerGroups.get(layer);
+      members.forEach((n,mi)=>{
+        const baseAngle=(li/layerList.length)*Math.PI*2-Math.PI/2;
+        const spread=(members.length>1?(mi/(members.length-1)-0.5)*0.6:0);
+        const angle=baseAngle+spread;
+        const r=rBase*(0.55+0.45*(globalIdx/Math.max(N-1,1)));
+        n.x=cx+Math.cos(angle)*r;
+        n.y=cy+Math.sin(angle)*r;
+        n.color=nodeColor(n);
+        n.radius=COMPLEXITY_RADIUS[n.complexity||'']||6;
+        globalIdx++;
+      });
+    });
+  }
+
+  function drawGraph(ts){
+    const W=canvas.width/(window.devicePixelRatio||1);
+    const H=canvas.height/(window.devicePixelRatio||1);
+    const dpr=window.devicePixelRatio||1;
+    ctx.save();ctx.scale(dpr,dpr);
+    ctx.clearRect(0,0,W,H);
+    const t=reducedMotion?0:(ts||0)*0.001;
+
+    const nodeMap=new Map(graphNodes.map((n,i)=>[n.id,i]));
+
+    // Edges
+    for(const e of graphEdges){
+      const ai=nodeMap.get(e.source);
+      const bi=nodeMap.get(e.target);
+      if(ai==null||bi==null)continue;
+      const a=graphNodes[ai],b=graphNodes[bi];
+      const hiSrc=hovered!=null&&(nodeMap.get(e.source)===hovered||nodeMap.get(e.target)===hovered);
+      const hiHighlight=highlighted&&(e.source===highlighted||e.target===highlighted);
+      const hi=hiSrc||hiHighlight;
+      const color=hi?(EDGE_CAT_COLORS[e.category]||'rgba(45,212,191,.5)'):('rgba(148,163,184,.10)');
+      ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);
+      ctx.strokeStyle=color;
+      ctx.lineWidth=hi?1.8:0.7;
+      ctx.stroke();
+    }
+
+    // Nodes
+    for(let i=0;i<graphNodes.length;i++){
+      const n=graphNodes[i];
+      const isH=hovered===i;
+      const isHighlighted=highlighted===n.id;
+      const isConnected=hovered!=null&&!isH&&graphEdges.some(e=>{
+        const si=nodeMap.get(e.source),ti=nodeMap.get(e.target);
+        return si===hovered&&ti===i||ti===hovered&&si===i;
+      });
+      const isSearch=searchQuery&&searchMatches.has(n.id);
+      const dim=hovered!=null&&!isH&&!isConnected&&!isHighlighted;
+      const pulse=reducedMotion?1:(isH||isHighlighted?1.3:(1+0.07*Math.sin(t*0.7+i*0.9)));
+      const rad=n.radius*pulse;
+
+      // Search ring
+      if(isSearch&&!dim){
+        ctx.beginPath();ctx.arc(n.x,n.y,rad+5,0,Math.PI*2);
+        ctx.strokeStyle='rgba(255,255,255,.5)';ctx.lineWidth=1.5;ctx.stroke();
+      }
+
+      // Tour/inspector highlight ring
+      if(isHighlighted){
+        ctx.beginPath();ctx.arc(n.x,n.y,rad+7,0,Math.PI*2);
+        ctx.strokeStyle='rgba(45,212,191,.8)';ctx.lineWidth=2;ctx.stroke();
+      }
+
+      if(!dim){
+        // Glow
+        const grd=ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,rad*2.8);
+        grd.addColorStop(0,n.color+(isH||isHighlighted?'50':'18'));
+        grd.addColorStop(1,n.color+'00');
+        ctx.fillStyle=grd;ctx.beginPath();ctx.arc(n.x,n.y,rad*2.8,0,Math.PI*2);ctx.fill();
+      }
+
+      ctx.globalAlpha=dim?0.2:0.9;
+      ctx.fillStyle=dim?'#334155':n.color;
+      ctx.beginPath();ctx.arc(n.x,n.y,rad,0,Math.PI*2);ctx.fill();
+      ctx.globalAlpha=1;
+
+      // Label
+      if(isH||isHighlighted||n.radius>=9){
+        ctx.font='500 9px system-ui,sans-serif';
+        ctx.fillStyle=dim?'transparent':'#cbd5e1';
+        ctx.textAlign='center';
+        ctx.fillText(n.name.slice(0,16),n.x,n.y+rad+11);
+      }
+    }
+    ctx.restore();
+    if(!reducedMotion)animFrameId=requestAnimationFrame(drawGraph);
+  }
+
+  function highlightNode(id){
+    highlighted=id;
+    if(reducedMotion)requestAnimationFrame(drawGraph);
+  }
+
+  function resizeCanvas(){
+    if(canvas.parentElement){
+      const dpr=window.devicePixelRatio||1;
+      const W=canvas.parentElement.offsetWidth||600;
+      const H=canvas.parentElement.offsetHeight||320;
+      canvas.width=W*dpr;canvas.height=H*dpr;
+      layoutNodes(graphNodes,W,H);
+      if(reducedMotion)requestAnimationFrame(drawGraph);
+    }
+  }
+
+  // ── Apply filters and re-render ──
+  function applyFilters(){
+    if(animFrameId!=null){cancelAnimationFrame(animFrameId);animFrameId=null;}
+    graphNodes=getFilteredNodes();
+    graphEdges=getFilteredEdges(graphNodes.map(n=>n.id));
+    // Build search match set
+    searchMatches=new Set();
+    if(searchQuery){
+      const q=searchQuery.toLowerCase();
+      for(const n of graphNodes){
+        if(n.name.toLowerCase().includes(q)||n.summary.toLowerCase().includes(q))searchMatches.add(n.id);
+      }
+    }
+    // Match count
+    if(searchQuery){
+      matchCount.textContent=searchMatches.size+' match'+(searchMatches.size!==1?'es':'');
+    }else{
+      matchCount.textContent=graphNodes.length+' node'+(graphNodes.length!==1?'s':'');
+    }
+    // Rebuild tour if open
+    if(tourActive)buildTour();
+    renderLegend(graphNodes);
+    resizeCanvas();
+    if(!reducedMotion){animFrameId=requestAnimationFrame(drawGraph);}
+    else{requestAnimationFrame(drawGraph);}
+  }
+
+  // ── Mouse interactions ──
+  canvas.addEventListener('mousemove',(ev)=>{
+    const rect=canvas.getBoundingClientRect();
+    const mx=ev.clientX-rect.left,my=ev.clientY-rect.top;
+    hovered=null;
+    for(let i=0;i<graphNodes.length;i++){
+      const n=graphNodes[i];
+      const dx=mx-n.x,dy=my-n.y;
+      if(dx*dx+dy*dy<(n.radius+8)**2){hovered=i;break;}
+    }
+    canvas.title=hovered!=null?graphNodes[hovered].name:'';
+    canvas.style.cursor=hovered!=null?'pointer':'crosshair';
+    if(reducedMotion)requestAnimationFrame(drawGraph);
   });
+
+  canvas.addEventListener('mouseleave',()=>{
+    hovered=null;
+    canvas.title='';
+    canvas.style.cursor='crosshair';
+    if(reducedMotion)requestAnimationFrame(drawGraph);
+  });
+
+  canvas.addEventListener('click',()=>{
+    if(hovered==null)return;
+    const n=graphNodes[hovered];
+    selectedNode=n.id;
+    highlightNode(n.id);
+    showInspector(n,graphEdges);
+  });
+
+  canvas.setAttribute('tabindex','0');
+  canvas.addEventListener('keydown',(e)=>{
+    if(e.key==='Escape'){
+      selectedNode=null;
+      inspectorPanel.classList.remove('visible');
+      highlightNode(null);
+    }
+  });
+
+  // ── SVG export ──
+  function exportAsSvg(){
+    const W=canvas.width/(window.devicePixelRatio||1)||600;
+    const H=canvas.height/(window.devicePixelRatio||1)||320;
+    const nodeMap=new Map(graphNodes.map((n,i)=>[n.id,i]));
+    let svgLines=['<?xml version="1.0" encoding="UTF-8"?>',
+      '<svg xmlns="http'+'://www.w3.org/2000/svg" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'">',
+      '<rect width="'+W+'" height="'+H+'" fill="#080d1a"/>'];
+    // Edges
+    for(const e of graphEdges){
+      const ai=nodeMap.get(e.source),bi=nodeMap.get(e.target);
+      if(ai==null||bi==null)continue;
+      const a=graphNodes[ai],b=graphNodes[bi];
+      const color=EDGE_CAT_COLORS[e.category]||'rgba(148,163,184,.2)';
+      svgLines.push('<line x1="'+a.x.toFixed(1)+'" y1="'+a.y.toFixed(1)+'" x2="'+b.x.toFixed(1)+'" y2="'+b.y.toFixed(1)+'" stroke="'+color+'" stroke-width="0.8"/>');
+    }
+    // Nodes
+    for(const n of graphNodes){
+      const r=n.radius||6;
+      const escaped=n.name.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      svgLines.push('<circle cx="'+n.x.toFixed(1)+'" cy="'+n.y.toFixed(1)+'" r="'+r+'" fill="'+n.color+'"/>');
+      svgLines.push('<text x="'+n.x.toFixed(1)+'" y="'+(n.y+r+11).toFixed(1)+'" text-anchor="middle" font-size="9" fill="#94a3b8" font-family="system-ui,sans-serif">'+escaped.slice(0,16)+'</text>');
+    }
+    svgLines.push('</svg>');
+    const blob=new Blob([svgLines.join('\n')],{type:'image/svg+xml'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='codebase-graph.svg';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  // ── Initial render ──
+  requestAnimationFrame(()=>{
+    resizeCanvas();
+    applyFilters();
+    if(!reducedMotion)animFrameId=requestAnimationFrame(drawGraph);
+  });
+
+  // Resize observer (debounced)
+  let resizeTimer=null;
+  if(typeof ResizeObserver!=='undefined'){
+    const ro=new ResizeObserver(()=>{
+      clearTimeout(resizeTimer);
+      resizeTimer=setTimeout(()=>resizeCanvas(),80);
+    });
+    ro.observe(graphArea);
+  }
 }
 
 // ── Initial renders ──

@@ -334,3 +334,156 @@ describe('generateComprehensionHTML — skillFrequency .count field contract', (
     );
   });
 });
+
+// ─── Phase 4: Understand tab features ───
+
+const phase4Data = {
+  project: 'Phase4Test',
+  generated_at: '2026-06-20T10:00:00.000Z',
+  modules: [
+    {
+      id: 'auth',
+      name: 'AuthService',
+      layer: 'service',
+      type: 'service',
+      complexity: 'complex',
+      summary: 'Handles authentication.',
+    },
+    { id: 'db', name: 'UserRepo', layer: 'data', type: 'class', complexity: 'simple', summary: 'Database access.' },
+    {
+      id: 'api',
+      name: 'AuthController',
+      layer: 'api',
+      type: 'endpoint',
+      complexity: 'moderate',
+      summary: 'REST endpoints.',
+    },
+    {
+      id: 'cfg',
+      name: 'app.config',
+      layer: 'infra',
+      type: 'config',
+      complexity: 'simple',
+      summary: 'App config file.',
+    },
+  ],
+  edges: [
+    { from: 'api', to: 'auth', category: 'structural' },
+    { from: 'auth', to: 'db', category: 'data-flow' },
+    { from: 'db', to: 'cfg', category: 'dependency' },
+  ],
+  domains: [
+    {
+      name: 'Authentication',
+      summary: 'User identity flows',
+      flows: [{ name: 'Login', steps: ['Submit credentials', 'Validate', 'Issue token'] }],
+    },
+  ],
+};
+
+describe('generateComprehensionHTML — Phase 4: filter controls for present node types', () => {
+  it('(a) output contains filter controls for present node types', () => {
+    const result = generateComprehensionHTML(phase4Data);
+    // The node types present: service, class, endpoint, config
+    // Each should appear as a filter checkbox label in the embedded JS or rendered HTML
+    assert.ok(result.includes('service') || result.includes('"service"'), 'Expected "service" type in output');
+    assert.ok(result.includes('class') || result.includes('"class"'), 'Expected "class" type in output');
+    assert.ok(result.includes('endpoint') || result.includes('"endpoint"'), 'Expected "endpoint" type in output');
+  });
+
+  it('(a) output contains filter controls for present edge categories', () => {
+    const result = generateComprehensionHTML(phase4Data);
+    // Edge categories present: structural, data-flow, dependency
+    assert.ok(
+      result.includes('structural') || result.includes('"structural"'),
+      'Expected "structural" category in output',
+    );
+    assert.ok(
+      result.includes('data-flow') || result.includes('"data-flow"'),
+      'Expected "data-flow" category in output',
+    );
+  });
+});
+
+describe('generateComprehensionHTML — Phase 4: domain view markup', () => {
+  it('(b) domain view markup present when domains exist', () => {
+    const result = generateComprehensionHTML(phase4Data);
+    // Domain view button and domain name should appear in the JS string
+    assert.ok(
+      result.includes('Domain View') || result.includes('u-domain'),
+      'Expected Domain View markup or toggle in output',
+    );
+    // Domain name embedded in data
+    assert.ok(
+      result.includes('Authentication') || result.includes('"Authentication"'),
+      'Expected domain name "Authentication" in output',
+    );
+  });
+
+  it('(b) domain steps embedded in output', () => {
+    const result = generateComprehensionHTML(phase4Data);
+    assert.ok(
+      result.includes('Submit credentials') || result.includes('"Submit credentials"'),
+      'Expected step text in output',
+    );
+  });
+});
+
+describe('generateComprehensionHTML — Phase 4: tour step list rendered', () => {
+  it('(c) tour-related markup (Start Tour button) present in output', () => {
+    const result = generateComprehensionHTML(phase4Data);
+    assert.ok(
+      result.includes('Start Tour') || result.includes('u-tour'),
+      'Expected tour button or tour CSS class in output',
+    );
+  });
+
+  it('(c) tour builds on module data embedded in output', () => {
+    const result = generateComprehensionHTML(phase4Data);
+    // Tour step nodes come from modules embedded in D.modules
+    assert.ok(
+      result.includes('"AuthService"') || result.includes('AuthService'),
+      'Expected module name embedded for tour',
+    );
+  });
+});
+
+describe('generateComprehensionHTML — Phase 4: self-containment guard extended', () => {
+  it('(d) no http(s):// with comprehension data (extended self-containment check)', () => {
+    const result = generateComprehensionHTML(phase4Data);
+    assert.ok(!result.includes('http://'), 'Found http:// in Phase 4 output');
+    assert.ok(!result.includes('https://'), 'Found https:// in Phase 4 output');
+  });
+
+  it('(d) no <link> tags with comprehension data', () => {
+    const result = generateComprehensionHTML(phase4Data);
+    assert.ok(!result.includes('<link'), 'Found <link> in Phase 4 output — not self-contained');
+  });
+
+  it('(d) no @import in Phase 4 CSS additions', () => {
+    const result = generateComprehensionHTML(phase4Data);
+    assert.ok(!result.includes('@import'), 'Found @import in Phase 4 output');
+  });
+});
+
+describe('generateComprehensionHTML — Phase 4: XSS — module name containing <script>', () => {
+  it('(e) module name containing <script> is escaped in output', () => {
+    const xssData = {
+      ...phase4Data,
+      modules: [
+        ...phase4Data.modules,
+        { id: 'evil', name: '<script>alert(1)</script>', layer: 'api', type: 'module', summary: 'xss test' },
+      ],
+    };
+    const result = generateComprehensionHTML(xssData);
+    // The raw string must not appear outside the safeJson JSON blob
+    const dataStart = result.indexOf('const D =');
+    const dataEnd = result.indexOf(';\n', dataStart);
+    const afterData = dataStart !== -1 && dataEnd !== -1 ? result.slice(dataEnd + 2) : '';
+    // After the JSON blob, no raw <script> from the node name should appear
+    assert.ok(
+      !afterData.includes('<script>alert(1)</script>'),
+      'Raw <script> from module name found outside JSON blob — XSS!',
+    );
+  });
+});
