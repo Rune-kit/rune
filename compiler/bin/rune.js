@@ -25,9 +25,11 @@ import { installHooks } from '../commands/hooks/install.js';
 import { hookStatus } from '../commands/hooks/status.js';
 import { uninstallHooks } from '../commands/hooks/uninstall.js';
 import { formatSetupResult, runSetup } from '../commands/setup.js';
+import { generateComprehensionHTML } from '../comprehension.js';
 import { generateDashboardHTML } from '../dashboard.js';
 import { checkMeshIntegrity, formatDoctorResults, formatMeshResults, runDoctor } from '../doctor.js';
 import { buildAll } from '../emitter.js';
+import { assembleGovernance } from '../governance-collector.js';
 import { collectStats, renderStatus, renderStatusJson } from '../status.js';
 import { collectGraphData, generateMeshHTML } from '../visualizer.js';
 
@@ -438,7 +440,7 @@ async function cmdAnalytics(projectRoot, args) {
     return;
   }
 
-  const days = args.days ? parseInt(args.days, 10) : 30;
+  const days = Number.isFinite(parseInt(args.days, 10)) ? parseInt(args.days, 10) : 30;
 
   logStep('◎', `Querying metrics (${days > 0 ? `${days} days` : 'all time'})...`);
   const data = await getAllAnalytics(projectRoot, days);
@@ -465,6 +467,119 @@ async function cmdAnalytics(projectRoot, args) {
   logStep('✓', `Dashboard written to ${path.relative(projectRoot, outputPath)}`);
 
   // Open in browser
+  try {
+    const { exec } = await import('node:child_process');
+    const cmd =
+      process.platform === 'win32'
+        ? `start "" "${outputPath}"`
+        : process.platform === 'darwin'
+          ? `open "${outputPath}"`
+          : `xdg-open "${outputPath}"`;
+    exec(cmd);
+  } catch {
+    /* ignore if browser open fails */
+  }
+}
+
+// ─── Dashboard Command (Comprehension) ───
+// Access control: intentionally open-to-all for MVP. Tier-gating (e.g. Business-only)
+// is deferred to Phase 5 of the dashboard plan — see docs/VISION.md.
+// Mesh fallback: collectGraphData(projectRoot) returns empty for non-Rune projects by
+// design; the Understand tab prefers the project's own comprehension.json over the
+// Rune mesh, so external projects see an empty graph until they run rune onboard.
+
+async function cmdDashboard(projectRoot, args) {
+  const runeDir = path.join(projectRoot, '.rune');
+  const days = Number.isFinite(parseInt(args.days, 10)) ? parseInt(args.days, 10) : 30;
+
+  logStep('◎', 'Assembling dashboard data...');
+
+  // 1. comprehension.json (optional — onboard/autopsy writes this)
+  let comprehensionData = {};
+  const comprehensionPath = path.join(runeDir, 'comprehension.json');
+  try {
+    if (existsSync(comprehensionPath)) {
+      comprehensionData = JSON.parse(await readFile(comprehensionPath, 'utf-8'));
+      logStep('✓', 'comprehension.json loaded');
+    } else {
+      logStep('·', 'comprehension.json not found — run rune onboard or rune autopsy to generate it');
+    }
+  } catch {
+    logStep('·', 'comprehension.json unreadable — skipping');
+  }
+
+  // 2. Governance (assembleGovernance collects from metrics + mesh + Business packs)
+  let governanceData = { gates: [], signals: [], compliance: [], decisions: [] };
+  try {
+    governanceData = await assembleGovernance(projectRoot, days);
+    logStep('✓', `Governance: ${governanceData.gates.length} gates, ${governanceData.compliance.length} obligations`);
+  } catch {
+    logStep('·', 'Governance collection failed — using empty defaults');
+  }
+
+  // 3. Analytics
+  let analyticsData = {};
+  try {
+    analyticsData = await getAllAnalytics(projectRoot, days);
+    logStep('✓', `Analytics: ${analyticsData.overview?.total_sessions ?? 0} sessions`);
+  } catch {
+    logStep('·', 'Analytics collection failed — using empty defaults');
+  }
+
+  // 4. Mesh graph data
+  let meshData = { nodes: [], edges: [] };
+  try {
+    const graphResult = await collectGraphData(projectRoot);
+    // collectGraphData returns { nodes, edges, signalEdges, ... }
+    meshData = { nodes: graphResult.nodes || [], edges: graphResult.edges || [] };
+    logStep('✓', `Mesh: ${meshData.nodes.length} nodes, ${meshData.edges.length} edges`);
+  } catch {
+    logStep('·', 'Mesh graph collection failed — using empty defaults');
+  }
+
+  // Merge into one data object
+  const data = {
+    // From comprehension.json
+    project: comprehensionData.project || '',
+    generated_at: comprehensionData.generated_at || new Date().toISOString(),
+    health_score: comprehensionData.health_score ?? null,
+    modules: comprehensionData.modules || [],
+    edges: comprehensionData.edges || [],
+    layers: comprehensionData.layers || [],
+    domains: comprehensionData.domains || [],
+    // From governance
+    gates: governanceData.gates || [],
+    signals: governanceData.signals || [],
+    compliance: governanceData.compliance || [],
+    decisions: governanceData.decisions || [],
+    window_days: days,
+    // From analytics — getSkillFrequency returns { skill, sessions_count }; renderMeasure
+    // reads .count, so we normalise here to avoid NaN bars.
+    overview: analyticsData.overview || {},
+    skillFrequency: (analyticsData.skillFrequency || []).map((s) => ({
+      skill: s.skill,
+      count: s.count ?? s.sessions_count ?? 0,
+    })),
+    modelDistribution: analyticsData.modelDistribution || [],
+    // Mesh (for Understand tab fallback when no comprehension.json)
+    skillMesh: meshData,
+  };
+
+  const html = generateComprehensionHTML(data);
+
+  // Ensure .rune/ exists
+  if (!existsSync(runeDir)) {
+    const { mkdir: mkdirFs } = await import('node:fs/promises');
+    await mkdirFs(runeDir, { recursive: true });
+  }
+
+  const outputPath = args.output ? path.resolve(projectRoot, args.output) : path.join(runeDir, 'comprehension.html');
+
+  const { writeFile: writeFileFs } = await import('node:fs/promises');
+  await writeFileFs(outputPath, html, 'utf-8');
+  logStep('✓', `Dashboard written to ${path.relative(projectRoot, outputPath)}`);
+
+  // Open in browser (mirror analytics command pattern)
   try {
     const { exec } = await import('node:child_process');
     const cmd =
@@ -703,6 +818,9 @@ async function main() {
     case 'dash':
       await cmdAnalytics(projectRoot, args);
       break;
+    case 'dashboard':
+      await cmdDashboard(projectRoot, args);
+      break;
     case 'hooks':
       await cmdHooks(projectRoot, args, subcommand);
       break;
@@ -733,6 +851,8 @@ async function main() {
       log('    status   Project dashboard (skills, signals, packs, health)');
       log('    visualize  Interactive mesh graph (opens in browser)');
       log('    analytics  Usage analytics dashboard (Business tier)');
+      log('    dashboard  Comprehension dashboard — Verdict hero + Govern + Measure + Understand tabs');
+      log('               [--days <n>]  Lookback window for gate counts (default: 30)');
       log('    hooks      Install/uninstall/status for multi-platform auto-discipline');
       log(
         '               hooks install [--preset gentle|strict|off] [--platform claude|cursor|windsurf|antigravity|all] [--global]',
