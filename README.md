@@ -83,7 +83,11 @@ _Methodology: Claude Code CLI headless mode (`claude -p --output-format json`), 
 
 ---
 
-## What's New (v2.18.1 — Setup Installs Tier Skills, Not Just Hooks)
+## What's New (v2.19.0 — Comprehension)
+
+> **v2.19.0 (2026-06-20):** New `rune dashboard` verb renders Rune's flagship **human-visible artifact** — a self-contained HTML "Codebase Briefing + Governance Scorecard" you can open in a meeting with no server, no CDN, no telemetry, nothing leaving the machine. The headline is the governance/value **verdict** (0-100 score with honest `—` empty-state), not a code graph — the buyer's codebase graph lives in the **Understand** tab (node/edge filters, domain view with flow steps, guided tour, node inspector, PNG/SVG/JSON export, keyboard-accessible canvas). Five-tab IA: Verdict → Govern / Measure / Understand / Improve. **Tier-aware** — Free sees verdict + measure, **Pro** adds a "My Lens" cost/ROI persona, **Business** unlocks the full Governance Scorecard (gate-outcome ledger + compliance coverage). Honest by design: empty states render `—` not fabricated numbers, and Free/Pro see an upsell that *describes* value rather than fake data. XSS-hardened + 100% self-contained. Internals: `comprehension.js` split 3584 → 1255 LOC (browser app extracted to `comprehension-client.js`, byte-identical output). Built on existing onboard / autopsy / analytics / mesh generators — original work, no external dependency. CI 1558/1558.
+
+### Previous (v2.18.1 — Setup Installs Tier Skills, Not Just Hooks)
 
 > **v2.18.1 (2026-05-17):** Bug fix — `rune setup --tier pro|business` now copies the tier's `skills/` directories into the Free plugin's `skills/` folder. Before this fix, paid tiers shipped hooks only, so `rune:autopilot` (Pro) returned `Unknown skill: rune:autopilot` because the SKILL.md was at `Pro/skills/autopilot/` but invisible to the Claude Code plugin runtime. New `installTierSkills` in `compiler/commands/setup.js` runs after `installHooks`, copies each `<tierRoot>/skills/<name>/` into `<runeRoot>/skills/`, idempotent (skips existing — protects Free skills from clobber and user-edited Pro skills from stomp), with path-traversal guard + symlink rejection + partial-copy cleanup + version-drift detection. Paired with Pro `autopilot-v1.5.0` (Step 0 LOAD now reads user-message context for plan path — same pattern cook uses). 25/26 setup tests pass (1 skipped on Windows — symlink test needs admin/dev-mode). Full CI 1444 tests.
 

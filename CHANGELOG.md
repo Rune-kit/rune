@@ -3,7 +3,19 @@
 All notable changes to Rune are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [2.19.0] - 2026-06-20
+
+"Comprehension" — the flagship human-visible artifact. `rune dashboard` renders a self-contained HTML "Codebase Briefing + Governance Scorecard": a single file a buyer can open in a meeting with no server, no CDN, no telemetry, nothing leaving the machine. The headline is the governance/value **verdict** (not a code graph — the buyer's codebase graph lives in the Understand tab). Tier-aware: Free sees the verdict + measure; Pro adds a "My Lens" cost/ROI persona; Business unlocks the full Governance Scorecard + compliance coverage. Built entirely on existing generators (onboard / autopsy / analytics / mesh) — original work, no external dependency.
+
+### Added — `rune dashboard` comprehension dashboard
+
+- **New `rune dashboard` CLI verb + `compiler/comprehension.js`** — emits one self-contained HTML document (Signal Teal palette, Verdict hero, 5-tab IA: Verdict → Govern / Measure / Understand / Improve). No external requests of any kind; XSS-hardened (data embedded as JSON with `</`→`<\/`, U+2028/U+2029 line-terminator escaping, every dynamic string escaped).
+- **Verdict hero** — plain-language governance/value verdict with a 0-100 score (count-up animation) and an honest empty-state (renders `—` when there is no session data or no real basis, never a fabricated number).
+- **Govern tab (Business)** — gate-outcome ledger with BLOCK capture, compliance coverage by pack, decision-provenance scaffold, and persona-scoped report profiles. Free/Pro see an honest upsell that *describes* the feature's value — never fake data.
+- **Measure tab** — KPI row, model distribution, skill-ROI (active vs dormant of all installed skills), skill heatmap, session timeline, and skill-chain frequency. `BLOAT_THRESHOLD`-based workflow-bloat detection.
+- **Understand tab** — the *buyer's* codebase graph (from onboard/autopsy), with node-type + edge-category filters, a domain view with flow steps, a guided tour, a node inspector, and export to PNG / SVG / JSON. The canvas is keyboard-accessible (tabindex, arrow-key navigation, sr-only node list).
+- **Improve tab** — data-driven finding cards (blocks caught, repeated chains with count ≥ 3, workflow bloat) with an honest empty state when session data is thin — no boilerplate masquerading as findings.
+- **Tier gating** — `hasPro` / `hasBusiness` embedded in the data blob; the Pro "My Lens" persona (keyboard-operable, `aria-pressed`) is gated to `hasPro`, the full Govern scorecard to `hasBusiness`. Default (empty) data resolves to Free.
 
 ### Fixed — Session metrics attribution (dashboard data foundation)
 
@@ -15,6 +27,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - `compiler/schemas/comprehension.schema.json` + `compiler/schemas/governance.schema.json` — JSON Schema contracts for the upcoming dashboard.
 - `compiler/governance-collector.js` — assembles `.rune/governance.json` (gates/signals/compliance) best-effort; documents 6 capture gaps (gate outcomes, per-fire timestamps, signal runtime counts, compliance verification, decision provenance, fired=invocation-not-outcome). `onboard`/`autopsy` now also emit `.rune/comprehension.json`.
+
+### Changed — comprehension.js split
+
+- **`compiler/comprehension.js` split (3584 → 1255 lines).** The 2.3k-line embedded browser application was extracted to a new `compiler/comprehension-client.js` as a `CLIENT_SCRIPT` template-literal asset; the generator interpolates it after the embedded data line. Output is byte-identical (golden-hash verified across empty / sample / Business / Pro / XSS fixtures). No behavior change.
+
+### Verification
+
+- 1,558 tests pass — the dashboard suite covers XSS / script-injection, self-containment (no http(s):// / `<link>` / `@import`), tier gating, NaN guards, all five tab panels, and the client-script split. Biome clean, doctor healthy, mesh 64 skills / 203 connections / 40 signals.
 
 ## [2.18.1] - 2026-05-17
 
