@@ -1,5 +1,6 @@
 // Rune Metrics Collector Hook
-// PostToolUse on Skill — captures skill invocations for H3 mesh analytics
+// PostToolUse on Skill|Task|Agent — captures skill invocations for H3 mesh analytics
+// (skills run both via the Skill tool and as rune:* subagents via Task/Agent)
 // Append-only JSONL to tmpdir. Flushed to .rune/metrics/ at session end.
 // Async: true — never blocks skill execution.
 //
@@ -23,10 +24,32 @@ process.stdin.on('end', () => {
 
   try {
     const hookData = JSON.parse(stdinData);
-    // PostToolUse stdin: { tool: "Skill", tool_input: { skill: "rune:cook", ... }, tool_result: ... }
+    // PostToolUse stdin covers TWO invocation paths:
+    //   Skill tool: { tool: "Skill", tool_input: { skill: "rune:cook", ... } }
+    //   Task tool:  { tool: "Task",  tool_input: { subagent_type: "rune:cook", ... } }
+    // In Rune most skills run as subagents via Task, so the old Skill-only
+    // capture left skills_used[] empty. Capture both.
+    const toolName = hookData.tool || hookData.tool_name || '';
     const toolInput = hookData.tool_input || {};
-    const raw = toolInput.skill || toolInput.name || '';
-    skillName = raw.replace(/^rune:/, '') || 'unknown';
+    const fromSkill = () => (toolInput.skill || toolInput.name || '').replace(/^rune:/, '') || 'unknown';
+    // Subagent path — only count Rune skills (rune:*); skip generic agents
+    // (general-purpose, Explore, claude, statusline-setup, …) which are not skills.
+    const fromSubagent = () => {
+      const sub = toolInput.subagent_type || '';
+      return /^rune:/.test(sub) ? sub.replace(/^rune:/, '') : 'unknown';
+    };
+    // Branch on TOOL NAME first (authoritative), so a Skill invocation is never
+    // mis-routed by an incidental subagent_type field. Fall back to field-sniffing
+    // only when the tool name is absent.
+    if (toolName === 'Skill') {
+      skillName = fromSkill();
+    } else if (toolName === 'Task' || toolName === 'Agent') {
+      skillName = fromSubagent();
+    } else if (toolInput.skill || toolInput.name) {
+      skillName = fromSkill();
+    } else {
+      skillName = fromSubagent();
+    }
   } catch {
     // Fallback: try env var for backwards compatibility
     const toolInput = process.env.CLAUDE_TOOL_INPUT || '';

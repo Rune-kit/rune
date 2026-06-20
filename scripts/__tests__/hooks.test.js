@@ -6,6 +6,8 @@
 
 import assert from 'node:assert';
 import { execFileSync } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { describe, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -124,5 +126,78 @@ describe('intent-router', () => {
   test('graceful on invalid JSON', () => {
     const { exitCode } = runHook('intent-router', 'not json');
     assert.strictEqual(exitCode, 0, 'should exit cleanly on invalid JSON');
+  });
+});
+
+// --- Metrics Collector (skill attribution: Skill + Task subagent paths) ---
+
+describe('metrics-collector: skill attribution', () => {
+  // Run the hook with a controlled cwd so the tmpdir metrics file is isolated,
+  // then read back what it recorded. Returns the recorded skill names (in order).
+  function runMetrics(stdinInput) {
+    const tmpCwd = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'rune-mc-')));
+    const hash = Buffer.from(tmpCwd).toString('base64url').slice(0, 16);
+    const metricsFile = path.join(os.tmpdir(), `rune-metrics-${hash}.jsonl`);
+    try {
+      fs.rmSync(metricsFile, { force: true });
+      execFileSync('node', [path.join(HOOKS_DIR, 'metrics-collector', 'index.cjs')], {
+        input: stdinInput,
+        cwd: tmpCwd,
+        encoding: 'utf-8',
+        stdio: ['pipe', 'pipe', 'pipe'],
+        timeout: 5000,
+      });
+      if (!fs.existsSync(metricsFile)) return [];
+      return fs
+        .readFileSync(metricsFile, 'utf-8')
+        .trim()
+        .split('\n')
+        .filter(Boolean)
+        .map((l) => JSON.parse(l).skill);
+    } finally {
+      fs.rmSync(metricsFile, { force: true });
+      fs.rmSync(tmpCwd, { recursive: true, force: true });
+    }
+  }
+
+  test('captures Skill tool invocation (rune:review → review)', () => {
+    const skills = runMetrics('{"tool":"Skill","tool_input":{"skill":"rune:review"}}');
+    assert.deepStrictEqual(skills, ['review']);
+  });
+
+  test('captures Task subagent invocation (rune:cook → cook)', () => {
+    const skills = runMetrics('{"tool":"Task","tool_input":{"subagent_type":"rune:cook"}}');
+    assert.deepStrictEqual(skills, ['cook'], 'Task subagent path must be attributed');
+  });
+
+  test('skips generic (non-rune) subagents', () => {
+    const skills = runMetrics('{"tool":"Task","tool_input":{"subagent_type":"general-purpose"}}');
+    assert.deepStrictEqual(skills, [], 'generic agents are not Rune skills');
+  });
+
+  test('captures subagent via Agent tool (rune:fix → fix)', () => {
+    const skills = runMetrics('{"tool":"Agent","tool_input":{"subagent_type":"rune:fix"}}');
+    assert.deepStrictEqual(skills, ['fix'], 'Agent tool path must be attributed');
+  });
+
+  test('Skill tool with incidental subagent_type still attributes the skill', () => {
+    // tool name is authoritative — must NOT be mis-routed to the subagent path
+    const skills = runMetrics('{"tool":"Skill","tool_input":{"skill":"rune:plan","subagent_type":"rune:cook"}}');
+    assert.deepStrictEqual(skills, ['plan']);
+  });
+
+  test('resolves tool via tool_name field as well as tool', () => {
+    const skills = runMetrics('{"tool_name":"Task","tool_input":{"subagent_type":"rune:debug"}}');
+    assert.deepStrictEqual(skills, ['debug']);
+  });
+
+  test('skips non-rune subagent via Agent tool (Explore)', () => {
+    const skills = runMetrics('{"tool":"Agent","tool_input":{"subagent_type":"Explore"}}');
+    assert.deepStrictEqual(skills, []);
+  });
+
+  test('graceful on empty input (records nothing)', () => {
+    const skills = runMetrics('');
+    assert.deepStrictEqual(skills, []);
   });
 });

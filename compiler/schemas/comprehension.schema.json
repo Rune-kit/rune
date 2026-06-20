@@ -1,0 +1,87 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://rune-kit.dev/schemas/comprehension.schema.json",
+  "title": "Rune Comprehension Graph",
+  "description": "Buyer-codebase comprehension graph emitted by onboard/autopsy. Powers the dashboard Understand tab (modules, domains, flows, steps) and the Verdict health score. Written to .rune/comprehension.json.",
+  "type": "object",
+  "required": ["project", "generated_at", "modules", "edges"],
+  "additionalProperties": false,
+  "properties": {
+    "project": { "type": "string", "description": "Project name" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "source": { "type": "string", "enum": ["onboard", "autopsy"], "description": "Which skill produced this emit" },
+    "health_score": { "type": ["integer", "null"], "minimum": 0, "maximum": 100, "description": "0-100, or null when the producer (e.g. onboard) does not compute a score" },
+    "layers": {
+      "type": "array",
+      "description": "Architectural layers detected (e.g. API, Service, Data, UI, Utility)",
+      "items": {
+        "type": "object",
+        "required": ["id", "name"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "color": { "type": "string", "description": "Optional palette key (code/service/data/domain/docs/infra/concept)" }
+        }
+      }
+    },
+    "domains": {
+      "type": "array",
+      "description": "Business domains → flows → steps (non-tech readable process view)",
+      "items": {
+        "type": "object",
+        "required": ["name", "flows"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string" },
+          "summary": { "type": "string" },
+          "flows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["name", "steps"],
+              "additionalProperties": false,
+              "properties": {
+                "name": { "type": "string" },
+                "steps": { "type": "array", "items": { "type": "string" } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "modules": {
+      "type": "array",
+      "description": "Graph nodes — files/modules/services/etc.",
+      "items": {
+        "type": "object",
+        "required": ["id", "name"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "layer": { "type": "string" },
+          "type": { "type": "string", "description": "file | function | class | module | service | table | endpoint | domain | flow | step | doc | config" },
+          "complexity": { "type": "string", "enum": ["simple", "moderate", "complex"] },
+          "files": { "type": "integer", "minimum": 0 },
+          "summary": { "type": "string" }
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "description": "Graph edges between modules",
+      "items": {
+        "type": "object",
+        "required": ["from", "to", "category"],
+        "additionalProperties": false,
+        "properties": {
+          "from": { "type": "string" },
+          "to": { "type": "string" },
+          "category": { "type": "string", "enum": ["structural", "behavioral", "data-flow", "dependency", "semantic", "infrastructure", "domain", "knowledge"] },
+          "weight": { "type": "number" }
+        }
+      }
+    }
+  }
+}

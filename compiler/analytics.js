@@ -6,6 +6,11 @@
  *
  * Upgrade path: swap readJsonl() with DuckDB queries when data
  * volume exceeds ~1000 sessions (currently capped at 100).
+ *
+ * NOTE (metric scale): `tool_calls` semantics changed when context-watch widened
+ * its matcher from Edit|Write to all tools. Rows written before that change are
+ * Edit/Write-scaled (~2-3x lower); trend lines may show a one-time discontinuity.
+ * Treat absolute tool_calls comparisons across that boundary with care.
  */
 
 import { existsSync } from 'node:fs';

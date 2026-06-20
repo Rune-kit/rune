@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://rune-kit.dev/schemas/governance.schema.json",
+  "title": "Rune Governance Record",
+  "description": "Governance + value evidence assembled by governance-collector from metrics, session-bridge state, journal ADRs, and the signal mesh. Powers the dashboard Verdict + Govern tabs (gates, signals, compliance, decision provenance). Written to .rune/governance.json.",
+  "type": "object",
+  "required": ["generated_at", "gates", "signals"],
+  "additionalProperties": false,
+  "properties": {
+    "generated_at": { "type": "string", "format": "date-time" },
+    "window_days": { "type": "integer", "minimum": 1, "description": "Lookback window for the assembled record" },
+    "gates": {
+      "type": "array",
+      "description": "HARD-GATE fire events (sentinel, preflight, completion-gate, logic-guardian, …)",
+      "items": {
+        "type": "object",
+        "required": ["name", "fired"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string" },
+          "fired": { "type": "integer", "minimum": 0, "description": "INVOCATION count of the gate skill (cumulative total_invocations from skills.json; windowed session-presence as fallback). NOT a pass/fail outcome count — see passed/bypassed/blocked." },
+          "passed": { "type": "integer", "minimum": 0 },
+          "bypassed": { "type": "integer", "minimum": 0 },
+          "blocked": { "type": "integer", "minimum": 0 },
+          "ts": { "type": "string", "format": "date-time", "description": "Most recent fire" }
+        }
+      }
+    },
+    "signals": {
+      "type": "array",
+      "description": "Mesh signal emissions captured (cause→effect across skills/packs)",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string" },
+          "from": { "type": "string" },
+          "to": { "type": "string" },
+          "count": { "type": "integer", "minimum": 0 },
+          "ts": { "type": "string", "format": "date-time" }
+        }
+      }
+    },
+    "compliance": {
+      "type": "array",
+      "description": "Obligations declared by installed Business packs vs met/gap status",
+      "items": {
+        "type": "object",
+        "required": ["pack", "obligation", "status"],
+        "additionalProperties": false,
+        "properties": {
+          "pack": { "type": "string" },
+          "obligation": { "type": "string" },
+          "status": { "type": "string", "enum": ["met", "partial", "gap", "unknown"] },
+          "evidence": { "type": "string" }
+        }
+      }
+    },
+    "decisions": {
+      "type": "array",
+      "description": "Decision provenance — trace an output back through signal chain → gate → model → cost",
+      "items": {
+        "type": "object",
+        "required": ["output"],
+        "additionalProperties": false,
+        "properties": {
+          "output": { "type": "string", "description": "Commit, file, or artifact" },
+          "signal_chain": { "type": "array", "items": { "type": "string" } },
+          "gate": { "type": "string" },
+          "model": { "type": "string" },
+          "cost": { "type": "number", "description": "Estimated USD" },
+          "ts": { "type": "string", "format": "date-time" }
+        }
+      }
+    }
+  }
+}

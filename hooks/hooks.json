@@ -36,7 +36,7 @@
         ]
       },
       {
-        "matcher": "Edit|Write",
+        "matcher": ".*",
         "hooks": [
           {
             "type": "command",
@@ -73,7 +73,7 @@
         ]
       },
       {
-        "matcher": "Skill",
+        "matcher": "Skill|Task|Agent",
         "hooks": [
           {
             "type": "command",

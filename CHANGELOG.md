@@ -3,6 +3,19 @@
 All notable changes to Rune are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Fixed — Session metrics attribution (dashboard data foundation)
+
+- **`metrics-collector` now captures Task/Agent subagents.** Matcher widened from `Skill` to `Skill|Task|Agent` (`hooks/hooks.json`) and the hook reads `tool_input.subagent_type` (rune:* only) in addition to `tool_input.skill`. Previously skills run as subagents (the dominant path in Rune) were never recorded, leaving `skills_used[]` empty in `sessions.jsonl`. Generic agents (general-purpose, Explore, …) are excluded.
+- **`context-watch` now counts ALL tool calls.** Matcher widened from `Edit|Write` to `.*` so `tool_calls` / `tool_distribution` reflect real activity, and the warning thresholds were aligned to the context-engine model (ORANGE ~80, RED ~120). The fabricated ">85%" claim in the RED message was removed (tool count is directional, not a context percentage).
+- **⚠ Metric scale change:** because `context-watch` previously counted only Edit/Write, `tool_calls` values in `sessions.jsonl` rows written BEFORE this change are Edit/Write-scaled and roughly 2-3x lower than rows written after. Analytics/dashboard trend lines will show a one-time discontinuity at the cutover; old rows are not migrated.
+
+### Added — Dashboard data contracts
+
+- `compiler/schemas/comprehension.schema.json` + `compiler/schemas/governance.schema.json` — JSON Schema contracts for the upcoming dashboard.
+- `compiler/governance-collector.js` — assembles `.rune/governance.json` (gates/signals/compliance) best-effort; documents 6 capture gaps (gate outcomes, per-fire timestamps, signal runtime counts, compliance verification, decision provenance, fired=invocation-not-outcome). `onboard`/`autopsy` now also emit `.rune/comprehension.json`.
+
 ## [2.18.1] - 2026-05-17
 
 Fix: `rune setup --tier pro|business` now also installs the tier's `skills/` directories into the Free plugin's `skills/` folder — previously only hooks were wired, which left paid-tier skills invisible to the Claude Code runtime (`rune:autopilot` returned `Unknown skill: rune:autopilot`).

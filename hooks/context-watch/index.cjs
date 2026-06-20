@@ -1,6 +1,7 @@
 // Rune Context Watch Hook
 // Lightweight tool call counter — detects context pressure and suggests rune:context-engine
-// Runs as PreToolUse hook on Edit/Write (high-cost operations)
+// Runs as PreToolUse hook on ALL tools (matcher ".*") — total tool volume is the
+// context-pressure proxy and feeds tool_distribution metrics at session end.
 //
 // H3 Intelligence: also tracks tool type distribution and session start timestamp
 // for metrics aggregation at session end.
@@ -19,10 +20,13 @@ const cwd = process.cwd();
 const hash = Buffer.from(cwd).toString('base64url').slice(0, 16);
 const counterFile = path.join(os.tmpdir(), `rune-context-watch-${hash}.json`);
 
-// Thresholds
-const FIRST_WARNING = 40;
+// Thresholds — counts ALL tool calls (matcher ".*"), not just Edit/Write, so the
+// totals reflect true context pressure AND feed accurate tool_distribution metrics.
+// Aligned with the context-engine skill's own model (ORANGE ~80, RED ~120 tool calls)
+// so the hook and the skill it delegates to agree.
+const FIRST_WARNING = 80;
 const REPEAT_INTERVAL = 20;
-const CRITICAL_THRESHOLD = 80;
+const CRITICAL_THRESHOLD = 120;
 
 // Read stdin JSON to get tool name (Claude Code passes hook data via stdin)
 let stdinData = '';
@@ -57,16 +61,20 @@ process.stdin.on('end', () => {
     state.sessionId = `s-${now.slice(0, 10).replace(/-/g, '')}-${now.slice(11, 19).replace(/:/g, '')}`;
   }
 
-  // Increment total and per-tool counters
+  // Increment total (drives context-pressure warnings) and per-tool distribution.
+  // Skip the per-tool bucket when the tool name is unattributable, so a parse
+  // hiccup doesn't pollute tool_distribution with an "unknown" entry.
   state.count += 1;
-  state.toolCounts[toolName] = (state.toolCounts[toolName] || 0) + 1;
+  if (toolName !== 'unknown') {
+    state.toolCounts[toolName] = (state.toolCounts[toolName] || 0) + 1;
+  }
 
   // Check thresholds
   const count = state.count;
   const sinceLast = count - state.lastWarning;
 
   if (count >= CRITICAL_THRESHOLD && sinceLast >= REPEAT_INTERVAL) {
-    console.log(`\n🔴 [Rune context-watch] ${count} tool calls — context likely RED (>85%).`);
+    console.log(`\n🔴 [Rune context-watch] ${count} tool calls — context likely RED (tool count is directional, not a %).`);
     console.log('  RECOMMENDED: Invoke rune:context-engine for state save + /compact.');
     console.log('  Risk: auto-compaction may lose critical decisions without state save.\n');
     state.lastWarning = count;
