@@ -150,7 +150,10 @@ export function generateComprehensionHTML(data) {
   } else if (verdictScore >= 75) {
     verdictLine = `${projectLabel} is <b>healthy</b> — ${firedCount} gate${firedCount !== 1 ? 's' : ''} active${complianceMet > 0 ? `, ${complianceMet}/${complianceTotal} obligations met` : ''}.`;
   } else if (verdictScore >= 40) {
-    verdictLine = `${projectLabel} is <b>developing</b> — gates active: ${firedCount}. Grow coverage to improve score.`;
+    verdictLine =
+      firedCount > 0
+        ? `${projectLabel} is <b>developing</b> — gates active: ${firedCount}. Grow coverage to improve score.`
+        : `${projectLabel} is <b>developing</b> — no gate fires recorded yet. Grow coverage to improve score.`;
   } else {
     verdictLine = `${projectLabel} needs <b>attention</b> — limited gate coverage and session data so far.`;
   }
@@ -173,6 +176,12 @@ export function generateComprehensionHTML(data) {
   const compliancePct = complianceTotal > 0 ? Math.round((complianceMet / complianceTotal) * 100) : null;
   const sessions = d.overview?.total_sessions ?? 0;
 
+  // Profile: initial persona seeded from d.profile (read by cmdDashboard from .rune/dashboard-profile.json).
+  // Clamp persona to known values so a tampered dashboard-profile.json can't produce an incoherent view.
+  const _VALID_PERSONAS = ['exec', 'compliance', 'eng'];
+  const initialPersona = _VALID_PERSONAS.includes(d.profile?.persona) ? d.profile.persona : 'exec';
+  const initialPinned = Array.isArray(d.profile?.pinnedConcerns) ? d.profile.pinnedConcerns : [];
+
   // Embed data safely
   const dataJson = safeJson({
     project: d.project,
@@ -187,11 +196,14 @@ export function generateComprehensionHTML(data) {
     gates: d.gates,
     signals: d.signals,
     compliance: d.compliance,
+    decisions: d.decisions,
     overview: d.overview,
     skillFrequency: d.skillFrequency,
     modelDistribution: d.modelDistribution,
     skillMesh: d.skillMesh,
     window_days: d.window_days,
+    initialPersona,
+    initialPinned,
   });
 
   return `<!DOCTYPE html>
@@ -470,6 +482,74 @@ tr:last-child td{border-bottom:none;}
 }
 .compliance-text{flex:1;line-height:1.5;}
 
+/* ── Govern tab additions (Phase 3) ── */
+.govern-scorecard{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;
+}
+.govern-scorecard .kpi{margin-top:0;}
+.govern-3col{display:grid;grid-template-columns:1.1fr .9fr;gap:16px;margin-top:0;}
+.govern-full{margin-top:16px;}
+.govern-provenance{margin-top:16px;}
+/* Coverage map */
+.cov-pack{margin-bottom:14px;}
+.cov-pack-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:5px;font-size:12px;
+}
+.cov-pack-name{
+  font-family:var(--font-mono);font-size:11px;color:var(--text-secondary);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px;
+}
+.cov-bar-track{height:6px;background:var(--bg-elevated);border-radius:3px;overflow:hidden;}
+.cov-bar-fill{height:100%;border-radius:3px;background:var(--pass);}
+.cov-items{margin-top:6px;}
+.cov-item{
+  display:flex;gap:8px;align-items:flex-start;
+  padding:5px 0;border-bottom:1px solid var(--border);font-size:11px;
+}
+.cov-item:last-child{border-bottom:none;}
+.cov-item-text{flex:1;color:var(--text-secondary);line-height:1.45;}
+/* Pinned pack highlight */
+.cov-pack.pinned>.cov-pack-header>.cov-pack-name{color:var(--accent);}
+.cov-pack.pinned{
+  border-left:2px solid var(--accent-deep);padding-left:8px;
+}
+/* Blocked-events sub-table */
+.blocked-events{margin-top:8px;}
+.blocked-events summary{
+  font-size:11px;color:var(--text-tertiary);cursor:pointer;
+  padding:4px 0;list-style:none;
+}
+.blocked-events summary:hover{color:var(--text-secondary);}
+.blocked-events table{margin-top:6px;}
+/* Persona-gated visibility */
+.persona-exec-hide{} /* default: show */
+.persona-compliance-hide{}
+.persona-eng-hide{}
+/* Applied dynamically via JS */
+[data-persona-hide]{display:none!important;}
+/* Blocks-caught badge */
+.blocks-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  font-family:var(--font-mono);font-size:11px;font-weight:700;
+  color:var(--fail);background:rgba(239,68,68,.10);
+  padding:2px 8px;border-radius:var(--r-pill);
+}
+/* Profile actions */
+.profile-bar{
+  display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;
+}
+.profile-bar button{
+  font:500 11px var(--font-body);padding:5px 12px;border-radius:var(--r-el);
+  border:1px solid var(--border-strong);background:transparent;
+  color:var(--text-secondary);cursor:pointer;transition:all var(--t-fast);
+}
+.profile-bar button:hover{background:var(--bg-elevated);color:var(--text-primary);border-color:var(--accent);}
+.profile-bar button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+.profile-bar .profile-status{font-size:11px;color:var(--text-tertiary);}
+/* Govern-full multi-section layout */
+.govern-sections{display:flex;flex-direction:column;gap:16px;margin-top:16px;}
+
 /* ── Understand graph canvas ── */
 #understand-canvas{width:100%;height:100%;display:block;cursor:crosshair;}
 
@@ -529,10 +609,10 @@ tr:last-child td{border-bottom:none;}
       <button class="tab" role="tab" aria-selected="false" aria-controls="panel-understand" id="tab-understand">Understand</button>
       <button class="tab" role="tab" aria-selected="false" aria-controls="panel-improve" id="tab-improve">Improve</button>
     </nav>
-    <div class="persona" role="group" aria-label="Persona view">
-      <button class="on" aria-pressed="true">Exec</button>
-      <button aria-pressed="false">Compliance</button>
-      <button aria-pressed="false">Eng</button>
+    <div class="persona" role="group" aria-label="Persona view — changes section emphasis">
+      <button data-persona="exec" aria-pressed="${initialPersona === 'exec' ? 'true' : 'false'}" class="${initialPersona === 'exec' ? 'on' : ''}">Exec</button>
+      <button data-persona="compliance" aria-pressed="${initialPersona === 'compliance' ? 'true' : 'false'}" class="${initialPersona === 'compliance' ? 'on' : ''}">Compliance</button>
+      <button data-persona="eng" aria-pressed="${initialPersona === 'eng' ? 'true' : 'false'}" class="${initialPersona === 'eng' ? 'on' : ''}">Eng</button>
     </div>
   </header>
 
@@ -660,13 +740,79 @@ tabs.forEach((tab,i)=>{
   });
 });
 
+// ── Profile state ──
+// Loaded from D.initialPersona (seeded from .rune/dashboard-profile.json on generate).
+// Also persisted to localStorage for instant UX within the same browser session.
+const LS_KEY='rune_dashboard_profile';
+const VALID_PERSONAS=['exec','compliance','eng'];
+function clampPersona(v){
+  return VALID_PERSONAS.includes(v)?v:(VALID_PERSONAS.includes(D.initialPersona)?D.initialPersona:'exec');
+}
+function loadProfile(){
+  // Prefer localStorage (instant UX within session) over D.initialPersona.
+  // Normalize shape on load: guard against missing/unknown fields from tampered storage.
+  try{
+    const raw=localStorage.getItem(LS_KEY);
+    if(raw){
+      const p=JSON.parse(raw);
+      return {
+        persona:clampPersona(p?.persona),
+        pinnedConcerns:Array.isArray(p?.pinnedConcerns)?p.pinnedConcerns:[],
+      };
+    }
+  }catch{}
+  return {persona:clampPersona(D.initialPersona),pinnedConcerns:Array.isArray(D.initialPinned)?D.initialPinned:[]};
+}
+function saveProfile(p){
+  try{localStorage.setItem(LS_KEY,JSON.stringify(p));}catch{}
+}
+let currentProfile=loadProfile();
+
 // ── Persona toggle ──
+// Personas re-emphasize sections:
+//   Exec       → scorecard + verdict prominent; raw tables de-emphasised
+//   Compliance → compliance coverage + ledger first; details shown
+//   Eng        → full detail including provenance + raw events
+const PERSONA_LABELS={exec:'Exec',compliance:'Compliance',eng:'Eng'};
+const PERSONA_DESCRIPTIONS={
+  exec:'Scorecard and verdict at a glance.',
+  compliance:'Compliance coverage and obligation ledger.',
+  eng:'Full detail including raw events and provenance.',
+};
+
+function applyPersona(persona){
+  currentProfile={...currentProfile,persona};
+  saveProfile(currentProfile);
+
+  // Update button states
+  document.querySelectorAll('.persona button').forEach(b=>{
+    const active=b.dataset.persona===persona;
+    b.classList.toggle('on',active);
+    b.setAttribute('aria-pressed',active?'true':'false');
+  });
+
+  // Section visibility/order — use data-persona-hide attribute
+  // Exec: hide raw tables (.govern-eng-only), show scorecard first
+  // Compliance: show coverage first (.govern-compliance-first reorder)
+  // Eng: show everything
+  document.querySelectorAll('[data-exec-hide]').forEach(el=>{
+    el.style.display=persona==='exec'?'none':'';
+  });
+  document.querySelectorAll('[data-eng-only]').forEach(el=>{
+    el.style.display=persona==='eng'?'':'none';
+  });
+  document.querySelectorAll('[data-compliance-priority]').forEach(el=>{
+    el.style.order=persona==='compliance'?'-1':'0';
+  });
+
+  // Update profile status label
+  const statusEl=document.getElementById('profile-status-label');
+  if(statusEl)statusEl.textContent=PERSONA_DESCRIPTIONS[persona]||'';
+}
+
 document.querySelectorAll('.persona button').forEach(btn=>{
   btn.addEventListener('click',()=>{
-    document.querySelectorAll('.persona button').forEach(b=>{
-      b.classList.remove('on');b.setAttribute('aria-pressed','false');
-    });
-    btn.classList.add('on');btn.setAttribute('aria-pressed','true');
+    applyPersona(btn.dataset.persona||'exec');
   });
 });
 
@@ -709,17 +855,103 @@ window.addEventListener('load',()=>{
   }
 });
 
-// ── Govern tab ──
+// ── Govern tab (Phase 3) ──
 function renderGovern(){
   const container=document.getElementById('govern-content');
   if(!container)return;
 
   const gates=D.gates||[];
   const compliance=D.compliance||[];
+  const decisions=D.decisions||[];
+  const totalBlocks=gates.reduce((s,g)=>s+(g.blocked||0),0);
+  const totalFired=gates.reduce((s,g)=>s+(g.fired||0),0);
+  const met=compliance.filter(c=>c.status==='met').length;
+  const compliancePct=compliance.length>0?Math.round(met/compliance.length*100):null;
 
-  // Left: Gate ledger
+  // ── Profile bar ──
+  const profileBar=document.createElement('div');
+  profileBar.className='profile-bar';
+  profileBar.setAttribute('aria-label','Profile actions');
+  const profileStatus=document.createElement('span');
+  profileStatus.id='profile-status-label';
+  profileStatus.className='profile-status';
+  profileStatus.textContent='';
+  const exportBtn=document.createElement('button');
+  exportBtn.textContent='Export profile';
+  exportBtn.setAttribute('aria-label','Download dashboard profile JSON');
+  exportBtn.addEventListener('click',()=>{
+    const blob=new Blob([JSON.stringify(currentProfile,null,2)],{type:'application/json'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='dashboard-profile.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+  profileBar.appendChild(profileStatus);
+  profileBar.appendChild(exportBtn);
+  container.appendChild(profileBar);
+
+  // ── Govern sections wrapper (flex col for persona ordering) ──
+  const sections=document.createElement('div');
+  sections.className='govern-sections';
+  container.appendChild(sections);
+
+  // ── 1. Scorecard row ── (visible to all personas, prominent for Exec)
+  const scorecard=document.createElement('div');
+  scorecard.className='govern-scorecard';
+  scorecard.setAttribute('aria-label','Governance scorecard');
+
+  function kpiCell(label,val,sub,subClass){
+    const d=document.createElement('div');
+    d.className='kpi';
+    d.innerHTML=
+      '<div class="k-lbl">'+esc(label)+'</div>'+
+      '<div class="k-val" style="font-size:22px">'+esc(String(val==null?'—':val))+'</div>'+
+      (sub?'<div class="k-sub'+(subClass?' '+subClass:'')+'">'+esc(sub)+'</div>':'');
+    return d;
+  }
+
+  scorecard.appendChild(kpiCell(
+    'Compliance',
+    compliancePct!==null?compliancePct+'%':'—',
+    compliance.length>0?met+'/'+compliance.length+' obligations met':'no obligations captured',
+    met>0?'up':'',
+  ));
+  scorecard.appendChild(kpiCell(
+    'Gates fired',
+    totalFired>0?totalFired:'—',
+    totalFired>0?gates.length+' gate'+(gates.length!==1?'s':'')+' active':'no gates yet',
+    totalFired>0?'up':'',
+  ));
+  scorecard.appendChild(kpiCell(
+    'Blocks caught',
+    totalBlocks>0?totalBlocks:'—',
+    totalBlocks>0?'real block events captured':'not captured yet',
+    totalBlocks>0?'warn':'',
+  ));
+  scorecard.appendChild(kpiCell(
+    'Cost / feature',
+    '—',
+    'not captured yet',
+    '',
+  ));
+  sections.appendChild(scorecard);
+
+  // ── 2. Two-column: Gate ledger (left) + Compliance coverage map (right) ──
+  const twoCol=document.createElement('div');
+  twoCol.className='govern-3col';
+  twoCol.setAttribute('data-compliance-priority','1'); // Compliance persona pulls this first
+  sections.appendChild(twoCol);
+
+  // ── 2a. Gate ledger ──
+  const ledgerWrap=document.createElement('div');
+  ledgerWrap.setAttribute('data-exec-hide','1'); // Exec hides raw ledger to show scorecard only
+  twoCol.appendChild(ledgerWrap);
+
   const ledgerPanel=document.createElement('div');
   ledgerPanel.className='panel';
+  ledgerWrap.appendChild(ledgerPanel);
+
   const ledgerTitle=document.createElement('h3');
   ledgerTitle.innerHTML='Governance Ledger <span class="pill">gate audit</span>';
   ledgerPanel.appendChild(ledgerTitle);
@@ -727,63 +959,251 @@ function renderGovern(){
   if(gates.length===0){
     const empty=document.createElement('div');
     empty.className='empty';
+    empty.style.padding='30px 10px';
     empty.innerHTML='<h4>No gates recorded yet</h4><p>Run Rune skills (sentinel, preflight, completion-gate, etc.) to start capturing gate fire events.</p>';
     ledgerPanel.appendChild(empty);
   } else {
     const tbl=document.createElement('table');
     tbl.setAttribute('aria-label','Governance gate ledger');
-    tbl.innerHTML='<thead><tr><th>Gate</th><th>Fired</th><th>Outcomes</th><th>Last used</th></tr></thead>';
+    tbl.innerHTML=
+      '<thead><tr>'+
+        '<th>Gate</th>'+
+        '<th>Fired</th>'+
+        '<th>Blocked</th>'+
+        '<th>Passed / Bypassed</th>'+
+        '<th>Last event</th>'+
+      '</tr></thead>';
     const tbody=document.createElement('tbody');
     for(const g of gates){
       const tr=document.createElement('tr');
-      const tsLabel=g.ts ? new Date(g.ts).toLocaleDateString() : '—';
-      // GAP-1: passed/bypassed/blocked are always 0 in Phase 1 — honest label
-      const outcomesLabel='not captured yet';
+      const tsLabel=g.ts?new Date(g.ts).toLocaleDateString():'—';
+      const blocked=safeInt(g.blocked);
+      // passed/bypassed remain uncaptured (GAP-1 Phase 3 — honest label)
+      const passedLabel='not captured';
+      const blockedCell=blocked>0
+        ?'<span class="blocks-badge" aria-label="'+blocked+' block'+(blocked!==1?'s':'')+' caught">&#x26A0; '+blocked+'</span>'
+        :'<span style="color:var(--text-tertiary);font-size:11px">—</span>';
       tr.innerHTML=
         '<td class="mono">'+esc(g.name)+'</td>'+
         '<td class="mono">'+safeInt(g.fired)+'</td>'+
-        '<td style="color:var(--text-tertiary);font-size:11px">'+esc(outcomesLabel)+'</td>'+
-        '<td class="mono">'+esc(tsLabel)+'</td>';
+        '<td>'+blockedCell+'</td>'+
+        '<td style="color:var(--text-tertiary);font-size:11px">'+esc(passedLabel)+'</td>'+
+        '<td class="mono" style="font-size:11px">'+esc(tsLabel)+'</td>';
       tbody.appendChild(tr);
     }
     tbl.appendChild(tbody);
     ledgerPanel.appendChild(tbl);
+
+    // Blocked events detail (Eng persona only) — read from gate-outcomes embedded in gate data
+    const blockedGates=gates.filter(g=>(g.blocked||0)>0);
+    if(blockedGates.length>0){
+      const detail=document.createElement('details');
+      detail.className='blocked-events';
+      detail.setAttribute('data-eng-only','1');
+      const sum=document.createElement('summary');
+      sum.textContent='Raw block events ('+totalBlocks+' total) — Eng view';
+      detail.appendChild(sum);
+      const mini=document.createElement('table');
+      mini.setAttribute('aria-label','Raw block events');
+      mini.innerHTML='<thead><tr><th>Gate</th><th>Blocks captured</th><th>Most recent</th></tr></thead>';
+      const mb=document.createElement('tbody');
+      for(const g of blockedGates){
+        const mr=document.createElement('tr');
+        mr.innerHTML=
+          '<td class="mono" style="font-size:11px">'+esc(g.name)+'</td>'+
+          '<td class="mono" style="font-size:11px">'+safeInt(g.blocked)+'</td>'+
+          '<td style="font-size:11px;color:var(--text-tertiary)">'+esc(g.ts?new Date(g.ts).toLocaleString():'—')+'</td>';
+        mb.appendChild(mr);
+      }
+      mini.appendChild(mb);
+      detail.appendChild(mini);
+      ledgerPanel.appendChild(detail);
+    }
   }
 
-  // Right: Compliance
+  // ── 2b. Compliance coverage map ──
+  const compWrap=document.createElement('div');
+  twoCol.appendChild(compWrap);
+
   const compPanel=document.createElement('div');
   compPanel.className='panel';
+  compWrap.appendChild(compPanel);
+
   const compTitle=document.createElement('h3');
-  compTitle.innerHTML='Compliance <span class="pill">obligations</span>';
+  compTitle.innerHTML='Compliance Coverage <span class="pill">obligations</span>';
   compPanel.appendChild(compTitle);
 
   if(compliance.length===0){
     const empty=document.createElement('div');
     empty.className='empty';
+    empty.style.padding='30px 10px';
     empty.innerHTML='<h4>No obligations captured</h4><p>Business pack PACK.md Constraints + Done-When sections declare obligations. Install Rune Business to see them here.</p>';
     compPanel.appendChild(empty);
   } else {
-    const list=document.createElement('div');
-    list.setAttribute('aria-label','Compliance obligations');
+    // Group by pack
+    const byPack=new Map();
     for(const c of compliance){
-      const item=document.createElement('div');
-      item.className='compliance-item';
-      let stClass='info';
-      let stIcon='?';
-      if(c.status==='met'){stClass='pass';stIcon='&#10003;';}
-      else if(c.status==='gap'){stClass='fail';stIcon='&#10005;';}
-      else if(c.status==='partial'){stClass='warn';stIcon='&#9651;';}
-      item.innerHTML=
-        '<div class="compliance-pack" title="'+esc(c.pack)+'">'+esc(c.pack)+'</div>'+
-        '<div class="compliance-text">'+esc(c.obligation)+'</div>'+
-        '<span class="st '+stClass+'" aria-label="Status: '+esc(c.status)+'">'+stIcon+' '+esc(c.status)+'</span>';
-      list.appendChild(item);
+      if(!byPack.has(c.pack))byPack.set(c.pack,[]);
+      byPack.get(c.pack).push(c);
     }
-    compPanel.appendChild(list);
+
+    // Pin controls
+    const pinBar=document.createElement('div');
+    pinBar.style.cssText='margin-bottom:10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;';
+    const pinLabel=document.createElement('span');
+    pinLabel.style.cssText='font-size:11px;color:var(--text-tertiary);flex-shrink:0;';
+    pinLabel.textContent='Pin pack:';
+    pinBar.appendChild(pinLabel);
+    for(const pk of byPack.keys()){
+      const chip=document.createElement('button');
+      chip.style.cssText='font:500 10px var(--font-mono);padding:2px 8px;border-radius:var(--r-pill);cursor:pointer;transition:all var(--t-fast);';
+      chip.textContent=pk.split('/').pop()||pk;
+      chip.title='Pin/unpin: '+pk;
+      chip.setAttribute('aria-label','Pin pack '+pk);
+      chip.setAttribute('aria-pressed',currentProfile.pinnedConcerns.includes(pk)?'true':'false');
+      chip.style.border=currentProfile.pinnedConcerns.includes(pk)?'1px solid var(--accent)':'1px solid var(--border-strong)';
+      chip.style.background=currentProfile.pinnedConcerns.includes(pk)?'rgba(45,212,191,.10)':'transparent';
+      chip.style.color=currentProfile.pinnedConcerns.includes(pk)?'var(--accent)':'var(--text-secondary)';
+      chip.addEventListener('click',()=>{
+        const pinned=currentProfile.pinnedConcerns;
+        const idx=pinned.indexOf(pk);
+        const newPinned=idx>=0?pinned.filter(p=>p!==pk):[...pinned,pk];
+        currentProfile={...currentProfile,pinnedConcerns:newPinned};
+        saveProfile(currentProfile);
+        // Re-render govern to reflect new pin state
+        container.innerHTML='';
+        renderGovern();
+      });
+      pinBar.appendChild(chip);
+    }
+    compPanel.appendChild(pinBar);
+
+    // Coverage map: pinned packs first
+    const sortedPacks=[...byPack.keys()].sort((a,b)=>{
+      const aPin=currentProfile.pinnedConcerns.includes(a)?0:1;
+      const bPin=currentProfile.pinnedConcerns.includes(b)?0:1;
+      return aPin-bPin||a.localeCompare(b);
+    });
+
+    const covList=document.createElement('div');
+    covList.setAttribute('aria-label','Compliance coverage by pack');
+    for(const pk of sortedPacks){
+      const items=byPack.get(pk);
+      const pkMet=items.filter(c=>c.status==='met').length;
+      const pkUnknown=items.filter(c=>c.status==='unknown').length;
+      const pkGap=items.filter(c=>c.status==='gap'||c.status==='partial').length;
+      const isPinned=currentProfile.pinnedConcerns.includes(pk);
+
+      const packDiv=document.createElement('div');
+      packDiv.className='cov-pack'+(isPinned?' pinned':'');
+
+      // Pack header with bar
+      const hdr=document.createElement('div');
+      hdr.className='cov-pack-header';
+      const nameSpan=document.createElement('span');
+      nameSpan.className='cov-pack-name';
+      nameSpan.title=pk;
+      nameSpan.textContent=pk;
+      const pctSpan=document.createElement('span');
+      const pctVal=items.length>0?Math.round(pkMet/items.length*100):0;
+      // Status pill for the pack: color+icon+text (never color-only per design system)
+      let pkStClass='info',pkStIcon='?',pkStText='unknown';
+      if(pkMet===items.length&&items.length>0){pkStClass='pass';pkStIcon='&#10003;';pkStText='all met';}
+      else if(pkGap>0){pkStClass='fail';pkStIcon='&#10005;';pkStText=pkGap+' gap'+(pkGap!==1?'s':'');}
+      else if(pkMet>0){pkStClass='warn';pkStIcon='&#9651;';pkStText=pkMet+'/'+items.length+' met';}
+      pctSpan.innerHTML='<span class="st '+pkStClass+'" aria-label="Pack status: '+pkStText+'">'+pkStIcon+' '+esc(pkStText)+'</span>';
+      hdr.appendChild(nameSpan);
+      hdr.appendChild(pctSpan);
+      packDiv.appendChild(hdr);
+
+      // Coverage bar
+      const barTrack=document.createElement('div');
+      barTrack.className='cov-bar-track';
+      barTrack.setAttribute('role','progressbar');
+      barTrack.setAttribute('aria-valuenow',String(pctVal));
+      barTrack.setAttribute('aria-valuemin','0');
+      barTrack.setAttribute('aria-valuemax','100');
+      barTrack.setAttribute('aria-label',pctVal+'% obligations met for '+pk);
+      const barFill=document.createElement('div');
+      barFill.className='cov-bar-fill';
+      barFill.style.width=pctVal+'%';
+      barFill.style.background=pkMet===items.length&&items.length>0?'var(--pass)':pkGap>0?'var(--fail)':'var(--warn)';
+      barTrack.appendChild(barFill);
+      packDiv.appendChild(barTrack);
+
+      // Items (Compliance+Eng see all; Exec sees pack-level summary only)
+      const itemsDiv=document.createElement('div');
+      itemsDiv.className='cov-items';
+      itemsDiv.setAttribute('data-exec-hide','1');
+      for(const c of items){
+        const row=document.createElement('div');
+        row.className='cov-item';
+        let stClass='info',stIcon='?',stText=c.status;
+        if(c.status==='met'){stClass='pass';stIcon='&#10003;';stText='met';}
+        else if(c.status==='gap'){stClass='fail';stIcon='&#10005;';stText='gap';}
+        else if(c.status==='partial'){stClass='warn';stIcon='&#9651;';stText='partial';}
+        else{stClass='info';stIcon='&#8253;';stText='not verified';}
+        row.innerHTML=
+          '<span class="st '+stClass+'" aria-label="Status: '+esc(stText)+'" style="flex-shrink:0;margin-top:1px">'+stIcon+'</span>'+
+          '<span class="cov-item-text">'+esc(c.obligation)+'</span>';
+        itemsDiv.appendChild(row);
+      }
+      packDiv.appendChild(itemsDiv);
+      covList.appendChild(packDiv);
+    }
+    compPanel.appendChild(covList);
   }
 
-  container.appendChild(ledgerPanel);
-  container.appendChild(compPanel);
+  // ── 3. Decision Provenance ──
+  const provPanel=document.createElement('div');
+  provPanel.className='panel govern-provenance';
+  provPanel.setAttribute('data-eng-only','1'); // Exec/Compliance: hide raw provenance
+  const provTitle=document.createElement('h3');
+  provTitle.innerHTML='Decision Provenance <span class="pill">trace</span>';
+  provPanel.appendChild(provTitle);
+
+  if(decisions.length===0){
+    const empty=document.createElement('div');
+    empty.className='empty';
+    empty.style.padding='30px 10px';
+    empty.innerHTML=
+      '<h4>No decision provenance captured yet</h4>'+
+      '<p>Future: a journal/ADR hook or <code>xlabs_log_decision</code> integration will populate this trace. Each entry maps an output (commit/file) back through its signal chain &#x2192; gate &#x2192; model &#x2192; cost.</p>';
+    provPanel.appendChild(empty);
+  } else {
+    const tbl=document.createElement('table');
+    tbl.setAttribute('aria-label','Decision provenance trace');
+    tbl.innerHTML=
+      '<thead><tr>'+
+        '<th>Output</th>'+
+        '<th>Signal chain</th>'+
+        '<th>Gate</th>'+
+        '<th>Model</th>'+
+        '<th>Cost (USD)</th>'+
+        '<th>When</th>'+
+      '</tr></thead>';
+    const tbody=document.createElement('tbody');
+    for(const dec of decisions){
+      const tr=document.createElement('tr');
+      const chain=Array.isArray(dec.signal_chain)?dec.signal_chain.map(s=>esc(s)).join(' &#x2192; '):'—';
+      const cost=typeof dec.cost==='number'?'$'+dec.cost.toFixed(4):'—';
+      const ts=dec.ts?new Date(dec.ts).toLocaleDateString():'—';
+      tr.innerHTML=
+        '<td class="mono" style="font-size:11px">'+esc(dec.output||'—')+'</td>'+
+        '<td style="font-size:10px;color:var(--accent)">'+chain+'</td>'+
+        '<td class="mono" style="font-size:11px">'+esc(dec.gate||'—')+'</td>'+
+        '<td class="mono" style="font-size:11px">'+esc(dec.model||'—')+'</td>'+
+        '<td class="mono" style="font-size:11px">'+esc(cost)+'</td>'+
+        '<td style="font-size:11px;color:var(--text-tertiary)">'+esc(ts)+'</td>';
+      tbody.appendChild(tr);
+    }
+    tbl.appendChild(tbody);
+    provPanel.appendChild(tbl);
+  }
+  sections.appendChild(provPanel);
+
+  // Apply initial persona
+  applyPersona(currentProfile.persona);
 }
 
 // ── Measure tab ──

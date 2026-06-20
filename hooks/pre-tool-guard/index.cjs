@@ -7,9 +7,48 @@
 // - Per-project .rune/privacy.json config (custom patterns + overrides)
 // - Three tiers: ALLOW (silent), WARN (log), BLOCK (exit code 2)
 // - Content-aware: scans first bytes for secret patterns on WARN files
+//
+// Gate-outcome capture:
+// - BLOCK events are appended to .rune/metrics/gate-outcomes.jsonl (best-effort)
+// - passed/bypassed outcomes are NOT captured here (not observable at this layer)
 
 const fs = require('fs');
 const path = require('path');
+
+/**
+ * Append a structured gate-outcome record to .rune/metrics/gate-outcomes.jsonl
+ * relative to process.cwd(). Best-effort: any error is silently swallowed so
+ * that capture NEVER affects the BLOCK decision or exit code.
+ *
+ * @param {string} gate  - Gate name (e.g. "privacy-mesh")
+ * @param {string} outcome - "blocked" (only outcome captured here)
+ * @param {string} detail - Short human-readable reason
+ */
+function appendGateOutcome(gate, outcome, detail) {
+  try {
+    const outDir = path.join(process.cwd(), '.rune', 'metrics');
+    fs.mkdirSync(outDir, { recursive: true });
+    const outFile = path.join(outDir, 'gate-outcomes.jsonl');
+    const entry = JSON.stringify({
+      ts: new Date().toISOString(),
+      gate,
+      outcome,
+      detail: String(detail).slice(0, 200), // cap length; no PII in detail
+    });
+    fs.appendFileSync(outFile, entry + '\n');
+
+    // Bound file to last 500 lines so it never grows unbounded.
+    // Synchronous read-trim-write, fully inside this try/catch — NEVER throws,
+    // NEVER affects the BLOCK decision or exit code.
+    const raw = fs.readFileSync(outFile, 'utf-8');
+    const lines = raw.split('\n').filter(Boolean);
+    if (lines.length > 500) {
+      fs.writeFileSync(outFile, lines.slice(-500).join('\n') + '\n');
+    }
+  } catch {
+    // Capture is best-effort. NEVER throw, NEVER affect exit code.
+  }
+}
 
 // Read tool_input from Claude Code hook stdin
 let input = '';
@@ -87,6 +126,11 @@ process.stdin.on('end', () => {
 
   const isBlocked = blockPatterns.some((p) => p.test(basename) || p.test(normalized));
   if (isBlocked) {
+    // Append block outcome BEFORE printing/exiting — fail-safe, never affects exit code.
+    // Only "blocked" is captured here; "passed" and "bypassed" are not observable
+    // at this layer and intentionally remain uncaptured (see GAP-1 in governance-collector.js).
+    appendGateOutcome('privacy-mesh', 'blocked', `file matched BLOCK-tier pattern: ${basename}`);
+
     console.log(`\n🚫 [Rune privacy-mesh] BLOCKED: ${filePath}`);
     console.log('  This file matches a BLOCK-tier pattern (private keys, certificates).');
     console.log('  Override: add path to .rune/privacy.json "allow" list if intentional.\n');

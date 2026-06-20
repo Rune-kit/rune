@@ -162,10 +162,42 @@ describe('assembleGovernance — gate skill counting', () => {
     assert.ok(Object.hasOwn(gate, 'bypassed'));
     assert.ok(Object.hasOwn(gate, 'blocked'));
     assert.equal(typeof gate.fired, 'number');
-    // Phase-1 limitation: outcome fields are 0
+    // passed/bypassed remain 0 — not observable at the hook layer (GAP-1)
     assert.equal(gate.passed, 0, 'passed must be 0 (GAP-1: no outcome capture)');
     assert.equal(gate.bypassed, 0, 'bypassed must be 0 (GAP-1: no outcome capture)');
-    assert.equal(gate.blocked, 0, 'blocked must be 0 (GAP-1: no outcome capture)');
+    // blocked IS captured when gate-outcomes.jsonl is present (Phase 3).
+    // In this test there is no fixture, so blocked === 0.
+    assert.equal(gate.blocked, 0, 'blocked must be 0 when no gate-outcomes.jsonl fixture is present');
+  });
+
+  it('surfaces blocked count from gate-outcomes.jsonl (HIGH-1 regression)', async () => {
+    // Arrange: write a gate-outcomes.jsonl with 3 blocked events for "privacy-mesh".
+    // "privacy-mesh" is NOT in GATE_SKILLS, so this test specifically exercises the
+    // HIGH-1 fix: gateOutcomes.keys() must be included in allGateNames.
+    const metricsDir = path.join(tmpDir, '.rune', 'metrics');
+    await mkdir(metricsDir, { recursive: true });
+
+    const ts1 = '2026-06-01T10:00:00.000Z';
+    const ts2 = '2026-06-02T11:00:00.000Z';
+    const ts3 = '2026-06-03T12:00:00.000Z';
+    const lines = `${[
+      JSON.stringify({ ts: ts1, gate: 'privacy-mesh', outcome: 'blocked', detail: 'file matched BLOCK-tier' }),
+      JSON.stringify({ ts: ts2, gate: 'privacy-mesh', outcome: 'blocked', detail: 'file matched BLOCK-tier' }),
+      JSON.stringify({ ts: ts3, gate: 'privacy-mesh', outcome: 'blocked', detail: 'file matched BLOCK-tier' }),
+    ].join('\n')}\n`;
+    await writeFile(path.join(metricsDir, 'gate-outcomes.jsonl'), lines);
+
+    // Act
+    const result = await assembleGovernance(tmpDir, 30);
+
+    // Assert: privacy-mesh must appear in gates[] with blocked=3 and a non-null ts
+    const pmGate = result.gates.find((g) => g.name === 'privacy-mesh');
+    assert.ok(pmGate, 'privacy-mesh gate must appear in gates[] when it has blocked events');
+    assert.equal(pmGate.blocked, 3, 'blocked must equal the number of blocked outcome records');
+    assert.ok(pmGate.ts !== null && typeof pmGate.ts === 'string', 'ts must be non-null when blocked events exist');
+    assert.equal(pmGate.ts, ts3, 'ts must be the most-recent blocked event timestamp');
+    // fired and passed/bypassed are 0 — no sessions or skills.json for this gate
+    assert.equal(pmGate.fired, 0, 'fired must be 0 when gate has no session/skills.json data');
   });
 
   it('reads gate counts from skills.json totals when no windowed sessions', async () => {

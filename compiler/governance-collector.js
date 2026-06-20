@@ -6,15 +6,16 @@
  *   2. Signals     — static mesh signal definitions from the visualizer
  *   3. Compliance  — obligations declared in Business pack PACK.md files
  *
- * Phase-1 known capture gaps (documented here so future phases know what to fill):
+ * Phase-3 known capture gaps (updated from Phase 1):
  *
- *   GAP-1  Gate outcomes (passed / bypassed / blocked) — there is currently NO
- *            structured capture of whether a gate invocation passed, was bypassed,
- *            or blocked a workflow.  The metrics hook records skill_invocations but
- *            does not distinguish outcome.  A future gate-outcome hook must log a
- *            structured record (session_id, gate, outcome, ts) to a dedicated
- *            .rune/metrics/gate-outcomes.jsonl file.  Until then, all three outcome
- *            counters are set to 0.
+ *   GAP-1  Gate outcomes (passed / bypassed / blocked) — PARTIALLY FILLED in Phase 3.
+ *            pre-tool-guard now appends a structured record to
+ *            .rune/metrics/gate-outcomes.jsonl when it decides to BLOCK (exit code 2).
+ *            This file is read here and populates the `blocked` count + most-recent `ts`
+ *            for the "privacy-mesh" gate.
+ *            STILL uncaptured: `passed` and `bypassed` outcomes remain 0 because they
+ *            are not observable at the hook layer without instrumenting every allow/pass
+ *            path — which would add noise without signal value.
  *
  *   GAP-2  Gate timestamps — no PER-INVOCATION timestamp is captured.  Best-effort:
  *            the `ts` field carries the date-only `last_used` from skills.json when
@@ -131,6 +132,45 @@ function extractSection(content, heading) {
   return next === -1 ? body : body.slice(0, next);
 }
 
+// ─── Gate-outcome capture reader ─────────────────────────────────────────────
+
+/**
+ * Read .rune/metrics/gate-outcomes.jsonl and return a map of
+ *   gate → { blocked: number, latestTs: string|null }
+ *
+ * Only "blocked" outcomes are currently captured (pre-tool-guard Phase 3).
+ * passed/bypassed remain uncaptured — see GAP-1.
+ *
+ * Never throws — degrades to empty map on any error.
+ */
+async function loadGateOutcomes(runeRoot) {
+  const outFile = path.join(runeRoot, '.rune', 'metrics', 'gate-outcomes.jsonl');
+  const result = new Map(); // gate → { blocked, latestTs }
+
+  try {
+    if (!existsSync(outFile)) return result;
+    const raw = await readFile(outFile, 'utf-8');
+    for (const record of readJsonl(raw)) {
+      if (!record || typeof record.gate !== 'string') continue;
+      const gate = record.gate;
+      const existing = result.get(gate) || { blocked: 0, latestTs: null };
+
+      if (record.outcome === 'blocked') {
+        existing.blocked += 1;
+        // Keep the most-recent ts (ISO string compare works lexicographically)
+        if (record.ts && (!existing.latestTs || record.ts > existing.latestTs)) {
+          existing.latestTs = record.ts;
+        }
+      }
+      result.set(gate, existing);
+    }
+  } catch {
+    /* degrade silently */
+  }
+
+  return result;
+}
+
 // ─── Gate assembly ────────────────────────────────────────────────────────────
 
 /**
@@ -142,7 +182,10 @@ function extractSection(content, heading) {
  * invocation count, NOT a pass/fail outcome.
  */
 async function assembleGates(runeRoot, days) {
-  const { sessions, skillTotals } = await loadMetrics(runeRoot);
+  const [{ sessions, skillTotals }, gateOutcomes] = await Promise.all([
+    loadMetrics(runeRoot),
+    loadGateOutcomes(runeRoot),
+  ]);
   const filtered = filterByDays(sessions, days);
 
   // Windowed session-PRESENCE: number of sessions in the window that invoked the
@@ -169,22 +212,31 @@ async function assembleGates(runeRoot, days) {
     return rec && typeof rec === 'object' && rec.last_used ? `${rec.last_used}T00:00:00.000Z` : null;
   };
 
-  const allGateNames = new Set([...Object.keys(sessionPresence), ...GATE_SKILLS.filter((g) => totalFires(g) > 0)]);
+  const allGateNames = new Set([
+    ...Object.keys(sessionPresence),
+    ...GATE_SKILLS.filter((g) => totalFires(g) > 0),
+    ...gateOutcomes.keys(),
+  ]);
 
   if (allGateNames.size === 0) return [];
 
-  return Array.from(allGateNames).map((name) => ({
-    name,
-    // Cumulative true fire count; windowed session-presence as fallback (GAP-6).
-    fired: totalFires(name) || sessionPresence[name] || 0,
-    // GAP-1: outcome capture not yet implemented — all set to 0
-    passed: 0,
-    bypassed: 0,
-    blocked: 0,
-    // GAP-2: per-invocation timestamps not captured. Best-effort: most-recent
-    // last_used date from skills.json (date-only), else null.
-    ts: lastUsedTs(name),
-  }));
+  return Array.from(allGateNames).map((name) => {
+    const outcomes = gateOutcomes.get(name) || { blocked: 0, latestTs: null };
+    // Prefer outcome ts over skills.json date when a real block event was recorded
+    const ts = outcomes.latestTs || lastUsedTs(name);
+    return {
+      name,
+      // Cumulative true fire count; windowed session-presence as fallback (GAP-6).
+      fired: totalFires(name) || sessionPresence[name] || 0,
+      // GAP-1 (Phase 3 partial fill): blocked IS now captured from gate-outcomes.jsonl.
+      // passed/bypassed remain 0 — not observable at the hook layer.
+      passed: 0,
+      bypassed: 0,
+      blocked: outcomes.blocked,
+      // Best-effort ts: real block event ts when available, else last_used from skills.json.
+      ts,
+    };
+  });
 }
 
 // ─── Signal assembly ──────────────────────────────────────────────────────────

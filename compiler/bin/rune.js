@@ -537,6 +537,18 @@ async function cmdDashboard(projectRoot, args) {
     logStep('·', 'Mesh graph collection failed — using empty defaults');
   }
 
+  // 5. Dashboard profile (optional — persona + pinnedConcerns persisted by UI)
+  let profileData = null;
+  const profilePath = path.join(runeDir, 'dashboard-profile.json');
+  try {
+    if (existsSync(profilePath)) {
+      profileData = JSON.parse(await readFile(profilePath, 'utf-8'));
+      logStep('✓', `Dashboard profile loaded (persona: ${profileData.persona || 'exec'})`);
+    }
+  } catch {
+    logStep('·', 'dashboard-profile.json unreadable — using defaults');
+  }
+
   // Merge into one data object
   const data = {
     // From comprehension.json
@@ -563,6 +575,8 @@ async function cmdDashboard(projectRoot, args) {
     modelDistribution: analyticsData.modelDistribution || [],
     // Mesh (for Understand tab fallback when no comprehension.json)
     skillMesh: meshData,
+    // Profile (persona + pinnedConcerns) — seeds initial UI state
+    profile: profileData,
   };
 
   const html = generateComprehensionHTML(data);
