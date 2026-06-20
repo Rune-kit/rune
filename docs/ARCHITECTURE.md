@@ -550,3 +550,21 @@ L2: relevant subset (only what they need)
 L3: minimal query (stateless, no history)
 L4: domain-filtered subset
 ```
+
+## Comprehension Dashboard
+
+`rune dashboard` generates `.rune/comprehension.html` — a fully self-contained HTML artifact (no CDN, no external requests) that surfaces project health from real session, gate, and mesh data.
+
+**Five tabs:**
+- **Verdict** — health score (0–100), gate coverage, compliance pct, active skills KPIs
+- **Govern** — gate ledger, compliance coverage map, decision provenance
+- **Measure** — skill frequency bars, model mix, skill ROI (active vs dormant), activity heatmap, session timeline
+- **Understand** — interactive mesh graph (module or skill fallback), domain view, guided tour, node inspector
+- **Improve** — data-driven anti-pattern cards derived from real gate events and session patterns
+
+**Tier gating** (detected via `$RUNE_PRO_ROOT` / `$RUNE_BUSINESS_ROOT` env vars, sibling monorepo paths, or well-known install paths):
+- **Free** — Verdict, Measure, Understand, Improve fully available. Govern shows an honest upsell (no fabricated data).
+- **Pro** — Adds "My Lens" persona: personal cost, gates fired, and skill-ROI curated view.
+- **Business** — Full Govern: compliance coverage, gate ledger, decision provenance.
+
+XSS safety: all data embedded via `safeJson` (every `<` → `<`, U+2028/U+2029 escaped — prevents `</script>` breakout). Self-contained: no `<link>`, no `@import`, no external fonts.

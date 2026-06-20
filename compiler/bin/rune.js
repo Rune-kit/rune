@@ -494,6 +494,23 @@ async function cmdDashboard(projectRoot, args) {
 
   logStep('◎', 'Assembling dashboard data...');
 
+  // ── Tier detection (reuse existing detectTiers from setup.js) ──
+  // Mirrors the pattern used by cmdHooks (line ~317). detectTiers checks:
+  //   1. $RUNE_PRO_ROOT / $RUNE_BUSINESS_ROOT env vars
+  //   2. sibling monorepo paths (../Pro, ../Business)
+  //   3. Well-known developer paths (D:/Project/Rune/Pro etc.)
+  // Dashboard generation is always open (no CLI gate) — tier only affects
+  // WHICH panels render real data vs honest upsell inside the HTML.
+  const { detectTiers } = await import('../commands/setup.js');
+  const detectedTiers = detectTiers(projectRoot);
+  const hasPro = detectedTiers.pro !== null;
+  const hasBusiness = detectedTiers.business !== null;
+  const tier = hasBusiness ? 'business' : hasPro ? 'pro' : 'free';
+  logStep(
+    '◎',
+    `Tier: ${tier}${hasPro && !hasBusiness ? ' (Pro detected)' : ''}${hasBusiness ? ' (Business detected)' : ''}`,
+  );
+
   // 1. comprehension.json (optional — onboard/autopsy writes this)
   let comprehensionData = {};
   const comprehensionPath = path.join(runeDir, 'comprehension.json');
@@ -581,6 +598,15 @@ async function cmdDashboard(projectRoot, args) {
     skillMesh: meshData,
     // Profile (persona + pinnedConcerns) — seeds initial UI state
     profile: profileData,
+    // Phase 5b — tier gating
+    // tier: 'free' | 'pro' | 'business'
+    // hasPro / hasBusiness: booleans used by the renderer to decide which panels to show.
+    // Free → Govern shows honest upsell (no real compliance/ledger panels).
+    // Pro  → unlocks My Lens persona option.
+    // Business → Govern fully unlocked (existing scorecard/ledger/compliance/persona/provenance).
+    tier,
+    hasPro,
+    hasBusiness,
   };
 
   const html = generateComprehensionHTML(data);

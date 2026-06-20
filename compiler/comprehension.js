@@ -202,6 +202,10 @@ export function generateComprehensionHTML(data) {
       totalInstalledSkills: ALL_KNOWN_SKILLS.length, // single source of truth
       // mesh
       skillMesh: { nodes: [], edges: [] },
+      // Phase 5b — tier gating (defaults to 'free' when not supplied by cmdDashboard)
+      tier: 'free',
+      hasPro: false,
+      hasBusiness: false,
     },
     data,
   );
@@ -253,7 +257,8 @@ export function generateComprehensionHTML(data) {
 
   // Profile: initial persona seeded from d.profile (read by cmdDashboard from .rune/dashboard-profile.json).
   // Clamp persona to known values so a tampered dashboard-profile.json can't produce an incoherent view.
-  const _VALID_PERSONAS = ['exec', 'compliance', 'eng'];
+  // 'mylens' is a Pro-only persona — only valid when hasPro is true.
+  const _VALID_PERSONAS = d.hasPro ? ['exec', 'compliance', 'eng', 'mylens'] : ['exec', 'compliance', 'eng'];
   const initialPersona = _VALID_PERSONAS.includes(d.profile?.persona) ? d.profile.persona : 'exec';
   const initialPinned = Array.isArray(d.profile?.pinnedConcerns) ? d.profile.pinnedConcerns : [];
 
@@ -284,6 +289,10 @@ export function generateComprehensionHTML(data) {
     sessionTimeline: d.sessionTimeline || [],
     skillChains: d.skillChains || [],
     totalInstalledSkills: ALL_KNOWN_SKILLS.length, // single source of truth
+    // Phase 5b — tier gating
+    tier: d.tier,
+    hasPro: d.hasPro,
+    hasBusiness: d.hasBusiness,
   });
 
   return `<!DOCTYPE html>
@@ -900,7 +909,7 @@ tr:last-child td{border-bottom:none;}
   padding:3px 9px;margin:2px;color:var(--text-secondary);border:1px solid var(--border);
 }
 .roi-chip.active{color:var(--accent);border-color:rgba(45,212,191,.3);}
-.roi-chip.dormant{color:var(--text-disabled);border-color:transparent;}
+.roi-chip.dormant{color:var(--text-secondary);border-color:transparent;}
 .roi-stat{
   font-family:var(--font-mono);font-weight:700;font-size:22px;
   color:var(--text-primary);margin-bottom:4px;
@@ -1017,6 +1026,70 @@ tr:last-child td{border-bottom:none;}
 }
 /* Focused node ring — drawn on canvas, not CSS */
 
+/* ── Tier upsell panel (Govern tab — free tier) ── */
+.tier-upsell{
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:60px 20px 48px;gap:18px;text-align:center;
+}
+.tier-upsell .upsell-icon{
+  font-size:36px;opacity:.5;line-height:1;
+  pointer-events:none;
+}
+.tier-upsell h3{
+  font-family:var(--font-display);font-size:22px;font-weight:600;
+  color:var(--text-primary);max-width:440px;line-height:1.3;
+}
+.tier-upsell .upsell-desc{
+  font-size:13px;color:var(--text-secondary);max-width:480px;line-height:1.7;
+}
+.upsell-features{
+  display:flex;flex-direction:column;gap:8px;
+  max-width:400px;text-align:left;
+}
+.upsell-feature{
+  display:flex;align-items:flex-start;gap:8px;
+  font-size:12px;color:var(--text-secondary);line-height:1.5;
+}
+.upsell-feature-icon{
+  font-size:14px;flex-shrink:0;margin-top:1px;
+  pointer-events:none;
+}
+.upsell-how{
+  margin-top:4px;font-size:11px;color:var(--text-tertiary);
+  background:var(--bg-elevated);border-radius:var(--r-el);
+  padding:10px 16px;max-width:400px;line-height:1.65;
+}
+.upsell-how code{
+  font-family:var(--font-mono);font-size:10px;
+  background:var(--bg-card);padding:1px 6px;border-radius:3px;
+  border:1px solid var(--border);color:var(--accent);
+}
+
+/* ── My Lens persona (Pro) ── */
+/* My Lens reuses existing measure-panel styles — no new classes needed.
+   The panel content is injected by renderMyLens() into govern-content. */
+.mylens-header{
+  display:flex;align-items:center;gap:10px;padding:16px 0 8px;
+  border-bottom:1px solid var(--border);margin-bottom:16px;
+}
+.mylens-badge{
+  font:600 10px var(--font-body);text-transform:uppercase;letter-spacing:.06em;
+  padding:2px 8px;border-radius:var(--r-pill);
+  background:rgba(45,212,191,.12);color:var(--accent);flex-shrink:0;
+}
+.mylens-title{
+  font-family:var(--font-display);font-size:16px;font-weight:600;
+  color:var(--text-primary);
+}
+.mylens-sub{
+  font-size:11px;color:var(--text-tertiary);margin-left:auto;
+}
+.mylens-kpis{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;
+}
+.mylens-kpis .kpi{margin:0;}
+@media(max-width:640px){.mylens-kpis{grid-template-columns:1fr 1fr;}}
+
 /* ── Footer ── */
 .footer{
   text-align:center;margin-top:28px;
@@ -1064,8 +1137,11 @@ tr:last-child td{border-bottom:none;}
       <button data-persona="exec" aria-pressed="${initialPersona === 'exec' ? 'true' : 'false'}" class="${initialPersona === 'exec' ? 'on' : ''}">Exec</button>
       <button data-persona="compliance" aria-pressed="${initialPersona === 'compliance' ? 'true' : 'false'}" class="${initialPersona === 'compliance' ? 'on' : ''}">Compliance</button>
       <button data-persona="eng" aria-pressed="${initialPersona === 'eng' ? 'true' : 'false'}" class="${initialPersona === 'eng' ? 'on' : ''}">Eng</button>
+      ${d.hasPro ? `<button data-persona="mylens" aria-pressed="${initialPersona === 'mylens' ? 'true' : 'false'}" class="${initialPersona === 'mylens' ? 'on' : ''}" title="Pro: personal cost, gates fired, and skill ROI focus">My Lens</button>` : ''}
     </div>
   </header>
+
+  <main id="dash-main">
 
   <!-- ── VERDICT TAB ── -->
   <div class="tab-panel active" id="panel-verdict" role="tabpanel" aria-labelledby="tab-verdict">
@@ -1147,6 +1223,8 @@ tr:last-child td{border-bottom:none;}
     </div>
   </div>
 
+  </main>
+
   <footer class="footer">
     Generated ${escHtml(generatedDate)}
     &bull; Rune Dashboard
@@ -1191,7 +1269,8 @@ tabs.forEach((tab,i)=>{
 // Loaded from D.initialPersona (seeded from .rune/dashboard-profile.json on generate).
 // Also persisted to localStorage for instant UX within the same browser session.
 const LS_KEY='rune_dashboard_profile';
-const VALID_PERSONAS=['exec','compliance','eng'];
+// 'mylens' is only valid when Pro is available (D.hasPro is embedded server-side).
+const VALID_PERSONAS=D.hasPro?['exec','compliance','eng','mylens']:['exec','compliance','eng'];
 function clampPersona(v){
   return VALID_PERSONAS.includes(v)?v:(VALID_PERSONAS.includes(D.initialPersona)?D.initialPersona:'exec');
 }
@@ -1220,11 +1299,13 @@ let currentProfile=loadProfile();
 //   Exec       → scorecard + verdict prominent; raw tables de-emphasised
 //   Compliance → compliance coverage + ledger first; details shown
 //   Eng        → full detail including provenance + raw events
-const PERSONA_LABELS={exec:'Exec',compliance:'Compliance',eng:'Eng'};
+//   My Lens    → Pro-only; personal focus: cost, gates, skill-ROI
+const PERSONA_LABELS={exec:'Exec',compliance:'Compliance',eng:'Eng',mylens:'My Lens'};
 const PERSONA_DESCRIPTIONS={
   exec:'Scorecard and verdict at a glance.',
   compliance:'Compliance coverage and obligation ledger.',
   eng:'Full detail including raw events and provenance.',
+  mylens:'Your personal leverage: cost, gates fired, and skill ROI.',
 };
 
 function applyPersona(persona){
@@ -1237,6 +1318,32 @@ function applyPersona(persona){
     b.classList.toggle('on',active);
     b.setAttribute('aria-pressed',active?'true':'false');
   });
+
+  // My Lens: activate Govern tab panel directly (without re-triggering renderGovern),
+  // then replace govern-content with My Lens curated view.
+  if(persona==='mylens'){
+    // Activate Govern tab visually without dispatching a click (which would call renderGovern)
+    document.querySelectorAll('.tab').forEach(t=>{
+      t.classList.remove('active');t.setAttribute('aria-selected','false');
+    });
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+    const governTab=document.getElementById('tab-govern');
+    const governPanel=document.getElementById('panel-govern');
+    if(governTab){governTab.classList.add('active');governTab.setAttribute('aria-selected','true');}
+    if(governPanel){governPanel.classList.add('active');}
+    // Replace govern-content with My Lens view
+    const container=document.getElementById('govern-content');
+    if(container){container.innerHTML='';renderMyLens();}
+    return;
+  }
+
+  // Switching away from mylens → restore govern-content to upsell or full govern
+  const container=document.getElementById('govern-content');
+  if(container && container.querySelector('.mylens-header')){
+    // My Lens was showing — replace with standard govern view
+    container.innerHTML='';
+    renderGovern();
+  }
 
   // Section visibility/order — use data-persona-hide attribute
   // Exec: hide raw tables (.govern-eng-only), show scorecard first
@@ -1302,10 +1409,69 @@ window.addEventListener('load',()=>{
   }
 });
 
-// ── Govern tab (Phase 3) ──
+// ── Govern tab (Phase 3 / Phase 5b) ──
 function renderGovern(){
   const container=document.getElementById('govern-content');
   if(!container)return;
+
+  // Phase 5b — tier gate: Govern is a Business feature.
+  // Free and Pro tiers see an honest upsell instead of fabricated data.
+  if(!D.hasBusiness){
+    const upsell=document.createElement('div');
+    upsell.className='tier-upsell';
+    upsell.setAttribute('aria-label','Govern tab — Business tier feature');
+
+    const icon=document.createElement('div');
+    icon.className='upsell-icon';
+    icon.setAttribute('aria-hidden','true');
+    icon.innerHTML='&#x1F5C2;'; // 🗂
+
+    const title=document.createElement('h3');
+    title.textContent='Govern — compliance, gate ledger, and decision provenance';
+
+    const desc=document.createElement('p');
+    desc.className='upsell-desc';
+    desc.textContent='The Govern tab tracks your compliance obligations, shows which quality gates fired and blocked, and maps output decisions back through their signal chain. This is a Rune Business feature.';
+
+    const features=document.createElement('ul');
+    features.className='upsell-features';
+    features.setAttribute('aria-label','Govern features included in Business tier');
+    const featureList=[
+      {icon:'&#x2705;','text':'Compliance coverage map — obligations met, gap, unknown per pack'},
+      {icon:'&#x1F6AB;','text':'Gate ledger — sentinel, preflight, completion-gate fire + block counts'},
+      {icon:'&#x1F50D;','text':'Decision provenance — output ↦ signal chain ↦ gate ↦ model ↦ cost'},
+      {icon:'&#x1F4C8;','text':'Governance scorecard — compliance %, blocks caught, cost per feature'},
+    ];
+    for(const f of featureList){
+      const li=document.createElement('li');
+      li.className='upsell-feature';
+      const fi=document.createElement('span');
+      fi.className='upsell-feature-icon';
+      fi.setAttribute('aria-hidden','true');
+      fi.innerHTML=f.icon;
+      const ft=document.createElement('span');
+      ft.textContent=f.text;
+      li.appendChild(fi);
+      li.appendChild(ft);
+      features.appendChild(li);
+    }
+
+    const how=document.createElement('p');
+    how.className='upsell-how';
+    // Note: no external URLs here — dashboard is 100% local, no CDN or tracking.
+    how.innerHTML=
+      'To unlock Govern, set <code>RUNE_BUSINESS_ROOT</code> to your Rune Business directory and regenerate: <code>rune dashboard</code>. '
+      +'Business tier ($149 lifetime) includes finance, legal, HR, and enterprise-search packs. '
+      +'Available at <code>github.com/sponsors/rune-kit</code>.';
+
+    upsell.appendChild(icon);
+    upsell.appendChild(title);
+    upsell.appendChild(desc);
+    upsell.appendChild(features);
+    upsell.appendChild(how);
+    container.appendChild(upsell);
+    return; // ← early return: no fabricated govern panels
+  }
 
   const gates=D.gates||[];
   const compliance=D.compliance||[];
@@ -1651,6 +1817,170 @@ function renderGovern(){
 
   // Apply initial persona
   applyPersona(currentProfile.persona);
+}
+
+// ── My Lens (Pro-only persona) ──
+// Renders into #govern-content when the "My Lens" persona is selected.
+// Shows only: cost KPIs, gates fired + blocks, skill-ROI (active/dormant).
+// Data is the SAME real data as other tabs — just curated for personal leverage.
+// XSS: all user data interpolated via esc(); no innerHTML of raw D values.
+function renderMyLens(){
+  const container=document.getElementById('govern-content');
+  if(!container)return;
+
+  const gates=D.gates||[];
+  const freq=D.skillFrequency||[];
+  const ov=D.overview||{};
+  const totalInstalled=D.totalInstalledSkills||63;
+  const totalFired=gates.reduce((s,g)=>s+(g.fired||0),0);
+  const totalBlocks=gates.reduce((s,g)=>s+(g.blocked||0),0);
+  const activeSkills=freq.length;
+  const dormantCount=Math.max(0,totalInstalled-activeSkills);
+
+  // Header
+  const hdr=document.createElement('div');
+  hdr.className='mylens-header';
+  const badge=document.createElement('span');
+  badge.className='mylens-badge';
+  badge.setAttribute('aria-label','Pro feature');
+  badge.textContent='Pro';
+  const title=document.createElement('span');
+  title.className='mylens-title';
+  title.textContent='My Lens';
+  const sub=document.createElement('span');
+  sub.className='mylens-sub';
+  sub.textContent='Personal leverage focus';
+  hdr.appendChild(badge);
+  hdr.appendChild(title);
+  hdr.appendChild(sub);
+  container.appendChild(hdr);
+
+  // KPI row (3 cards: gates fired, blocks caught, skills active)
+  const kpis=document.createElement('div');
+  kpis.className='mylens-kpis';
+  kpis.setAttribute('aria-label','Personal usage key metrics');
+
+  function mkKpi(label,val,sub2,subCls){
+    const d=document.createElement('div');
+    d.className='kpi';
+    d.innerHTML=
+      '<div class="k-lbl">'+esc(label)+'</div>'+
+      '<div class="k-val" style="font-size:24px">'+esc(String(val==null?'—':val))+'</div>'+
+      (sub2?'<div class="k-sub'+(subCls?' '+subCls:'')+'">'+esc(sub2)+'</div>':'');
+    return d;
+  }
+
+  kpis.appendChild(mkKpi(
+    'Gates fired',
+    totalFired>0?totalFired:'—',
+    totalFired>0?gates.length+' gate'+(gates.length!==1?'s':'')+' active':'no gates yet',
+    totalFired>0?'up':'',
+  ));
+  kpis.appendChild(mkKpi(
+    'Blocks caught',
+    totalBlocks>0?totalBlocks:'—',
+    totalBlocks>0?'real policy violations blocked':'none recorded yet',
+    totalBlocks>0?'warn':'',
+  ));
+  kpis.appendChild(mkKpi(
+    'Skills active',
+    activeSkills>0?activeSkills+'/'+totalInstalled:'—',
+    activeSkills>0?(dormantCount+' dormant in last '+(D.window_days||30)+'d'):'run skills to track',
+    activeSkills>0?(dormantCount>0?'warn':'up'):'',
+  ));
+  container.appendChild(kpis);
+
+  // Skill ROI — top used + dormant (reuse Measure-tab data)
+  if(freq.length>0){
+    const roiPanel=document.createElement('div');
+    roiPanel.className='panel section';
+    roiPanel.setAttribute('aria-label','Skill ROI — active and dormant');
+    roiPanel.innerHTML='<h3>Skill ROI <span class="pill">your window</span></h3>';
+
+    // All-known list (same as renderMeasure)
+    const allKnown=['cook','plan','scout','brainstorm','design','skill-forge','debug','fix','test','review',
+      'db','sentinel','preflight','onboard','deploy','marketing','perf','autopsy','safeguard','surgeon',
+      'audit','incident','review-intake','logic-guardian','ba','docs','mcp-builder','adversary','retro',
+      'graft','improve-architecture','research','docs-seeker','trend-scout','problem-solver',
+      'sequential-thinking','verification','hallucination-guard','completion-gate','constraint-check',
+      'sast','integrity-check','context-engine','context-pack','journal','session-bridge',
+      'neural-memory','worktree','watchdog','scope-guard','browser-pilot','asset-creator',
+      'video-creator','slides','dependency-doctor','git','doc-processor','sentinel-env',
+      'team','launch','rescue','scaffold','skill-router'];
+    const activeSet=new Set(freq.map(s=>s.skill));
+    const dormantSamples=allKnown.filter(s=>!activeSet.has(s)).slice(0,6);
+
+    const roi=document.createElement('div');
+    roi.className='roi-grid';
+
+    // Top active
+    const topCard=document.createElement('div');
+    topCard.className='roi-card';
+    const topTitleEl=document.createElement('div');
+    topTitleEl.className='roi-card-title';
+    topTitleEl.textContent='Your top skills';
+    topCard.appendChild(topTitleEl);
+    const topChips=document.createElement('div');
+    for(const s of freq.slice(0,6)){
+      const chip=document.createElement('span');
+      chip.className='roi-chip active';
+      chip.setAttribute('aria-label',s.skill+': '+s.count+' sessions');
+      chip.textContent=s.skill;
+      topChips.appendChild(chip);
+    }
+    topCard.appendChild(topChips);
+
+    // Dormant sample
+    const dormCard=document.createElement('div');
+    dormCard.className='roi-card';
+    const dormTitleEl=document.createElement('div');
+    dormTitleEl.className='roi-card-title';
+    dormTitleEl.textContent=dormantCount>0?'Unused this period':'All skills active';
+    dormCard.appendChild(dormTitleEl);
+    const dormChips=document.createElement('div');
+    for(const s of dormantSamples){
+      const chip=document.createElement('span');
+      chip.className='roi-chip dormant';
+      chip.setAttribute('aria-label',s+': not used in window');
+      chip.textContent=s;
+      dormChips.appendChild(chip);
+    }
+    if(dormantCount>dormantSamples.length){
+      const more=document.createElement('span');
+      more.className='roi-chip dormant';
+      more.style.fontStyle='italic';
+      more.textContent='+'+(dormantCount-dormantSamples.length)+' more';
+      dormChips.appendChild(more);
+    }
+    dormCard.appendChild(dormChips);
+
+    roi.appendChild(topCard);
+    roi.appendChild(dormCard);
+    roiPanel.appendChild(roi);
+    container.appendChild(roiPanel);
+  } else {
+    const empty=document.createElement('div');
+    empty.className='empty';
+    empty.style.padding='24px 10px';
+    empty.innerHTML='<h4>No session data yet</h4><p>Run Rune skills to start seeing your personal leverage data here.</p>';
+    container.appendChild(empty);
+  }
+
+  // Cost / feature — honest placeholder (not captured)
+  const costPanel=document.createElement('div');
+  costPanel.className='panel section';
+  costPanel.setAttribute('aria-label','Cost metrics');
+  costPanel.innerHTML=
+    '<h3>Cost / Feature <span class="pill">personal</span></h3>'+
+    '<div class="empty" style="padding:18px 10px">'+
+    '<h4>Not captured yet</h4>'+
+    '<p>Per-feature cost tracking requires session-level cost data. Run sessions with Rune hooks to begin collecting.</p>'+
+    '</div>';
+  container.appendChild(costPanel);
+
+  // Update profile status label
+  const statusEl=document.getElementById('profile-status-label');
+  if(statusEl)statusEl.textContent=PERSONA_DESCRIPTIONS.mylens||'';
 }
 
 // ── Measure tab (Phase 5a enrichment) ──
@@ -3104,7 +3434,7 @@ function renderUnderstandGraph(){
 
   // ── Canvas keyboard accessibility (Phase 5a) ──
   canvas.setAttribute('tabindex','0');
-  canvas.setAttribute('aria-label','Module dependency graph — use Arrow keys or Tab/Shift+Tab to navigate nodes, Enter or Space to inspect, Escape to close');
+  canvas.setAttribute('aria-label','Module dependency graph — Arrow keys to navigate nodes, Enter or Space to inspect, Escape to exit');
 
   // kbFocusIdx is hoisted above drawGraph so it's in scope without a TDZ typeof guard.
   function kbFocusNode(idx){
@@ -3117,14 +3447,16 @@ function renderUnderstandGraph(){
     const total=graphNodes.length;
     if(total===0)return;
 
-    if(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key==='Tab'&&!e.shiftKey){
+    // Arrow keys ONLY for intra-graph node cycling — Tab/Shift+Tab must bubble
+    // so keyboard focus can leave the canvas (WCAG 2.1.2 No Keyboard Trap).
+    if(e.key==='ArrowRight'||e.key==='ArrowDown'){
       e.preventDefault();
       kbFocusIdx=(kbFocusIdx+1)%total;
       kbFocusNode(kbFocusIdx);
       // Announce to sr-only live region
       const node=graphNodes[kbFocusIdx];
       if(node&&srLiveEl){srLiveEl.textContent=node.name+', '+node.type+', '+(kbFocusIdx+1)+' of '+total;}
-    } else if(e.key==='ArrowLeft'||e.key==='ArrowUp'||e.key==='Tab'&&e.shiftKey){
+    } else if(e.key==='ArrowLeft'||e.key==='ArrowUp'){
       e.preventDefault();
       kbFocusIdx=(kbFocusIdx-1+total)%total;
       kbFocusNode(kbFocusIdx);
@@ -3231,6 +3563,11 @@ function renderUnderstandGraph(){
 renderGovern();
 renderMeasure();
 renderImprove();
+// Materialize the persisted persona on load. renderGovern() applies the persona
+// for the Business path, but early-returns the upsell for Free/Pro before reaching
+// it — so a persisted My Lens (Pro) selection would otherwise not render. Re-apply
+// here (idempotent for Business).
+if(typeof applyPersona==='function'){applyPersona(currentProfile.persona);}
 </script>
 </body>
 </html>`;

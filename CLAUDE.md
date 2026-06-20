@@ -92,8 +92,9 @@ When the user's intent matches a skill, invoke it BEFORE writing any code or ana
 - Validate build: `node compiler/bin/rune.js doctor`
 - Hook drift report: `node compiler/bin/rune.js doctor --hooks` (compares installed vs canonical preset)
 - Project dashboard: `node compiler/bin/rune.js status` (tiered neofetch)
+- Comprehension dashboard: `node compiler/bin/rune.js dashboard` (self-contained HTML — Verdict/Govern/Measure/Understand/Improve tabs; tier-aware: Pro = My Lens, Business = full Govern)
 - Mesh visualizer: `node compiler/bin/rune.js visualize` (interactive graph)
-- Run tests: `npm test` (1,376 tests — compiler + signals + hooks + tier-hooks + scripts + status + visualizer + setup wizard)
+- Run tests: `npm test` (1,559 tests — compiler + signals + hooks + tier-hooks + scripts + status + visualizer + setup wizard + dashboard)
 - Install runtime hooks (manual): `node compiler/bin/rune.js hooks install --preset gentle [--global]` (add `--tier pro` / `--tier business` to stack paid tiers)
 - Run tests with coverage: `npm run test:coverage` (c8 + lcov)
 - Lint: `npm run lint` (Biome)

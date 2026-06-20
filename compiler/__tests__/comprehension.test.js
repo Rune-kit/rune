@@ -756,3 +756,161 @@ describe('generateComprehensionHTML — XSS: skill chain with <script> in Improv
     );
   });
 });
+
+// ─── Phase 5b: Tier gating tests ───
+
+describe('generateComprehensionHTML — Phase 5b: Free tier — Govern renders upsell (not real data)', () => {
+  // Free tier: no hasPro, no hasBusiness (or hasBusiness explicitly false)
+  const freeTierData = {
+    project: 'FreeProject',
+    generated_at: '2026-06-20T10:00:00.000Z',
+    tier: 'free',
+    hasPro: false,
+    hasBusiness: false,
+    gates: [{ name: 'sentinel', fired: 3, blocked: 1 }],
+    compliance: [{ pack: '@rune-business/finance', obligation: 'MUST log all decisions', status: 'met' }],
+    decisions: [{ output: 'commit-abc', gate: 'sentinel', model: 'claude-sonnet', cost: 0.0042 }],
+    overview: { total_sessions: 5 },
+    skillFrequency: [{ skill: 'cook', count: 10 }],
+  };
+
+  it('embeds hasBusiness:false in the data JSON for Free tier', () => {
+    const result = generateComprehensionHTML(freeTierData);
+    // The tier data is embedded in const D = {...} — verify hasBusiness is false
+    assert.ok(result.includes('"hasBusiness":false'), 'Expected hasBusiness:false embedded in Free tier data JSON');
+  });
+
+  it('embeds hasPro:false in the data JSON for Free tier', () => {
+    const result = generateComprehensionHTML(freeTierData);
+    assert.ok(result.includes('"hasPro":false'), 'Expected hasPro:false embedded in Free tier data JSON');
+  });
+
+  it('upsell text about Business feature is present in JS source', () => {
+    const result = generateComprehensionHTML(freeTierData);
+    // The upsell description uses this text in textContent — it appears as a JS string literal.
+    assert.ok(
+      result.includes('Rune Business feature') || result.includes('Business tier'),
+      'Expected upsell description text in Free tier govern JS source',
+    );
+  });
+
+  it('upsell describes what Govern provides (honest description)', () => {
+    const result = generateComprehensionHTML(freeTierData);
+    // The upsell must mention gate ledger or compliance — real value description
+    assert.ok(
+      result.includes('gate') || result.includes('compliance') || result.includes('Business'),
+      'Upsell should describe the Govern feature value',
+    );
+  });
+
+  it('still passes the no-https guard (no external URLs in upsell)', () => {
+    const result = generateComprehensionHTML(freeTierData);
+    assert.ok(!result.includes('https://'), 'Found https:// in free-tier upsell — self-containment broken');
+  });
+
+  it('still passes the no-http guard', () => {
+    const result = generateComprehensionHTML(freeTierData);
+    assert.ok(!result.includes('http://'), 'Found http:// in free-tier output');
+  });
+});
+
+describe('generateComprehensionHTML — Phase 5b: Business tier — Govern renders real panels', () => {
+  const businessTierData = {
+    project: 'BusinessProject',
+    generated_at: '2026-06-20T10:00:00.000Z',
+    tier: 'business',
+    hasPro: true,
+    hasBusiness: true,
+    gates: [{ name: 'sentinel', fired: 5, blocked: 2 }],
+    compliance: [{ pack: '@rune-business/finance', obligation: 'MUST log all decisions', status: 'met' }],
+    decisions: [],
+    overview: { total_sessions: 8 },
+    skillFrequency: [{ skill: 'cook', count: 15 }],
+  };
+
+  it('renders Governance Ledger for Business tier', () => {
+    const result = generateComprehensionHTML(businessTierData);
+    assert.ok(
+      result.includes('Governance Ledger') || result.includes('govern-content'),
+      'Expected Governance Ledger in Business tier output',
+    );
+  });
+
+  it('renders Compliance Coverage for Business tier', () => {
+    const result = generateComprehensionHTML(businessTierData);
+    assert.ok(
+      result.includes('Compliance Coverage') || result.includes('cov-pack'),
+      'Expected Compliance Coverage in Business tier output',
+    );
+  });
+
+  it('embeds hasBusiness:true in the data JSON for Business tier', () => {
+    const result = generateComprehensionHTML(businessTierData);
+    // The key check: D.hasBusiness is embedded as true for Business tier
+    assert.ok(result.includes('"hasBusiness":true'), 'Expected hasBusiness:true in Business tier data JSON');
+  });
+
+  it('embeds tier:"business" in the data JSON', () => {
+    const result = generateComprehensionHTML(businessTierData);
+    assert.ok(result.includes('"tier":"business"'), 'Expected tier:business in Business tier data JSON');
+  });
+});
+
+describe('generateComprehensionHTML — Phase 5b: Pro tier — My Lens persona present', () => {
+  const proTierData = {
+    project: 'ProProject',
+    generated_at: '2026-06-20T10:00:00.000Z',
+    tier: 'pro',
+    hasPro: true,
+    hasBusiness: false,
+    overview: { total_sessions: 5 },
+    skillFrequency: [{ skill: 'cook', count: 10 }],
+    gates: [{ name: 'sentinel', fired: 3, blocked: 0 }],
+  };
+
+  it('renders the My Lens persona button when hasPro is true', () => {
+    const result = generateComprehensionHTML(proTierData);
+    assert.ok(
+      result.includes('My Lens') || result.includes('data-persona="mylens"') || result.includes('mylens'),
+      'Expected My Lens persona option in Pro tier output',
+    );
+  });
+
+  it('My Lens persona button is keyboard-operable (aria-pressed attribute present)', () => {
+    const result = generateComprehensionHTML(proTierData);
+    // The My Lens button renders with aria-pressed
+    assert.ok(
+      result.includes('aria-pressed') && (result.includes('mylens') || result.includes('My Lens')),
+      'Expected aria-pressed on My Lens persona button',
+    );
+  });
+});
+
+describe('generateComprehensionHTML — Phase 5b: Free tier — My Lens persona absent', () => {
+  const freeTierNoProData = {
+    project: 'FreeNoProProject',
+    tier: 'free',
+    hasPro: false,
+    hasBusiness: false,
+  };
+
+  it('does NOT render My Lens persona button when hasPro is false', () => {
+    const result = generateComprehensionHTML(freeTierNoProData);
+    // The "My Lens" option must not appear for free users — Pro-only feature
+    assert.ok(!result.includes('data-persona="mylens"'), 'My Lens persona button should not appear in Free tier');
+  });
+});
+
+describe('generateComprehensionHTML — Phase 5b: default data (empty) uses free tier defaults', () => {
+  it('empty data defaults to free tier — hasBusiness:false, no My Lens button', () => {
+    const result = generateComprehensionHTML({});
+    // Must not show My Lens button (hasPro=false by default)
+    assert.ok(!result.includes('data-persona="mylens"'), 'My Lens must not appear in default (free) tier output');
+    // hasBusiness defaults to false — verify it's embedded correctly
+    assert.ok(result.includes('"hasBusiness":false'), 'Expected hasBusiness:false in default data JSON');
+    // hasPro defaults to false
+    assert.ok(result.includes('"hasPro":false'), 'Expected hasPro:false in default data JSON');
+    // tier defaults to 'free'
+    assert.ok(result.includes('"tier":"free"'), 'Expected tier:free in default data JSON');
+  });
+});

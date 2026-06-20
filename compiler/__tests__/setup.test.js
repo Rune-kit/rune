@@ -42,6 +42,11 @@ async function seedFakeRuneRoot(root) {
 }
 
 beforeEach(async () => {
+  // Clear tier env vars BEFORE each test so detection-isolation tests are
+  // deterministic regardless of the operator's shell (e.g. a dev with
+  // RUNE_PRO_ROOT set). afterEach also clears them.
+  delete process.env.RUNE_PRO_ROOT;
+  delete process.env.RUNE_BUSINESS_ROOT;
   tmpRoot = await mkdtemp(path.join(tmpdir(), 'rune-setup-'));
   await mkdir(path.join(tmpRoot, 'project'), { recursive: true });
 });

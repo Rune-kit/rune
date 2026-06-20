@@ -647,7 +647,12 @@ npx @rune-kit/rune build --platform windsurf
 
 # Validate compiled output
 npx @rune-kit/rune doctor
+
+# Open comprehension dashboard (human-readable project health)
+npx @rune-kit/rune dashboard
 ```
+
+`rune dashboard` generates a self-contained HTML file (`.rune/comprehension.html`) with five tabs — Verdict, Govern, Measure, Understand, Improve — driven by real session, gate, and mesh data. No external requests, no CDN. Tier-aware: Pro unlocks My Lens persona; Business unlocks the full Govern panel (compliance, gate ledger, decision provenance).
 
 See [docs/MULTI-PLATFORM.md](docs/MULTI-PLATFORM.md) for the full architecture.
 
