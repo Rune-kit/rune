@@ -98,6 +98,77 @@ export function computeVerdictScore(data) {
 }
 
 /**
+ * Canonical list of all Rune core skills — single source of truth for the
+ * "installed skills" denominator used in the ROI panel and KPI counters.
+ * Update this list whenever a skill is added or removed from the Free tier.
+ */
+const ALL_KNOWN_SKILLS = [
+  'cook',
+  'plan',
+  'scout',
+  'brainstorm',
+  'design',
+  'skill-forge',
+  'debug',
+  'fix',
+  'test',
+  'review',
+  'db',
+  'sentinel',
+  'preflight',
+  'onboard',
+  'deploy',
+  'marketing',
+  'perf',
+  'autopsy',
+  'safeguard',
+  'surgeon',
+  'audit',
+  'incident',
+  'review-intake',
+  'logic-guardian',
+  'ba',
+  'docs',
+  'mcp-builder',
+  'adversary',
+  'retro',
+  'graft',
+  'improve-architecture',
+  'research',
+  'docs-seeker',
+  'trend-scout',
+  'problem-solver',
+  'sequential-thinking',
+  'verification',
+  'hallucination-guard',
+  'completion-gate',
+  'constraint-check',
+  'sast',
+  'integrity-check',
+  'context-engine',
+  'context-pack',
+  'journal',
+  'session-bridge',
+  'neural-memory',
+  'worktree',
+  'watchdog',
+  'scope-guard',
+  'browser-pilot',
+  'asset-creator',
+  'video-creator',
+  'slides',
+  'dependency-doctor',
+  'git',
+  'doc-processor',
+  'sentinel-env',
+  'team',
+  'launch',
+  'rescue',
+  'scaffold',
+  'skill-router',
+];
+
+/**
  * Generate the fully self-contained comprehension dashboard HTML string.
  *
  * @param {object} data - Merged data from comprehension.json + governance.json +
@@ -125,6 +196,10 @@ export function generateComprehensionHTML(data) {
       overview: {},
       skillFrequency: [],
       modelDistribution: [],
+      skillHeatmap: { heatmap: [], dates: [], maxCount: 1 },
+      sessionTimeline: [],
+      skillChains: [],
+      totalInstalledSkills: ALL_KNOWN_SKILLS.length, // single source of truth
       // mesh
       skillMesh: { nodes: [], edges: [] },
     },
@@ -142,7 +217,7 @@ export function generateComprehensionHTML(data) {
   const complianceTotal = (d.compliance || []).length;
   const complianceMet = (d.compliance || []).filter((c) => c.status === 'met').length;
   const skillsActive = d.overview?.total_skill_invocations ? (d.skillFrequency?.length ?? 0) : 0;
-  const totalSkills = 64; // canonical mesh size
+  const totalSkills = ALL_KNOWN_SKILLS.length; // single source of truth — ALL_KNOWN_SKILLS array
 
   let verdictLine;
   if (verdictScore === null) {
@@ -204,6 +279,11 @@ export function generateComprehensionHTML(data) {
     window_days: d.window_days,
     initialPersona,
     initialPinned,
+    // Phase 5a
+    skillHeatmap: d.skillHeatmap || { heatmap: [], dates: [], maxCount: 1 },
+    sessionTimeline: d.sessionTimeline || [],
+    skillChains: d.skillChains || [],
+    totalInstalledSkills: ALL_KNOWN_SKILLS.length, // single source of truth
   });
 
   return `<!DOCTYPE html>
@@ -800,6 +880,143 @@ tr:last-child td{border-bottom:none;}
   font-size:13px;color:var(--text-tertiary);max-width:420px;line-height:1.7;
 }
 
+/* ── Phase 5a: Measure enrichment ── */
+/* Skill-ROI section */
+.roi-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;
+}
+.roi-card{
+  background:var(--bg-elevated);border-radius:var(--r-el);
+  padding:14px;font-size:12px;
+}
+.roi-card-title{
+  font:500 10px var(--font-body);text-transform:uppercase;letter-spacing:.06em;
+  color:var(--text-tertiary);margin-bottom:8px;
+}
+.roi-chip{
+  display:inline-flex;align-items:center;gap:5px;
+  font-family:var(--font-mono);font-size:11px;
+  background:var(--bg-card);border-radius:var(--r-pill);
+  padding:3px 9px;margin:2px;color:var(--text-secondary);border:1px solid var(--border);
+}
+.roi-chip.active{color:var(--accent);border-color:rgba(45,212,191,.3);}
+.roi-chip.dormant{color:var(--text-disabled);border-color:transparent;}
+.roi-stat{
+  font-family:var(--font-mono);font-weight:700;font-size:22px;
+  color:var(--text-primary);margin-bottom:4px;
+}
+.roi-stat-sub{font-size:11px;color:var(--text-secondary);}
+
+/* Heatmap */
+.heatmap-wrap{overflow-x:auto;margin-top:10px;}
+.heatmap-table{border-collapse:collapse;font-size:10px;min-width:400px;}
+.heatmap-table th{
+  font:500 9px var(--font-body);text-transform:uppercase;letter-spacing:.04em;
+  color:var(--text-tertiary);padding:3px 4px;text-align:left;
+  white-space:nowrap;
+}
+.hm-skill-label{
+  font-family:var(--font-mono);font-size:9px;color:var(--text-secondary);
+  max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  padding-right:6px;
+}
+.hm-cell{
+  width:16px;height:16px;border-radius:2px;
+  transition:opacity var(--t-fast);
+}
+.hm-cell:hover{opacity:.7;}
+/* Timeline */
+.timeline-list{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
+.timeline-item{
+  background:var(--bg-elevated);border-radius:var(--r-el);
+  padding:10px 12px;display:flex;align-items:flex-start;gap:10px;
+  border-left:2px solid var(--border-strong);
+}
+.timeline-item.primary{border-left-color:var(--accent);}
+.timeline-date{
+  font-family:var(--font-mono);font-size:10px;color:var(--text-tertiary);
+  flex-shrink:0;width:72px;
+}
+.timeline-skills{
+  flex:1;display:flex;flex-wrap:wrap;gap:4px;
+}
+.timeline-skill-chip{
+  font-family:var(--font-mono);font-size:9px;
+  background:var(--bg-card);border-radius:3px;
+  padding:2px 6px;color:var(--text-secondary);border:1px solid var(--border);
+}
+.timeline-skill-chip.primary-skill{
+  color:var(--accent);border-color:rgba(45,212,191,.3);
+}
+.timeline-meta{
+  font-size:10px;color:var(--text-tertiary);flex-shrink:0;text-align:right;
+  width:60px;
+}
+
+/* ── Phase 5a: Improve tab cards ── */
+.improve-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:14px;margin-top:16px;
+}
+.improve-card{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:var(--r-card);padding:16px;
+  border-left:3px solid var(--border-strong);
+  transition:transform var(--t-fast),box-shadow var(--t-fast);
+}
+.improve-card:hover{
+  transform:translateY(-1px);box-shadow:var(--shadow-md);
+}
+.improve-card.sev-warn{border-left-color:var(--warn);}
+.improve-card.sev-info{border-left-color:var(--info);}
+.improve-card.sev-pass{border-left-color:var(--pass);}
+.improve-card-header{
+  display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;
+}
+.improve-card-icon{font-size:16px;flex-shrink:0;margin-top:1px;}
+.improve-card-title{
+  font:600 13px var(--font-body);color:var(--text-primary);flex:1;
+  line-height:1.3;
+}
+.improve-sev-badge{
+  font:600 9px var(--font-body);text-transform:uppercase;letter-spacing:.06em;
+  padding:2px 7px;border-radius:var(--r-pill);flex-shrink:0;
+}
+.improve-sev-badge.warn{background:rgba(245,158,11,.15);color:var(--warn);}
+.improve-sev-badge.info{background:rgba(56,189,248,.15);color:var(--info);}
+.improve-sev-badge.pass{background:rgba(16,185,129,.15);color:var(--pass);}
+.improve-card-body{
+  font-size:12px;color:var(--text-secondary);line-height:1.6;
+}
+.improve-card-action{
+  margin-top:10px;padding-top:10px;border-top:1px solid var(--border);
+  font-size:11px;color:var(--text-tertiary);display:flex;gap:6px;align-items:baseline;
+}
+.improve-card-action b{color:var(--accent);font-weight:600;}
+.improve-header{
+  display:flex;align-items:baseline;gap:12px;margin-bottom:4px;
+}
+.improve-header h3{
+  font:600 15px var(--font-display);color:var(--text-primary);
+}
+.improve-header .improve-count{
+  font-family:var(--font-mono);font-size:11px;color:var(--text-tertiary);
+}
+.improve-subhead{
+  font-size:12px;color:var(--text-tertiary);margin-bottom:16px;line-height:1.5;
+}
+
+/* ── Canvas keyboard accessibility (sr-only node list) ── */
+.sr-only{
+  position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+  overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;
+}
+/* Canvas focus ring */
+#understand-canvas:focus-visible{
+  outline:2px solid var(--accent);outline-offset:2px;
+}
+/* Focused node ring — drawn on canvas, not CSS */
+
 /* ── Footer ── */
 .footer{
   text-align:center;margin-top:28px;
@@ -925,12 +1142,8 @@ tr:last-child td{border-bottom:none;}
 
   <!-- ── IMPROVE TAB ── -->
   <div class="tab-panel" id="panel-improve" role="tabpanel" aria-labelledby="tab-improve">
-    <div class="section">
-      <div class="improve-placeholder">
-        <div class="ip-icon" aria-hidden="true">&#128640;</div>
-        <h4>Improve — coming soon</h4>
-        <p>Prioritised improvement recommendations derived from governance gaps and comprehension depth will appear here in a future phase.</p>
-      </div>
+    <div class="section" id="improve-content">
+      <!-- data-driven improvement cards rendered by JS -->
     </div>
   </div>
 
@@ -1440,58 +1653,101 @@ function renderGovern(){
   applyPersona(currentProfile.persona);
 }
 
-// ── Measure tab ──
+// ── Measure tab (Phase 5a enrichment) ──
 function renderMeasure(){
   const container=document.getElementById('measure-content');
   if(!container)return;
 
+  // Canonical list of all Rune core skills — single source of truth for denominator.
+  // D.totalInstalledSkills is the server-side embedding of ALL_KNOWN_SKILLS.length,
+  // but we also keep the list here for dormant-sample filtering.
+  const allKnownSkills=D.allCoreSkillNames||['cook','plan','scout','brainstorm','design','skill-forge','debug','fix','test','review',
+    'db','sentinel','preflight','onboard','deploy','marketing','perf','autopsy','safeguard','surgeon',
+    'audit','incident','review-intake','logic-guardian','ba','docs','mcp-builder','adversary','retro',
+    'graft','improve-architecture','research','docs-seeker','trend-scout','problem-solver',
+    'sequential-thinking','verification','hallucination-guard','completion-gate','constraint-check',
+    'sast','integrity-check','context-engine','context-pack','journal','session-bridge',
+    'neural-memory','worktree','watchdog','scope-guard','browser-pilot','asset-creator',
+    'video-creator','slides','dependency-doctor','git','doc-processor','sentinel-env',
+    'team','launch','rescue','scaffold','skill-router'];
+  const totalInstalled=allKnownSkills.length; // single source of truth — never magic 64
+
   const freq=D.skillFrequency||[];
   const models=D.modelDistribution||[];
   const ov=D.overview||{};
+  const heatmapData=D.skillHeatmap||{heatmap:[],dates:[],maxCount:1};
+  const timeline=D.sessionTimeline||[];
 
-  const cols=document.createElement('div');
-  cols.className='cols';
+  // ── Row 1: Top Skills (left) + Model Mix (right) ──
+  const row1=document.createElement('div');
+  row1.className='cols';
 
-  // Left: top skills
+  // Left: top skills frequency bar
   const skillPanel=document.createElement('div');
   skillPanel.className='panel';
   skillPanel.innerHTML='<h3>Top Skills <span class="pill">frequency</span></h3>';
 
   if(freq.length===0){
-    skillPanel.innerHTML+='<div class="empty"><h4>No skill data</h4><p>Run Rune skills to start collecting frequency metrics.</p></div>';
+    skillPanel.innerHTML+='<div class="empty" style="padding:24px 10px"><h4>No skill data yet</h4><p>Run Rune skills to start collecting frequency metrics.</p></div>';
   } else {
     const maxCount=freq[0].count||1;
     const barList=document.createElement('div');
     barList.style.marginTop='8px';
+    barList.setAttribute('role','list');
+    barList.setAttribute('aria-label','Top skills by frequency');
     for(const s of freq.slice(0,15)){
       const row=document.createElement('div');
       row.className='skill-bar-row';
+      row.setAttribute('role','listitem');
       const pct=Math.max(4,Math.round((s.count/maxCount)*100));
-      row.innerHTML=
-        '<div class="skill-bar-name" title="'+esc(s.skill)+'">'+esc(s.skill)+'</div>'+
-        '<div class="skill-bar-track"><div class="skill-bar-fill" style="width:'+pct+'%"></div></div>'+
-        '<div class="skill-bar-count">'+safeInt(s.count)+'</div>';
+      const nameEl=document.createElement('div');
+      nameEl.className='skill-bar-name';
+      nameEl.title=s.skill;
+      nameEl.textContent=s.skill;
+      const track=document.createElement('div');
+      track.className='skill-bar-track';
+      track.setAttribute('role','progressbar');
+      track.setAttribute('aria-valuenow',String(s.count));
+      track.setAttribute('aria-valuemax',String(maxCount));
+      track.setAttribute('aria-label',s.skill+': '+s.count+' sessions');
+      const fill=document.createElement('div');
+      fill.className='skill-bar-fill';
+      fill.style.width=pct+'%';
+      track.appendChild(fill);
+      const countEl=document.createElement('div');
+      countEl.className='skill-bar-count';
+      countEl.textContent=String(safeInt(s.count));
+      row.appendChild(nameEl);row.appendChild(track);row.appendChild(countEl);
       barList.appendChild(row);
     }
     skillPanel.appendChild(barList);
   }
 
-  // Right: models + overview stats
+  // Right: model mix table + session overview
   const rightPanel=document.createElement('div');
   rightPanel.className='panel';
   rightPanel.innerHTML='<h3>Model Mix <span class="pill">usage</span></h3>';
 
-  if(models.length===0 && !ov.total_sessions){
-    rightPanel.innerHTML+='<div class="empty"><h4>No analytics data</h4><p>Start sessions to populate model usage and overview stats.</p></div>';
+  if(models.length===0&&!ov.total_sessions){
+    rightPanel.innerHTML+='<div class="empty" style="padding:24px 10px"><h4>No analytics data yet</h4><p>Start sessions to populate model usage stats.</p></div>';
   } else {
     if(models.length>0){
       const tbl=document.createElement('table');
       tbl.setAttribute('aria-label','Model distribution');
       tbl.innerHTML='<thead><tr><th>Model</th><th style="text-align:right">Skill calls</th></tr></thead>';
       const tbody=document.createElement('tbody');
+      const total=models.reduce((s,m)=>s+(m.skill_count||0),0)||1;
       for(const m of models){
         const tr=document.createElement('tr');
-        tr.innerHTML='<td class="mono">'+esc(m.model)+'</td><td class="mono" style="text-align:right">'+safeInt(m.skill_count)+'</td>';
+        const pct=total>0?Math.round((m.skill_count||0)/total*100):0;
+        const modelCell=document.createElement('td');
+        modelCell.className='mono';
+        modelCell.textContent=m.model;
+        const countCell=document.createElement('td');
+        countCell.className='mono';
+        countCell.style.textAlign='right';
+        countCell.textContent=String(safeInt(m.skill_count))+' ('+pct+'%)';
+        tr.appendChild(modelCell);tr.appendChild(countCell);
         tbody.appendChild(tr);
       }
       tbl.appendChild(tbody);
@@ -1499,27 +1755,457 @@ function renderMeasure(){
     }
     if(ov.total_sessions){
       const stats=document.createElement('div');
-      stats.style.cssText='margin-top:16px;display:flex;flex-direction:column;gap:8px;';
+      stats.style.cssText='margin-top:14px;display:flex;flex-direction:column;gap:8px;';
       const items=[
         ['Sessions',ov.total_sessions],
-        ['Avg duration',ov.avg_duration_min!=null?ov.avg_duration_min+'min':'—'],
+        ['Avg duration',ov.avg_duration_min!=null?ov.avg_duration_min+' min':'—'],
         ['Total tool calls',ov.total_tool_calls||0],
         ['Skill invocations',ov.total_skill_invocations||0],
         ['Active days',ov.active_days||0],
       ];
       for(const [label,val] of items){
         const row=document.createElement('div');
-        row.style.cssText='display:flex;justify-content:space-between;font-size:13px;';
-        row.innerHTML='<span style="color:var(--text-tertiary)">'+esc(label)+'</span><span style="font-family:var(--font-mono);color:var(--text-primary)">'+esc(String(val))+'</span>';
+        row.style.cssText='display:flex;justify-content:space-between;font-size:12px;';
+        const lblEl=document.createElement('span');
+        lblEl.style.color='var(--text-tertiary)';
+        lblEl.textContent=label;
+        const valEl=document.createElement('span');
+        valEl.style.cssText='font-family:var(--font-mono);color:var(--text-primary);';
+        valEl.textContent=String(val);
+        row.appendChild(lblEl);row.appendChild(valEl);
         stats.appendChild(row);
       }
       rightPanel.appendChild(stats);
     }
   }
 
-  cols.appendChild(skillPanel);
-  cols.appendChild(rightPanel);
-  container.appendChild(cols);
+  row1.appendChild(skillPanel);
+  row1.appendChild(rightPanel);
+  container.appendChild(row1);
+
+  // ── Row 2: Skill-ROI (used vs dormant) ──
+  const roiSection=document.createElement('div');
+  roiSection.className='section panel';
+  roiSection.setAttribute('aria-label','Skill ROI — used versus dormant');
+  const roiTitle=document.createElement('h3');
+  roiTitle.innerHTML='Skill ROI <span class="pill">coverage</span>';
+  roiSection.appendChild(roiTitle);
+
+  const activeSkills=freq.length; // distinct skills invoked in window
+  const dormantCount=Math.max(0,totalInstalled-activeSkills);
+
+  if(freq.length===0){
+    const empty=document.createElement('div');
+    empty.className='empty';
+    empty.style.padding='24px 10px';
+    empty.innerHTML='<h4>No session data yet</h4><p>Run Rune skills to see which are active vs dormant in your window.</p>';
+    roiSection.appendChild(empty);
+  } else {
+    const roiMeta=document.createElement('div');
+    roiMeta.style.cssText='margin-bottom:12px;font-size:12px;color:var(--text-secondary);';
+    const activeEl=document.createElement('span');
+    activeEl.innerHTML='<b style="font-family:var(--font-mono);color:var(--pass)">'+activeSkills+'</b> of <b style="font-family:var(--font-mono)">'+totalInstalled+'</b> Rune core skills active this period &bull; ';
+    const dormEl=document.createElement('span');
+    dormEl.innerHTML='<b style="font-family:var(--font-mono);color:var(--text-tertiary)">'+dormantCount+'</b> dormant in the last '+safeInt(D.window_days||30)+' days';
+    roiMeta.appendChild(activeEl);
+    roiMeta.appendChild(dormEl);
+    roiSection.appendChild(roiMeta);
+
+    // Progress bar for ROI coverage
+    const coveragePct=totalInstalled>0?Math.round(activeSkills/totalInstalled*100):0;
+    const barWrap=document.createElement('div');
+    barWrap.style.cssText='height:6px;background:var(--bg-elevated);border-radius:3px;margin-bottom:14px;overflow:hidden;';
+    barWrap.setAttribute('role','progressbar');
+    barWrap.setAttribute('aria-valuenow',String(coveragePct));
+    barWrap.setAttribute('aria-valuemin','0');
+    barWrap.setAttribute('aria-valuemax','100');
+    barWrap.setAttribute('aria-label',coveragePct+'% of Rune core skills active this period');
+    const barFill=document.createElement('div');
+    barFill.style.cssText='height:100%;width:'+coveragePct+'%;border-radius:3px;background:var(--accent);';
+    barWrap.appendChild(barFill);
+    roiSection.appendChild(barWrap);
+
+    const roiGrid=document.createElement('div');
+    roiGrid.className='roi-grid';
+
+    // Top used
+    const topCard=document.createElement('div');
+    topCard.className='roi-card';
+    const topTitle=document.createElement('div');
+    topTitle.className='roi-card-title';
+    topTitle.textContent='Top active skills';
+    topCard.appendChild(topTitle);
+    const topChips=document.createElement('div');
+    for(const s of freq.slice(0,8)){
+      const chip=document.createElement('span');
+      chip.className='roi-chip active';
+      chip.setAttribute('aria-label',s.skill+': used '+s.count+' sessions');
+      chip.textContent=s.skill;
+      topChips.appendChild(chip);
+    }
+    topCard.appendChild(topChips);
+
+    // Dormant (Rune core skills not invoked in this window)
+    const activeSet=new Set(freq.map(s=>s.skill));
+    const dormantSamples=allKnownSkills.filter(s=>!activeSet.has(s)).slice(0,8);
+
+    const dormCard=document.createElement('div');
+    dormCard.className='roi-card';
+    const dormTitle=document.createElement('div');
+    dormTitle.className='roi-card-title';
+    dormTitle.textContent=dormantCount>0?'Dormant skills (sample)':'No dormant skills';
+    dormCard.appendChild(dormTitle);
+    if(dormantSamples.length>0){
+      const dormChips=document.createElement('div');
+      for(const s of dormantSamples){
+        const chip=document.createElement('span');
+        chip.className='roi-chip dormant';
+        chip.setAttribute('aria-label',s+': not used in window');
+        chip.textContent=s;
+        dormChips.appendChild(chip);
+      }
+      if(dormantCount>dormantSamples.length){
+        const more=document.createElement('span');
+        more.className='roi-chip dormant';
+        more.style.fontStyle='italic';
+        more.textContent='+'+(dormantCount-dormantSamples.length)+' more';
+        dormChips.appendChild(more);
+      }
+      dormCard.appendChild(dormChips);
+    } else {
+      const msg=document.createElement('p');
+      msg.style.cssText='font-size:11px;color:var(--text-tertiary);margin-top:4px;';
+      msg.textContent='All tracked skills used in this window.';
+      dormCard.appendChild(msg);
+    }
+
+    roiGrid.appendChild(topCard);
+    roiGrid.appendChild(dormCard);
+    roiSection.appendChild(roiGrid);
+  }
+  container.appendChild(roiSection);
+
+  // ── Row 3: Activity heatmap (per-day per-skill) ──
+  const hmSection=document.createElement('div');
+  hmSection.className='section panel';
+  hmSection.setAttribute('aria-label','Activity heatmap — skill use by date');
+  const hmTitle=document.createElement('h3');
+  hmTitle.innerHTML='Activity Heatmap <span class="pill">per-day</span>';
+  hmSection.appendChild(hmTitle);
+
+  const hm=heatmapData.heatmap||[];
+  const hmDates=heatmapData.dates||[];
+  const hmMax=heatmapData.maxCount||1;
+
+  if(hm.length===0||hmDates.length===0){
+    const empty=document.createElement('div');
+    empty.className='empty';
+    empty.style.padding='24px 10px';
+    empty.innerHTML='<h4>No heatmap data yet</h4><p>Activity data by date will appear here once sessions are recorded. Not captured — no per-day metrics available.</p>';
+    hmSection.appendChild(empty);
+  } else {
+    const hmMeta=document.createElement('p');
+    hmMeta.style.cssText='font-size:11px;color:var(--text-tertiary);margin-bottom:8px;';
+    hmMeta.textContent='Per-day skill invocations — top '+hm.length+' skills, '+hmDates.length+' day'+(hmDates.length!==1?'s':'');
+    hmSection.appendChild(hmMeta);
+
+    const hmWrap=document.createElement('div');
+    hmWrap.className='heatmap-wrap';
+
+    const tbl=document.createElement('table');
+    tbl.className='heatmap-table';
+    tbl.setAttribute('aria-label','Skill activity heatmap by date');
+
+    // Header row — dates (show last 14 max to fit)
+    const showDates=hmDates.slice(-14);
+    const thead=document.createElement('thead');
+    const hdr=document.createElement('tr');
+    const cornerTh=document.createElement('th');
+    cornerTh.textContent='Skill';
+    hdr.appendChild(cornerTh);
+    for(const d of showDates){
+      const th=document.createElement('th');
+      th.style.textAlign='center';
+      // Show MM-DD
+      th.textContent=d.slice(5);
+      hdr.appendChild(th);
+    }
+    thead.appendChild(hdr);
+    tbl.appendChild(thead);
+
+    const tbody=document.createElement('tbody');
+    for(const row of hm){
+      const tr=document.createElement('tr');
+      const nameTd=document.createElement('td');
+      nameTd.className='hm-skill-label';
+      nameTd.title=row.skill;
+      nameTd.textContent=row.skill;
+      tr.appendChild(nameTd);
+      // Only show dates in showDates window
+      const dateMap=new Map(row.days.map(d=>[d.date,d.count]));
+      for(const date of showDates){
+        const count=dateMap.get(date)||0;
+        const td=document.createElement('td');
+        td.style.padding='2px';
+        const cell=document.createElement('div');
+        cell.className='hm-cell';
+        // Opacity 0.08 (empty) → 0.9 (max)
+        const alpha=count===0?0.08:0.15+0.75*(count/hmMax);
+        cell.style.background='rgba(45,212,191,'+alpha.toFixed(2)+')';
+        cell.setAttribute('aria-label',row.skill+' on '+date+': '+count+(count===1?' session':' sessions'));
+        cell.title=date+': '+count;
+        td.appendChild(cell);
+        tr.appendChild(td);
+      }
+      tbody.appendChild(tr);
+    }
+    tbl.appendChild(tbody);
+    hmWrap.appendChild(tbl);
+    hmSection.appendChild(hmWrap);
+  }
+  container.appendChild(hmSection);
+
+  // ── Row 4: Session timeline ──
+  const tlSection=document.createElement('div');
+  tlSection.className='section panel';
+  tlSection.setAttribute('aria-label','Recent session timeline');
+  const tlTitle=document.createElement('h3');
+  tlTitle.innerHTML='Session Timeline <span class="pill">recent</span>';
+  tlSection.appendChild(tlTitle);
+
+  if(timeline.length===0){
+    const empty=document.createElement('div');
+    empty.className='empty';
+    empty.style.padding='24px 10px';
+    empty.innerHTML='<h4>No session timeline yet</h4><p>Recent sessions with their skill sequences will appear here. Not captured — run sessions to populate.</p>';
+    tlSection.appendChild(empty);
+  } else {
+    const tlList=document.createElement('div');
+    tlList.className='timeline-list';
+    tlList.setAttribute('role','list');
+    tlList.setAttribute('aria-label','Recent sessions');
+    for(const session of timeline){
+      const item=document.createElement('div');
+      item.className='timeline-item'+(session.primary_skill&&session.primary_skill!=='unknown'?' primary':'');
+      item.setAttribute('role','listitem');
+      item.setAttribute('aria-label','Session on '+session.date+': '+session.skills_used.length+' skills');
+
+      const dateEl=document.createElement('div');
+      dateEl.className='timeline-date';
+      dateEl.textContent=session.date;
+
+      const skillsEl=document.createElement('div');
+      skillsEl.className='timeline-skills';
+      for(const sk of (session.skills_used||[]).slice(0,8)){
+        const chip=document.createElement('span');
+        chip.className='timeline-skill-chip'+(sk===session.primary_skill?' primary-skill':'');
+        chip.textContent=sk;
+        skillsEl.appendChild(chip);
+      }
+      if((session.skills_used||[]).length>8){
+        const more=document.createElement('span');
+        more.className='timeline-skill-chip';
+        more.style.fontStyle='italic';
+        more.textContent='+'+(session.skills_used.length-8)+' more';
+        skillsEl.appendChild(more);
+      }
+
+      const metaEl=document.createElement('div');
+      metaEl.className='timeline-meta';
+      if(session.duration_min>0){
+        const durEl=document.createElement('div');
+        durEl.textContent=session.duration_min+'min';
+        metaEl.appendChild(durEl);
+      }
+      if(session.tool_calls>0){
+        const tcEl=document.createElement('div');
+        tcEl.style.marginTop='2px';
+        tcEl.textContent=session.tool_calls+' calls';
+        metaEl.appendChild(tcEl);
+      }
+
+      item.appendChild(dateEl);
+      item.appendChild(skillsEl);
+      item.appendChild(metaEl);
+      tlList.appendChild(item);
+    }
+    tlSection.appendChild(tlList);
+  }
+  container.appendChild(tlSection);
+}
+
+// ── Improve tab (Phase 5a — data-driven anti-pattern cards) ──
+function renderImprove(){
+  const container=document.getElementById('improve-content');
+  if(!container)return;
+
+  const gates=D.gates||[];
+  const freq=D.skillFrequency||[];
+  const timeline=D.sessionTimeline||[];
+  const chains=D.skillChains||[];
+  // Use the embedded count (which comes from ALL_KNOWN_SKILLS.length server-side) — never a bare 64
+  const totalInstalled=D.totalInstalledSkills||D.allCoreSkillNames?.length||63;
+  const ov=D.overview||{};
+
+  // ── Derive findings from REAL data only ──
+  // SECURITY: f.body is innerHTML — EVERY string data interpolation MUST be esc()'d; only numbers may be raw.
+  const findings=[];
+
+  // 1. Gate coverage low
+  const GATE_SKILLS=['sentinel','preflight','completion-gate','logic-guardian',
+    'constraint-check','sast','integrity-check','hallucination-guard'];
+  const activeFiredGates=gates.filter(g=>(g.fired||0)>0).map(g=>g.name);
+  const coverageCount=activeFiredGates.length;
+  if(gates.length>0&&coverageCount<4&&ov.total_sessions>=3){
+    findings.push({
+      icon:'&#9888;',
+      sev:'warn',
+      title:'Low gate coverage',
+      body:'Only '+coverageCount+' of '+GATE_SKILLS.length+' gate skills have fired in the last '+(D.window_days||30)+' days. Gate skills (sentinel, preflight, completion-gate…) catch issues before they reach production.',
+      action:'Add <b>sentinel</b> or <b>preflight</b> to your workflow as pre-commit checks.',
+    });
+  }
+
+  // 2. Blocks caught → link to Govern
+  const totalBlocks=gates.reduce((s,g)=>s+(g.blocked||0),0);
+  if(totalBlocks>0){
+    findings.push({
+      icon:'&#128721;',
+      sev:'warn',
+      title:totalBlocks+' block event'+(totalBlocks!==1?'s':'')+' caught',
+      body:'Your gates have blocked '+totalBlocks+' event'+(totalBlocks!==1?'s':'')+'. These are real policy violations your workflow caught — review them in the Govern tab.',
+      action:'Open <b>Govern → Gate Ledger</b> to see which gate fired and what it stopped.',
+    });
+  }
+
+  // 3. Context bloat — sessions with very high tool_calls
+  const BLOAT_THRESHOLD=120;
+  const bloatSessions=timeline.filter(s=>s.tool_calls>BLOAT_THRESHOLD);
+  if(bloatSessions.length>0){
+    const avg=Math.round(bloatSessions.reduce((s,x)=>s+x.tool_calls,0)/bloatSessions.length);
+    findings.push({
+      icon:'&#128165;',
+      sev:'warn',
+      title:'Context bloat detected in '+bloatSessions.length+' session'+(bloatSessions.length!==1?'s':''),
+      body:bloatSessions.length+' session'+(bloatSessions.length!==1?'s have':' has')+' over '+BLOAT_THRESHOLD+' tool calls (avg '+avg+' in those sessions). Long sessions risk context window exhaustion and model drift.',
+      action:'Use <b>context-engine</b> to checkpoint and compact at logical phase boundaries.',
+    });
+  }
+
+  // 4. Dormant skills (from skill-ROI)
+  const activeSet=new Set(freq.map(s=>s.skill));
+  const dormantCount=Math.max(0,totalInstalled-activeSet.size);
+  if(freq.length>0&&dormantCount>10){
+    findings.push({
+      icon:'&#128712;',
+      sev:'info',
+      title:dormantCount+' Rune core skills unused in this window',
+      body:'Only '+activeSet.size+' of '+totalInstalled+' Rune core skills were invoked in the last '+(D.window_days||30)+' days. Many skills may solve problems you are currently solving manually.',
+      action:'Browse dormant skills (Measure tab) — they may reduce redundant work.',
+    });
+  }
+
+  // 5. Skill-discovery — repeated chain patterns (only if real data)
+  const repeatChains=chains.filter(c=>c.count>=3);
+  if(repeatChains.length>0){
+    const top=repeatChains[0];
+    findings.push({
+      icon:'&#128304;',
+      sev:'info',
+      title:'Repeated workflow pattern detected',
+      body:'The chain <span style="font-family:var(--font-mono);font-size:11px;color:var(--accent)">'+esc(top.chain)+'</span> appeared '+top.count+' time'+(top.count!==1?'s':'')+'. Repeated skill sequences are candidates for a custom skill.',
+      action:'Run <b>skill-forge</b> to codify this pattern into a reusable skill.',
+    });
+  }
+
+  // 6. No gate skills defined at all (not even zero-fired)
+  if(gates.length===0&&ov.total_sessions>0){
+    findings.push({
+      icon:'&#9651;',
+      sev:'info',
+      title:'No gate activity recorded',
+      body:'Sessions are being recorded but no gate skills (sentinel, preflight, etc.) have fired yet. Gate coverage is zero — quality checks are not integrated into the workflow.',
+      action:'Install Rune hooks: <b>rune hooks install --preset gentle</b>.',
+    });
+  }
+
+  // ── Render ──
+  const header=document.createElement('div');
+  header.className='improve-header';
+  const h3=document.createElement('h3');
+  h3.textContent='Improvement Insights';
+  const count=document.createElement('span');
+  count.className='improve-count';
+  count.textContent=findings.length>0?findings.length+' finding'+(findings.length!==1?'s':''):'';
+  header.appendChild(h3);
+  header.appendChild(count);
+  container.appendChild(header);
+
+  const subhead=document.createElement('p');
+  subhead.className='improve-subhead';
+  subhead.textContent='Derived from your real session and governance data. Only findings with evidence are shown — no generic advice.';
+  container.appendChild(subhead);
+
+  if(findings.length===0){
+    const emptyDiv=document.createElement('div');
+    emptyDiv.className='empty';
+    emptyDiv.innerHTML=
+      '<h4>Not enough session data yet</h4>'+
+      '<p>Improvement recommendations are derived from real gate events, session patterns, and skill chains. Run more sessions with Rune skills to surface data-driven insights here.</p>';
+    container.appendChild(emptyDiv);
+    return;
+  }
+
+  const grid=document.createElement('div');
+  grid.className='improve-grid';
+  grid.setAttribute('role','list');
+  grid.setAttribute('aria-label','Improvement findings');
+
+  for(const f of findings){
+    const card=document.createElement('div');
+    card.className='improve-card sev-'+f.sev;
+    card.setAttribute('role','listitem');
+
+    const hdr=document.createElement('div');
+    hdr.className='improve-card-header';
+
+    const iconEl=document.createElement('span');
+    iconEl.className='improve-card-icon';
+    iconEl.setAttribute('aria-hidden','true');
+    iconEl.innerHTML=f.icon;
+
+    const titleEl=document.createElement('span');
+    titleEl.className='improve-card-title';
+    titleEl.textContent=f.title;
+
+    const sevBadge=document.createElement('span');
+    sevBadge.className='improve-sev-badge '+f.sev;
+    sevBadge.setAttribute('aria-label','Severity: '+f.sev);
+    sevBadge.textContent=f.sev;
+
+    hdr.appendChild(iconEl);
+    hdr.appendChild(titleEl);
+    hdr.appendChild(sevBadge);
+    card.appendChild(hdr);
+
+    const body=document.createElement('div');
+    body.className='improve-card-body';
+    // f.body may contain safe inline HTML (font-family span for chain display) — the chain text is escaped via esc()
+    body.innerHTML=f.body;
+    card.appendChild(body);
+
+    if(f.action){
+      const action=document.createElement('div');
+      action.className='improve-card-action';
+      // f.action uses <b> tags only, no interpolated user data
+      action.innerHTML='<span>&#9654;</span><span>'+f.action+'</span>';
+      card.appendChild(action);
+    }
+
+    grid.appendChild(card);
+  }
+
+  container.appendChild(grid);
 }
 
 // ── Understand tab: module graph (Phase 4) ──
@@ -2039,7 +2725,7 @@ function renderUnderstandGraph(){
   graphArea.className='u-graph-wrap';
   const canvas=document.createElement('canvas');
   canvas.id='understand-canvas';
-  canvas.setAttribute('role','img');
+  canvas.setAttribute('role','group');
   canvas.setAttribute('aria-label','Module dependency graph');
   graphArea.appendChild(canvas);
   main.appendChild(graphArea);
@@ -2212,6 +2898,7 @@ function renderUnderstandGraph(){
   let graphEdges=[];
   let hovered=null;
   let highlighted=null; // node id to highlight (tour / inspector)
+  let kbFocusIdx=-1; // hoisted here so drawGraph can reference it without a TDZ typeof guard
   const ctx=canvas.getContext('2d');
   const reducedMotion=matchMedia('(prefers-reduced-motion:reduce)').matches;
 
@@ -2318,6 +3005,26 @@ function renderUnderstandGraph(){
         ctx.fillText(n.name.slice(0,16),n.x,n.y+rad+11);
       }
     }
+
+    // ── Keyboard focus ring (drawn last, always on top) ──
+    if(kbFocusIdx>=0&&kbFocusIdx<graphNodes.length){
+      const fn=graphNodes[kbFocusIdx];
+      if(fn&&fn.x!=null&&fn.y!=null){
+        const fnRad=(fn.radius||6);
+        ctx.beginPath();
+        ctx.arc(fn.x,fn.y,fnRad+10,0,Math.PI*2);
+        ctx.strokeStyle='rgba(45,212,191,.95)';
+        ctx.lineWidth=2.5;
+        ctx.setLineDash([4,3]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.font='bold 10px system-ui,sans-serif';
+        ctx.fillStyle='#f1f5f9';
+        ctx.textAlign='center';
+        ctx.fillText(fn.name.slice(0,20),fn.x,fn.y+fnRad+24);
+      }
+    }
+
     ctx.restore();
     if(!reducedMotion)animFrameId=requestAnimationFrame(drawGraph);
   }
@@ -2395,14 +3102,80 @@ function renderUnderstandGraph(){
     showInspector(n,graphEdges);
   });
 
+  // ── Canvas keyboard accessibility (Phase 5a) ──
   canvas.setAttribute('tabindex','0');
+  canvas.setAttribute('aria-label','Module dependency graph — use Arrow keys or Tab/Shift+Tab to navigate nodes, Enter or Space to inspect, Escape to close');
+
+  // kbFocusIdx is hoisted above drawGraph so it's in scope without a TDZ typeof guard.
+  function kbFocusNode(idx){
+    kbFocusIdx=idx;
+    highlighted=idx>=0&&idx<graphNodes.length?graphNodes[idx].id:null;
+    if(reducedMotion)requestAnimationFrame(drawGraph);
+  }
+
   canvas.addEventListener('keydown',(e)=>{
-    if(e.key==='Escape'){
+    const total=graphNodes.length;
+    if(total===0)return;
+
+    if(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key==='Tab'&&!e.shiftKey){
+      e.preventDefault();
+      kbFocusIdx=(kbFocusIdx+1)%total;
+      kbFocusNode(kbFocusIdx);
+      // Announce to sr-only live region
+      const node=graphNodes[kbFocusIdx];
+      if(node&&srLiveEl){srLiveEl.textContent=node.name+', '+node.type+', '+(kbFocusIdx+1)+' of '+total;}
+    } else if(e.key==='ArrowLeft'||e.key==='ArrowUp'||e.key==='Tab'&&e.shiftKey){
+      e.preventDefault();
+      kbFocusIdx=(kbFocusIdx-1+total)%total;
+      kbFocusNode(kbFocusIdx);
+      const node=graphNodes[kbFocusIdx];
+      if(node&&srLiveEl){srLiveEl.textContent=node.name+', '+node.type+', '+(kbFocusIdx+1)+' of '+total;}
+    } else if(e.key==='Enter'||e.key===' '){
+      e.preventDefault();
+      if(kbFocusIdx>=0&&kbFocusIdx<total){
+        const n=graphNodes[kbFocusIdx];
+        selectedNode=n.id;
+        highlightNode(n.id);
+        showInspector(n,graphEdges);
+      }
+    } else if(e.key==='Escape'){
+      if(kbFocusIdx>=0){kbFocusIdx=-1;kbFocusNode(-1);}
       selectedNode=null;
       inspectorPanel.classList.remove('visible');
       highlightNode(null);
+      e.stopPropagation(); // prevent double-fire with document-level Esc handler (~line 2637)
     }
   });
+
+  canvas.addEventListener('blur',()=>{
+    // Clear kb focus ring when canvas loses focus
+    kbFocusIdx=-1;
+    if(highlighted&&!selectedNode)highlightNode(null);
+  });
+
+  // ── Sr-only live region (ARIA announcements) ──
+  const srLiveEl=document.createElement('div');
+  srLiveEl.setAttribute('aria-live','polite');
+  srLiveEl.setAttribute('aria-atomic','true');
+  srLiveEl.className='sr-only';
+  main.appendChild(srLiveEl);
+
+  // ── Sr-only static node list (screen reader full graph access) ──
+  const srListWrap=document.createElement('div');
+  srListWrap.className='sr-only';
+  srListWrap.setAttribute('aria-label','Graph node list');
+  const srHeading=document.createElement('h4');
+  srHeading.textContent='Graph nodes ('+allNodes.length+' total)';
+  srListWrap.appendChild(srHeading);
+  const srUl=document.createElement('ul');
+  for(const n of allNodes){
+    const li=document.createElement('li');
+    // textContent only — no innerHTML here, safe for any node name
+    li.textContent=n.name+' — '+n.type+(n.layer?' ('+n.layer+')':'');
+    srUl.appendChild(li);
+  }
+  srListWrap.appendChild(srUl);
+  main.appendChild(srListWrap);
 
   // ── SVG export ──
   function exportAsSvg(){
@@ -2457,6 +3230,7 @@ function renderUnderstandGraph(){
 // ── Initial renders ──
 renderGovern();
 renderMeasure();
+renderImprove();
 </script>
 </body>
 </html>`;

@@ -573,6 +573,10 @@ async function cmdDashboard(projectRoot, args) {
       count: s.count ?? s.sessions_count ?? 0,
     })),
     modelDistribution: analyticsData.modelDistribution || [],
+    // Phase 5a additions — Measure tab enrichment
+    skillHeatmap: analyticsData.skillHeatmap || { heatmap: [], dates: [], maxCount: 1 },
+    sessionTimeline: analyticsData.sessionTimeline || [],
+    skillChains: analyticsData.skillChains || [],
     // Mesh (for Understand tab fallback when no comprehension.json)
     skillMesh: meshData,
     // Profile (persona + pinnedConcerns) — seeds initial UI state
