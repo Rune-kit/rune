@@ -12,13 +12,11 @@
 // Data source: stdin JSON from Claude Code (not env vars)
 
 const fs = require('fs');
-const path = require('path');
-const os = require('os');
+const { stateFile } = require('../lib/context-key.cjs');
 
-// Counter file scoped to current working directory (hash of cwd)
-const cwd = process.cwd();
-const hash = Buffer.from(cwd).toString('base64url').slice(0, 16);
-const counterFile = path.join(os.tmpdir(), `rune-context-watch-${hash}.json`);
+// The counter file is keyed by Claude Code session_id (parsed from stdin in the
+// handler below) so it resets per session and never bleeds across sessions or
+// projects. See lib/context-key.cjs.
 
 // Thresholds — counts ALL tool calls (matcher ".*"), not just Edit/Write, so the
 // totals reflect true context pressure AND feed accurate tool_distribution metrics.
@@ -34,13 +32,18 @@ process.stdin.setEncoding('utf-8');
 process.stdin.on('data', chunk => { stdinData += chunk; });
 process.stdin.on('end', () => {
   let toolName = 'unknown';
+  let sessionId;
   try {
     const parsed = JSON.parse(stdinData);
     toolName = parsed.tool || parsed.tool_name || 'unknown';
+    sessionId = parsed.session_id;
   } catch {
     // Fallback to env var for backwards compatibility
     toolName = process.env.CLAUDE_TOOL_NAME || 'unknown';
   }
+
+  // Session-keyed counter (resets per session, no cross-session/project bleed).
+  const counterFile = stateFile('rune-context-watch', sessionId);
 
   // Read current state
   let state = { count: 0, lastWarning: 0, sessionStart: null, sessionId: null, toolCounts: {} };

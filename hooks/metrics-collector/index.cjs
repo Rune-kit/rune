@@ -9,11 +9,11 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const { resolveStateKey, stateFile } = require('../lib/context-key.cjs');
 
-const cwd = process.cwd();
-const hash = Buffer.from(cwd).toString('base64url').slice(0, 16);
-const metricsFile = path.join(os.tmpdir(), `rune-metrics-${hash}.jsonl`);
-const watchFile = path.join(os.tmpdir(), `rune-context-watch-${hash}.json`);
+// metricsFile + watchFile are keyed by the Claude Code session_id (parsed from
+// stdin in the handler) so they reset per session and match the session-keyed
+// context-watch counter. See lib/context-key.cjs.
 
 // Read stdin JSON to get tool input (Claude Code passes hook data via stdin)
 let stdinData = '';
@@ -21,9 +21,11 @@ process.stdin.setEncoding('utf-8');
 process.stdin.on('data', chunk => { stdinData += chunk; });
 process.stdin.on('end', () => {
   let skillName = 'unknown';
+  let claudeSessionId; // raw Claude Code session_id — used to key temp files
 
   try {
     const hookData = JSON.parse(stdinData);
+    claudeSessionId = hookData.session_id;
     // PostToolUse stdin covers TWO invocation paths:
     //   Skill tool: { tool: "Skill", tool_input: { skill: "rune:cook", ... } }
     //   Task tool:  { tool: "Task",  tool_input: { subagent_type: "rune:cook", ... } }
@@ -66,6 +68,10 @@ process.stdin.on('end', () => {
   if (skillName && skillName !== 'unknown') {
     const now = Date.now();
     const ts = new Date(now).toISOString();
+
+    // Session-keyed temp files (match the session-keyed context-watch counter).
+    const metricsFile = path.join(os.tmpdir(), `rune-metrics-${resolveStateKey(claudeSessionId)}.jsonl`);
+    const watchFile = stateFile('rune-context-watch', claudeSessionId);
 
     // Read session ID from context-watch state (shared tmpdir file)
     let sessionId = null;

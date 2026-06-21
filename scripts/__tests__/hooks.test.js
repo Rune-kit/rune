@@ -7,6 +7,7 @@
 import assert from 'node:assert';
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
+import { createRequire } from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
 import { describe, test } from 'node:test';
@@ -14,6 +15,8 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const HOOKS_DIR = path.resolve(__dirname, '../../hooks');
+const require = createRequire(import.meta.url);
+const { resolveStateKey } = require('../../hooks/lib/context-key.cjs');
 
 /**
  * Run a hook with given stdin input and environment
@@ -136,8 +139,14 @@ describe('metrics-collector: skill attribution', () => {
   // then read back what it recorded. Returns the recorded skill names (in order).
   function runMetrics(stdinInput) {
     const tmpCwd = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'rune-mc-')));
-    const hash = Buffer.from(tmpCwd).toString('base64url').slice(0, 16);
-    const metricsFile = path.join(os.tmpdir(), `rune-metrics-${hash}.jsonl`);
+    // Metrics files are session-keyed; inputs without a session_id fall back to
+    // a cwd-derived key (same derivation the hook uses).
+    let sessionId;
+    try {
+      sessionId = JSON.parse(stdinInput).session_id;
+    } catch {}
+    const key = resolveStateKey(sessionId, tmpCwd);
+    const metricsFile = path.join(os.tmpdir(), `rune-metrics-${key}.jsonl`);
     try {
       fs.rmSync(metricsFile, { force: true });
       execFileSync('node', [path.join(HOOKS_DIR, 'metrics-collector', 'index.cjs')], {
@@ -199,6 +208,30 @@ describe('metrics-collector: skill attribution', () => {
   test('graceful on empty input (records nothing)', () => {
     const skills = runMetrics('');
     assert.deepStrictEqual(skills, []);
+  });
+
+  test('records under the session-keyed file, not a cwd-keyed one (no cross-session bleed)', () => {
+    const tmpCwd = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'rune-mc-')));
+    const sid = 'sess-iso-123';
+    const sessionFile = path.join(os.tmpdir(), `rune-metrics-${resolveStateKey(sid)}.jsonl`);
+    const cwdFile = path.join(os.tmpdir(), `rune-metrics-${resolveStateKey(undefined, tmpCwd)}.jsonl`);
+    try {
+      fs.rmSync(sessionFile, { force: true });
+      fs.rmSync(cwdFile, { force: true });
+      execFileSync('node', [path.join(HOOKS_DIR, 'metrics-collector', 'index.cjs')], {
+        input: JSON.stringify({ tool: 'Skill', tool_input: { skill: 'rune:review' }, session_id: sid }),
+        cwd: tmpCwd,
+        encoding: 'utf-8',
+        stdio: ['pipe', 'pipe', 'pipe'],
+        timeout: 5000,
+      });
+      assert.ok(fs.existsSync(sessionFile), 'event should land in the session-keyed file');
+      assert.ok(!fs.existsSync(cwdFile), 'must NOT fall back to a cwd-keyed file when session_id is present');
+    } finally {
+      fs.rmSync(sessionFile, { force: true });
+      fs.rmSync(cwdFile, { force: true });
+      fs.rmSync(tmpCwd, { recursive: true, force: true });
+    }
   });
 });
 

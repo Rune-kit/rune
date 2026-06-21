@@ -3,6 +3,14 @@
 All notable changes to Rune are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Fixed — Context hooks key temp files by session_id (no more false "100% compact")
+
+- **Root cause.** The context pressure hooks keyed their temp files by `base64url(process.cwd())`. The statusline (Pro `rune-pulse`) and the PreToolUse / UserPromptSubmit hooks could run with different working directories, so the hooks never found the statusline's real-percentage pulse file. They fell back to a tool-call counter that **never reset across sessions/projects**, and the 1M-window scaling was defeated (the unreadable pulse couldn't supply `size`) — pinning the estimate at "100% URGENT, run /compact" while the real context was a fraction of that.
+- **Fix.** New `hooks/lib/context-key.cjs` keys all context state files by the Claude Code `session_id` (passed on stdin to the statusline AND every hook, identical within a session, unique per session). `context-watch` + `metrics-collector` now derive their files from `session_id`; counters reset automatically per session, so `session-start` no longer needs to pre-reset them. Falls back to a cwd hash only when `session_id` is absent. (Pro `rune-pulse` / `context-sense` / `context-inject` get the same fix in the Pro repo.)
+- **Tests.** `scripts/__tests__/hooks.test.js` — metrics attribution now exercises the session-keyed path + a no-cross-session-bleed guard. 1,559 pass.
+
 ## [2.19.0] - 2026-06-20
 
 "Comprehension" — the flagship human-visible artifact. `rune dashboard` renders a self-contained HTML "Codebase Briefing + Governance Scorecard": a single file a buyer can open in a meeting with no server, no CDN, no telemetry, nothing leaving the machine. The headline is the governance/value **verdict** (not a code graph — the buyer's codebase graph lives in the Understand tab). Tier-aware: Free sees the verdict + measure; Pro adds a "My Lens" cost/ROI persona; Business unlocks the full Governance Scorecard + compliance coverage. Built entirely on existing generators (onboard / autopsy / analytics / mesh) — original work, no external dependency.

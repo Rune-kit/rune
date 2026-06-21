@@ -8,16 +8,10 @@ const os = require('os');
 const cwd = process.cwd();
 const runeDir = path.join(cwd, '.rune');
 
-// Initialize fresh session state (shared between context-watch and metrics-collector)
-const hash = Buffer.from(cwd).toString('base64url').slice(0, 16);
-const counterFile = path.join(os.tmpdir(), `rune-context-watch-${hash}.json`);
-const now = new Date().toISOString();
-const sessionId = `s-${now.slice(0, 10).replace(/-/g, '')}-${now.slice(11, 19).replace(/:/g, '')}`;
-try {
-  fs.writeFileSync(counterFile, JSON.stringify({
-    count: 0, lastWarning: 0, sessionStart: now, sessionId, toolCounts: {}
-  }));
-} catch { /* non-critical */ }
+// The context-watch counter is now keyed by the Claude Code session_id (see
+// hooks/lib/context-key.cjs), so each new session starts with a fresh counter
+// automatically — no explicit reset is needed here. (Previously this block
+// reset a cwd-keyed file, which bled across sessions in the same directory.)
 
 if (fs.existsSync(runeDir)) {
   const stateFiles = [
