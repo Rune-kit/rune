@@ -3,7 +3,7 @@ name: ba
 description: "Business Analyst agent. Use when starting a new feature requiring requirements elicitation BEFORE plan or cook. Asks probing questions, identifies hidden requirements, maps stakeholders, defines scope boundaries, and produces a structured Requirements Document that plan and cook consume."
 metadata:
   author: runedev
-  version: "1.0.0"
+  version: "1.1.0"
   layer: L2
   model: opus
   group: creation
@@ -389,6 +389,7 @@ Run each, label verdict 🟢 pass / 🟡 warn / 🔴 fail:
 | # | Check | 🔴 Fail | 🟢 Pass |
 |---|-------|---------|---------|
 | 1 | Every Acceptance Criterion traces to a User Story | AC orphaned | 1:N mapping clear |
+| 1b | Every EARS `FR-n` (Step 4.5) traces up to a User Story AND down to an AC | FR has no AC (untested promise) or no story (orphan behavior) | FR → story + AC both present |
 | 2 | Every Business Rule (Q5) is enforced in an AC or Exception Flow | Rule has no enforcement path | Rule → specific AC or exception |
 | 3 | Scope IN ∩ Scope OUT = ∅ | Direct overlap in phrasing | Sets disjoint |
 | 4 | Every user-story flow has a terminal state | State loop without exit condition | Terminal state explicit |
@@ -402,6 +403,7 @@ Run each, label verdict 🟢 pass / 🟡 warn / 🔴 fail:
 ```
 Logic Consistency Report:
   1. AC → User Story:      🟢 all AC trace to US-1 or US-2
+  1b. EARS FR → story+AC:  🟢 FR-1..FR-5 each map to a story and an AC
   2. Business rule → AC:   🟡 "no duplicate emails" cited — exception flow missing
   3. Scope disjoint:       🟢
   4. Terminal states:      🟢
@@ -441,6 +443,36 @@ Based on all gathered information, produce:
 **Dependencies** (things that must exist before we can build):
 - [APIs, services, libraries, access, existing code]
 
+### Step 4.5 — Functional Requirements (EARS)
+<MUST-READ path="references/ears-format.md" trigger="when writing the functional-requirements section for a Feature/Integration/Greenfield requirement"/>
+
+Translate each in-scope item (Step 4) into atomic, testable **functional requirements** using EARS (Easy Approach to Requirements Syntax). EARS sits between user stories (WHY) and acceptance criteria (HOW we prove it) — it names exactly WHAT the system shall do, with an explicit trigger or condition.
+
+Pick the simplest EARS template that fits each behavior; give each a stable ID (`FR-1`, `FR-2`, …):
+
+| Type | Template |
+|------|----------|
+| Ubiquitous | The `<system>` shall `<response>`. |
+| Event-driven | When `<trigger>`, the `<system>` shall `<response>`. |
+| State-driven | While `<state>`, the `<system>` shall `<response>`. |
+| Optional | Where `<feature is included>`, the `<system>` shall `<response>`. |
+| Unwanted | If `<unwanted condition>`, then the `<system>` shall `<response>`. |
+| Complex | While `<state>`, when `<trigger>`, the `<system>` shall `<response>`. |
+
+```
+FR-1  The API shall return responses in JSON.
+FR-2  When a request omits a valid auth token, the API shall respond with HTTP 401.
+FR-3  If the payment provider times out, then the system shall mark the order pending and queue a retry.
+```
+
+Rules (full guidance in [references/ears-format.md](references/ears-format.md)):
+- **One `shall` per requirement** — compound "shall do A and B" splits into two `FR-n`.
+- **Named subject, testable response** — never "it shall handle gracefully". Move measurable limits into the response; pure performance targets stay in NFRs (Step 6).
+- **Don't smuggle HOW** — observable behavior only; leave implementation to `plan`.
+- Every `FR-n` traces up to a User Story and down to an Acceptance Criterion (checked in Step 3.6).
+
+**Skip EARS** for Bug Fix and Refactor types (no new behavior to specify). For plumbing/integration, a few event-driven + unwanted-behavior lines suffice — don't pad with ubiquitous filler. EARS is a format recommendation, not a gate.
+
 ### Step 5 — User Stories & Acceptance Criteria
 
 For each in-scope feature, generate:
@@ -456,6 +488,7 @@ Rules:
 - Primary user story first, then edge cases
 - Every user story has at least 2 acceptance criteria (happy path + error)
 - Acceptance criteria are TESTABLE — they become test cases in Phase 3
+- Each AC proves a specific `FR-n` from Step 4.5 — cite it (`AC-1.2 → FR-3`). Every unwanted-behavior `FR` (the `If …` lines) needs an error-path AC; that's where EARS earns its keep
 
 ### Step 6 — Non-Functional Requirements (NFRs)
 
@@ -539,6 +572,9 @@ Created: [date] | BA Session: [summary]
 
 ## User Stories
 [from Step 5]
+
+## Functional Requirements
+[from Step 4.5 — EARS-format FR-n list; skip for Bug Fix/Refactor]
 
 ## Scope
 ### In Scope
@@ -718,6 +754,10 @@ Known failure modes for this skill. Check these before declaring done.
 | All three tiers have same resources/effort | MEDIUM | Quick Win should be low-effort. If all tiers need "2 engineers, 3 months" → re-scope Quick Win to something achievable in 1 sprint |
 | Skipping Logic Consistency check because ambiguity is low | CRITICAL | Step 3.6 HARD-GATE: clarity ≠ consistency. A 90% clarity spec can still contain pairwise contradictions (scope IN/OUT overlap, rules with no enforcement, orphan ACs) |
 | Handing off to plan with unresolved 🔴 consistency fails | CRITICAL | Step 3.6 gate: 1+ 🔴 = BLOCK. 🟡 allowed only when logged as Risk in requirements.md |
+| Vague functional requirements ("system shall be fast/user-friendly") instead of EARS | MEDIUM | Step 4.5: every FR uses an EARS template with a named subject + testable response; vague targets move to NFRs (Step 6) |
+| Compound EARS requirement ("shall do A and B and C") hiding untested behavior | MEDIUM | Step 4.5: one `shall` per `FR-n` — split compounds so each behavior gets its own AC |
+| EARS `FR-n` with no acceptance criterion (untested promise) | MEDIUM | Step 3.6 check 1b: every FR traces down to an AC and up to a User Story |
+| Manufacturing EARS requirements for a bug fix or refactor | LOW | Step 4.5: skip EARS when there's no new behavior to specify — format recommendation, not ceremony |
 | Producing only requirements.md, skipping mermaid and tasks.md | HIGH | Step 7 is a triad — plan's contract expects all 3. Sequence diagram is always produced; state machine only if stateful; tasks.md always produced |
 | Mermaid diagram unrelated to actual user stories (decorative only) | MEDIUM | Sequence must trace AC-1.1 of US-1; state machine nodes must map to state-bearing ACs. Auditable by pattern-match |
 | tasks.md as flat list instead of layered | MEDIUM | Derivation rules enforce 1 US → Interface task, 1 rule → Logic + Unit test, 1 AC → Test task, 1 NFR → verification. Skipping layers loses plan's backbone structure |
@@ -741,7 +781,8 @@ Known failure modes for this skill. Check these before declaring done.
 - Ambiguity Score computed and displayed — must be ≤ 40% before proceeding (≤ 25% preferred)
 - Hidden requirements discovered and confirmed with user
 - Scope defined (in/out/assumptions/dependencies)
-- User stories with testable acceptance criteria produced
+- Functional requirements written in EARS format (FR-n) — skip for Bug Fix/Refactor
+- User stories with testable acceptance criteria produced, each AC citing the `FR-n` it proves
 - Non-functional requirements assessed (relevant ones only)
 - Logic Consistency Report produced — 0 🔴 before handoff (🟡 logged as Risks)
 - Tiered recommendations generated (Quick Win / Differentiation / Moat) — skip for Bug Fix/Refactor
