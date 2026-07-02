@@ -39,21 +39,6 @@ jobs:
       - name: Build OpenClaw format
         run: node compiler/bin/rune.js build --platform openclaw --output .
 
-      - name: Publish to ClawHub
-        continue-on-error: true
-        env:
-          CLAWHUB_TOKEN: ${{ secrets.CLAWHUB_TOKEN }}
-        run: |
-          npm install -g clawhub
-          clawhub login --token "$CLAWHUB_TOKEN" --no-browser
-          TAG="${GITHUB_REF#refs/tags/}"
-          CHANGELOG=$(git log "$(git tag --sort=-v:refname | grep '^v' | sed -n '2p')..${TAG}" --pretty=format:"• %s" --no-merges | head -10)
-          clawhub publish .openclaw/rune \
-            --slug rune-kit \
-            --name "Rune" \
-            --version "${TAG#v}" \
-            --changelog "${CHANGELOG}" || echo "⚠️ ClawHub CLI returned non-zero — usually a timeout response; verify via 'clawhub inspect rune-kit' since the server-side publish typically still succeeds"
-
       - name: Generate changelog
         id: changelog
         run: |
@@ -93,6 +78,33 @@ jobs:
               --notes "${{ steps.changelog.outputs.notes }}" \
               --latest
           fi
+
+      - name: Publish + verify ClawHub
+        env:
+          CLAWHUB_TOKEN: ${{ secrets.CLAWHUB_TOKEN }}
+        run: |
+          npm install -g clawhub
+          # Login must fail LOUD — a revoked/expired token was once swallowed by continue-on-error
+          # and left ClawHub stale at an old version for a month with a false green check.
+          clawhub login --token "$CLAWHUB_TOKEN" --no-browser
+          TAG="${GITHUB_REF#refs/tags/}"
+          VERSION="${TAG#v}"
+          CHANGELOG=$(git log "$(git tag --sort=-v:refname | grep '^v' | sed -n '2p')..${TAG}" --pretty=format:"• %s" --no-merges | head -10)
+          # ClawHub frequently answers "Timeout" while still committing server-side, so its exit
+          # code is unreliable. Tolerate it here; the inspect check below is the real gate.
+          clawhub publish .openclaw/rune \
+            --slug rune-kit \
+            --name "Rune" \
+            --version "$VERSION" \
+            --changelog "${CHANGELOG}" || echo "publish returned non-zero (often a benign timeout) — verifying via inspect"
+          sleep 5
+          LATEST=$(clawhub inspect rune-kit 2>&1 | grep -i "latest:" | grep -oE "[0-9]+\.[0-9]+\.[0-9]+" | head -1)
+          echo "ClawHub latest after publish: ${LATEST:-none} (expected ${VERSION})"
+          if [ "$LATEST" != "$VERSION" ]; then
+            echo "::error::ClawHub did NOT land ${VERSION} (latest=${LATEST:-none}) — token likely invalid/revoked. This check exists so the ✓ can never lie again."
+            exit 1
+          fi
+          echo "✅ ClawHub verified at ${VERSION}"
 
       - name: Summary
         run: |
