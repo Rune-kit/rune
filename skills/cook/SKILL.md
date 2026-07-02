@@ -282,7 +282,12 @@ After scout completes, check if the detected tech stack or task description matc
 **Step 0.5 — Cross-Project Recall**: Call `neural-memory` (Recall Mode) with 3-5 topics relevant to the current task. Always prefix queries with the project name (e.g., `"ProjectName auth pattern"` not `"auth pattern"`).
 
 1. Use `Glob` to check for `.rune/plan-*.md` files
-2. If a master plan exists matching the current task: Read it → find first `⬚ Pending` or `🔄 Active` phase → load ONLY that phase file → announce "Resuming from Phase N" → skip to Phase 4
+2. If a master plan exists matching the current task:
+   - **Step 0.55 — Spec-Backfill Gate (HARD-GATE)**: Before resuming, `Glob` `.rune/features/*/requirements.md`. If NO requirements doc exists AND the task is a **Feature / Integration / Greenfield** (same classification as the Phase 1 BA-gate — NOT a bug fix, refactor, or trivial change), the plan was produced without a spec (e.g., a `brainstorm → plan` bypass that skipped `ba`). Do NOT resume blindly:
+     1. Invoke `rune:ba` to backfill requirements (5-question elicitation, or Synthesis Mode if the plan + conversation already carry enough context) → produces `.rune/features/<name>/requirements.md`.
+     2. Re-invoke `rune:plan` to reconcile the existing plan against the new spec — if the plan contradicts a locked Decision or misses a requirement, revise the affected phase files and get user re-approval (Re-Planning protocol).
+     3. THEN resume. For Bug Fix / Refactor / trivial tasks, skip this gate — no spec is expected.
+   - Read the (reconciled) master plan → find first `⬚ Pending` or `🔄 Active` phase → load ONLY that phase file → announce "Resuming from Phase N" → skip to Phase 4
 3. If no master plan exists → proceed to Phase 1 as normal
 
 **Step 0.6 — Contract Load**: Use `Glob` to check for `.rune/contract.md`. If it exists:
@@ -802,6 +807,7 @@ Mentally track tool call fingerprints. 3 identical calls → WARN. 5 identical c
 | Gate | Requires | If Missing |
 |------|----------|------------|
 | Resume Gate | Phase 0 checks for master plan before starting | Proceed to Phase 1 |
+| Spec-Backfill Gate | Feature/greenfield resume requires `requirements.md` to exist alongside the plan | Plan without spec → invoke `rune:ba` to backfill, reconcile plan, THEN resume |
 | Scout Gate | scout output before Phase 2 | Invoke rune:scout first |
 | Plan Gate | User-approved plan before Phase 3 | Cannot proceed |
 | Adversary Gate | adversary verdict before Phase 3 for features | Skip for bugfix/hotfix/refactor |
@@ -881,6 +887,7 @@ Common multi-agent failures to explicitly avoid. These are NOT edge cases — th
 | Anti-Pattern | Why It Fails | Correct Approach |
 |---|---|---|
 | **Bypass hierarchy** — skipping scout/plan and jumping to Phase 4 code | Builds wrong thing. Most "wasted work" traces back to missing Phase 1-2 | Follow phase gates. Even "obvious" tasks benefit from 30s of scout |
+| **Resume without spec** — a `brainstorm → plan` chain produced a plan file, so Phase 0 skips to Phase 4 and `ba` never runs | Plan exists but no requirements/acceptance criteria — a plan without a spec. Ships confident code for the wrong "what" | Spec-Backfill Gate (Step 0.55): feature/greenfield resume with no `requirements.md` → run `ba`, reconcile plan, THEN resume |
 | **Shadow decisions** — making architectural choices without logging to decisions.md | Next session repeats the same debate. Team agents contradict each other | Log every non-trivial choice via `decisions.md` or `journal` |
 | **Gold-plating** — adding "nice-to-have" features not in the approved plan | Scope creep, delayed delivery, untested code paths | Build ONLY what's in the plan. Log extras as follow-up tasks |
 | **Test-after** — writing tests after implementation instead of before (TDD violation) | Tests validate implementation bugs, not requirements. Coverage looks good but misses edge cases | Phase 3 (RED) before Phase 4 (GREEN). Always |

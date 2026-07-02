@@ -5,6 +5,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed — Spec no longer dropped on `brainstorm → plan → cook`
+
+- **Root cause.** A `brainstorm → plan → cook` chain silently skipped `ba` (the spec/requirements step). `brainstorm` Step 5 handed the chosen approach straight to `plan`; `plan` reads `requirements.md` only if it already exists (it never invokes `ba`); then `cook` Phase 0's resume-gate saw the `.rune/plan-*.md` file and jumped to Phase 4 — so `ba` never ran. Result: a plan with no spec behind it (no EARS `FR-n`, no user stories, no acceptance criteria) — the "plan without spec" vibe-coding gap.
+- **Fix (two gates).** `brainstorm` Step 5 now runs a **spec-presence gate** — a standalone brainstorm that picks a new-feature approach with no `requirements.md` routes to `ba` FIRST (loop-guard: skipped when `ba`/`cook` is the caller). `cook` Phase 0 adds **Step 0.55 Spec-Backfill Gate** (HARD-GATE): a feature/greenfield resume that finds a plan but no `requirements.md` invokes `ba` to backfill, reconciles the plan, THEN resumes — the hard stop that closes every bypass path, not just brainstorm's. Registered the `brainstorm ↔ ba` reciprocal connection (mesh 203 → 204 connections).
+- **Tests.** 1,559 pass; `doctor` mesh healthy (64 skills / 204 connections / 40 signals). Doc stats swept 203 → 204 (README, landing, guides, VISION, branding, CLAUDE.md).
+
 ### Fixed — Context hooks key temp files by session_id (no more false "100% compact")
 
 - **Root cause.** The context pressure hooks keyed their temp files by `base64url(process.cwd())`. The statusline (Pro `rune-pulse`) and the PreToolUse / UserPromptSubmit hooks could run with different working directories, so the hooks never found the statusline's real-percentage pulse file. They fell back to a tool-call counter that **never reset across sessions/projects**, and the 1M-window scaling was defeated (the unreadable pulse couldn't supply `size`) — pinning the estimate at "100% URGENT, run /compact" while the real context was a fraction of that.

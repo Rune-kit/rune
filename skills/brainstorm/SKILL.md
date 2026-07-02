@@ -103,7 +103,8 @@ Direct API call ≠ Wrapper/middleware layer ≠ Reverse engineering ≠ Browser
 
 ## Calls (outbound)
 
-- `plan` (L2): when idea is selected and needs structuring into actionable steps
+- `ba` (L2): when no requirements spec exists yet AND brainstorm is a standalone entry point — hand off for requirement elicitation BEFORE plan (never when `ba` is the caller — would loop)
+- `plan` (L2): when idea is selected and needs structuring into actionable steps (spec already exists, or task is a refactor/config change with no new behavior)
 - `design` (L2): when selected approach has UI/UX implications — hand off visual decisions
 - `research` (L3): gather data for informed brainstorming (existing solutions, benchmarks)
 - `trend-scout` (L3): market context and trends for product-oriented brainstorming
@@ -124,6 +125,7 @@ Direct API call ≠ Wrapper/middleware layer ≠ Reverse engineering ≠ Browser
 ## Cross-Hub Connections
 
 - `brainstorm` ↔ `plan` — bidirectional: brainstorm generates options → plan structures the chosen one, plan needs exploration → brainstorm ideates
+- `brainstorm` → `ba` — a standalone brainstorm that picks an approach for a NEW feature with no requirements spec routes to `ba` first (WHAT before HOW). Suppressed when `ba` is the caller — that direction is `ba` → `brainstorm` and re-invoking would loop.
 
 ## Reasoning Frameworks
 
@@ -374,12 +376,33 @@ For each rejected option, state:
 
 The "Revisit if" clause is critical — it turns a rejection into a future trigger, not a permanent dismissal.
 
-### Step 5 — Return to Plan
-Pass the recommended approach back to `rune:plan` for structuring into an executable implementation plan. Include:
+### Step 5 — Hand Off (Spec Gate → BA if missing, then Plan)
+
+Before structuring the chosen approach, check whether a requirements spec exists. Choosing an approach answers **HOW** — it does NOT answer **WHAT** (requirements, acceptance criteria, scope boundaries, hidden requirements). Handing a bare approach straight to `plan` produces a plan with no spec behind it — the "plan without spec" gap that turns into vibe-coding.
+
+**Spec-presence gate:**
+
+1. `Glob` `.rune/features/*/requirements.md`.
+2. **Route to `rune:plan` directly** if ANY of:
+   - A requirements doc already exists (BA ran earlier this session, or a continuation).
+   - Brainstorm was invoked BY `ba` or `cook` (mode/caller from Step 0) — the spec step is already in the chain; re-invoking `ba` would loop.
+   - The chosen approach implies NO new user-facing behavior (pure refactor, config change, infra swap, dependency choice).
+3. **Route to `rune:ba` FIRST** (then `ba` hands to `plan`) if ALL of:
+   - No requirements doc exists, AND
+   - Brainstorm is a standalone entry point (user ran `/rune brainstorm …` directly), AND
+   - The chosen approach implies new feature behavior (a new capability, workflow, or product surface).
+
+<HARD-GATE>
+Do NOT skip `ba` on the way to `plan` for a NEW feature just because an approach was already chosen.
+Approach ≠ requirements. A plan built on a chosen approach but no acceptance criteria is a plan without a spec.
+Loop guard: if `ba` was the caller, hand back to `plan` normally — NEVER re-invoke `ba`.
+</HARD-GATE>
+
+Pass to the next skill (`ba` or `plan`):
 - The chosen option name
-- Key constraints to honor in the plan
-- Any risks identified that the plan must mitigate
-- The Not Doing list (so plan knows what's explicitly out of scope)
+- Key constraints to honor
+- Any risks identified that must be mitigated
+- The Not Doing list (so the next skill knows what's explicitly out of scope)
 
 If the user rejects the recommendation, return to Step 2 with adjusted constraints and regenerate.
 
@@ -456,6 +479,7 @@ Known failure modes for this skill. Check these before declaring done.
 | [Rescue] Skipping Collision-Zone/Inversion frameworks | HIGH | Conventional thinking already failed — MUST use at least one breakthrough framework |
 | [Rescue] All approaches are "clean/proper" — no hacky option | MEDIUM | At least 1 must be unconventional — wrappers, reverse-engineering, debug mode abuse, proxy layers |
 | Calling plan directly instead of presenting options first | CRITICAL | Steps 2-3 are mandatory — present options, get approval, THEN call plan |
+| Handing a chosen approach straight to `plan` for a new feature with no requirements spec | CRITICAL | Step 5 spec-presence gate: standalone brainstorm + no `requirements.md` + new behavior → route to `ba` FIRST. Approach (HOW) is not a spec (WHAT). Skipping `ba` here is the "plan without spec" vibe-coding gap |
 | "Creative" options that ignore stated constraints | MEDIUM | Every option must satisfy the constraints declared in Step 1 |
 | Missing "Not Doing" list — rejected options not documented | MEDIUM | Step 4.75 is MANDATORY — every rejected option needs trade-off rationale + "Revisit if" condition |
 | [Design-It-Twice] Single agent producing N options instead of N parallel subagents | HIGH | Step 2.5 — constraint pinning happens at spawn, not in a loop. Each constraint = one Task call |
@@ -470,7 +494,8 @@ Known failure modes for this skill. Check these before declaring done.
 - User has explicitly approved an approach (not implied or assumed)
 - Selected option documented with rationale
 - Constraints for plan phase listed explicitly
-- `plan` (L2) called with the approved approach and constraints
+- Step 5 spec-presence gate evaluated — routed to `ba` (new feature, no spec, standalone) or `plan` (spec exists, or ba/cook was the caller, or no new behavior)
+- Next skill (`ba` or `plan`) called with the approved approach and constraints
 
 ## Cost Profile
 
