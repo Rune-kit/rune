@@ -103,7 +103,7 @@ When the user's intent matches a skill, invoke it BEFORE writing any code or ana
 
 ## Current Wave
 
-64 core skills built (v2.19.0 — "Comprehension — `rune dashboard` human-visible Codebase Briefing + Governance Scorecard").
+64 core skills built (v2.20.0 — "Comprehension — `rune dashboard` human-visible Codebase Briefing + Governance Scorecard").
 
 Comprehension dashboard: `rune dashboard` emits a self-contained HTML artifact (Verdict hero + 5-tab IA: Verdict → Govern / Measure / Understand / Improve). Tier-aware — Free = verdict + measure, Pro = "My Lens" cost/ROI persona, Business = full Governance Scorecard + compliance coverage. Generator `compiler/comprehension.js` + client app `compiler/comprehension-client.js`. No CDN, no telemetry, XSS-hardened.
 

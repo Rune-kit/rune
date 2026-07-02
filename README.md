@@ -83,7 +83,9 @@ _Methodology: Claude Code CLI headless mode (`claude -p --output-format json`), 
 
 ---
 
-## What's New (v2.19.0 — Comprehension)
+## What's New (v2.20.0 — Spec Discipline)
+
+> **v2.20.0 (2026-07-02):** Closes the "plan without spec" gap — a `brainstorm → plan → cook` chain no longer skips `ba`. Two new gates (`brainstorm` spec-presence + `cook` Phase 0 **Spec-Backfill Gate**) force requirements before code on every bypass path, not just brainstorm's. Batch also lands `ba` v1.1.0 (EARS `FR-n` functional-requirements layer), `adversary` v0.4.0 (reasoning-mode catalog + steelman-first), and a context-hook fix (session_id keying — no more false "100% compact"). Mesh **204 connections**, 1,559 tests.
 
 > **v2.19.0 (2026-06-20):** New `rune dashboard` verb renders Rune's flagship **human-visible artifact** — a self-contained HTML "Codebase Briefing + Governance Scorecard" you can open in a meeting with no server, no CDN, no telemetry, nothing leaving the machine. The headline is the governance/value **verdict** (0-100 score with honest `—` empty-state), not a code graph — the buyer's codebase graph lives in the **Understand** tab (node/edge filters, domain view with flow steps, guided tour, node inspector, PNG/SVG/JSON export, keyboard-accessible canvas). Five-tab IA: Verdict → Govern / Measure / Understand / Improve. **Tier-aware** — Free sees verdict + measure, **Pro** adds a "My Lens" cost/ROI persona, **Business** unlocks the full Governance Scorecard (gate-outcome ledger + compliance coverage). Honest by design: empty states render `—` not fabricated numbers, and Free/Pro see an upsell that *describes* value rather than fake data. XSS-hardened + 100% self-contained. Internals: `comprehension.js` split 3584 → 1255 LOC (browser app extracted to `comprehension-client.js`, byte-identical output). Built on existing onboard / autopsy / analytics / mesh generators — original work, no external dependency. CI 1558/1558.
 

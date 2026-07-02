@@ -5,6 +5,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.20.0] - 2026-07-02
+
+"Spec Discipline" — close the plan-without-spec gap so a `brainstorm → plan → cook` chain can no longer skip `ba`; ship the `ba` EARS functional-requirements layer and `adversary` reasoning-mode catalog; key context hooks by `session_id`.
+
 ### Fixed — Spec no longer dropped on `brainstorm → plan → cook`
 
 - **Root cause.** A `brainstorm → plan → cook` chain silently skipped `ba` (the spec/requirements step). `brainstorm` Step 5 handed the chosen approach straight to `plan`; `plan` reads `requirements.md` only if it already exists (it never invokes `ba`); then `cook` Phase 0's resume-gate saw the `.rune/plan-*.md` file and jumped to Phase 4 — so `ba` never ran. Result: a plan with no spec behind it (no EARS `FR-n`, no user stories, no acceptance criteria) — the "plan without spec" vibe-coding gap.
