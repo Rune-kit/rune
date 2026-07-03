@@ -3,7 +3,7 @@ name: ba
 description: "Business Analyst agent. Use when starting a new feature requiring requirements elicitation BEFORE plan or cook. Asks probing questions, identifies hidden requirements, maps stakeholders, defines scope boundaries, and produces a structured Requirements Document that plan and cook consume."
 metadata:
   author: runedev
-  version: "1.1.0"
+  version: "1.2.0"
   layer: L2
   model: opus
   group: creation
@@ -479,7 +479,9 @@ Rules (full guidance in [references/ears-format.md](references/ears-format.md)):
 For each in-scope feature, generate:
 
 ```
-US-1: As a [persona], I want to [action] so that [benefit]
+US-1 [P1]: As a [persona], I want to [action] so that [benefit]
+  Independent Test: [specific action proving this story works end-to-end on its own —
+                     e.g., "submit the form with valid data and see the saved record listed"]
   AC-1.1: GIVEN [context] WHEN [action] THEN [result]
   AC-1.2: GIVEN [error case] WHEN [action] THEN [error handling]
   AC-1.3: GIVEN [edge case] WHEN [action] THEN [graceful behavior]
@@ -487,9 +489,28 @@ US-1: As a [persona], I want to [action] so that [benefit]
 
 Rules:
 - Primary user story first, then edge cases
+- **Every story carries a priority**: `P1` = MVP-critical (the P1 set alone must be a viable, demoable product), `P2` = important, `P3` = nice-to-have. Implementing ONLY the P1 stories must still yield a working feature
+- **Every story carries an Independent Test** — one concrete user action that proves the story end-to-end (through UI, logic, AND data if the story touches them). If no single action can prove it, the story is sliced wrong — split or merge until it can. This field is what downstream verification gates (plan's Coverage Gate, completion-gate's evidence trail) trace against
 - Every user story has at least 2 acceptance criteria (happy path + error)
 - Acceptance criteria are TESTABLE — they become test cases in Phase 3
 - Each AC proves a specific `FR-n` from Step 4.5 — cite it (`AC-1.2 → FR-3`). Every unwanted-behavior `FR` (the `If …` lines) needs an error-path AC; that's where EARS earns its keep
+- An AC whose THEN clause stops at the UI ("THEN the button shows a spinner") for a story that persists or fetches data is INCOMPLETE — the THEN must name the observable outcome ("THEN the order appears in the list / the record is persisted")
+
+### Step 5.5 — Key Entities (mandatory if feature involves data)
+
+If ANY user story creates, reads, updates, or deletes data, list the key entities — WHAT the data is, not HOW it's stored (no table names, no column types, no ORM detail):
+
+```
+## Key Entities
+- **Order**: what a customer submits — items, quantities, status (draft → submitted → fulfilled). One User has many Orders.
+- **User**: the person placing orders — identity, contact. Referenced by Order.
+```
+
+Rules:
+- One line per entity: name, what it represents, key attributes (plain language), relationships
+- State-bearing entities name their lifecycle states — these become the state machine in requirements.mermaid
+- This section SEEDS `plan`'s data-model.md — a story that touches data but has no entity here is a spec gap (plan will bounce it back)
+- Skip entirely for stateless features (pure computation, styling, config)
 
 ### Step 6 — Non-Functional Requirements (NFRs)
 
@@ -572,10 +593,13 @@ Created: [date] | BA Session: [summary]
 - Affected systems: [what]
 
 ## User Stories
-[from Step 5]
+[from Step 5 — each with [P1|P2|P3] priority and Independent Test]
 
 ## Functional Requirements
 [from Step 4.5 — EARS-format FR-n list; skip for Bug Fix/Refactor]
+
+## Key Entities
+[from Step 5.5 — mandatory if feature involves data; omit section for stateless features]
 
 ## Scope
 ### In Scope
@@ -634,40 +658,42 @@ Skip state machine if feature is stateless (simple CRUD with no lifecycle). Sequ
 
 #### Artifact 3: tasks.md
 
-Pre-broken implementation tasks by layer. Plan refines this backbone, does not create from scratch. Save to `.rune/features/<feature-name>/tasks.md`:
+Pre-broken implementation tasks **grouped by user story** (vertical slices), NOT by layer. Plan refines this backbone, does not create from scratch. Save to `.rune/features/<feature-name>/tasks.md`:
 
 ```markdown
 # Implementation Tasks: [Feature Name]
 
-## Data Layer
-- [ ] Schema — [tables/models from AC]
-- [ ] Migration up + down
-- [ ] Seed/fixtures if tests need them
+## Foundational (blocking prerequisites)
+> Shared infrastructure NO story can start without. Keep minimal.
+- [ ] Schema/migrations for Key Entities shared by 2+ stories
+- [ ] Auth/routing/middleware skeleton (only if 2+ stories need it)
 
-## Logic Layer
-- [ ] [each Q5 Business Rule → one task]
-- [ ] Validation for [each AC error case]
-- [ ] State transitions from requirements.mermaid (if present)
+## US-1 [P1]: [story title]
+> Layer order WITHIN the story: Data → Logic → Endpoint → UI → Test. UI never first.
+- [ ] Data: [entity/migration this story owns, if not Foundational]
+- [ ] Logic: [each Business Rule this story enforces → one task]
+- [ ] Endpoint: [handler/service/API this story calls — skip only if story is pure-UI]
+- [ ] UI: [component/surface — calls the Endpoint task above; a UI element and the
+      endpoint it calls are ONE story's tasks, never split across stories]
+- [ ] Test: [each AC of this story → one test; happy path + error]
+- **Checkpoint**: US-1 independently functional — run its Independent Test
 
-## Interface Layer (API / UI)
-- [ ] [each User Story → one endpoint or UI component]
-- [ ] Contract schema from AC (request/response)
-- [ ] Error handling for [each AC error]
-
-## Test Layer
-- [ ] Unit: [each business rule → one test]
-- [ ] Integration: [each AC happy path]
-- [ ] Regression: [each AC error case]
+## US-2 [P2]: [story title]
+- [ ] ... (same internal structure)
 
 ## NFR Verification
 - [ ] [each NFR from Step 6 → one measurement task]
 ```
 
 Derivation rules:
-- 1 User Story → ≥1 Interface task
-- 1 Business Rule → 1 Logic task + 1 Unit test task
-- 1 AC → ≥1 Test task (happy path + error)
+- 1 User Story → 1 `## US-n` section containing ALL its layers (data through test) — a story section with only UI/Endpoint tasks and no Logic/Data/Test is a broken slice; a UI task with no Endpoint task above it (and no pure-UI justification) is a dead button in waiting
+- 1 Business Rule → 1 Logic task + 1 test task, inside the story that enforces it
+- 1 AC → ≥1 Test task inside its story (happy path + error)
 - 1 NFR → 1 NFR Verification task
+- Foundational holds ONLY what 2+ stories share — story-specific work stays in the story
+- P1 sections first; completing all P1 sections + Foundational = viable MVP
+
+**Why story-grouped**: layer-grouped backbones ("all Data → all Logic → all Interface") invite the executor to finish the Interface layer and stop — shipping UI with no wiring. Story-grouped means every completed section is a demoable end-to-end slice.
 
 #### Handoff
 
@@ -720,6 +746,10 @@ Inside `requirements.md` the **Decision Classification** table MUST appear verba
 8. MUST NOT write code or plan implementation — BA produces WHAT, plan produces HOW
 9. MUST ask ONE question at a time by default; bundle yes/no batches only after user shows concise replies
 10. MUST NOT skip BA for non-trivial tasks — "just build it" gets redirected to Question 1
+11. MUST assign [P1|P2|P3] priority to every user story — the P1 set alone must be a viable, demoable product
+12. MUST give every user story an Independent Test — one concrete action proving it end-to-end
+13. MUST list Key Entities when any story touches data (Step 5.5) — a data-touching story with no entity is a spec gap
+14. MUST group tasks.md by user story (vertical slices), never by layer
 
 ## Returns
 
@@ -727,7 +757,7 @@ Inside `requirements.md` the **Decision Classification** table MUST appear verba
 |----------|--------|----------|
 | Requirements document | Markdown | `.rune/features/<feature-name>/requirements.md` |
 | Visual model | Mermaid (sequence + optional state machine) | `.rune/features/<feature-name>/requirements.mermaid` |
-| Implementation task backbone | Markdown checklist by layer | `.rune/features/<feature-name>/tasks.md` |
+| Implementation task backbone | Markdown checklist by user story (vertical slices — Data→Logic→Endpoint→UI→Test per US-n) | `.rune/features/<feature-name>/tasks.md` |
 | Logic Consistency Report | Markdown section | Embedded in requirements.md |
 | Ambiguity + Completeness scores | Markdown display blocks | Embedded in requirements.md |
 
@@ -761,7 +791,11 @@ Known failure modes for this skill. Check these before declaring done.
 | Manufacturing EARS requirements for a bug fix or refactor | LOW | Step 4.5: skip EARS when there's no new behavior to specify — format recommendation, not ceremony |
 | Producing only requirements.md, skipping mermaid and tasks.md | HIGH | Step 7 is a triad — plan's contract expects all 3. Sequence diagram is always produced; state machine only if stateful; tasks.md always produced |
 | Mermaid diagram unrelated to actual user stories (decorative only) | MEDIUM | Sequence must trace AC-1.1 of US-1; state machine nodes must map to state-bearing ACs. Auditable by pattern-match |
-| tasks.md as flat list instead of layered | MEDIUM | Derivation rules enforce 1 US → Interface task, 1 rule → Logic + Unit test, 1 AC → Test task, 1 NFR → verification. Skipping layers loses plan's backbone structure |
+| tasks.md grouped by layer instead of by story | HIGH | Story-grouped derivation: 1 US → 1 section with ALL its layers (Data→Logic→Interface→Test). Layer-grouped backbones invite "finish the UI layer and stop" — the dead-button root cause |
+| Story with UI tasks but no Logic/Data/Test tasks (broken slice) | HIGH | Step 7 Artifact 3 rule: a `## US-n` section containing only UI/Endpoint tasks is invalid — the UI element and the endpoint it calls belong to the SAME story |
+| Story without an Independent Test (unprovable slice) | HIGH | Step 5 rule: every story names one concrete action proving it end-to-end. Can't name one → story is sliced wrong |
+| AC whose THEN stops at the UI for a data-touching story | HIGH | Step 5 rule: THEN must name the observable outcome (record persisted / data returned), not just the widget state |
+| Data-touching story with no Key Entity listed | MEDIUM | Step 5.5: plan bounces specs where a story touches data absent from Key Entities |
 | Re-litigating a previously rejected concept without surfacing it | HIGH | Step 1.5 HARD-GATE: scan `.out-of-scope/` first; exact match (≥0.8) MUST be surfaced before elicitation begins |
 | Skipping Step 1.5 because `.out-of-scope/` directory looks empty | MEDIUM | Empty directory is silent-skip OK; directory absent entirely is silent-skip OK; never skip due to "I don't think this matches anything" — let the matcher decide |
 | User asserts behavior; agent records user's version without grep verification | HIGH | Step 2.6 HARD-GATE: every "the system does X" assertion gets grep'd; conflicts surface to user before recording |
@@ -784,6 +818,9 @@ Known failure modes for this skill. Check these before declaring done.
 - Scope defined (in/out/assumptions/dependencies)
 - Functional requirements written in EARS format (FR-n) — skip for Bug Fix/Refactor
 - User stories with testable acceptance criteria produced, each AC citing the `FR-n` it proves
+- Every story has a [P1|P2|P3] priority and an Independent Test; P1 set alone = viable MVP
+- Key Entities listed (if feature involves data) — seeds plan's data-model.md
+- tasks.md grouped by user story (vertical slices), Foundational section minimal
 - Non-functional requirements assessed (relevant ones only)
 - Logic Consistency Report produced — 0 🔴 before handoff (🟡 logged as Risks)
 - Tiered recommendations generated (Quick Win / Differentiation / Moat) — skip for Bug Fix/Refactor

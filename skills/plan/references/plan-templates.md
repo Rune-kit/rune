@@ -29,6 +29,16 @@ Save to `.rune/plan-<feature>.md`. Max 80 lines.
 - Discretion (agent): [list — agent chose X because Y]
 - Deferred: [list — explicitly excluded from this feature]
 
+## Coverage Summary
+<!-- Step 5.7 — only when BA requirements exist. P1 zero-coverage = plan not presentable.
+     Inserted AFTER phase files exist (task IDs come from them). If >15 rows, move the full
+     table to .rune/plan-<feature>-coverage.md and keep only a pointer + ❌/deferred rows here. -->
+| Key | Priority | Tasks | Covered |
+|-----|----------|-------|---------|
+| US-1 | P1 | P1-T2, P1-T3 | ✅ |
+| FR-3 | — | P2-T4 | ✅ |
+| US-3 | P2 | — | ❌ deferred to v2 (explicit) |
+
 ## Architecture
 <brief system diagram or component list — NOT implementation detail>
 
@@ -89,23 +99,32 @@ function validateInput(raw: unknown): TradeEntry[];  // throws ValidationError
 
 Each task MUST include: **File** (exact path), **Test** (test file or N/A), **Verify** (shell command), **Commit** (semantic message). Granularity: 2-5 min per task. If >10min, decompose.
 
-- [ ] Task 1 — Create calculateProfit function
-  - Req: REQ-001 (P&L calculation)
+**Task IDs**: label every task `P<phase>-T<seq>` (phase number + position within phase). Coverage Summary, Traceability Matrix, and `depends_on` reference these IDs.
+
+**Req IDs**: when BA produced `FR-n`/`US-n` IDs, use THOSE IDs in the Req field and Traceability Matrix — do NOT renumber as REQ-n. The `REQ-n` format is only for ad-hoc plans with no BA spec.
+
+When BA requirements exist, each task also carries **Story** (`US-n` it serves) — and UI tasks carry **Contract** (the `contracts/` file whose endpoint the UI invokes; see `references/boundary-artifacts.md`). A UI task with `Contract: none` MUST justify why (static UI, consumes prior slice's contract).
+
+- [ ] P2-T1 — Create calculateProfit function
+  - Req: FR-1 (P&L calculation)
+  - Story: US-1
   - File: `src/foo/bar.ts` (new)
   - Test: `tests/foo/bar.test.ts` (new)
   - Verify: `npm test -- --grep "calculateProfit"`
   - Commit: `feat(trading): add calculateProfit with fee calculation`
   - Logic: sum entries by side, apply fees (0.1% per trade), return net P&L
   - Edge: empty array → return { netPnL: 0, totalFees: 0, winRate: 0 }
-- [ ] Task 2 — Add input validation
-  - Req: REQ-002 (input validation)
+- [ ] P2-T2 — Add input validation
+  - Req: FR-2 (input validation)
+  - Story: US-1
   - File: `src/foo/baz.ts` (modify)
   - Test: `tests/foo/baz.test.ts` (new)
   - Verify: `npm test -- --grep "validateInput"`
   - Commit: `feat(trading): add input validation for trade entries`
   - Logic: check side is 'long'|'short', prices > 0, quantity > 0
-- [ ] Task 3 — Write integration tests
-  - Req: REQ-001, REQ-002 (integration coverage)
+- [ ] P2-T3 — Write integration tests
+  - Req: FR-1, FR-2 (integration coverage)
+  - Story: US-1
   - File: `tests/foo/bar.test.ts` (modify)
   - Test: N/A — this IS the test task
   - Verify: `npm test -- --grep "trading" && npx tsc --noEmit`
@@ -157,10 +176,10 @@ Each task MUST include: **File** (exact path), **Test** (test file or N/A), **Ve
 ## Traceability Matrix
 | Req ID | Requirement | Task(s) | Test(s) | Status |
 |--------|-------------|---------|---------|--------|
-| REQ-001 | P&L calculation with fees | Task 1 | `tests/foo/bar.test.ts` | ⬚ |
-| REQ-002 | Input validation | Task 2 | `tests/foo/baz.test.ts` | ⬚ |
+| FR-1 | P&L calculation with fees | P2-T1 | `tests/foo/bar.test.ts` | ⬚ |
+| FR-2 | Input validation | P2-T2 | `tests/foo/baz.test.ts` | ⬚ |
 
-Every requirement from BA's Requirements Document MUST appear in this matrix. Missing requirement = incomplete phase. `completion-gate` checks this matrix during verification.
+Every requirement from BA's Requirements Document MUST appear in this matrix, using BA's own IDs (`FR-n`/`US-n` — REQ-n only when no BA spec exists). Missing requirement = incomplete phase. `completion-gate` checks this matrix during verification.
 
 ## Files Touched
 - `src/foo/bar.ts` — new

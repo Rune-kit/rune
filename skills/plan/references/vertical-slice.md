@@ -10,6 +10,7 @@
 2. **Demoable on its own** — when the slice is merged, you can demo it (or run a single command to verify). If demoing requires "and now switch to the other PR", the slices were drawn wrong.
 3. **Narrow but complete** — one user story, one happy path, minimal error handling. Edge cases are *separate slices*, not bigger versions of the same slice.
 4. **Independently grabbable** — any developer or agent should be able to pick up Slice N without reading Slice N+1. Dependencies declared explicitly, not implicit.
+5. **Layer order WITHIN the slice: Data → Logic → Endpoint/Service → UI → Integration.** UI is structurally last. The button and the endpoint it calls are ONE slice's tasks — a slice whose UI task has no upstream endpoint task (and consumes no prior slice's contract) ships a dead button. If the slice has a contract file (`references/boundary-artifacts.md`), the contract test task precedes the implementation task.
 
 ## Slice types
 
@@ -25,13 +26,14 @@
 ```markdown
 ### Slice: [verb-led title]
 - **Type**: AFK | HITL
-- **Story**: As a [persona], I want to [action] so that [benefit]
-- **Path through layers**:
+- **Story**: US-n — As a [persona], I want to [action] so that [benefit]
+- **Path through layers** (this is also the BUILD ORDER — top to bottom):
   - Schema: [migration / type addition]
-  - API: [endpoint or function signature]
-  - UI: [component or surface]
-  - Test: [verification approach]
-- **Demoable**: [exact command or click-path that shows it works]
+  - Logic: [business rule / validation]
+  - API: [endpoint or function signature — cite `contracts/<file>.md` if one exists]
+  - UI: [component or surface — names the API line above as its call target]
+  - Test: [verification approach — must cross UI→API, not mock the whole chain]
+- **Demoable**: [exact command or click-path that shows it works — reuse the story's Independent Test]
 - **Blocked by**: [slice IDs] | None — can start immediately
 - **Out of scope** (explicit): [what this slice does NOT cover]
 ```
