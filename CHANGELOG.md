@@ -5,6 +5,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.22.1] - 2026-07-03
+
+### Fixed — tier-hook loader accepts lifecycle events
+
+- `VALID_EVENTS` in the tier manifest validator now includes **`PreCompact`** and **`SessionStart`** (both real Claude Code hook events, matcher-optional). Pro hooks v1.2.0 wires `context-reset` on both — Free was rejecting the whole Pro manifest (`entries[3]: 'event' must be one of …`), so `rune hooks install --tier pro` and `doctor --hooks` failed to load Pro's hook set. +1 test (44 tier tests).
+
 ## [2.22.0] - 2026-07-03
 
 "Convergence, Dogfooded" — the v2.21.0 gates were run against a live fixture by fresh executor agents (no author context); 16 executor-reported ambiguities became spec fixes, and the dogfood fixture became the seed of a permanent skill-behavior eval harness.

@@ -78,7 +78,18 @@ export function compareSemver(a, b) {
 }
 
 /** Valid event names a manifest entry may declare. */
-const VALID_EVENTS = new Set(['UserPromptSubmit', 'PreToolUse', 'PostToolUse', 'Stop', 'statusLine']);
+const VALID_EVENTS = new Set([
+  'UserPromptSubmit',
+  'PreToolUse',
+  'PostToolUse',
+  'Stop',
+  'statusLine',
+  'PreCompact',
+  'SessionStart',
+]);
+
+/** Lifecycle events where `matcher` is optional (PreCompact matches manual|auto, SessionStart matches startup|resume — both default to all when omitted). */
+const MATCHER_OPTIONAL_EVENTS = new Set(['statusLine', 'Stop', 'PreCompact', 'SessionStart']);
 
 /** Tier names must be simple lowercase identifiers. Blocks `../../etc` and similar traversal. */
 const TIER_NAME_RE = /^[a-z][a-z0-9-]{0,31}$/;
@@ -178,7 +189,7 @@ export function validateManifest(manifest, source = '<memory>') {
     if (raw.matcher !== undefined && typeof raw.matcher !== 'string') {
       throw new Error(`${where}: 'matcher' must be a string if present`);
     }
-    if (raw.event !== 'statusLine' && raw.event !== 'Stop' && !raw.matcher) {
+    if (!MATCHER_OPTIONAL_EVENTS.has(raw.event) && !raw.matcher) {
       throw new Error(`${where}: '${raw.event}' requires a 'matcher' string (e.g. 'Edit|Write' or '.*')`);
     }
     if (raw.globs !== undefined && !Array.isArray(raw.globs)) {

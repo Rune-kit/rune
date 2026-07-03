@@ -161,6 +161,21 @@ describe('validateManifest', () => {
     });
     assert.strictEqual(m.entries[0].matcher, null);
   });
+
+  test('accepts PreCompact and SessionStart lifecycle events without matcher', () => {
+    // Pro hooks manifest v1.2.0 wires context-reset on both — Free must load it (was rejected pre-v2.22.1)
+    const m = validateManifest({
+      tier: 'pro',
+      entries: [
+        { id: 'context-reset-precompact', event: 'PreCompact', command: 'node context-reset.cjs' },
+        { id: 'context-reset-sessionstart', event: 'SessionStart', command: 'node context-reset.cjs' },
+      ],
+    });
+    assert.strictEqual(m.entries.length, 2);
+    assert.strictEqual(m.entries[0].event, 'PreCompact');
+    assert.strictEqual(m.entries[0].matcher, null);
+    assert.strictEqual(m.entries[1].event, 'SessionStart');
+  });
 });
 
 describe('loadTierManifest + locateTierManifest', () => {
