@@ -1,0 +1,13 @@
+{
+  "skill": "preflight",
+  "description": "REGRESSION: fully wired Svelte diff — preflight's dead-interactive check must NOT false-positive on on:click/on:submit/prop-origin handlers, and the overall verdict must not be BLOCK for a dead interactive.",
+  "must": [
+    "re:verdict"
+  ],
+  "mustNot": [
+    "re:BLOCK.{0,80}dead.{0,3}interactive",
+    "re:dead.{0,3}interactive.{0,80}BLOCK"
+  ],
+  "fileUntouched": "src/FeedbackForm.svelte",
+  "notes": "WARN findings (missing loading state, no test file, no try/catch) are acceptable and expected — the assert is only that no dead-interactive BLOCK fires on correctly bound Svelte handlers. mustNot regexes couple BLOCK with the phrase in either order so 'no dead interactive elements found' prose can't false-fail."
+}

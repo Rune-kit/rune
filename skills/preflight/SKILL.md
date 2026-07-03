@@ -3,7 +3,7 @@ name: preflight
 description: "Pre-commit quality gate that catches 'almost right' code. Use when about to commit — auto-fires before commit to validate logic correctness, error handling, regressions, and completeness. Goes beyond linting."
 metadata:
   author: runedev
-  version: "1.2.0"
+  version: "1.2.1"
   layer: L2
   model: sonnet
   group: quality
@@ -209,7 +209,7 @@ If a domain hook flags BLOCK, the overall preflight verdict is BLOCK regardless 
 | `openapi.*`, `*.graphql`, `*.proto` | API Contract | Breaking changes flagged, version bumped, deprecated fields documented |
 | `docs/policies/*`, `PRIVACY*`, `TERMS*` | Legal/Compliance | No placeholder text, review date current, practice matches policy |
 | `**/billing*`, `**/payment*`, `**/invoice*` | Financial | Decimal precision correct, currency locale-aware, no hardcoded rates |
-| `*.tsx`, `*.jsx`, `*.svelte`, `*.vue`, `components/*` | UI/Frontend | Design token compliance, animation a11y, touch targets, visual hierarchy |
+| `*.tsx`, `*.jsx`, `*.svelte`, `*.vue`, `*.html` (with script/template content), `components/*` | UI/Frontend | Design token compliance, animation a11y, touch targets, visual hierarchy |
 | `skills/*/SKILL.md`, `extensions/*/PACK.md` | Rune Skill | Frontmatter valid, all required sections present, word count within layer budget |
 | `*.test.*`, `*.spec.*`, `__tests__/*` | Test Quality | No `.skip`/`.only` left in, assertions present (not empty tests), no hardcoded timeouts |
 
@@ -225,7 +225,7 @@ For each detected domain, run its checks on the relevant files in the diff:
 
 #### UI/Frontend Domain Checks
 
-When UI/Frontend hook is triggered, run these checks on all `.tsx`/`.jsx`/`.svelte`/`.vue` files in the diff.
+When UI/Frontend hook is triggered, run these checks on all `.tsx`/`.jsx`/`.svelte`/`.vue`/`.html` files in the diff (plain `.html` counts when it carries interactive markup or inline scripts — a vanilla-JS page is still a UI).
 
 **Preamble — load design contract**: If `.rune/design-system.md` exists, read it once. Apply the project's **Scale Minimums** block over the defaults below (e.g., a project declaring `body ≥18px` should flag 16px body text). If the file is absent, use defaults and emit a LOW advisory: "No `.rune/design-system.md` — run `rune design` to lock visual decisions."
 

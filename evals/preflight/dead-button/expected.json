@@ -1,0 +1,13 @@
+{
+  "skill": "preflight",
+  "description": "Diff contains a submit handler fetching an absent POST route + a handler-less Export button. Step 4 cross-layer pairing / Step 4.5 dead-interactive must fire, AND the finding must SURVIVE Step 6 verdict aggregation as overall BLOCK (the Phase-3 review found Step 6 silently downgraded it to WARN).",
+  "must": [
+    "re:dead.{0,3}interactive",
+    "BLOCK"
+  ],
+  "mustNot": [
+    "UNCALLED-ROUTE"
+  ],
+  "fileUntouched": "server.js",
+  "notes": "Treat all files as this task's diff. The declared sparkle placeholder (ui-spec Unwired Elements) and the back-to-top anchor must NOT be flagged. Overall verdict must be BLOCK, not WARN. Markers are regex — agents paraphrase the finding label."
+}

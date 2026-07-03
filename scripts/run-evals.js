@@ -19,7 +19,7 @@
 // Requires the `claude` CLI on PATH (Claude Code). Exit 1 on any failure.
 
 import { execFileSync } from 'node:child_process';
-import { cpSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
+import { cpSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -53,7 +53,7 @@ function buildPrompt(skillName, workDir, expected) {
     `1. Read ${skillPath}`,
     `2. Execute it against this project: ${workDir}`,
     ``,
-    `Constraints: do not run package-manager installs, linters, tests, or builds (no toolchain) — where the skill calls for them, SKIP with reason. File edits are allowed ONLY where the skill's own steps dictate.`,
+    `Constraints: do not run package-manager installs, linters, tests, or builds (no toolchain) — where the skill calls for them, SKIP with reason. The project has no git history — treat EVERY file in the project as this task's diff (all created/modified in this task). Where the skill invokes other rune skills, note the delegation and perform the check yourself from this skill's own text. File edits are allowed ONLY where the skill's own steps dictate.`,
     expected.appendsTo
       ? `The plan/task file the skill may append to is ${expected.appendsTo} (relative to the project).`
       : '',
@@ -93,12 +93,17 @@ function runCase(c) {
     // keep workDir on failure for post-mortem; clean on pass below
   }
 
+  // Markers: plain strings = exact substring; "re:<pattern>" = case-insensitive regex.
+  // Agents paraphrase — prefer re: for prose findings, exact for signal names / task IDs.
+  const matches = (marker) =>
+    marker.startsWith('re:') ? new RegExp(marker.slice(3), 'i').test(transcript) : transcript.includes(marker);
+
   const failures = [];
   for (const marker of expected.must ?? []) {
-    if (!transcript.includes(marker)) failures.push(`missing expected marker: "${marker}"`);
+    if (!matches(marker)) failures.push(`missing expected marker: "${marker}"`);
   }
   for (const marker of expected.mustNot ?? []) {
-    if (transcript.includes(marker)) failures.push(`forbidden marker present: "${marker}"`);
+    if (matches(marker)) failures.push(`forbidden marker present: "${marker}"`);
   }
   if (guarded && before !== null) {
     const after = existsSync(guarded) ? readFileSync(guarded, 'utf-8') : null;
@@ -113,7 +118,13 @@ function runCase(c) {
   }
 
   const pass = failures.length === 0;
-  if (pass) rmSync(workDir, { recursive: true, force: true });
+  if (pass) {
+    rmSync(workDir, { recursive: true, force: true });
+  } else {
+    // Preserve the transcript alongside the fixture — a failed marker without
+    // the transcript is un-post-mortemable (learned the hard way).
+    writeFileSync(join(workDir, '_transcript.txt'), transcript);
+  }
   return { id: c.id, pass, failures, workDir: pass ? null : workDir };
 }
 

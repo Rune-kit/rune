@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Feedback Board</title>
+</head>
+<body id="top">
+  <header>
+    <div class="placeholder" data-icon="sparkle" aria-label="Sparkle icon — design pass needed">[ ICON: sparkle ]</div>
+    <h1>Feedback Board</h1>
+  </header>
+
+  <main>
+    <form id="feedback-form">
+      <label for="note">Your feedback</label>
+      <textarea id="note" maxlength="500" required></textarea>
+      <p id="form-error" role="alert" hidden></p>
+      <button type="submit">Submit</button>
+    </form>
+
+    <button id="export">Export CSV</button>
+
+    <ul id="feedback-list" aria-live="polite"></ul>
+
+    <a href="#top">Back to top</a>
+  </main>
+
+  <script>
+    async function loadFeedback() {
+      const res = await fetch('/api/feedback');
+      const notes = await res.json();
+      const list = document.getElementById('feedback-list');
+      list.innerHTML = '';
+      for (const n of notes) {
+        const li = document.createElement('li');
+        li.textContent = n.text;
+        list.appendChild(li);
+      }
+    }
+
+    async function submitFeedback(event) {
+      event.preventDefault();
+      const note = document.getElementById('note');
+      const errorEl = document.getElementById('form-error');
+      const res = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ text: note.value }),
+      });
+      if (res.status === 422) {
+        const body = await res.json();
+        errorEl.textContent = body.error;
+        errorEl.hidden = false;
+        return;
+      }
+      errorEl.hidden = true;
+      note.value = '';
+      await loadFeedback();
+    }
+
+    document.getElementById('feedback-form').addEventListener('submit', submitFeedback);
+    loadFeedback();
+  </script>
+</body>
+</html>
