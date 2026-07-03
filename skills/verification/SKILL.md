@@ -3,7 +3,7 @@ name: verification
 description: "Universal verification runner. Runs lint, type-check, tests, and build. Use after any code change to verify nothing is broken."
 metadata:
   author: runedev
-  version: "0.6.0"
+  version: "0.7.0"
   layer: L3
   model: haiku
   group: validation
@@ -139,18 +139,20 @@ If ANY stub pattern detected → mark file as STUB, Level 2 FAIL.
 
 If file has 0 consumers → mark as UNWIRED, Level 3 FAIL.
 
-**Exception**: Entry-point files (main.ts, index.ts, App.tsx, routes config) are exempt from Level 3 — they ARE the top-level consumers.
+**Exception**: Entry-point files are exempt from Level 3 — they ARE the top-level consumers. Entry points include: main.ts/index.ts/App.tsx/routes config, server entrypoints referenced by package.json `main`/`start`/`bin`, and root pages served statically (e.g. `public/index.html` behind `express.static`).
+
+**Config/manifest files** (package.json, tsconfig, *.yml, dotfiles): Level 2 = valid, non-empty, matches its schema's basic shape; Level 3 = exempt (consumed by tooling, not imports).
 
 **Level 3.5 — INTERACTION WIRED** (UI files in this task's diff only — `.tsx/.jsx/.vue/.svelte/.html`):
 
 Level 3 proves the component is *rendered*; Level 3.5 proves its interactive elements *do something*. For each UI file created or modified in this task:
 
-1. `Grep` interactive elements in the file — framework-aware patterns: `<button`, `<form`, `type="submit"`, `action=`, plus binding syntax per framework: React `onClick=`/`onSubmit=`, Svelte `on:click=`/`on:submit=`, Vue `@click`/`@submit`/`v-on:`, plain HTML `addEventListener`
+1. `Grep` interactive elements in the file — framework-aware patterns: `<button`, `<form`, `type="submit"`, `action=`, `<a ` with an action-style href (`href="#"`, `href=""`, `javascript:`) — pure-navigation anchors (`href="#section-id"` with a matching id, route paths) are exempt — plus binding syntax per framework: React `onClick=`/`onSubmit=`, Svelte `on:click=`/`on:submit=`, Vue `@click`/`@submit`/`v-on:`, plain HTML `addEventListener`
 2. For each element, trace INWARD:
    - **Handler bound?** Interactive element with NO binding in any framework syntax above and no enclosing form handler → `UNWIRED-INTERACTIVE`. **Prop-origin handlers PASS**: `onClick={props.onSave}`, `on:click={dispatch('save')}`, or a callback-library pattern (`onSubmit={handleSubmit(onSubmit)}` — react-hook-form et al.) count as bound; wiring the prop is the parent's/caller's responsibility, checked at the parent's own 3.5 pass
    - **Handler resolves?** The bound symbol is locally defined OR imported (imported = resolves; do not demand the import's body) and its body is non-trivial (not caught by the Level 2 dead-handler patterns)
    - **Target exists?** If the handler calls `fetch`/`axios`/a service function → the route path or service symbol EXISTS somewhere in the codebase (`Grep` the path/symbol). Handler → nonexistent target = `UNWIRED-INTERACTIVE`. Pure-navigation handlers (`router.push`, `navigate(...)`, framework `<Link>`) PASS — navigation is their target
-3. **Reverse check**: every API route file created in this task has ≥1 caller (`Grep` the route path across UI/service files). Route with 0 callers → `UNCALLED-ROUTE`
+3. **Reverse check**: every API route HANDLER created in this task (per-route, not per-file — a file with 3 routes gets 3 checks) has ≥1 caller (`Grep` each route's path across UI/service files). Route with 0 callers → `UNCALLED-ROUTE`
 4. Pure-display elements (no user expectation of action: decorative buttons in mockups explicitly listed in `.rune/ui-spec.md` `## Unwired Elements`) are reported as INFO, not failures — they are design's declared debt, tracked by `converge`
 5. **De-dup**: if preflight already flagged the same element as dead-interactive in this session, cite the cross-reference ("preflight Step 4.5 already flagged") instead of emitting a duplicate finding
 
@@ -327,7 +329,7 @@ When any skill calls verification and then reports results upstream:
 3. MUST report specific failures with file:line references
 4. MUST NOT skip checks because "changes are small"
 5. MUST include stdout/stderr capture in every check result — empty output noted explicitly
-6. MUST mark Overall as INCOMPLETE if any check was skipped without valid reason (tool not installed = valid, "changes are small" = invalid)
+6. MUST mark Overall as INCOMPLETE if any check was skipped without valid reason (tool not installed = valid, "changes are small" = invalid). **Precedence**: a 3-Level or Level 3.5 FAIL dominates — Overall = FAIL even when command checks were validly skipped; INCOMPLETE applies only when nothing failed
 7. MUST run the 3-Level Artifact Verification on every file created/modified this task, AND Level 3.5 INTERACTION WIRED on every UI file (`.tsx/.jsx/.vue/.svelte/.html`) in the diff — skip 3.5 only when the diff contains no UI files (note "L3.5: n/a — no UI files")
 
 ## Sharp Edges

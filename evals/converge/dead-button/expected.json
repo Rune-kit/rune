@@ -1,0 +1,19 @@
+{
+  "skill": "converge",
+  "description": "P1 story's UI submits to a route that doesn't exist; plan claims the task done. Converge must find the gap, dedupe remediation, and not flag declared debt or navigation.",
+  "must": [
+    "convergence.gaps",
+    "contract:create-feedback",
+    "missing",
+    "partial",
+    "CRITICAL",
+    "CV-1.1"
+  ],
+  "mustNot": [
+    "convergence.clean",
+    "CV-1.2 [LOW] Create and wire sparkle",
+    "NO_SPEC"
+  ],
+  "appendsTo": ".rune/plan-feedback-board.md",
+  "notes": "Deferred-debt (sparkle icon) must NOT get a CV task. Export CSV button = unrequested, no CV task. Back-to-top anchor must not be a gap."
+}

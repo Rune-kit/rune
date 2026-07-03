@@ -5,7 +5,7 @@ context: fork
 agent: general-purpose
 metadata:
   author: runedev
-  version: "2.6.0"
+  version: "2.6.1"
   layer: L1
   model: sonnet
   group: orchestrator
@@ -531,6 +531,7 @@ Before entering ANY Phase N+1, assert: Phase N `completed` in TodoWrite | gate c
      - Re-run Phase 6 VERIFY on the remediated code, then re-invoke converge (round 2)
      - **Max 2 remediation rounds.** Gaps still present after round 2 → produce a Structured Escalation Report (the same gap surviving 2 rounds means the approach is wrong, not the effort)
 4. `unrequested` findings are surfaced to the user in the Cook Report — never silently deleted, never blocking
+5. **Stale CV tasks**: if converge reports clean but unchecked `CV-*` tasks remain from earlier rounds (e.g., rules changed between rounds), cook closes them as `[x] (resolved — superseded)` with a Cook Report note — converge's append-only contract means only cook may touch them
 
 <HARD-GATE>
 A P1 story with a CRITICAL convergence gap (missing/contradicts) MUST NOT be committed as "done."

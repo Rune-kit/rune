@@ -3,7 +3,7 @@ name: converge
 description: "Spec↔code convergence scan. Use after implementation to verify the ACTUAL codebase matches the spec/plan — detects missing backends, dead buttons, partial wiring, scope creep. Classifies gaps (missing/partial/contradicts/unrequested), appends remediation tasks, loops until converged. The direct answer to 'the UI renders but nothing works' syndrome."
 metadata:
   author: runedev
-  version: "0.1.0"
+  version: "0.2.0"
   layer: L3
   model: sonnet
   group: verification
@@ -50,6 +50,11 @@ Load intent sources (all that exist; requirements.md is mandatory — without it
 
 The inventory is a flat list of keys: `FR-3`, `US-1/AC-1.2`, `contract:create-order`, `entity:Order`, `decision:<slug>`.
 
+Rules:
+- **Task IDs (`P<phase>-T<seq>`) and quickstart.md are EVIDENCE, not verdict keys** — tasks feed the code-scope map (Step 2), quickstart steps feed pass/fail evidence for story rows. Neither gets its own verdict row
+- **US-n verdict is DERIVED**: worst verdict among its `AC-n.m` rows (all ACs implemented → story implemented; any partial/missing → story inherits it). Don't independently re-assess the story
+- **Plan Claims vs Reality**: while reading tasks, note every task marked `[x]` whose artifact is missing/partial in code — these go in a dedicated report section (informational; `completion-gate` owns claim enforcement, converge just surfaces the lie)
+
 ### Step 2 — Build the Code-Scope Map
 
 Map intent → code locations. NO full-repo read — targeted lookups only:
@@ -78,7 +83,13 @@ element → handler bound? → handler body non-trivial? → calls service/fetch
         → target route/function EXISTS in codebase? → route touches the entity the AC names?
 ```
 
-First broken link = `partial`, keyed to that element's `US-n/AC-n.m`. Elements listed in `## Unwired Elements` are automatically `missing` (designed placeholder, never wired). Heuristics: `onClick={() => {}}`, `href="#"` on action links, `console.log`-only handlers, `preventDefault()`-only submits, `fetch('/api/...')` where no route file matches — all break the chain.
+First broken link = `partial`, keyed to that element's `US-n/AC-n.m`. Heuristics: `onClick={() => {}}`, `href="#"` on action links, `console.log`-only handlers, `preventDefault()`-only submits, `fetch('/api/...')` where no route file matches — all break the chain.
+
+**Unwired Elements (declared debt)** — elements listed in `.rune/ui-spec.md` `## Unwired Elements`:
+- Owner of wiring is a task/story IN THIS feature's plan → `missing`, keyed to that story (in-scope debt)
+- Owner is external (asset-creator pass, future feature, human) → **`deferred-debt`**: report in a separate `### Deferred (declared debt)` section, do NOT append a CV task, do NOT count in gap counts, does NOT block `convergence.clean`. Declared debt with a named owner is tracked honesty, not a convergence failure
+
+**Precedence**: an element that maps to NO intent key takes the `unrequested` path — the dead-interaction trace runs only for AC-referenced elements.
 
 ### Step 4 — Assign Severity
 
@@ -104,12 +115,16 @@ Task format: `CV-<round>.<seq> [severity] <imperative> per <intent-key> (<gap-ty
 
 **Deduplication**: when multiple intent keys trace to the SAME absent/broken artifact (e.g., `contract:create-order` missing AND `US-1/AC-1.1` partial, both resolved by implementing `src/api/orders.ts`), emit ONE combined CV task citing all keys — `CV-1.1 [CRITICAL] Implement POST /api/orders per contract:create-order + US-1/AC-1.1 (missing/partial) — src/api/orders.ts`. One target file = one task; the report table still lists every key's verdict separately.
 
-If ZERO gaps: write nothing (task file stays byte-identical), emit `convergence.clean`.
+**No CV tasks for `unrequested` findings** — they are surfaced for human decision (Constraint 6), never converted to work items. **No CV tasks for `deferred-debt`** — the named owner owns it.
+
+If ZERO gaps (missing/partial/contradicts on spec keys — deferred-debt and unrequested don't count): write nothing (task file stays byte-identical), emit `convergence.clean`.
 
 ### Step 6 — Emit Verdict
 
-- Gaps found → emit `convergence.gaps` with `{feature, round, counts: {missing, partial, contradicts, unrequested}, critical: N}`
+- Gaps found → emit `convergence.gaps` with `{feature, round, counts: {missing, partial, contradicts, unrequested}, critical: N, cv_tasks: N}`
 - Clean → emit `convergence.clean` with `{feature, round, keys_checked: N}`
+
+Payload notes: `counts` are PER-KEY (one absent route can inflate several keys — that's fine for zero-checks, which is all cook needs); `cv_tasks` is the DEDUPED work-item count — consumers judging workload use `cv_tasks` + `critical`, not raw counts.
 
 The caller (cook Phase 6.5) executes appended tasks and re-invokes converge — loop until clean, max 2 remediation rounds before escalation.
 
@@ -119,15 +134,24 @@ The caller (cook Phase 6.5) executes appended tasks and re-invokes converge — 
 ## Convergence Report — <feature> (round N)
 
 Intent keys checked: 23 | implemented: 19 | gaps: 4
+(keys checked = spec keys only; unrequested and deferred-debt listed separately below)
 
 | Key | Verdict | Severity | Evidence |
 |-----|---------|----------|----------|
 | contract:create-order | missing | CRITICAL | contracts/create-order.md exists; no route matches POST /api/orders (grep: 0 hits in src/) |
 | US-1/AC-1.1 | partial | HIGH | OrderForm.tsx:42 fetch('/api/orders') → route absent |
 | US-3/AC-3.1 | implemented | — | route src/api/list.ts:12, caller OrderList.tsx:8 |
-| (none) | unrequested | LOW | src/pages/admin-stats.tsx maps to no story |
 
-Verdict: 2 gaps blocking P1 → convergence.gaps emitted, 2 tasks appended (CV-1.1, CV-1.2)
+### Unrequested (surfaced, no CV tasks)
+- src/pages/admin-stats.tsx — maps to no story
+
+### Deferred (declared debt, no CV tasks)
+- [ ICON: sparkle ] (ui-spec Unwired Elements, owner: asset-creator)
+
+### Plan Claims vs Reality
+- P1-T2 marked [x] but POST /api/orders absent — see contract:create-order gap
+
+Verdict: 2 gaps blocking P1 → convergence.gaps emitted, 1 task appended (CV-1.1, deduped)
 ```
 
 Every row needs `file:line` evidence or a grep result count — verdicts without evidence are hallucinations.
@@ -155,6 +179,9 @@ Every row needs `file:line` evidence or a grep result count — verdicts without
 | Fixing the gap itself "since it's small" | HIGH | Converge never edits source — emit the task, let fix own the change |
 | Scanning the whole repo (context blowout) | MEDIUM | Step 2 is targeted Glob/Grep from intent keys — not a repo read |
 | Treating `unrequested` as an error to delete | MEDIUM | Scope creep is surfaced for human decision — it may be wanted, undocumented work |
+| Declared debt (Unwired Elements, external owner) blocks convergence.clean forever | HIGH | deferred-debt class: reported, never a CV task, never blocks clean — a decorative icon must not cause a round-cap escalation |
+| Appending CV tasks for unrequested findings | MEDIUM | Step 5: unrequested = surfaced only; converting scope creep into work items without user decision IS scope creep |
+| Double-assessing US-n independently of its ACs | LOW | Story verdict is derived — worst of its AC rows |
 
 ## Done When
 

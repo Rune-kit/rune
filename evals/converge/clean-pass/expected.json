@@ -1,0 +1,16 @@
+{
+  "skill": "converge",
+  "description": "Everything the spec asks for is wired. Converge must report clean, write NOTHING, and list declared debt + unrequested separately without blocking.",
+  "must": [
+    "convergence.clean",
+    "implemented"
+  ],
+  "mustNot": [
+    "convergence.gaps",
+    "CV-1.",
+    "NO_SPEC",
+    "CRITICAL"
+  ],
+  "fileUntouched": ".rune/plan-feedback-board.md",
+  "notes": "Sparkle icon = deferred-debt (owner asset-creator), Export button = unrequested — neither blocks clean. Plan file must stay byte-identical."
+}

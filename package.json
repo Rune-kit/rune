@@ -1,7 +1,7 @@
 {
   "name": "@rune-kit/rune",
-  "version": "2.21.0",
-  "description": "64-skill mesh for AI coding assistants — runtime auto-discipline via native hooks (Claude/Cursor/Windsurf/Antigravity), 5-layer architecture, 215+ connections, multi-platform compiler. v2.17 adds quarantine L3 for prompt-injection advisory on untrusted external content.",
+  "version": "2.22.0",
+  "description": "65-skill mesh for AI coding assistants — runtime auto-discipline via native hooks (Claude/Cursor/Windsurf/Antigravity), 5-layer architecture, 204 connections + 43 signals, multi-platform compiler. converge (L3) scans spec vs code so dead-button/frontend-only implementations can't ship.",
   "type": "module",
   "bin": {
     "rune": "./compiler/bin/rune.js"
@@ -14,7 +14,8 @@
     "lint": "biome check .",
     "lint:fix": "biome check --fix .",
     "format": "biome format --write .",
-    "ci": "biome check . && node --test compiler/__tests__/*.test.js scripts/__tests__/*.test.js && node compiler/bin/rune.js doctor",
+    "ci": "biome check . && node --test compiler/__tests__/*.test.js scripts/__tests__/*.test.js && npm run doctor",
+    "eval": "node scripts/run-evals.js",
     "version-check": "node scripts/version-sync-check.js",
     "version-bump": "node scripts/bump-version.js",
     "prepublishOnly": "node scripts/version-sync-check.js"

@@ -5,6 +5,37 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.22.0] - 2026-07-03
+
+"Convergence, Dogfooded" — the v2.21.0 gates were run against a live fixture by fresh executor agents (no author context); 16 executor-reported ambiguities became spec fixes, and the dogfood fixture became the seed of a permanent skill-behavior eval harness.
+
+### Added — Skill behavior evals (`npm run eval`)
+
+- **`evals/` + `scripts/run-evals.js`** — behavioral eval runner: each case copies a fixture repo to a temp dir, runs a FRESH headless agent whose only instruction source is the skill's SKILL.md, and asserts transcript markers + file-mutation contracts (`fileUntouched` for append-only/no-write guarantees). Not part of `npm run ci` (each case = a full agent run); run after any edit to an evaled skill.
+- **2 seed cases** (the actual dogfood fixture, verbatim): `converge/dead-button` (P1 submit → absent route, plan claims done, declared-debt icon, unrequested button, navigation-anchor bait) and `converge/clean-pass` (fully wired — must emit clean and write nothing).
+- Dogfood round-1 results: both verification Level 3.5 and converge caught the dead button with file:line evidence, zero false positives on navigation anchors, `addEventListener` bindings recognized, dedup collapsed 7 intent keys into 1 CV task.
+
+### Fixed — converge v0.2.0 (dogfood findings)
+
+- **`deferred-debt` class**: Unwired Elements with an EXTERNAL wiring owner (asset pass, future feature) are reported but get no CV task and never block `convergence.clean` — previously a decorative placeholder could force a round-cap escalation. Owner inside this feature's plan → still `missing`.
+- **Report gains 3 sections**: `Unrequested` (surfaced, never CV tasks — explicit now), `Deferred (declared debt)`, and `Plan Claims vs Reality` (tasks marked `[x]` whose artifact is absent — the lie surfaced first-class).
+- US-n verdicts are DERIVED (worst of ACs); task IDs + quickstart are evidence, not verdict keys; `convergence.gaps` payload adds `cv_tasks` (deduped work-item count) so consumers don't misread per-key inflation.
+- cook v2.6.1: closes stale CV tasks as `(resolved — superseded)` when converge reports clean — append-only means only cook may touch them.
+
+### Fixed — verification v0.7.0 (dogfood findings)
+
+- FAIL precedence: a 3-Level/3.5 FAIL dominates — Overall=FAIL even when command checks were validly skipped.
+- Entry-point exemption covers server entrypoints (package.json `main`/`start`/`bin`) and statically-served root pages; config/manifest files get explicit L2/L3 rules.
+- Level 3.5 element list includes action-style anchors (`href="#"`, `javascript:`) with pure-navigation exemption; reverse check is per-ROUTE, not per-file.
+
+### Changed — Pro `autopilot` v1.6.0
+
+- Phase 6.5 CONVERGE explicitly NOT skipped in autonomous mode — that's exactly where dead buttons hide. Converge severity maps into autopilot's stricter thresholds (P1 partial = BLOCK); unconverged P1 gap after round cap = BLOCKED, never committed.
+
+### Ops
+
+- `npm run ci` now includes `version-sync-check.js` — full parity with the CI publish gate (a local-CI-passes/publish-fails gap caused a re-tag during the v2.21.0 release).
+
 ## [2.21.0] - 2026-07-03
 
 "Convergence" — kill the dead-button failure mode: a spec↔code gap scan (`converge`, the 65th skill) plus a traceability chain from spec IDs to contracts to coverage gates, so "UI renders but the backend never existed" can no longer pass the pipeline.
