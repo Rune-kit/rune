@@ -52,3 +52,6 @@ docs/references/voltagent-analysis.md
 docs/assets/demo-subtitles.srt
 docs/assets/end-card.html
 docs/assets/thumbnail.html
+
+# Neural Memory MCP local artifacts
+.neuralmemory/
