@@ -9,7 +9,7 @@ metadata:
   group: validation
   tools: "Read, Bash, Glob, Grep"
   listen: code.changed
-  emit: verification.complete
+  emit: verification.complete, integration.verified
 ---
 
 # verification
@@ -145,15 +145,18 @@ If file has 0 consumers → mark as UNWIRED, Level 3 FAIL.
 
 Level 3 proves the component is *rendered*; Level 3.5 proves its interactive elements *do something*. For each UI file created or modified in this task:
 
-1. `Grep` interactive elements in the file: `<button`, `onClick=`, `onSubmit=`, `<form`, `action=`, `type="submit"`
+1. `Grep` interactive elements in the file — framework-aware patterns: `<button`, `<form`, `type="submit"`, `action=`, plus binding syntax per framework: React `onClick=`/`onSubmit=`, Svelte `on:click=`/`on:submit=`, Vue `@click`/`@submit`/`v-on:`, plain HTML `addEventListener`
 2. For each element, trace INWARD:
-   - **Handler bound?** `<button>` with no `onClick`/no enclosing form handler → `UNWIRED-INTERACTIVE`
-   - **Handler resolves?** The bound symbol is defined and its body is non-trivial (not caught by the Level 2 dead-handler patterns)
-   - **Target exists?** If the handler calls `fetch`/`axios`/a service function → the route path or service symbol EXISTS somewhere in the codebase (`Grep` the path/symbol). Handler → nonexistent target = `UNWIRED-INTERACTIVE`
+   - **Handler bound?** Interactive element with NO binding in any framework syntax above and no enclosing form handler → `UNWIRED-INTERACTIVE`. **Prop-origin handlers PASS**: `onClick={props.onSave}`, `on:click={dispatch('save')}`, or a callback-library pattern (`onSubmit={handleSubmit(onSubmit)}` — react-hook-form et al.) count as bound; wiring the prop is the parent's/caller's responsibility, checked at the parent's own 3.5 pass
+   - **Handler resolves?** The bound symbol is locally defined OR imported (imported = resolves; do not demand the import's body) and its body is non-trivial (not caught by the Level 2 dead-handler patterns)
+   - **Target exists?** If the handler calls `fetch`/`axios`/a service function → the route path or service symbol EXISTS somewhere in the codebase (`Grep` the path/symbol). Handler → nonexistent target = `UNWIRED-INTERACTIVE`. Pure-navigation handlers (`router.push`, `navigate(...)`, framework `<Link>`) PASS — navigation is their target
 3. **Reverse check**: every API route file created in this task has ≥1 caller (`Grep` the route path across UI/service files). Route with 0 callers → `UNCALLED-ROUTE`
 4. Pure-display elements (no user expectation of action: decorative buttons in mockups explicitly listed in `.rune/ui-spec.md` `## Unwired Elements`) are reported as INFO, not failures — they are design's declared debt, tracked by `converge`
+5. **De-dup**: if preflight already flagged the same element as dead-interactive in this session, cite the cross-reference ("preflight Step 4.5 already flagged") instead of emitting a duplicate finding
 
 **Scope guard**: Level 3.5 runs ONLY on files in this task's diff. Pre-existing files with dead interactive elements → WARN (legacy debt, don't punish), never FAIL.
+
+**Signal**: when the diff touches both UI and api/service/data files AND every Level 3.5 check passes, emit `integration.verified` with `{files_checked, interactions_traced}`. Downstream `deploy` uses this as its cross-layer wiring evidence.
 
 <HARD-GATE name="3-level-verification">
 ALL new files must pass Level 1 + Level 2 + Level 3.
@@ -325,6 +328,7 @@ When any skill calls verification and then reports results upstream:
 4. MUST NOT skip checks because "changes are small"
 5. MUST include stdout/stderr capture in every check result — empty output noted explicitly
 6. MUST mark Overall as INCOMPLETE if any check was skipped without valid reason (tool not installed = valid, "changes are small" = invalid)
+7. MUST run the 3-Level Artifact Verification on every file created/modified this task, AND Level 3.5 INTERACTION WIRED on every UI file (`.tsx/.jsx/.vue/.svelte/.html`) in the diff — skip 3.5 only when the diff contains no UI files (note "L3.5: n/a — no UI files")
 
 ## Sharp Edges
 
@@ -352,6 +356,8 @@ Known failure modes for this skill. Check these before declaring done.
 - lint, type-check, tests, and build all executed (or SKIP with reason if tool missing)
 - Each check shows actual command output
 - Failures include specific file:line references (not just counts)
+- 3-Level check run on all created/modified files; Level 3.5 INTERACTION WIRED run on all UI files in the diff (or "n/a — no UI files" noted)
+- `integration.verified` emitted when the diff spans UI+data and all 3.5 checks pass
 - Verification Report emitted with Overall PASS/FAIL verdict
 
 ## Cost Profile

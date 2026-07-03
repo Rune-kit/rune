@@ -193,9 +193,10 @@ Clone, port, or convert features from any GitHub repo into your project. Underst
 | **trend-scout** | Market intelligence — Product Hunt, GitHub Trending, HN, Reddit |
 | **problem-solver** | Structured reasoning frameworks (5 Whys, Fishbone, First Principles, SCAMPER) with bias detection |
 | **sequential-thinking** | Multi-variable analysis for >3 interdependent factors with cascading effects |
-| **verification** | Universal verification — lint, type-check, tests, build. 3-level quality gate |
+| **verification** | Universal verification — lint, type-check, tests, build. 3-level quality gate + Level 3.5 interaction wiring |
 | **hallucination-guard** | Post-generation validation — phantom imports, typosquatting |
 | **completion-gate** | Lie detector — validates every completion claim has evidence |
+| **converge** | Spec↔code gap scan — missing/partial/contradicts/unrequested gaps, append-only remediation, dead-button detector |
 | **constraint-check** | Audits whether HARD-GATEs and constraints were followed |
 | **sast** | Static analysis runner — ESLint, Semgrep, Bandit, Clippy, govulncheck |
 | **integrity-check** | Detects prompt injection, memory poisoning in `.rune/` files |

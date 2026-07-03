@@ -4,13 +4,13 @@ description: "Deploy application to target platform. Use when user explicitly sa
 disable-model-invocation: true
 metadata:
   author: runedev
-  version: "0.7.0"
+  version: "0.8.0"
   layer: L2
   model: sonnet
   group: delivery
   tools: "Read, Write, Edit, Bash, Glob, Grep"
   emit: deploy.complete
-  listen: security.passed, tests.passed, docs.updated, audit.complete, db.migrated
+  listen: security.passed, tests.passed, docs.updated, audit.complete, db.migrated, integration.verified, convergence.clean
 ---
 
 # deploy
@@ -57,6 +57,8 @@ Call `rune:verification` to run the full test suite and build.
 ```
 If verification fails → STOP. Do NOT proceed. Report failure with test output.
 ```
+
+**Wiring evidence check (advisory)**: when deploying a FEATURE (not a hotfix — hotfix chain exempt) whose changes touch both UI and api/service/data files, look for cross-layer evidence: `integration.verified` (verification Level 3.5 passed) or `convergence.clean` (converge found zero gaps). Neither present → WARN the user explicitly — "Deploying UI+data changes with no cross-layer wiring evidence. Unit tests alone don't prove the buttons work. Proceed?" — and require confirmation. Advisory, not a block: the user can proceed, but never unknowingly.
 
 Call `rune:sentinel` to run security scan.
 

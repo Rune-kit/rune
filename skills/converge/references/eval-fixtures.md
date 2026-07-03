@@ -49,3 +49,11 @@
 **Spec**: no `.rune/features/*/requirements.md` exists.
 
 **Expected**: converge reports `NO_SPEC` and stops. No inventory invented from the code, no tasks appended. **FAIL IF**: converge scans the code and fabricates intent keys from what it finds.
+
+## Fixture 7 — Remediation survives round 1 (escalation path)
+
+**Spec**: same as Fixture 1. **Round 1**: converge found `contract:create-order` missing, appended `CV-1.1`. Cook executed CV-1.1 but implemented a stub: `src/api/orders.ts` exists, handler returns `res.status(501)`.
+
+**Code state at round 2**: route file exists, body is a 501 stub; OrderForm unchanged.
+
+**Expected**: round 2 verdict for `contract:create-order` → `partial` (file exists but Level-2-style stub — a 501 is not an implementation), still CRITICAL (P1). `CV-2.1` appended. After round 2 the caller's cap is exhausted → cook produces a Structured Escalation Report with the surviving gap named. **FAIL IF**: classified `implemented` because the route file now exists, or converge silently allows a round 3.

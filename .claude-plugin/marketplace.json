@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "rune-kit",
-  "description": "Less skills. Deeper connections. A lean, interconnected skill ecosystem for Claude Code — 64 skills, 5-layer mesh, runtime auto-discipline.",
+  "description": "Less skills. Deeper connections. A lean, interconnected skill ecosystem for Claude Code — 65 skills, 5-layer mesh, runtime auto-discipline.",
   "owner": {
     "name": "Rune Contributors"
   },
@@ -9,8 +9,8 @@
     {
       "name": "rune",
       "source": "./",
-      "description": "64 skills wired into a self-aware 5-layer mesh — 203 sync connections + 40 async signals, adaptive routing, mesh analytics, logic preservation. Runs as native hooks (preflight/sentinel/completion-gate/quarantine auto-fire before tool use) or invoked library. Multi-platform: Claude Code, Cursor, Windsurf, Antigravity. Use rune:cook for any code task, rune:team for parallel work, rune:launch for deploy, rune:rescue for legacy code.",
-      "version": "2.20.0",
+      "description": "65 skills wired into a self-aware 5-layer mesh — 204 sync connections + 43 async signals, adaptive routing, mesh analytics, logic preservation. Runs as native hooks (preflight/sentinel/completion-gate/quarantine auto-fire before tool use) or invoked library. Multi-platform: Claude Code, Cursor, Windsurf, Antigravity. Use rune:cook for any code task, rune:team for parallel work, rune:launch for deploy, rune:rescue for legacy code.",
+      "version": "2.21.0",
       "author": {
         "name": "Rune Contributors"
       },

@@ -1,6 +1,6 @@
 ---
 name: converge
-description: "Spec↔code convergence scan. Use after implementation to verify the ACTUAL codebase matches the spec/plan — detects missing backends, dead buttons, partial wiring, scope creep. Classifies gaps (missing/partial/contradicts/unrequested), appends remediation tasks, loops until converged. The direct answer to 'the UI renders but nothing works.'"
+description: "Spec↔code convergence scan. Use after implementation to verify the ACTUAL codebase matches the spec/plan — detects missing backends, dead buttons, partial wiring, scope creep. Classifies gaps (missing/partial/contradicts/unrequested), appends remediation tasks, loops until converged. The direct answer to 'the UI renders but nothing works' syndrome."
 metadata:
   author: runedev
   version: "0.1.0"
@@ -9,7 +9,7 @@ metadata:
   group: verification
   tools: "Read, Glob, Grep"
   emit: convergence.gaps, convergence.clean
-  listen: phase.complete
+  listen: verification.complete
 ---
 
 # converge
@@ -101,6 +101,8 @@ If gaps exist, append to the ACTIVE phase file (or master plan task section if n
 ```
 
 Task format: `CV-<round>.<seq> [severity] <imperative> per <intent-key> (<gap-type>) — <file path>`. Every task cites its intent key — a remediation task with no key is itself a converge violation.
+
+**Deduplication**: when multiple intent keys trace to the SAME absent/broken artifact (e.g., `contract:create-order` missing AND `US-1/AC-1.1` partial, both resolved by implementing `src/api/orders.ts`), emit ONE combined CV task citing all keys — `CV-1.1 [CRITICAL] Implement POST /api/orders per contract:create-order + US-1/AC-1.1 (missing/partial) — src/api/orders.ts`. One target file = one task; the report table still lists every key's verdict separately.
 
 If ZERO gaps: write nothing (task file stays byte-identical), emit `convergence.clean`.
 

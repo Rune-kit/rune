@@ -193,7 +193,7 @@ If the design calls for an icon, illustration, or graphic that the agent cannot 
 | [ ICON: dashboard ] | Sidebar.tsx | asset pass pending | asset-creator |
 ```
 
-This list is how downstream gates tell **declared debt** from **accidental dead UI**: `preflight`/`verification` skip these elements (design's honest debt), while `converge` counts them as `missing` until wired. A placeholder NOT on this list that reaches implementation = a dead element with no owner — that's the bug this section exists to prevent.
+This list is how downstream gates tell **declared debt** from **accidental dead UI**: `preflight` skips these elements, `verification` reports them as INFO (visible, non-failing), and `converge` counts them as `missing` until wired. A placeholder NOT on this list that reaches implementation = a dead element with no owner — that's the bug this section exists to prevent.
 
 #### Rule 3 — Color Derivation via oklch(), not Manual Shading
 
@@ -667,6 +667,7 @@ Trading/Fintech — Data-Dense Dark — Web
 11. MUST write measurable rules into design-system.md — never vague directives like "modern typography" or "tasteful spacing" (Step 2.9 Rule 4)
 12. MUST NOT use pure `#000` / `#fff` for default text or background, MUST NOT ship lorem ipsum (Step 2.9 Rule 5)
 13. MUST list CJK-capable font FIRST in stack if product targets Chinese/Japanese/Korean (Step 2.9 Rule 6)
+14. MUST list every intentionally inert/placeholder element in `.rune/ui-spec.md` under `## Unwired Elements` (element, location, why unwired, wiring owner) — Placeholder Ownership (Step 2.9 Rule 2)
 
 ## Mesh Gates (L1/L2 only)
 
@@ -682,6 +683,7 @@ Trading/Fintech — Data-Dense Dark — Web
 | oklch-Derivation Gate | All accent variants derived via `oklch(from ...)` | Rewrite manual hex shades as relative oklch |
 | Measurable-Constraints Gate | Every rule in design-system.md is testable (concrete units, hex/oklch, ratios) | Rewrite vague directives as measurable specs (Step 2.9 Rule 4 table) |
 | No-Pure-No-Lorem Gate | No `#000`/`#fff` in semantic tokens; no lorem ipsum in output | Swap to oklch neutrals; replace lorem with real data or labelled placeholder |
+| Placeholder-Ownership Gate | Every inert/placeholder element shipped is listed in `.rune/ui-spec.md` `## Unwired Elements` (element, location, why, wiring owner) | Add the missing rows before reporting done — an unlisted placeholder is a dead element with no owner |
 
 ## Returns
 

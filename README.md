@@ -5,7 +5,7 @@
 <p align="center">
   <strong>Less skills. Deeper connections.</strong><br>
   A lean, interconnected skill ecosystem for AI coding assistants.<br>
-  64 skills · 204 connections · 40 signals · 13 platforms · MIT
+  65 skills · 204 connections · 43 signals · 13 platforms · MIT
 </p>
 
 <p align="center">
@@ -23,7 +23,7 @@
 
 Most skill ecosystems are either **too many isolated skills** (540+ that don't talk to each other) or **rigid pipelines** (A → B → C, if B fails everything stops).
 
-Rune is a **mesh** — 64 skills with 204 connections + 40 signals across a 5-layer architecture. Skills call each other bidirectionally, forming resilient workflows that adapt when things go wrong.
+Rune is a **mesh** — 65 skills with 204 connections + 43 signals across a 5-layer architecture. Skills call each other bidirectionally, forming resilient workflows that adapt when things go wrong.
 
 ```
 Pipeline:  A → B → C → D         (B fails = stuck)
@@ -83,7 +83,11 @@ _Methodology: Claude Code CLI headless mode (`claude -p --output-format json`), 
 
 ---
 
-## What's New (v2.20.0 — Spec Discipline)
+## What's New (v2.21.0 — Convergence)
+
+> **v2.21.0 (2026-07-03):** Kills the most expensive silent failure in AI-built apps: **the dead button** — UI renders, click does nothing, backend never existed. New `converge` skill (65th) re-reads your spec/plan/contracts as the sole source of intent and scans the ACTUAL code for `missing` / `partial` / `contradicts` / `unrequested` gaps, appending remediation tasks until spec and code converge (`cook` Phase 6.5, max 2 rounds then honest escalation). The whole chain got teeth: `ba` v1.2.0 emits story-sliced specs (P1/P2/P3 priorities, per-story **Independent Test**, **Key Entities**), `plan` v1.7.0 emits **contracts-first boundary artifacts** (`data-model.md` + `contracts/` + `quickstart.md`) with a P1 zero-coverage HARD-GATE and a Data→Logic→Endpoint→UI ordering law (UI is structurally last), `verification` v0.6.0 adds **Level 3.5 INTERACTION WIRED** (traces button → handler → route across React/Svelte/Vue syntax), `completion-gate` v1.9.0 makes the E2E flow trace mandatory for UI+data diffs (single-phase included), and `deploy` v0.8.0 warns before shipping UI+data changes with no wiring evidence. 3 new mesh signals (`convergence.gaps`, `convergence.clean`, `integration.verified`). Every gate is diff-scoped — legacy debt warns, new work fails.
+
+### Previous (v2.20.0 — Spec Discipline)
 
 > **v2.20.0 (2026-07-02):** Closes the "plan without spec" gap — a `brainstorm → plan → cook` chain no longer skips `ba`. Two new gates (`brainstorm` spec-presence + `cook` Phase 0 **Spec-Backfill Gate**) force requirements before code on every bypass path, not just brainstorm's. Batch also lands `ba` v1.1.0 (EARS `FR-n` functional-requirements layer), `adversary` v0.4.0 (reasoning-mode catalog + steelman-first), and a context-hook fix (session_id keying — no more false "100% compact"). Mesh **204 connections**, 1,559 tests.
 
@@ -215,7 +219,7 @@ cook ───emit:phase.complete────→ session-bridge
 
 ## What Rune Is (and Isn't)
 
-Rune started as a **Claude Code plugin** and now compiles to **every major AI IDE**. Same 64 skills, same mesh connections, same workflows — zero knowledge loss across platforms.
+Rune started as a **Claude Code plugin** and now compiles to **every major AI IDE**. Same 65 skills, same mesh connections, same workflows — zero knowledge loss across platforms.
 
 | | Rune Provides | Claude Code Provides |
 |---|---|---|
@@ -307,14 +311,14 @@ npx @rune-kit/rune init --platform windsurf
 npx @rune-kit/rune init --platform antigravity
 ```
 
-This compiles all 64 skills into your IDE's rules format. Same knowledge, same workflows.
+This compiles all 65 skills into your IDE's rules format. Same knowledge, same workflows.
 
 ### Platform Comparison
 
 | Feature | Claude Code | Cursor / Windsurf / Others |
 |---------|-------------|---------------------------|
 | Skills available | 64/64 | 64/64 |
-| Mesh connections | 203 sync + 40 signals (programmatic) | 203 sync + 40 signals (rule references) |
+| Mesh connections | 204 sync + 43 signals (programmatic) | 204 sync + 43 signals (rule references) |
 | Workflows & HARD-GATEs | Full | Full |
 | Extension packs | 14 | 14 |
 | Subagent parallelism | Native | Sequential fallback |
@@ -667,7 +671,7 @@ See [docs/MULTI-PLATFORM.md](docs/MULTI-PLATFORM.md) for the full architecture.
 | Doc | What's inside |
 |-----|---------------|
 | [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md) | Your first 5 minutes with Rune — install to first `/rune cook` |
-| [`docs/SKILLS.md`](docs/SKILLS.md) | All 64 skills, searchable by intent and layer |
+| [`docs/SKILLS.md`](docs/SKILLS.md) | All 65 skills, searchable by intent and layer |
 | [`docs/SIGNALS.md`](docs/SIGNALS.md) | Canonical signal inventory — 25 events, emit/listen graph |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | 5-layer mesh architecture reference |
 | [`docs/VISION.md`](docs/VISION.md) | Philosophy — what Rune is and isn't |
@@ -683,7 +687,7 @@ See [docs/MULTI-PLATFORM.md](docs/MULTI-PLATFORM.md) for the full architecture.
 Core Skills:       64 (L0: 1 │ L1: 5 │ L2: 30 │ L3: 28)
 Extension Packs:   14 free + 9 pro + 4 business
 Mesh Connections:  203 sync calls (rune doctor)
-Mesh Signals:      40 signals · 50 emit/listen edges (rune doctor)
+Mesh Signals:      43 signals · 55 emit/listen edges (rune doctor)
 Connections/Skill: 3.2 avg
 Platforms:         8 (Claude Code, Cursor, Windsurf, Antigravity, Codex, OpenCode, OpenClaw, Generic)
 Compiler:          ~1400 LOC (parser + 8 transforms + 8 adapters + CLI)

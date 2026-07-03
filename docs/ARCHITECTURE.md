@@ -7,7 +7,7 @@
 | **L0** | **Router** | **1** | **L1-L3 (routing)** | **Every message** | **Stateless (rule-based)** |
 | L1 | Orchestrators | 5 | L2, L3 | L0, User | Stateful (workflow) |
 | L2 | Workflow Hubs | 30 | L2 (cross-hub), L3 | L1, L2 | Stateful (task) |
-| L3 | Utilities | 27 | Nothing (pure)* | L1, L2 | Stateless |
+| L3 | Utilities | 28 | Nothing (pure)* | L1, L2 | Stateless |
 | L4 | Extension Packs | 14 free + 9 pro + 4 business | L3 | L2 (domain match) | Config-based |
 
 ### L0 — The Enforcement Layer
@@ -173,7 +173,7 @@ Adapters with `generateExtraFiles()` emit additional context files alongside per
 |-------|--------|
 | KNOWLEDGE | research, docs-seeker, trend-scout |
 | REASONING | problem-solver, sequential-thinking |
-| VALIDATION | verification, hallucination-guard, integrity-check, completion-gate, constraint-check, sast |
+| VALIDATION | verification, hallucination-guard, integrity-check, completion-gate, constraint-check, sast, converge |
 | STATE | context-engine, context-pack, journal, session-bridge, neural-memory |
 | MONITORING | watchdog, scope-guard |
 | MEDIA | browser-pilot, asset-creator, video-creator, slides |
@@ -272,7 +272,10 @@ Lowercase, dot-separated: `<domain>.<event>` (e.g. `code.changed`, `tests.failed
 | `docs.updated` | docs | — |
 | `audit.complete` | audit | — |
 | `db.migrated` | db | — |
-| `verification.complete` | verification | — |
+| `verification.complete` | verification | cook, converge |
+| `integration.verified` | verification | deploy |
+| `convergence.gaps` | converge | cook |
+| `convergence.clean` | converge | cook, deploy |
 | `graft.complete` | graft | cook |
 | `ideas.ready` | brainstorm | cook |
 | `preflight.passed` | preflight | cook |

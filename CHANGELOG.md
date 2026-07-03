@@ -5,6 +5,34 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.21.0] - 2026-07-03
+
+"Convergence" — kill the dead-button failure mode: a spec↔code gap scan (`converge`, the 65th skill) plus a traceability chain from spec IDs to contracts to coverage gates, so "UI renders but the backend never existed" can no longer pass the pipeline.
+
+### Added — `converge` skill (L3, the dead-button detector)
+
+- **What it does.** Post-implementation, re-reads spec/plan/contracts as the SOLE source of intent, scans the ACTUAL codebase (present state, not the diff), and classifies every intent key: `implemented` / `missing` / `partial` / `contradicts` / `unrequested`. Dead-interaction trace walks element → handler → service → route → entity; the first broken link is a `partial` gap keyed to the story's AC. APPEND-ONLY remediation: `CV-<round>.<seq>` tasks with intent keys; zero gaps = zero writes + `convergence.clean`. Refuses to run without a spec (`NO_SPEC` — "converge without a spec is vibes").
+- **cook v2.6.0 — Phase 6.5 CONVERGE.** After VERIFY, before COMMIT, for feature chains with `requirements.md`. Gaps → execute CV tasks → re-verify → re-converge, max 2 rounds then Structured Escalation. Unrequested-only gaps surface in the Cook Report without triggering the loop. HARD-GATE: a P1 CRITICAL convergence gap is never committed as "done". Quickstart execution wired into Phase 6 VERIFY.
+- **Fixtures.** `references/eval-fixtures.md` — 7 behavioral fixtures (dead button, clean pass, contradicted decision, scope creep, placeholder honesty, NO_SPEC refusal, round-2 escalation).
+
+### Added — Traceability backbone (`ba` v1.2.0, `plan` v1.7.0)
+
+- **`ba` v1.2.0.** User stories carry `[P1|P2|P3]` priority + per-story **Independent Test** (one concrete action proving the story end-to-end); new Step 5.5 **Key Entities** (mandatory for data-touching features); `tasks.md` artifact restructured from layer-grouped to **story-grouped vertical slices** (Data → Logic → Endpoint → UI → Test inside each `US-n` section) — layer-grouped backbones were inviting "finish the UI layer and stop". AC rule: a THEN that stops at widget state for a data-touching story is incomplete.
+- **`plan` v1.7.0.** New Step 3.7 **Boundary Artifacts** — features crossing a UI↔data boundary emit `data-model.md` + `contracts/` (each contract names its `Serves:` story and `Consumers:`) + `quickstart.md` (executable per-story validation) BEFORE phase files; tasks derive from contracts. New Step 5.7 **Coverage Gate** — every `FR-n`/`US-n` maps to task IDs (`P<phase>-T<seq>` scheme); a P1 story with zero coverage means the plan cannot be presented. Ordering law: UI is structurally LAST within each slice. Phase file cap unified at 200 lines.
+
+### Added — Deep wiring gates (work even WITHOUT a spec)
+
+- **`verification` v0.6.0.** Level 2 stub table catches dead handlers (`onClick={() => {}}`, `href="#"` action links, `preventDefault()`-only submits). New **Level 3.5 INTERACTION WIRED**: framework-aware (React/Svelte/Vue/plain-HTML syntax; prop-origin handlers and navigation handlers PASS) trace of every interactive element in the diff's UI files — handler bound → resolves → target route/service exists; reverse check: new routes need ≥1 caller. Diff-scoped: legacy dead UI warns, new work fails. Emits `integration.verified` on UI+data diffs that pass.
+- **`completion-gate` v1.9.0.** Step 4.5 Integration Check is now MANDATORY (not "optional for single-phase") when the diff touches UI+data files, the spec has Key Entities, or the task contains interaction keywords — with mechanical trigger definitions. Uncalled routes: WARN → **BLOCK** when the route was created in this task and a story references it; deferral requires a NAMED future-phase task.
+- **`preflight` v1.2.0.** Step 4 cross-layer pairing: a new interactive component whose handler chain reaches no real endpoint (and isn't explicitly scoped UI-only) = BLOCK. Step 4.5 dead-interactive check = BLOCK. Step 6 verdict aggregation updated so these BLOCKs survive to the final verdict.
+- **`design` v0.7.0.** Placeholder Ownership: every inert/placeholder element ships with a row in `.rune/ui-spec.md` `## Unwired Elements` (element, location, why, wiring owner) — the line between declared debt (preflight skips, verification reports INFO) and accidental dead UI (converge counts as `missing`). New Placeholder-Ownership mesh gate + Constraint 14.
+
+### Added — Test + deploy layer
+
+- **`test` v1.4.0.** Spec→Test Traceability keys on `US-n/AC-n.m`/`FR-n` and is mandatory when `requirements.md` exists ("no plan file" is no longer a skip); **cross-boundary minimum**: every UI↔data story needs ≥1 L2 integration test with the real route wired — mocking the entire chain doesn't count; contract tests written BEFORE endpoint implementation when `contracts/` exist; advisory browser-pilot click-through of each story's Independent Test.
+- **`deploy` v0.8.0.** Advisory wiring-evidence check: feature deploys touching UI+data with neither `integration.verified` nor `convergence.clean` → explicit WARN + user confirmation (hotfix chain exempt).
+- **Signals.** +3: `convergence.gaps` (converge → cook), `convergence.clean` (converge → cook, deploy), `integration.verified` (verification → deploy). Mesh: 65 skills, 204 connections, 43 signals (55 edges).
+
 ## [2.20.0] - 2026-07-02
 
 "Spec Discipline" — close the plan-without-spec gap so a `brainstorm → plan → cook` chain can no longer skip `ba`; ship the `ba` EARS functional-requirements layer and `adversary` reasoning-mode catalog; key context hooks by `session_id`.

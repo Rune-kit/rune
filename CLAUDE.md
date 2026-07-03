@@ -3,7 +3,7 @@
 ## Overview
 
 Rune is an interconnected skill ecosystem for AI coding assistants.
-64 core skills | 5-layer mesh architecture | 204 connections + 40 signals | Multi-platform.
+65 core skills | 5-layer mesh architecture | 204 connections + 43 signals | Multi-platform.
 Philosophy: "Less skills. Deeper connections."
 
 Works on: Claude Code (native plugin) · Cursor · Windsurf · Google Antigravity · OpenAI Codex · OpenCode · Aider · GitHub Copilot CLI · Gemini CLI · Qoder · Qwen Coder · any AI IDE.
@@ -103,7 +103,9 @@ When the user's intent matches a skill, invoke it BEFORE writing any code or ana
 
 ## Current Wave
 
-64 core skills built (v2.20.0 — "Comprehension — `rune dashboard` human-visible Codebase Briefing + Governance Scorecard").
+65 core skills built (v2.21.0 — "Convergence — spec↔code gap scan kills the dead-button failure mode").
+
+Convergence layer: new `converge` skill (L3) re-reads spec/plan/contracts as sole intent and scans the ACTUAL code for `missing`/`partial`/`contradicts`/`unrequested` gaps — cook Phase 6.5 loops it until clean (max 2 rounds). Upstream: ba emits story-sliced specs (P1/P2/P3 + Independent Test + Key Entities), plan emits contracts-first boundary artifacts (data-model/contracts/quickstart) with a P1 zero-coverage HARD-GATE. Downstream: verification Level 3.5 INTERACTION WIRED traces button→handler→route, completion-gate Step 4.5 is mandatory for UI+data diffs, deploy warns without wiring evidence (`integration.verified`/`convergence.clean`).
 
 Comprehension dashboard: `rune dashboard` emits a self-contained HTML artifact (Verdict hero + 5-tab IA: Verdict → Govern / Measure / Understand / Improve). Tier-aware — Free = verdict + measure, Pro = "My Lens" cost/ROI persona, Business = full Governance Scorecard + compliance coverage. Generator `compiler/comprehension.js` + client app `compiler/comprehension-client.js`. No CDN, no telemetry, XSS-hardened.
 
@@ -121,12 +123,12 @@ sentinel, preflight, onboard, deploy, marketing, perf,
 autopsy, safeguard, surgeon, audit, incident, review-intake, logic-guardian,
 ba, docs, mcp-builder, adversary, retro, graft, improve-architecture
 
-### L3 Utilities (27)
+### L3 Utilities (28)
 research, docs-seeker, trend-scout, problem-solver, sequential-thinking,
 verification, hallucination-guard, completion-gate, constraint-check, sast, integrity-check,
 context-engine, context-pack, journal, session-bridge, neural-memory, worktree,
 watchdog, scope-guard, browser-pilot, asset-creator, video-creator, slides,
-dependency-doctor, git, doc-processor, sentinel-env
+dependency-doctor, git, doc-processor, sentinel-env, converge
 
 ### L4 Extension Packs (14)
 @rune/ui, @rune/backend, @rune/devops, @rune/mobile, @rune/security,

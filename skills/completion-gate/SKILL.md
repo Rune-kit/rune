@@ -214,13 +214,15 @@ Check for integration gaps — between phases AND between layers:
    - If any step in the chain is missing or stubbed → CONTRADICTED
 
 **When this step is MANDATORY** (any one triggers it — single-phase tasks included):
-- The diff touches BOTH a UI file (`.tsx/.jsx/.vue/.svelte/.html`) AND an api/service/data file
+- The diff touches BOTH a UI file (`.tsx/.jsx/.vue/.svelte/.html`) AND an api/service/data file — where "api/service/data file" = any file whose path contains a segment from: `api`, `routes`, `handlers`, `services`, `service`, `stores`, `store`, `db`, `database`, `models`, `repositories`, `repo`, `queries` — OR any file exporting functions matching `create*`/`update*`/`delete*`/`fetch*`/`save*`/`post*` verb patterns
 - The feature spec has a `## Key Entities` section
-- The task description implies user interaction with persisted data (click, submit, save, login, search, checkout)
+- The task description contains any of these exact words: `click`, `submit`, `save`, `login`, `signup`, `search`, `checkout`, `upload`, `delete`, `order`, `pay` — EXCEPT when the phrase is explicitly local-only ("save to clipboard", "save locally", "client-side only")
 - Multi-phase master plan (always, as before)
 
 Skip ONLY when none of the above hold (pure-UI styling, pure-backend plumbing, docs/config).
 "Single-phase" is NOT a skip reason — most dead-button escapes are single-phase tasks.
+
+**De-dup**: if preflight (Step 4/4.5) or verification (Level 3.5) already flagged the same element/route in this session, cite the cross-reference instead of emitting a duplicate finding — one dead button = one finding + cross-refs, not three findings.
 
 ### Step 5 — Evidence Quality Gate
 

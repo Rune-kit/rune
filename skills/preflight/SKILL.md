@@ -239,7 +239,7 @@ When UI/Frontend hook is triggered, run these checks on all `.tsx`/`.jsx`/`.svel
 | **Scale Minimum — hero display** | `<h1>` with `text-3xl` or smaller (30px) when the heading is in a hero/landing section | WARN: "Hero heading below 48px at {file}:{line} — insufficient visual hierarchy" |
 | **Hand-rolled SVG for standard icons** | Inline `<svg viewBox=` in JSX when the surrounding comment/class names indicate standard iconography (dashboard, menu, close, chevron, arrow, search, home, user, settings, bell, trash) | WARN: "Hand-rolled SVG at {file}:{line} — use @phosphor-icons/react or huge-icons, or ship boxed placeholder" |
 | **Manual hex accent shading** | CSS/Tailwind config defining 2+ sibling `--accent-hover` / `--accent-pressed` / `--accent-active` with hex literals (no `oklch(from ...)` or design-token chain) | WARN: "Manual hex shade at {file}:{line} — derive via oklch(from var(--accent) calc(l - 0.08) c h)" |
-| **Dead interactive element** | `<button>`/`<form>`/action element with no bound handler, `onClick={() => {}}`, `href="#"` action link, or `preventDefault()`-only submit — in files of THIS diff (skip elements listed in `.rune/ui-spec.md` `## Unwired Elements`) | BLOCK: "Dead interactive at {file}:{line} — element renders but does nothing" |
+| **Dead interactive element** | `<button>`/`<form>`/action element with no bound handler (any framework syntax: `onClick=`, `on:click=`, `@click`, `v-on:`), `onClick={() => {}}`, `href="#"` on an action link (not navigation/scroll anchors), or `preventDefault()`-only submit — in files of THIS diff (skip elements listed in `.rune/ui-spec.md` `## Unwired Elements`; prop-origin handlers like `onClick={props.onSave}` count as bound) | BLOCK: "Dead interactive at {file}:{line} — element renders but does nothing" |
 | **Missing states** | Components fetching data without loading/error/empty states | WARN: "Async component at {file} missing [loading|error|empty] state" |
 | **Icon accessibility** | Decorative icons without `aria-hidden="true"`, functional icons without `aria-label` | WARN: "Icon at {file}:{line} missing aria attribute" |
 | **Inline styles** | `style={{` or `style=` attribute usage instead of classes/tokens | WARN: "Inline style at {file}:{line} — use CSS class or Tailwind" |
@@ -338,8 +338,8 @@ Invoke `rune:sentinel` on the changed files. Attach sentinel's output verbatim u
 
 ### Step 6 — Generate Verdict
 Aggregate all findings:
-- Any BLOCK from sentinel OR a logic issue that would cause data corruption or security bypass → overall **BLOCK**
-- Any missing error handling, regression risk with no tests, or incomplete feature → **WARN**
+- Any BLOCK from sentinel OR a logic issue that would cause data corruption or security bypass OR a dead interactive element (Step 4 cross-layer pairing / Step 4.5 dead-interactive check) OR a BLOCK from any domain hook → overall **BLOCK**
+- Any missing error handling, regression risk with no tests, or incomplete feature (other than the BLOCK cases above) → **WARN**
 - Only style or best-practice suggestions → **PASS**
 
 Report PASS, WARN, or BLOCK. For WARN, list each item the developer must acknowledge. For BLOCK, list each item that must be fixed before proceeding.
@@ -421,6 +421,8 @@ WARN — 3 issues found (0 blocking, 3 must-acknowledge). Resolve before commit 
 - Error handling verified on all async functions and HTTP calls
 - Regression impact assessed — dependent files identified via scout
 - Completeness checklist passed (validation schema, loading/error states, test file)
+- Cross-layer pairing checked (Step 4): every new interactive component's handler chain reaches a real endpoint/service or has an explicit UI-only scope
+- Dead-interactive scan done (Step 4.5 UI hook) on all UI files in the diff
 - Sentinel invoked and its output attached in Security section
 - Structured report emitted with PASS / WARN / BLOCK verdict and file:line for every finding
 

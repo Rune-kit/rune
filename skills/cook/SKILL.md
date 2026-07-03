@@ -110,8 +110,8 @@ Not every task needs every phase:
 Nano task:           DO → VERIFY → DONE (no phases, auto-detected)
 Simple bug fix:      Phase 1 → 4 → 6 → 7
 Small refactor:      Phase 1 → 4 → 5 → 6 → 7
-New feature:         Phase 1 → 1.5 → 2 → 3 → 4 → 5 → 6 → 7 → 8
-Complex feature:     All phases + brainstorm in Phase 2
+New feature:         Phase 1 → 1.5 → 2 → 3 → 4 → 5 → 6 → 6.5 → 7 → 8  (6.5: conditional — requires requirements.md)
+Complex feature:     All phases (incl. 6.5) + brainstorm in Phase 2
 Security-sensitive:  All phases + sentinel escalated to opus
 Fast mode:           Phase 1 → 4 → 6 → 7 (auto-detected, see below)
 Multi-session:       Phase 0 (resume) → 3 → 4 → 5 → 6 → 7 (one plan phase per session)
@@ -507,11 +507,13 @@ Invoke `rune:session-bridge` after Phase 2, 4, and 5 to save intermediate state.
 
 Before entering ANY Phase N+1, assert: Phase N `completed` in TodoWrite | gate condition met | no BLOCK from sub-skills | no unresolved CRITICAL findings. If any fails → STOP, log "BLOCKED at Phase N→N+1: [assertion]", fix, re-check.
 
-**Key transitions:** 1→2: scout done | 2→3: plan approved | 3→4: failing tests exist | 4→5: all tests pass | 5→6: no CRITICAL findings | 6→7: lint+types+build green.
+**Key transitions:** 1→2: scout done | 2→3: plan approved | 3→4: failing tests exist | 4→5: all tests pass | 5→6: no CRITICAL findings | 6→6.5: lint+types+build green | 6.5→7: convergence.clean or documented escalation (features with requirements.md; others pass through).
 
 ## Phase 6: VERIFY
 
 **REQUIRED SUB-SKILL**: Use `rune:verification` — run lint, type check, full test suite, build. Then `rune:hallucination-guard` to verify imports and API signatures. ALL checks MUST pass before commit.
+
+**Quickstart execution**: if `.rune/features/<name>/quickstart.md` exists (plan Step 3.7 boundary artifact), execute its validation blocks — run each command, compare against its **Expect** line. Any mismatch = verification FAIL (treat like a failing test). If the environment cannot run a block (no browser, no DB), SKIP it with the reason named in the Cook Report — a skipped quickstart is visible debt, never silent.
 
 ## Phase 6.5: CONVERGE (Spec↔Code Gap Scan)
 
@@ -522,10 +524,12 @@ Before entering ANY Phase N+1, assert: Phase N `completed` in TodoWrite | gate c
 
 1. Invoke `rune:converge` — it re-reads spec/plan/contracts as sole intent, scans present code state, classifies gaps (`missing` / `partial` / `contradicts` / `unrequested`)
 2. **`convergence.clean`** → proceed to Phase 7
-3. **`convergence.gaps`** → converge appended `CV-*` remediation tasks to the active phase file:
-   - Execute the CV tasks (return to Phase 4 loop for them; CRITICAL/HIGH first)
-   - Re-run Phase 6 VERIFY on the remediated code, then re-invoke converge (round 2)
-   - **Max 2 remediation rounds.** Gaps still present after round 2 → produce a Structured Escalation Report (the same gap surviving 2 rounds means the approach is wrong, not the effort)
+3. **`convergence.gaps`** → inspect the signal's `counts` payload first:
+   - **Unrequested-only** (`missing`=0, `partial`=0, `contradicts`=0, `unrequested`>0): no CV tasks were appended — surface the findings in the Cook Report and proceed to Phase 7. Do NOT enter the remediation loop for informational scope-creep findings
+   - **Otherwise**: converge appended `CV-*` remediation tasks to the active phase file:
+     - Execute the CV tasks (return to Phase 4 loop for them; CRITICAL/HIGH first)
+     - Re-run Phase 6 VERIFY on the remediated code, then re-invoke converge (round 2)
+     - **Max 2 remediation rounds.** Gaps still present after round 2 → produce a Structured Escalation Report (the same gap surviving 2 rounds means the approach is wrong, not the effort)
 4. `unrequested` findings are surfaced to the user in the Cook Report — never silently deleted, never blocking
 
 <HARD-GATE>
@@ -932,6 +936,7 @@ SELF-VALIDATION (run before emitting Cook Report):
 - [ ] Plan approval gate was not bypassed — user said "go" (check conversation history)
 - [ ] No Phase 4 code was written before Phase 3 tests (TDD order preserved)
 - [ ] All Phase 5 quality gates (preflight, sentinel, review) ran — not just claimed
+- [ ] Phase 6.5 converge ran for features with requirements.md — or skip announced (no spec) / escalation documented
 - [ ] No quality gate exceeded 3 remediation cycles without user escalation
 - [ ] No upstream issue was fixed by code change alone — UPSTREAM findings re-invoked the source skill
 - [ ] Cook Report contains actual commit hash, not placeholder
