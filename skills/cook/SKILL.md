@@ -5,13 +5,13 @@ context: fork
 agent: general-purpose
 metadata:
   author: runedev
-  version: "2.5.0"
+  version: "2.6.0"
   layer: L1
   model: sonnet
   group: orchestrator
   tools: "Read, Write, Edit, Bash, Glob, Grep"
   emit: phase.complete, checkpoint.request
-  listen: plan.ready, review.complete, ideas.ready, preflight.passed, verification.complete
+  listen: plan.ready, review.complete, ideas.ready, preflight.passed, verification.complete, convergence.gaps, convergence.clean
 ---
 
 # cook
@@ -513,6 +513,26 @@ Before entering ANY Phase N+1, assert: Phase N `completed` in TodoWrite | gate c
 
 **REQUIRED SUB-SKILL**: Use `rune:verification` — run lint, type check, full test suite, build. Then `rune:hallucination-guard` to verify imports and API signatures. ALL checks MUST pass before commit.
 
+## Phase 6.5: CONVERGE (Spec↔Code Gap Scan)
+
+**REQUIRED SUB-SKILL**: Use `rune:converge` — verify the ACTUAL codebase matches the spec before committing.
+
+**Trigger**: feature/greenfield chains where `.rune/features/<name>/requirements.md` exists.
+**Skip** (announce the skip): nano/fast/bugfix/refactor/hotfix chains, or no requirements.md (ad-hoc task — Phase 5 gates are the only protection).
+
+1. Invoke `rune:converge` — it re-reads spec/plan/contracts as sole intent, scans present code state, classifies gaps (`missing` / `partial` / `contradicts` / `unrequested`)
+2. **`convergence.clean`** → proceed to Phase 7
+3. **`convergence.gaps`** → converge appended `CV-*` remediation tasks to the active phase file:
+   - Execute the CV tasks (return to Phase 4 loop for them; CRITICAL/HIGH first)
+   - Re-run Phase 6 VERIFY on the remediated code, then re-invoke converge (round 2)
+   - **Max 2 remediation rounds.** Gaps still present after round 2 → produce a Structured Escalation Report (the same gap surviving 2 rounds means the approach is wrong, not the effort)
+4. `unrequested` findings are surfaced to the user in the Cook Report — never silently deleted, never blocking
+
+<HARD-GATE>
+A P1 story with a CRITICAL convergence gap (missing/contradicts) MUST NOT be committed as "done."
+Either remediate within the round cap, or escalate with the gap documented — never claim completion over a known dead path.
+</HARD-GATE>
+
 ## Phase 7: COMMIT
 
 **RECOMMENDED SUB-SKILL**: Use `rune:git` — stage specific files (`git add <files>`, NOT `git add .`), generate semantic commit message from diff. If working from master plan: update phase status `🔄 → ✅`, announce next phase or "All phases complete."
@@ -777,6 +797,7 @@ Mentally track tool call fingerprints. 3 identical calls → WARN. 5 identical c
 | 5 | `constraint-check` | L3 | Audit HARD-GATE compliance across workflow |
 | 6 | `verification` | L3 | Lint + types + tests + build |
 | 6 | `hallucination-guard` | L3 | Verify imports and API calls are real |
+| 6.5 | `converge` | L3 | Spec↔code gap scan for features with requirements.md — dead buttons, missing backends, contradicted decisions |
 | 7 | `journal` | L3 | Record architectural decisions |
 | 8 | `session-bridge` | L3 | Save context for future sessions |
 | any | `context-pack` | L3 | create structured handoff briefings before spawning subagents |
@@ -815,6 +836,7 @@ Mentally track tool call fingerprints. 3 identical calls → WARN. 5 identical c
 | Test-First Gate | Failing tests before Phase 4 | Write tests or get explicit skip |
 | Quality Gate | preflight + sentinel + review before Phase 7 | Fix findings, re-run |
 | Verification Gate | lint + types + tests + build green before commit | Fix, re-run |
+| Convergence Gate | `convergence.clean` (or documented escalation) before Phase 7 for features with requirements.md | Execute CV tasks, re-verify, re-converge (max 2 rounds) |
 
 ## Structured Output Contract (Prompt-as-API Pattern)
 
@@ -919,6 +941,7 @@ SELF-VALIDATION (run before emitting Cook Report):
 
 All applicable phases complete + Self-Validation passed:
 - User approved plan | All tests PASS (output shown) | preflight+sentinel+review PASS | build green
+- Convergence: `convergence.clean` OR skip announced (no requirements.md) OR escalation documented — never silent
 - Cook Report emitted with commit hash | Session state saved to .rune/ via session-bridge
 
 ## Cost Profile

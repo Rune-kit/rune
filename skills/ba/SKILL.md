@@ -490,7 +490,7 @@ US-1 [P1]: As a [persona], I want to [action] so that [benefit]
 Rules:
 - Primary user story first, then edge cases
 - **Every story carries a priority**: `P1` = MVP-critical (the P1 set alone must be a viable, demoable product), `P2` = important, `P3` = nice-to-have. Implementing ONLY the P1 stories must still yield a working feature
-- **Every story carries an Independent Test** — one concrete user action that proves the story end-to-end (through UI, logic, AND data if the story touches them). If no single action can prove it, the story is sliced wrong — split or merge until it can. This field is what downstream verification gates (plan's Coverage Gate, completion-gate's evidence trail) trace against
+- **Every story carries an Independent Test** — one concrete user action that proves the story end-to-end (through UI, logic, AND data if the story touches them). If no single action can prove it, the story is sliced wrong — split or merge until it can. This field is what downstream verification gates (plan's Coverage Gate, `converge`'s gap scan, completion-gate's evidence trail) trace against
 - Every user story has at least 2 acceptance criteria (happy path + error)
 - Acceptance criteria are TESTABLE — they become test cases in Phase 3
 - Each AC proves a specific `FR-n` from Step 4.5 — cite it (`AC-1.2 → FR-3`). Every unwanted-behavior `FR` (the `If …` lines) needs an error-path AC; that's where EARS earns its keep

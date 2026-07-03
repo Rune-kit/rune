@@ -177,6 +177,7 @@ For users who know exactly what they want:
 | Fix bug / debug only (no fix) | `rune:debug` → `rune:fix` | L2 chain |
 | Marketing assets only | `rune:marketing` | L2 |
 | Gather requirements / BA / elicit needs | `rune:ba` | L2 — requires opus |
+| "Did it fully implement?" / "does code match spec?" / check completeness | `rune:converge` | L3 — needs requirements.md |
 | Generate / update docs | `rune:docs` | L2 |
 | Build MCP server | `rune:mcp-builder` | L2 |
 | Red-team / challenge a plan / stress-test | `rune:adversary` | L2 — requires opus |
@@ -193,6 +194,7 @@ These are rarely invoked directly — they're called by Tier 1/2 skills:
 | `rune:verification` | cook, fix | Run lint/test/build |
 | `rune:hallucination-guard` | cook, fix | Verify imports |
 | `rune:completion-gate` | cook | Validate claims |
+| `rune:converge` | cook | Spec↔code gap scan (Phase 6.5) |
 | `rune:sentinel-env` | cook, scaffold, onboard | Environment pre-flight |
 | `rune:research` / `rune:docs-seeker` | any | Look up docs |
 | `rune:session-bridge` | cook, team | Save context (in-session state handoff) |

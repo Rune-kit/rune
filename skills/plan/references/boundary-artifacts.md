@@ -83,7 +83,8 @@ Rules:
 
 Save to `.rune/features/<name>/quickstart.md`. This is EXECUTABLE, not prose — the
 final phase carries a "run quickstart validation" task (see Task derivation below),
-so the feature cannot be declared done without these steps passing.
+and `converge` traces each story's acceptance scenarios against these steps, so the
+feature cannot be declared done without them passing.
 
 ```markdown
 # Quickstart: [Feature Name]
