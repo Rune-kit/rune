@@ -348,6 +348,7 @@ Known failure modes for this skill. Check these before declaring done.
 | Dead button — component rendered, interactive element wired to nothing | CRITICAL | Level 3.5: trace element → handler → target for every UI file in the diff. Rendering ≠ working |
 | Punishing legacy files for pre-existing dead interactions | MEDIUM | Level 3.5 scope guard: FAIL only for this task's diff; pre-existing = WARN |
 | Route created this task with zero callers passes silently | HIGH | Level 3.5 reverse check: new route files need ≥1 caller or FAIL |
+| `integration.verified` read as "quickstart validated" | LOW | Standalone verification runs do NOT execute quickstart.md (that's cook Phase 6's job) — the signal proves static wiring, not a live end-to-end run |
 | Truncated code — agent hit output limit mid-file | HIGH | Output Completion Enforcement: scan for `// ...`, `// rest of code`, bare ellipsis patterns. TRUNCATED = Level 2 FAIL |
 
 ## Done When

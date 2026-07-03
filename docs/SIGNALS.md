@@ -2,9 +2,11 @@
 
 > **Event-driven skill communication**. Skills emit signals when they finish work; other skills listen and auto-trigger. No central orchestrator required.
 
-**Status:** 25 signals in Free tier · all emitters have listeners · 0 orphans
+**Status:** 43 signals in Free tier (55 emit/listen edges, `rune doctor`) · 0 orphans
 **Enforced by:** `scripts/validate-signals.js` (run in CI)
-**Last updated:** v2.12.3 (2026-04-22)
+**Last updated:** v2.21.0 (2026-07-03)
+
+> This doc explains the mechanism and the core workflow signals. The **complete** emit/listen table (all 43 signals, including pack + observability signals) lives in [ARCHITECTURE.md → Signal Catalog](ARCHITECTURE.md#signal-catalog).
 
 ## How Signals Work
 
@@ -52,7 +54,10 @@ When `debug` finishes and emits `bug.diagnosed`, the mesh routes the event to ev
 | `preflight.blocked` | preflight | fix, plan | Quality gate blocked |
 | `tests.passed` | test | deploy | Test suite green |
 | `tests.failed` | test | debug | Test suite red |
-| `verification.complete` | verification | cook | Lint + types + tests all passed |
+| `verification.complete` | verification | cook, converge | Lint + types + tests all passed |
+| `integration.verified` | verification | deploy | Level 3.5 passed on a UI+data diff — cross-layer wiring evidence |
+| `convergence.gaps` | converge | cook | Spec↔code gaps found (missing/partial/contradicts/unrequested) — CV tasks appended |
+| `convergence.clean` | converge | cook, deploy | Zero spec↔code gaps — feature converged |
 
 ### Security & audit
 

@@ -123,12 +123,12 @@ sentinel, preflight, onboard, deploy, marketing, perf,
 autopsy, safeguard, surgeon, audit, incident, review-intake, logic-guardian,
 ba, docs, mcp-builder, adversary, retro, graft, improve-architecture
 
-### L3 Utilities (28)
+### L3 Utilities (29)
 research, docs-seeker, trend-scout, problem-solver, sequential-thinking,
 verification, hallucination-guard, completion-gate, constraint-check, sast, integrity-check,
 context-engine, context-pack, journal, session-bridge, neural-memory, worktree,
 watchdog, scope-guard, browser-pilot, asset-creator, video-creator, slides,
-dependency-doctor, git, doc-processor, sentinel-env, converge
+dependency-doctor, git, doc-processor, sentinel-env, quarantine, converge
 
 ### L4 Extension Packs (14)
 @rune/ui, @rune/backend, @rune/devops, @rune/mobile, @rune/security,

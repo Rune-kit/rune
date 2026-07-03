@@ -525,7 +525,7 @@ Before entering ANY Phase N+1, assert: Phase N `completed` in TodoWrite | gate c
 1. Invoke `rune:converge` — it re-reads spec/plan/contracts as sole intent, scans present code state, classifies gaps (`missing` / `partial` / `contradicts` / `unrequested`)
 2. **`convergence.clean`** → proceed to Phase 7
 3. **`convergence.gaps`** → inspect the signal's `counts` payload first:
-   - **Unrequested-only** (`missing`=0, `partial`=0, `contradicts`=0, `unrequested`>0): no CV tasks were appended — surface the findings in the Cook Report and proceed to Phase 7. Do NOT enter the remediation loop for informational scope-creep findings
+   - **Unrequested-only** (`counts.missing`=0, `counts.partial`=0, `counts.contradicts`=0, `counts.unrequested`>0): no CV tasks were appended — surface the findings in the Cook Report and proceed to Phase 7. Do NOT enter the remediation loop for informational scope-creep findings
    - **Otherwise**: converge appended `CV-*` remediation tasks to the active phase file:
      - Execute the CV tasks (return to Phase 4 loop for them; CRITICAL/HIGH first)
      - Re-run Phase 6 VERIFY on the remediated code, then re-invoke converge (round 2)
