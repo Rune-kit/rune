@@ -1,0 +1,13 @@
+{
+  "skill": "verification",
+  "description": "Submit handler fetches a POST route that doesn't exist; Export button has no handler. Level 3.5 must FAIL both, pass the GET chain and the navigation anchor, and report the declared sparkle placeholder as INFO.",
+  "must": [
+    "UNWIRED-INTERACTIVE",
+    "L3.5"
+  ],
+  "mustNot": [
+    "UNCALLED-ROUTE"
+  ],
+  "fileUntouched": "server.js",
+  "notes": "Two dead interactions expected (submit -> absent POST, #export no handler). GET /api/feedback has 2 callers so no UNCALLED-ROUTE. Back-to-top anchor and declared sparkle placeholder must not fail."
+}

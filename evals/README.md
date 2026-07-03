@@ -50,14 +50,17 @@ Failed cases preserve their temp fixture dir for post-mortem (path printed).
 
 ## Current cases
 
-| Case | Traps |
-|------|-------|
-| `converge/dead-button` | P1 submit → route absent (plan claims done); declared-debt icon; unrequested export button; navigation anchor bait |
-| `converge/clean-pass` | Same repo fully wired — must emit clean, write nothing, not block on declared debt |
+| Case | Traps | Type |
+|------|-------|------|
+| `converge/dead-button` | P1 submit → route absent (plan claims done); declared-debt icon; unrequested export button; navigation anchor bait | detection |
+| `converge/clean-pass` | Same repo fully wired — must emit clean, write nothing, not block on declared debt | clean + no-write |
+| `verification/dead-button` | Same fixture through Level 3.5 — dead submit + handler-less button must FAIL, GET chain and anchor must pass | detection |
+| `verification/svelte-wired` | Fully wired Svelte (`on:submit\|preventDefault`, `on:click`, prop-origin callback) — must NOT false-positive | **regression** (Phase-3 review BLOCK: React-only syntax) |
+| `verification/vue-wired` | Fully wired Vue 3 (`@submit.prevent`, `@click`, `defineProps` callback) — must NOT false-positive | **regression** |
 
 ## Adding cases for other skills
 
 The runner is skill-agnostic: it reads `skills/<skill>/SKILL.md` from the eval
-path. Priority candidates: `verification` (Level 3.5 framework-syntax matrix —
-Svelte/Vue/prop-origin handlers), `completion-gate` (mandatory-trigger matrix),
-`preflight` (dead-interactive BLOCK vs navigation false-positives).
+path. Next candidates: `completion-gate` (mandatory-trigger matrix — UI+data
+diff / Key Entities / interaction keywords), `preflight` (dead-interactive
+BLOCK vs navigation false-positives, Unwired Elements skip).

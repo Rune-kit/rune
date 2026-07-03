@@ -1,0 +1,14 @@
+{
+  "skill": "verification",
+  "description": "REGRESSION: fully wired Vue 3 app (@submit.prevent, @click local handler, prop-origin onSaved callback, navigation anchor). Level 3.5 must NOT false-positive on Vue binding syntax.",
+  "must": [
+    "L3.5"
+  ],
+  "mustNot": [
+    "UNWIRED-INTERACTIVE",
+    "UNCALLED-ROUTE",
+    "FAIL L3.5"
+  ],
+  "fileUntouched": "src/FeedbackForm.vue",
+  "notes": "Same regression intent as svelte-wired, Vue syntax (@click / @submit.prevent / defineProps callback)."
+}

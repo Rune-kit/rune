@@ -1,0 +1,14 @@
+{
+  "skill": "verification",
+  "description": "REGRESSION: fully wired Svelte app (on:submit|preventDefault, on:click local handler, prop-origin onSaved callback, navigation anchor). Level 3.5 must NOT false-positive on Svelte binding syntax.",
+  "must": [
+    "L3.5"
+  ],
+  "mustNot": [
+    "UNWIRED-INTERACTIVE",
+    "UNCALLED-ROUTE",
+    "FAIL L3.5"
+  ],
+  "fileUntouched": "src/FeedbackForm.svelte",
+  "notes": "This is the live regression test for the Phase-3 review BLOCK (React-only syntax would fail every Svelte button). Clear button = local handler (pure UI reset, no fetch — valid). onSaved() = prop-origin, parent App.svelte wires it. Both routes have callers."
+}
