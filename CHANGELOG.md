@@ -5,6 +5,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.22.2] - 2026-07-04
+
+### Fixed — `rune setup` installs tier skills where the plugin runtime looks
+
+- **New `resolveSkillInstallRoot`**: tier skills (Pro/Business) now install into the Claude Code **plugin cache** (`~/.claude/plugins/cache/rune-kit/rune/<newest>/skills/`) when it exists, falling back to the executing package root otherwise. Previously `installTierSkills` targeted the running rune.js's own root — `npx @rune-kit/rune setup` copied Pro skills into npx's ephemeral cache (invisible to the plugin runtime → `rune:autopilot` returned "Unknown skill" again), and running setup from a source checkout copied paid-tier skills INTO the MIT git tree. Found while updating this dev machine. +3 tests (setup: 28).
+
 ## [2.22.1] - 2026-07-03
 
 ### Fixed — tier-hook loader accepts lifecycle events

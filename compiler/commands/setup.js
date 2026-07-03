@@ -20,13 +20,50 @@
  *   3. Well-known paths: `D:/Project/Rune/Pro`, `~/rune-pro`, etc.
  */
 
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { cp, readdir, readFile, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { createInterface } from 'node:readline';
 import { installHooks } from './hooks/install.js';
 import { resolveTier, TIER_ENV_VARS } from './hooks/tiers.js';
+
+/**
+ * Resolve where tier skills should actually be installed so the Claude Code
+ * plugin runtime SEES them.
+ *
+ * `runeRoot` is the root of whichever rune.js is executing — which is the
+ * WRONG target in two common cases:
+ *   - `npx @rune-kit/rune setup` → runeRoot is npx's ephemeral cache; skills
+ *     copied there are invisible to the plugin runtime (and soon deleted)
+ *   - running from a source checkout → skills are copied into the git repo,
+ *     polluting the MIT source tree with paid-tier content
+ *
+ * The plugin runtime reads `~/.claude/plugins/cache/rune-kit/rune/<ver>/skills/`.
+ * If that cache exists, target its NEWEST version dir; otherwise fall back to
+ * runeRoot (plugin-cache executions land here anyway — cache is runeRoot).
+ *
+ * @param {string} runeRoot
+ * @param {{ homedir?: string }} [opts] — injectable for tests
+ * @returns {{ root: string, source: 'plugin-cache' | 'rune-root' }}
+ */
+export function resolveSkillInstallRoot(runeRoot, opts = {}) {
+  const home = opts.homedir || os.homedir();
+  const cacheRoot = path.join(home, '.claude', 'plugins', 'cache', 'rune-kit', 'rune');
+  if (existsSync(cacheRoot)) {
+    const versions = readdirSync(cacheRoot)
+      .filter((d) => /^\d+\.\d+\.\d+$/.test(d) && existsSync(path.join(cacheRoot, d, 'skills')))
+      .sort((a, b) => {
+        const [a1, a2, a3] = a.split('.').map(Number);
+        const [b1, b2, b3] = b.split('.').map(Number);
+        return b1 - a1 || b2 - a2 || b3 - a3;
+      });
+    if (versions.length > 0) {
+      return { root: path.join(cacheRoot, versions[0]), source: 'plugin-cache' };
+    }
+  }
+  return { root: runeRoot, source: 'rune-root' };
+}
 
 export const WELL_KNOWN_TIER_PATHS = {
   pro: ['D:/Project/Rune/Pro', path.join(os.homedir(), 'rune-pro'), path.join(os.homedir(), 'Project', 'Rune', 'Pro')],
@@ -41,7 +78,7 @@ export const WELL_KNOWN_TIER_PATHS = {
  * @param {{ projectRoot: string, runeRoot: string, args: object }} opts
  * @returns {Promise<{ scope: string, tiers: string[], preset: string, written: boolean, files: string[], notes: string[], skillResults: Array<{tier: string, installed: string[], skipped: Array<{skill: string, reason: string}>, reason: string|null}> }>}
  */
-export async function runSetup({ projectRoot, runeRoot, args = {} }) {
+export async function runSetup({ projectRoot, runeRoot, args = {}, skillTarget: skillTargetOverride }) {
   const detected = detectTiers(projectRoot);
 
   // Scope resolution
@@ -89,10 +126,14 @@ export async function runSetup({ projectRoot, runeRoot, args = {} }) {
     dry: args.dry,
   });
 
-  // Install tier skill files into <runeRoot>/skills/ so Claude Code (and any
-  // plugin-aware platform) discovers them alongside Free skills. Without this
+  // Install tier skill files where the plugin runtime actually LOOKS — the
+  // Claude Code plugin cache when present, runeRoot otherwise. Without this
   // step, paid tiers ship hooks only — `rune:autopilot` returns "Unknown skill"
   // because Pro/skills/autopilot/ is invisible to the plugin runtime.
+  const skillTarget =
+    typeof skillTargetOverride === 'string'
+      ? { root: skillTargetOverride, source: 'override' }
+      : (skillTargetOverride ?? resolveSkillInstallRoot(runeRoot));
   const skillResults = [];
   for (const tier of tiers) {
     try {
@@ -100,7 +141,7 @@ export async function runSetup({ projectRoot, runeRoot, args = {} }) {
       const skillResult = await installTierSkills({
         tier,
         tierManifest,
-        runeRoot,
+        runeRoot: skillTarget.root,
         dry: args.dry,
       });
       skillResults.push(skillResult);
@@ -116,6 +157,7 @@ export async function runSetup({ projectRoot, runeRoot, args = {} }) {
     preset,
     detected,
     skillResults,
+    skillTarget,
     ...result,
   };
 }

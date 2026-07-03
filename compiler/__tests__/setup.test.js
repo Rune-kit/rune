@@ -5,7 +5,13 @@ import { platform as osPlatform, tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, test } from 'node:test';
 import { resolveTier } from '../commands/hooks/tiers.js';
-import { detectTiers, formatSetupResult, installTierSkills, runSetup } from '../commands/setup.js';
+import {
+  detectTiers,
+  formatSetupResult,
+  installTierSkills,
+  resolveSkillInstallRoot,
+  runSetup,
+} from '../commands/setup.js';
 
 let tmpRoot;
 
@@ -366,6 +372,9 @@ describe('runSetup — Pro skill installation (regression: rune:autopilot Unknow
       projectRoot,
       runeRoot,
       args: { here: true, preset: 'gentle', tier: 'pro' },
+      // Pin the install target — without this, resolveSkillInstallRoot would
+      // target the REAL plugin cache on dev machines (test side-effect).
+      skillTarget: runeRoot,
     });
 
     assert.deepStrictEqual(result.tiers, ['pro']);
@@ -479,5 +488,45 @@ describe('formatSetupResult', () => {
     // Each rejected skill surfaced as a warning line (security visibility)
     assert.match(out, /⚠ evil-link: rejected: symlink/);
     assert.match(out, /⚠ \.\.\/escape: rejected: unsafe directory name/);
+  });
+});
+
+describe('resolveSkillInstallRoot', () => {
+  let home;
+
+  beforeEach(async () => {
+    home = await mkdtemp(path.join(tmpdir(), 'rune-home-'));
+  });
+
+  afterEach(async () => {
+    await rm(home, { recursive: true, force: true });
+  });
+
+  test('targets the NEWEST plugin-cache version dir when the cache exists', async () => {
+    // npx/source-checkout executions must NOT install into their own runeRoot
+    // when a plugin cache exists — the plugin runtime only reads the cache.
+    const cache = path.join(home, '.claude', 'plugins', 'cache', 'rune-kit', 'rune');
+    await mkdir(path.join(cache, '2.17.1', 'skills'), { recursive: true });
+    await mkdir(path.join(cache, '2.22.1', 'skills'), { recursive: true });
+    await mkdir(path.join(cache, '2.9.0', 'skills'), { recursive: true });
+
+    const target = resolveSkillInstallRoot('/some/npx/ephemeral/root', { homedir: home });
+    assert.strictEqual(target.source, 'plugin-cache');
+    assert.strictEqual(target.root, path.join(cache, '2.22.1'));
+  });
+
+  test('ignores cache version dirs without a skills/ folder', async () => {
+    const cache = path.join(home, '.claude', 'plugins', 'cache', 'rune-kit', 'rune');
+    await mkdir(path.join(cache, '2.22.1', 'skills'), { recursive: true });
+    await mkdir(path.join(cache, '2.23.0'), { recursive: true }); // half-installed, no skills/
+
+    const target = resolveSkillInstallRoot('/fallback', { homedir: home });
+    assert.strictEqual(target.root, path.join(cache, '2.22.1'));
+  });
+
+  test('falls back to runeRoot when no plugin cache exists', async () => {
+    const target = resolveSkillInstallRoot('/plain/rune/root', { homedir: home });
+    assert.strictEqual(target.source, 'rune-root');
+    assert.strictEqual(target.root, '/plain/rune/root');
   });
 });

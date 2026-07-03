@@ -1,6 +1,6 @@
 # Rune Roadmap
 
-> Last updated: July 2026 | Version: 2.22.1
+> Last updated: July 2026 | Version: 2.22.2
 
 ---
 
@@ -18,7 +18,7 @@ These principles guide every roadmap decision:
 
 ---
 
-## Current State (v2.22.1 — "Convergence, Dogfooded")
+## Current State (v2.22.2 — "Convergence, Dogfooded")
 
 | Layer | Count | Status |
 |-------|-------|--------|
