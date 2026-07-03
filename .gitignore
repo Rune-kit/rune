@@ -15,6 +15,7 @@ node_modules/
 
 # Rune local state (per-project, not in plugin)
 .rune/
+!evals/**/fixture/.rune/
 
 # Compiler output
 dist/
