@@ -3,7 +3,7 @@ name: verification
 description: "Universal verification runner. Runs lint, type-check, tests, and build. Use after any code change to verify nothing is broken."
 metadata:
   author: runedev
-  version: "0.5.0"
+  version: "0.6.0"
   layer: L3
   model: haiku
   group: validation
@@ -120,6 +120,9 @@ Glob("path/to/expected/file") → found
 | `useEffect` with empty body / `async function` with no `await` | React/JS | Hollow implementation |
 | File has only type/interface exports but no implementation | TypeScript | Stub types-only file |
 | `// TODO` or `# TODO` as the only content in a function | Any | Placeholder |
+| `onClick={() => {}}` / handler bound to an empty or `console.log`-only function | React/Vue/Svelte | Dead handler — wired to nothing |
+| `href="#"` on an action link (not navigation) | HTML/JSX | Dead action link |
+| Submit handler whose body is only `event.preventDefault()` | Any UI | Form that swallows input |
 
 If ANY stub pattern detected → mark file as STUB, Level 2 FAIL.
 
@@ -138,10 +141,26 @@ If file has 0 consumers → mark as UNWIRED, Level 3 FAIL.
 
 **Exception**: Entry-point files (main.ts, index.ts, App.tsx, routes config) are exempt from Level 3 — they ARE the top-level consumers.
 
+**Level 3.5 — INTERACTION WIRED** (UI files in this task's diff only — `.tsx/.jsx/.vue/.svelte/.html`):
+
+Level 3 proves the component is *rendered*; Level 3.5 proves its interactive elements *do something*. For each UI file created or modified in this task:
+
+1. `Grep` interactive elements in the file: `<button`, `onClick=`, `onSubmit=`, `<form`, `action=`, `type="submit"`
+2. For each element, trace INWARD:
+   - **Handler bound?** `<button>` with no `onClick`/no enclosing form handler → `UNWIRED-INTERACTIVE`
+   - **Handler resolves?** The bound symbol is defined and its body is non-trivial (not caught by the Level 2 dead-handler patterns)
+   - **Target exists?** If the handler calls `fetch`/`axios`/a service function → the route path or service symbol EXISTS somewhere in the codebase (`Grep` the path/symbol). Handler → nonexistent target = `UNWIRED-INTERACTIVE`
+3. **Reverse check**: every API route file created in this task has ≥1 caller (`Grep` the route path across UI/service files). Route with 0 callers → `UNCALLED-ROUTE`
+4. Pure-display elements (no user expectation of action: decorative buttons in mockups explicitly listed in `.rune/ui-spec.md` `## Unwired Elements`) are reported as INFO, not failures — they are design's declared debt, tracked by `converge`
+
+**Scope guard**: Level 3.5 runs ONLY on files in this task's diff. Pre-existing files with dead interactive elements → WARN (legacy debt, don't punish), never FAIL.
+
 <HARD-GATE name="3-level-verification">
 ALL new files must pass Level 1 + Level 2 + Level 3.
+UI files in this task's diff must ALSO pass Level 3.5.
 EXISTS but STUB = "Existence Theater" — agent created files but didn't implement them.
 EXISTS and SUBSTANTIVE but UNWIRED = dead code — created but never connected.
+SUBSTANTIVE and WIRED but UNWIRED-INTERACTIVE = dead button — renders, does nothing. Same failure tier as UNWIRED.
 Report which level failed for each file in the Verification Report.
 </HARD-GATE>
 
@@ -224,11 +243,12 @@ Tests:     [PASS/FAIL/SKIP] ([passed]/[total], [coverage]%)
 Build:     [PASS/FAIL/SKIP]
 
 ### 3-Level File Verification
-| File | L1 Exists | L2 Substantive | L3 Wired | Verdict |
-|------|-----------|----------------|----------|---------|
-| src/auth/login.ts | ✓ | ✓ | ✓ (imported by routes.ts) | PASS |
-| src/auth/reset.ts | ✓ | STUB (returns null) | — | FAIL L2 |
-| src/utils/format.ts | ✓ | ✓ | UNWIRED (0 importers) | FAIL L3 |
+| File | L1 Exists | L2 Substantive | L3 Wired | L3.5 Interaction | Verdict |
+|------|-----------|----------------|----------|------------------|---------|
+| src/auth/login.ts | ✓ | ✓ | ✓ (imported by routes.ts) | ✓ (submit → POST /api/login, route exists) | PASS |
+| src/auth/reset.ts | ✓ | STUB (returns null) | — | — | FAIL L2 |
+| src/utils/format.ts | ✓ | ✓ | UNWIRED (0 importers) | n/a (not UI) | FAIL L3 |
+| src/ui/OrderForm.tsx | ✓ | ✓ | ✓ (rendered by OrdersPage) | UNWIRED-INTERACTIVE (Save → fetch '/api/orders', route absent) | FAIL L3.5 |
 
 Overall:   [PASS/FAIL]
 
@@ -239,6 +259,8 @@ Overall:   [PASS/FAIL]
 - Build: [first 5 build errors]
 - Stubs: [files that failed Level 2 with stub pattern detected]
 - Unwired: [files that failed Level 3 with 0 consumers]
+- Dead interactions: [elements that failed Level 3.5 with the broken link named (no handler / dead handler / missing target)] 
+- Uncalled routes: [route files created this task with 0 callers]
 ```
 
 ## Output Completion Enforcement
@@ -319,6 +341,9 @@ Known failure modes for this skill. Check these before declaring done.
 | Trusting exit code 0 without output verification | CRITICAL | Artifact Verification HARD-GATE: always confirm success indicator in stdout (pass count, "0 errors", output file exists) |
 | Existence Theater — file exists but is a stub | HIGH | 3-Level check: Level 2 scans for stub patterns (`<div>Placeholder</div>`, `return null`, `NotImplementedError`) |
 | Dead code — file created but never imported/used | MEDIUM | 3-Level check: Level 3 greps for consumers. 0 importers = UNWIRED |
+| Dead button — component rendered, interactive element wired to nothing | CRITICAL | Level 3.5: trace element → handler → target for every UI file in the diff. Rendering ≠ working |
+| Punishing legacy files for pre-existing dead interactions | MEDIUM | Level 3.5 scope guard: FAIL only for this task's diff; pre-existing = WARN |
+| Route created this task with zero callers passes silently | HIGH | Level 3.5 reverse check: new route files need ≥1 caller or FAIL |
 | Truncated code — agent hit output limit mid-file | HIGH | Output Completion Enforcement: scan for `// ...`, `// rest of code`, bare ellipsis patterns. TRUNCATED = Level 2 FAIL |
 
 ## Done When

@@ -4,7 +4,7 @@ description: "Validates agent claims against evidence trail. Use when verifying 
 user-invocable: false
 metadata:
   author: runedev
-  version: "1.8.0"
+  version: "1.9.0"
   layer: L3
   model: haiku
   group: validation
@@ -189,9 +189,9 @@ If an axis has ZERO claims → flag as gap: "No [Completeness/Correctness/Cohere
 UNCONFIRMED — 1 claim lacks evidence, 1 contradicted. Cannot proceed to commit.
 ```
 
-### Step 4.5 — Cross-Phase Integration Check
+### Step 4.5 — Integration Check (Cross-Phase + Cross-Layer)
 
-When validating a completed phase in a multi-phase plan, check for integration gaps between phases:
+Check for integration gaps — between phases AND between layers:
 
 1. **Orphaned exports** — files/functions created in this phase that claim to be used by future phases (see `## Cross-Phase Context → Exports`) but are not yet importable:
    ```
@@ -201,19 +201,26 @@ When validating a completed phase in a multi-phase plan, check for integration g
    - Expected export missing entirely → UNCONFIRMED ("Phase N claims to export X but X not found")
    ```
 
-2. **Uncalled routes** — API endpoints added in this phase but not wired to any frontend/consumer yet:
-   - This is OK if a future phase handles wiring (check master plan)
-   - Flag as WARN if no future phase mentions consuming this route
+2. **Uncalled routes** — API endpoints added in this task but not wired to any frontend/consumer:
+   - **BLOCK** if the route was created in THIS task AND a user story/AC references the interaction it serves — an uncalled route behind a story's UI is a dead path, not future work
+   - WARN (deferral allowed) ONLY if a NAMED future-phase task explicitly references consuming this route (verifiable in the master plan/phase files — "a future phase will handle it" without a task ID is not an excuse)
 
 3. **Auth gaps** — new endpoints or pages without authentication/authorization:
    - `Grep` for route handlers without auth middleware
    - Flag as WARN (may be intentional for public endpoints, but worth checking)
 
-4. **E2E flow trace** — for the primary user flow this phase enables:
-   - Trace: entry point → business logic → data layer → response
+4. **E2E flow trace** — for the primary user flow this task enables:
+   - Trace: entry point → handler → business logic → data layer → response
    - If any step in the chain is missing or stubbed → CONTRADICTED
 
-**This step is OPTIONAL for single-phase tasks and MANDATORY for multi-phase master plans.**
+**When this step is MANDATORY** (any one triggers it — single-phase tasks included):
+- The diff touches BOTH a UI file (`.tsx/.jsx/.vue/.svelte/.html`) AND an api/service/data file
+- The feature spec has a `## Key Entities` section
+- The task description implies user interaction with persisted data (click, submit, save, login, search, checkout)
+- Multi-phase master plan (always, as before)
+
+Skip ONLY when none of the above hold (pure-UI styling, pure-backend plumbing, docs/config).
+"Single-phase" is NOT a skip reason — most dead-button escapes are single-phase tasks.
 
 ### Step 5 — Evidence Quality Gate
 
@@ -286,7 +293,9 @@ Completion Gate Report with status (CONFIRMED/UNCONFIRMED/CONTRADICTED), claim v
 | Completion-gate itself claims "all confirmed" without evidence | CRITICAL | Gate report MUST include the evidence table — no table = report is invalid |
 | Existence Theater — agent creates files but they're stubs | HIGH | Step 1b stub detection: grep for Placeholder/TODO/NotImplementedError in new files |
 | Cross-phase integration gaps — exports exist but wrong signature | HIGH | Step 4.5: verify exports match Code Contracts from phase file |
-| Phase complete but E2E flow broken — missing link in the chain | MEDIUM | Step 4.5 E2E flow trace: entry → logic → data → response must all be connected |
+| Phase complete but E2E flow broken — missing link in the chain | HIGH | Step 4.5 E2E flow trace: entry → handler → logic → data → response must all be connected |
+| Skipping Step 4.5 because the task is single-phase | CRITICAL | Mandatory triggers: UI+data diff, Key Entities in spec, or interaction-implying task — single-phase is where most dead buttons escape |
+| Excusing an uncalled route with "a future phase will wire it" (no task named) | HIGH | Step 4.5 #2: deferral requires a NAMED future-phase task referencing the route — vibes-deferral = BLOCK |
 | Rubber-stamping — all CONFIRMED without scrutiny | HIGH | Default-FAIL mindset: actively seek 3-5 issues. Zero issues = red flag, apply skeptic sweep on weakest 2 claims |
 | Partial completion claimed as full — 80% done but "implemented" | HIGH | Adversarial checklist: check for partial completion, scope mismatch, evidence-claim alignment |
 | Self-Validation skipped — skill has checks but gate ignores them | HIGH | Step 1c: extract Self-Validation from skill's SKILL.md, treat each as implicit claim. Missing = UNCONFIRMED |

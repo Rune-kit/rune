@@ -3,7 +3,7 @@ name: design
 description: "Design system reasoning. Maps product domain to style, palette, typography, and platform-specific patterns. Generates .rune/design-system.md as the shared design contract for all UI-generating skills."
 metadata:
   author: runedev
-  version: "0.6.0"
+  version: "0.7.0"
   layer: L2
   model: sonnet
   group: creation
@@ -182,6 +182,18 @@ If the design calls for an icon, illustration, or graphic that the agent cannot 
 - Use **Phosphor Icons** (`@phosphor-icons/react`) or **Huge Icons** as the library default. Never generate custom SVG for standard iconography.
 - For illustrations, reference a placeholder string (e.g., `[ILLUSTRATION: empty-state-dashboard]`) that a human or asset-creator pass fills in later.
 - Malformed SVG is the #1 AI tell. A clean labeled placeholder is honest and professional.
+
+**Placeholder Ownership (MANDATORY)**: every placeholder or intentionally inert element the design ships — `[ ICON: ... ]`, `[ILLUSTRATION: ...]`, `[ PLACEHOLDER: ... ]`, and any button/link/form rendered as visual-only (no behavior designed yet) — MUST be listed in `.rune/ui-spec.md` under a `## Unwired Elements` section:
+
+```markdown
+## Unwired Elements
+| Element | Location | Why unwired | Owner of wiring |
+|---------|----------|-------------|-----------------|
+| product-grid | ProductGrid.tsx | awaiting US-2 backend | US-2 Endpoint task |
+| [ ICON: dashboard ] | Sidebar.tsx | asset pass pending | asset-creator |
+```
+
+This list is how downstream gates tell **declared debt** from **accidental dead UI**: `preflight`/`verification` skip these elements (design's honest debt), while `converge` counts them as `missing` until wired. A placeholder NOT on this list that reaches implementation = a dead element with no owner — that's the bug this section exists to prevent.
 
 #### Rule 3 — Color Derivation via oklch(), not Manual Shading
 

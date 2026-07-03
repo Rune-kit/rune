@@ -3,7 +3,7 @@ name: preflight
 description: "Pre-commit quality gate that catches 'almost right' code. Use when about to commit — auto-fires before commit to validate logic correctness, error handling, regressions, and completeness. Goes beyond linting."
 metadata:
   author: runedev
-  version: "1.1.0"
+  version: "1.2.0"
   layer: L2
   model: sonnet
   group: quality
@@ -150,6 +150,7 @@ Verify that new code ships complete:
 - New feature → has at least one test file
 - New configuration option → has documentation (inline comment or docs file)
 - New database query → has corresponding migration file if schema changed
+- **Cross-layer pairing**: new interactive component (button/form/action) → its handler chain reaches a REAL endpoint/service that exists in the codebase — OR the plan explicitly scopes it UI-only with a mock (stated, not assumed). Unexcused missing pair = **BLOCK**, not WARN: a dead interactive element is incomplete work presented as complete. (Mirror check: new endpoint this diff → ≥1 consumer or a NAMED future task consuming it)
 
 **Framework-specific completeness (apply only if detected):**
 - React component with async data → must have `loading` state AND `error` state
@@ -238,6 +239,7 @@ When UI/Frontend hook is triggered, run these checks on all `.tsx`/`.jsx`/`.svel
 | **Scale Minimum — hero display** | `<h1>` with `text-3xl` or smaller (30px) when the heading is in a hero/landing section | WARN: "Hero heading below 48px at {file}:{line} — insufficient visual hierarchy" |
 | **Hand-rolled SVG for standard icons** | Inline `<svg viewBox=` in JSX when the surrounding comment/class names indicate standard iconography (dashboard, menu, close, chevron, arrow, search, home, user, settings, bell, trash) | WARN: "Hand-rolled SVG at {file}:{line} — use @phosphor-icons/react or huge-icons, or ship boxed placeholder" |
 | **Manual hex accent shading** | CSS/Tailwind config defining 2+ sibling `--accent-hover` / `--accent-pressed` / `--accent-active` with hex literals (no `oklch(from ...)` or design-token chain) | WARN: "Manual hex shade at {file}:{line} — derive via oklch(from var(--accent) calc(l - 0.08) c h)" |
+| **Dead interactive element** | `<button>`/`<form>`/action element with no bound handler, `onClick={() => {}}`, `href="#"` action link, or `preventDefault()`-only submit — in files of THIS diff (skip elements listed in `.rune/ui-spec.md` `## Unwired Elements`) | BLOCK: "Dead interactive at {file}:{line} — element renders but does nothing" |
 | **Missing states** | Components fetching data without loading/error/empty states | WARN: "Async component at {file} missing [loading|error|empty] state" |
 | **Icon accessibility** | Decorative icons without `aria-hidden="true"`, functional icons without `aria-label` | WARN: "Icon at {file}:{line} missing aria attribute" |
 | **Inline styles** | `style={{` or `style=` attribute usage instead of classes/tokens | WARN: "Inline style at {file}:{line} — use CSS class or Tailwind" |
@@ -410,6 +412,8 @@ WARN — 3 issues found (0 blocking, 3 must-acknowledge). Resolve before commit 
 | Domain hooks not triggered when pack is installed | HIGH | Step 4.5 auto-detects file patterns — if pack is installed but hooks don't fire, check file pattern matching |
 | Domain hooks overriding generic checks | HIGH | HARD-GATE: domain hooks are ADDITIVE — they never replace Steps 1-4 |
 | Pack Hard-Stop Thresholds ignored in preflight | MEDIUM | Step 4.5 Pack Integration must read installed pack thresholds — test with each new pack |
+| Dead interactive element downgraded to WARN ("just a loading-state issue") | CRITICAL | Step 4 cross-layer pairing + Step 4.5 dead-interactive check are BLOCK — a button wired to nothing is incomplete work, not a style nit |
+| Flagging design's declared placeholders as dead interactives | MEDIUM | Elements listed in `.rune/ui-spec.md` `## Unwired Elements` are design debt tracked by converge — skip, don't BLOCK |
 
 ## Done When
 
