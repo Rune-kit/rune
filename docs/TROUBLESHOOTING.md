@@ -34,9 +34,9 @@
 ### Cursor/Windsurf/Antigravity: skill invocations ignored
 **Symptom:** You type `@rune:cook` or `/rune cook` but nothing happens.
 **Fix:** These IDEs use different prefixes. Rune writes the correct format during `init`.
-- Cursor: Skills appear as `.cursor/rules/*.mdc` — invoke by describing intent
-- Windsurf: `.windsurf/workflows/*.md` — invoke via workflow menu
-- Antigravity: `.antigravity/workflows/*.md` — beta support
+- Cursor: Skills appear as `.cursor/skills/rune-<name>/SKILL.md` — invoke by describing intent
+- Windsurf: `.windsurf/skills/rune-<name>/SKILL.md` — invoke by intent or `@rune-<name>`
+- Antigravity: `.agents/skills/rune-<name>/SKILL.md` — auto-discovered
 
 If files exist but IDE ignores them, check IDE's "reload workspace" option.
 

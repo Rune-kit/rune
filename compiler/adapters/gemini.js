@@ -1,27 +1,25 @@
 /**
  * Gemini CLI Adapter
  *
- * Gemini CLI loads a single GEMINI.md at project root for context. It does NOT
- * support per-skill imports as of writing — so the canonical output is a
- * bundled GEMINI.md with every skill concatenated under `## rune-<name>` H2
- * sections. Per-skill files are still emitted under gemini/skills/ for human
- * inspection and forward-compatibility if Gemini adds @import support later.
+ * Emits SKILL.md files into .gemini/skills/{name}/ directories — Gemini CLI's
+ * native Agent Skills format. Gemini CLI discovers skills automatically from
+ * .gemini/skills/ (and the .agents/skills/ interop alias) and lazy-loads the
+ * full SKILL.md only when a skill is invoked — no more bundling every skill
+ * into GEMINI.md (which loaded all 65 skills as always-on context).
  *
- * Gemini context file: GEMINI.md (project root)
- * Gemini per-skill files: gemini/skills/rune-{name}.md (forward-compat staging)
+ * Gemini skills dir: .gemini/skills/
+ * Gemini skill format: .gemini/skills/{name}/SKILL.md
+ * Gemini project context: GEMINI.md (slim pointer, project root)
  *
- * @see https://github.com/google-gemini/gemini-cli
- * @see https://geminicli.com/docs/reference/configuration/
+ * @see https://geminicli.com/docs/cli/skills/
+ * @see https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/skills.md
  *
  * MODEL TIER MAPPING (v2.18+):
- * Gemini CLI exposes 1.5 Pro / 1.5 Flash / 2.0 Flash etc. Anthropic tier names
- * translate to Gemini families: opus→1.5-pro, sonnet→1.5-flash, haiku→
- * 2.0-flash-lite. Hint only — Gemini CLI reads model from --model flag /
- * config, not from rule body.
+ * Gemini CLI exposes Pro / Flash / Flash-Lite families. Anthropic tier names
+ * translate to Gemini families as a hint comment — Gemini CLI reads model
+ * from --model flag / config, not from the skill body.
  */
 
-import { readFile } from 'node:fs/promises';
-import nodePath from 'node:path';
 import { BRANDING_FOOTER } from '../transforms/branding.js';
 
 const MODEL_MAP = {
@@ -38,23 +36,24 @@ const TOOL_MAP = {
   Grep: 'search file contents',
   Bash: 'run a shell command',
   TodoWrite: 'track task progress',
-  Skill: 'follow the referenced rune-{name} section in GEMINI.md',
+  Skill: 'invoke the rune-{name} skill',
   Agent: 'execute the workflow',
 };
 
 export default {
   name: 'gemini',
-  outputDir: 'gemini/skills',
+  outputDir: '.gemini/skills',
   fileExtension: '.md',
   skillPrefix: 'rune-',
   skillSuffix: '',
 
-  // Per-skill files staged for forward compat; canonical entry is bundled GEMINI.md.
-  useSkillDirectories: false,
+  // Gemini CLI uses directory-per-skill: .gemini/skills/{name}/SKILL.md
+  useSkillDirectories: true,
+  skillFileName: 'SKILL.md',
 
   transformReference(skillName, raw) {
     const isBackticked = raw.startsWith('`') && raw.endsWith('`');
-    const ref = `the rune-${skillName} section in GEMINI.md`;
+    const ref = `the rune-${skillName} skill`;
     return isBackticked ? `\`${ref}\`` : ref;
   },
 
@@ -80,46 +79,24 @@ export default {
   },
 
   scriptsDir(skillName) {
-    return `rune-${skillName}-scripts`;
+    return `rune-${skillName}/scripts`;
   },
 
   postProcess(content) {
     return content.replace(/^context: fork\n/gm, '').replace(/^agent: general-purpose\n/gm, '');
   },
 
-  // Bundle every per-skill file into a single GEMINI.md with H2 section per skill.
-  // Gemini CLI loads GEMINI.md from project root as its context file. Hook contract
-  // requires relative paths (resolved against outputRoot by the emitter).
-  async generateExtraFiles({ stats, outputDir }) {
-    const skillFiles = [...stats.files]
-      .filter((f) => f.startsWith('rune-') && f.endsWith('.md') && !f.includes('/') && !f.includes('\\'))
-      .sort();
-
-    const sections = [];
-    for (const fname of skillFiles) {
-      const sourcePath = nodePath.join(outputDir, fname);
-      try {
-        const raw = await readFile(sourcePath, 'utf-8');
-        // Strip frontmatter — Gemini reads plain markdown.
-        const stripped = raw.replace(/^---\n[\s\S]*?\n---\n?/, '').trim();
-        const skillName = fname.replace(/^rune-/, '').replace(/\.md$/, '');
-        sections.push(`\n\n## rune-${skillName}\n\n${stripped}`);
-      } catch {
-        // Skip unreadable per-skill file — sections array still produces valid bundle.
-      }
-    }
-
+  // Slim GEMINI.md pointer — skills themselves are lazy-loaded natively.
+  generateExtraFiles({ stats }) {
     const geminiMd = [
       '# Rune — Project Configuration',
       '',
       'Rune is an interconnected skill ecosystem for AI coding assistants.',
-      `${stats.skillCount} core skills + ${stats.packCount} extension packs, bundled below.`,
+      `${stats.skillCount} core skills + ${stats.packCount} extension packs.`,
       '',
-      'When a user request matches a skill\'s domain (e.g. "implement", "review", "debug"), follow the matching `## rune-<name>` section.',
+      'Per-skill Agent Skills live under `.gemini/skills/rune-<name>/SKILL.md`. Gemini CLI discovers and lazy-loads them automatically.',
       '',
-      '> Per-skill files are staged in `gemini/skills/` for forward-compat if Gemini CLI adds @import support.',
-      '',
-      ...sections,
+      'When a user request matches a skill\'s domain (e.g. "implement", "review", "debug"), invoke the matching rune-<name> skill.',
       '',
       '---',
       '> Rune Skill Mesh — https://github.com/rune-kit/rune',

@@ -1,6 +1,13 @@
 # Rune Multi-Platform Architecture
 
-> Version: 0.1.0 | Status: Design | Target: 2-week build
+> Version: 0.1.0 | Status: Design (historical) | Target: 2-week build
+>
+> **Note (2026-07):** Output paths in this document reflect the original design.
+> Skill emission has since migrated to each platform's native Agent Skills dirs
+> (`.cursor/skills/`, `.windsurf/skills/`, `.agents/skills/` for Codex/Antigravity,
+> `.github/skills/`, `.gemini/skills/`, `.qwen/skills/`, `.qoder/skills/` — all
+> dir-per-skill SKILL.md). See `docs/ARCHITECTURE.md` → Cross-Platform Adapter
+> Coverage for the current table.
 
 ## 1. Principles
 

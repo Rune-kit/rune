@@ -65,7 +65,7 @@ async function discoverPacks(extensionsDir, enabledPacks = null) {
  * Copies directories except SKILL.md (already processed) and denylisted dirs
  *
  * @param {string} sourceSkillDir - e.g. skills/cook/
- * @param {string} outputSkillDir - e.g. .codex/skills/rune-cook/
+ * @param {string} outputSkillDir - e.g. .agents/skills/rune-cook/
  * @returns {Promise<string[]>} list of copied directory names
  */
 const COPY_DENYLIST = new Set(['.git', 'node_modules', '__pycache__', '.DS_Store', '.venv', '.env']);
@@ -74,7 +74,8 @@ async function copySkillExtraDirs(sourceSkillDir, outputSkillDir) {
   if (!existsSync(sourceSkillDir)) return [];
 
   const entries = await readdir(sourceSkillDir, { withFileTypes: true });
-  const dirs = entries.filter((e) => e.isDirectory() && !COPY_DENYLIST.has(e.name));
+  // scripts/ is excluded: copyScriptsDir handles it explicitly (with stats counting)
+  const dirs = entries.filter((e) => e.isDirectory() && !COPY_DENYLIST.has(e.name) && e.name !== 'scripts');
 
   const copied = [];
   for (const dir of dirs) {
@@ -91,7 +92,7 @@ async function copySkillExtraDirs(sourceSkillDir, outputSkillDir) {
  * Copy scripts directory from skill source to output.
  *
  * @param {string} sourceScriptsDir - e.g. skills/slides/scripts/
- * @param {string} outputScriptsDir - e.g. .cursor/rules/rune-slides-scripts/
+ * @param {string} outputScriptsDir - e.g. .cursor/skills/rune-slides/scripts/
  * @returns {Promise<string[]>} list of copied file paths
  */
 async function copyScriptsDir(sourceScriptsDir, outputScriptsDir) {
@@ -524,7 +525,7 @@ export async function buildAll({
       let skillDir = null;
 
       if (adapter.useSkillDirectories) {
-        // Directory-per-skill: .codex/skills/rune-{name}/SKILL.md
+        // Directory-per-skill: .agents/skills/rune-{name}/SKILL.md
         const dirName = `${adapter.skillPrefix}${parsed.name}`;
         skillDir = path.join(outputDir, dirName);
         await mkdir(skillDir, { recursive: true });

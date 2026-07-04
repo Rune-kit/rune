@@ -244,7 +244,10 @@ describe('buildAll split pack auto-discovery', () => {
       assert.strictEqual(stats.packCount, 1, 'should build 1 pack');
 
       // Read the compiled pack output
-      const packOutput = await readFile(path.join(outputRoot, adapter.outputDir, 'rune-ext-test-pack.mdc'), 'utf-8');
+      const packOutput = await readFile(
+        path.join(outputRoot, adapter.outputDir, 'rune-ext-test-pack', 'SKILL.md'),
+        'utf-8',
+      );
 
       // Should contain the pack index body
       assert.ok(packOutput.includes('Pack index body'), 'missing pack index body');
@@ -270,7 +273,7 @@ describe('buildAll split pack auto-discovery', () => {
     await buildAll({ runeRoot, outputRoot: tmp, adapter });
 
     try {
-      const packOutput = await readFile(path.join(tmp, adapter.outputDir, 'rune-ext-ai-ml.mdc'), 'utf-8');
+      const packOutput = await readFile(path.join(tmp, adapter.outputDir, 'rune-ext-ai-ml', 'SKILL.md'), 'utf-8');
 
       // Should be significantly longer than just the index body (~99 lines without skills)
       const lineCount = packOutput.split('\n').length;

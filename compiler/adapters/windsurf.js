@@ -1,8 +1,18 @@
 /**
  * Windsurf Adapter
  *
- * Emits .md rule files for .windsurf/rules/ directory.
- * Uses prose references for cross-skill mesh (no @file support).
+ * Emits SKILL.md files into .windsurf/skills/{name}/ directories — Windsurf's
+ * native Cascade Skills format. Cascade uses progressive disclosure: only the
+ * skill's name and description are shown to the model by default; the full
+ * SKILL.md is loaded when Cascade invokes the skill (or via @skill-name).
+ *
+ * Windsurf skills dir: .windsurf/skills/
+ * Windsurf skill format: .windsurf/skills/{name}/SKILL.md
+ * @see https://docs.windsurf.com/windsurf/cascade/skills
+ *
+ * NOTE: .windsurf/rules/ is still used by the runtime-hooks installer
+ * (adapters/hooks/windsurf.js) — rules are the correct vehicle for always-on
+ * hook context. Only skill emission moved to .windsurf/skills/.
  *
  * MODEL TIER MAPPING (v2.15+):
  * No-op. Windsurf's Anthropic API integration understands `model: opus|sonnet|haiku`
@@ -19,20 +29,24 @@ const TOOL_MAP = {
   Grep: 'search for text in files',
   Bash: 'run a shell command',
   TodoWrite: 'track task progress',
-  Skill: 'follow the referenced skill workflow',
+  Skill: 'invoke the named skill',
   Agent: 'execute the workflow',
 };
 
 export default {
   name: 'windsurf',
-  outputDir: '.windsurf/rules',
+  outputDir: '.windsurf/skills',
   fileExtension: '.md',
   skillPrefix: 'rune-',
   skillSuffix: '',
 
+  // Windsurf uses directory-per-skill: .windsurf/skills/{name}/SKILL.md
+  useSkillDirectories: true,
+  skillFileName: 'SKILL.md',
+
   transformReference(skillName, raw) {
     const isBackticked = raw.startsWith('`') && raw.endsWith('`');
-    const ref = `the rune-${skillName} rule file`;
+    const ref = `the rune-${skillName} skill`;
     return isBackticked ? `\`${ref}\`` : ref;
   },
 
@@ -41,7 +55,8 @@ export default {
   },
 
   generateHeader(skill) {
-    return `# rune-${skill.name}\n\n> Layer: ${skill.layer} | Group: ${skill.group}\n\n`;
+    const desc = (skill.description || '').replace(/"/g, '\\"');
+    return ['---', `name: rune-${skill.name}`, `description: "${desc}"`, '---', '', ''].join('\n');
   },
 
   generateFooter() {
@@ -53,7 +68,7 @@ export default {
   },
 
   scriptsDir(skillName) {
-    return `rune-${skillName}-scripts`;
+    return `rune-${skillName}/scripts`;
   },
 
   postProcess(content) {

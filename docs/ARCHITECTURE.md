@@ -109,18 +109,18 @@ Rune compiles core skills + extension packs into 13 platform-native formats. Eac
 | Adapter | Output | Skill Format | Extra Files | Source Doc |
 |---------|--------|--------------|-------------|------------|
 | **claude** | (passthrough) | native SKILL.md | — | Anthropic Claude Code |
-| **cursor** | `.cursor/rules/rune-<n>.mdc` | YAML frontmatter (alwaysApply for L0) | — | Cursor Rules |
-| **windsurf** | `.windsurf/workflows/...` + rules | workflow + rule pairs | — | Windsurf Cascade |
-| **antigravity** | `.antigravity/rules/...` | Gemini-flavored rules | — | Google Antigravity |
-| **codex** | `.codex/skills/rune-<n>/SKILL.md` | dir-per-skill, OpenAI tier | `AGENTS.md` | OpenAI Codex |
+| **cursor** | `.cursor/skills/rune-<n>/SKILL.md` | dir-per-skill Agent Skills (Cursor 2.4+) | — | cursor.com/docs/skills |
+| **windsurf** | `.windsurf/skills/rune-<n>/SKILL.md` | dir-per-skill Cascade Skills | — | docs.windsurf.com |
+| **antigravity** | `.agents/skills/rune-<n>/SKILL.md` | dir-per-skill, Gemini model map | — | antigravity.google/docs/skills |
+| **codex** | `.agents/skills/rune-<n>/SKILL.md` | dir-per-skill, OpenAI tier | `AGENTS.md` | developers.openai.com/codex/skills |
 | **opencode** | `.opencode/skills/rune-<n>/SKILL.md` | dir-per-skill, tier hints | — | opencode.ai/docs |
 | **openclaw** | `.openclaw/.../SKILL.md` | bundled with manifest + TS entry | `openclaw.plugin.json`, `src/index.ts` | OpenClaw |
 | **generic** | `.ai/rules/rune-<n>.md` | portable markdown | — | (fallback) |
 | **aider** | `aider/rules/rune-<n>.md` | flat markdown + tier inline | `.aider.conf.yml` (read[]), `CONVENTIONS.md` | aider.chat |
-| **copilot** | `.github/instructions/rune-<n>.instructions.md` | YAML w/ `applyTo: "**"` | `.github/copilot-instructions.md`, `AGENTS.md` | GitHub Copilot CLI |
-| **gemini** | `gemini/skills/rune-<n>.md` (staged) + bundled `GEMINI.md` | bundled H2 sections | `GEMINI.md` (single-file context) | Gemini CLI |
-| **qoder** | `.qoder/rules/rune-<n>.md` | YAML w/ tier:* | `AGENTS.md` | docs.qoder.com |
-| **qwen** | `qwen/skills/rune-<n>.md` | YAML + Qwen model hint | `QWEN.md` (with `@import` lines) | qwenlm.github.io |
+| **copilot** | `.github/skills/rune-<n>/SKILL.md` | dir-per-skill Agent Skills | `.github/copilot-instructions.md`, `AGENTS.md` | docs.github.com |
+| **gemini** | `.gemini/skills/rune-<n>/SKILL.md` | dir-per-skill, lazy-loaded natively | `GEMINI.md` (slim pointer) | geminicli.com/docs/cli/skills |
+| **qoder** | `.qoder/skills/rune-<n>/SKILL.md` | dir-per-skill, YAML w/ tier:* | `AGENTS.md` | docs.qoder.com |
+| **qwen** | `.qwen/skills/rune-<n>/SKILL.md` | dir-per-skill, Qwen model hint | `QWEN.md` (slim pointer) | qwenlm.github.io |
 
 Adapters with `generateExtraFiles()` emit additional context files alongside per-skill rules — this generic hook (added v2.18) replaces ad-hoc `if (adapter.name === ...)` special cases in the emitter.
 

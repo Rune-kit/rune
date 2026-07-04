@@ -58,12 +58,12 @@ describe('full pipeline: cook skill', () => {
 });
 
 describe('full pipeline: fix skill', () => {
-  test('cursor: cross-refs transformed to .mdc', () => {
+  test('cursor: cross-refs transformed to skill references', () => {
     const adapter = getAdapter('cursor');
     const result = transformSkill(fixParsed, adapter);
 
     // Fix references cook, debug, test, etc. — at least some should be transformed
-    assert.ok(result.body.includes('.mdc'), 'cursor output should contain .mdc references');
+    assert.ok(result.body.includes('the rune-'), 'cursor output should contain skill references');
   });
 
   test('generic: cross-refs transformed to descriptive text', () => {
@@ -82,15 +82,15 @@ describe('full pipeline: fix skill', () => {
 // --- Output assembly (header + body + footer) ---
 
 describe('output assembly', () => {
-  test('cursor output assembles into valid .mdc file', () => {
+  test('cursor output assembles into valid SKILL.md file', () => {
     const adapter = getAdapter('cursor');
     const result = transformSkill(cookParsed, adapter);
     const assembled = result.header + result.body + result.footer;
 
     // Should start with YAML frontmatter
-    assert.ok(assembled.startsWith('---\n'), 'cursor .mdc should start with YAML frontmatter');
-    assert.ok(assembled.includes('description:'), 'cursor .mdc should have description');
-    assert.ok(assembled.includes('alwaysApply:'), 'cursor .mdc should have alwaysApply');
+    assert.ok(assembled.startsWith('---\n'), 'cursor SKILL.md should start with YAML frontmatter');
+    assert.ok(assembled.includes('name: rune-'), 'cursor SKILL.md should have name');
+    assert.ok(assembled.includes('description:'), 'cursor SKILL.md should have description');
   });
 
   test('codex output has YAML frontmatter with name', () => {

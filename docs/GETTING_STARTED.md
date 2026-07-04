@@ -30,11 +30,11 @@ This detects your AI assistant and writes the right config files:
 | Assistant | What Rune writes |
 |-----------|------------------|
 | Claude Code | `.claude/` (plugin), skills invoke via `/rune <name>` |
-| Cursor | `.cursor/rules/*.mdc` |
-| Windsurf | `.windsurf/workflows/*.md` |
-| Antigravity | `.antigravity/workflows/*.md` |
-| Codex | `.codex/skills/` |
-| OpenCode | `.opencode/skills/` |
+| Cursor | `.cursor/skills/rune-<name>/SKILL.md` |
+| Windsurf | `.windsurf/skills/rune-<name>/SKILL.md` |
+| Antigravity | `.agents/skills/rune-<name>/SKILL.md` |
+| Codex | `.agents/skills/rune-<name>/SKILL.md` |
+| OpenCode | `.opencode/skills/rune-<name>/SKILL.md` |
 
 Verify install:
 

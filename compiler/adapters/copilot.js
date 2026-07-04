@@ -1,19 +1,17 @@
 /**
- * GitHub Copilot CLI Adapter
+ * GitHub Copilot Adapter
  *
- * Emits per-skill instruction files into .github/instructions/ — the documented
- * convention for GitHub Copilot custom instructions (read by both the CLI and
- * the GitHub Copilot IDE plugin family).
+ * Emits SKILL.md files into .github/skills/{name}/ directories — GitHub
+ * Copilot's native Agent Skills format (supported since Dec 2025 across
+ * Copilot CLI, VS Code agent mode, and github.com). Skills are loaded
+ * on-demand based on the description, keeping context lean.
  *
- * Copilot instructions dir: .github/instructions/
- * Copilot instruction file: .github/instructions/rune-{name}.instructions.md
+ * Copilot skills dir: .github/skills/ (also reads .claude/skills and .agents/skills)
+ * Copilot skill format: .github/skills/{name}/SKILL.md
  * Copilot project context: AGENTS.md (Copilot Spaces / Coding Agent convention)
  *
- * Each .instructions.md uses YAML frontmatter with `applyTo` for path scoping.
- * Default applyTo: "**" means "apply to all files."
- *
- * @see https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-custom-instructions
- * @see https://docs.github.com/en/copilot/concepts/response-customization
+ * @see https://docs.github.com/en/copilot/concepts/agents/about-agent-skills
+ * @see https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-skills
  *
  * MODEL TIER MAPPING (v2.18+):
  * Copilot multi-model support exposes Anthropic/OpenAI/Google providers. Tier
@@ -37,23 +35,24 @@ const TOOL_MAP = {
   Grep: 'search file contents',
   Bash: 'run a shell command',
   TodoWrite: 'track task progress',
-  Skill: 'follow the referenced instructions',
+  Skill: 'invoke the named skill',
   Agent: 'execute the workflow',
 };
 
 export default {
   name: 'copilot',
-  outputDir: '.github/instructions',
-  fileExtension: '.instructions.md',
+  outputDir: '.github/skills',
+  fileExtension: '.md',
   skillPrefix: 'rune-',
   skillSuffix: '',
 
-  // Copilot instructions are flat per-skill files, not directories.
-  useSkillDirectories: false,
+  // Copilot uses directory-per-skill: .github/skills/{name}/SKILL.md
+  useSkillDirectories: true,
+  skillFileName: 'SKILL.md',
 
   transformReference(skillName, raw) {
     const isBackticked = raw.startsWith('`') && raw.endsWith('`');
-    const ref = `the rune-${skillName} instructions`;
+    const ref = `the rune-${skillName} skill`;
     return isBackticked ? `\`${ref}\`` : ref;
   },
 
@@ -62,15 +61,13 @@ export default {
   },
 
   generateHeader(skill) {
-    // Per docs.github.com Copilot CLI custom-instructions spec, the only
-    // documented frontmatter key for `.instructions.md` is `applyTo`. Other
-    // metadata (description, tier hint) belongs in the markdown body so it
-    // survives parsing across CLI/IDE/extensions consistently.
-    const desc = (skill.description || '').replace(/\n/g, ' ');
+    // Agent Skills spec: name + description frontmatter, markdown body.
+    // Tier hint stays a body comment — Copilot has no model frontmatter key.
+    const desc = (skill.description || '').replace(/"/g, '\\"');
     const tierHint = skill.model ? MODEL_MAP[skill.model] || skill.model : null;
-    const lines = ['---', 'applyTo: "**"', '---', '', `# rune-${skill.name}`, '', `> ${desc}`];
-    if (tierHint) lines.push('', `<!-- tier-hint: ${tierHint} -->`);
-    lines.push('', '');
+    const lines = ['---', `name: rune-${skill.name}`, `description: "${desc}"`, '---', ''];
+    if (tierHint) lines.push(`<!-- tier-hint: ${tierHint} -->`, '');
+    lines.push('');
     return lines.join('\n');
   },
 
@@ -83,7 +80,7 @@ export default {
   },
 
   scriptsDir(skillName) {
-    return `rune-${skillName}-scripts`;
+    return `rune-${skillName}/scripts`;
   },
 
   postProcess(content) {
@@ -96,9 +93,9 @@ export default {
     const copilotIndex = [
       '# Rune — Copilot Custom Instructions',
       '',
-      `Per-skill instructions live under \`.github/instructions/rune-<name>.instructions.md\` (${stats.skillCount} skills + ${stats.packCount} packs). Copilot loads them based on each file's \`applyTo\` glob.`,
+      `Per-skill Agent Skills live under \`.github/skills/rune-<name>/SKILL.md\` (${stats.skillCount} skills + ${stats.packCount} packs). Copilot discovers and loads them on demand based on each skill's description.`,
       '',
-      'When a user request matches a skill\'s domain (e.g. "fix the failing test", "review this PR"), prefer following the corresponding rune-<name>.instructions.md over freestyling.',
+      'When a user request matches a skill\'s domain (e.g. "fix the failing test", "review this PR"), prefer invoking the corresponding rune-<name> skill over freestyling.',
       '',
       '---',
       '> Rune Skill Mesh — https://github.com/rune-kit/rune',
@@ -111,7 +108,7 @@ export default {
       'Rune is an interconnected skill ecosystem for AI coding assistants.',
       `${stats.skillCount} core skills + ${stats.packCount} extension packs.`,
       '',
-      'Per-skill custom instructions: `.github/instructions/rune-<name>.instructions.md`',
+      'Per-skill Agent Skills: `.github/skills/rune-<name>/SKILL.md`',
       '',
       '---',
       '> Rune Skill Mesh — https://github.com/rune-kit/rune',

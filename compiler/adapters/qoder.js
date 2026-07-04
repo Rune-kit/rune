@@ -1,14 +1,15 @@
 /**
  * Qoder Adapter
  *
- * Emits per-skill rule files into .qoder/rules/ — Qoder's documented project-level
- * rule directory. Qoder also reads AGENTS.md as its project-context file.
+ * Emits SKILL.md files into .qoder/skills/{name}/ directories — Qoder's
+ * documented project-level Agent Skills location (works identically in
+ * Qoder IDE and CLI). Qoder also reads AGENTS.md as its project-context file.
  *
- * Qoder rules dir: .qoder/rules/
- * Qoder rule file: .qoder/rules/rune-{name}.md (one file per skill)
+ * Qoder skills dir: .qoder/skills/
+ * Qoder skill format: .qoder/skills/{name}/SKILL.md
  * Qoder project context: AGENTS.md (open AGENTS.md standard)
  *
- * @see https://docs.qoder.com/user-guide/rules
+ * @see https://docs.qoder.com/extensions/skills
  * @see https://agents.md/
  *
  * MODEL TIER MAPPING (v2.18+):
@@ -32,23 +33,24 @@ const TOOL_MAP = {
   Grep: 'search file contents',
   Bash: 'run a shell command',
   TodoWrite: 'track task progress',
-  Skill: 'follow the referenced rune-{name} rule',
+  Skill: 'invoke the rune-{name} skill',
   Agent: 'execute the workflow',
 };
 
 export default {
   name: 'qoder',
-  outputDir: '.qoder/rules',
+  outputDir: '.qoder/skills',
   fileExtension: '.md',
   skillPrefix: 'rune-',
   skillSuffix: '',
 
-  // Qoder rules are flat .md files, not directory-per-skill
-  useSkillDirectories: false,
+  // Qoder uses directory-per-skill: .qoder/skills/{name}/SKILL.md
+  useSkillDirectories: true,
+  skillFileName: 'SKILL.md',
 
   transformReference(skillName, raw) {
     const isBackticked = raw.startsWith('`') && raw.endsWith('`');
-    const ref = `the rune-${skillName} rule`;
+    const ref = `the rune-${skillName} skill`;
     return isBackticked ? `\`${ref}\`` : ref;
   },
 
@@ -74,7 +76,7 @@ export default {
   },
 
   scriptsDir(skillName) {
-    return `rune-${skillName}-scripts`;
+    return `rune-${skillName}/scripts`;
   },
 
   postProcess(content) {
@@ -89,9 +91,7 @@ export default {
       'Rune is an interconnected skill ecosystem for AI coding assistants.',
       `${stats.skillCount} core skills + ${stats.packCount} extension packs.`,
       '',
-      'Per-skill rules live under `.qoder/rules/rune-<name>.md`. Qoder loads them automatically.',
-      '',
-      'Reference a skill by name (e.g. "follow the rune-cook rule") inside any chat — the rule file is auto-injected.',
+      'Per-skill Agent Skills live under `.qoder/skills/rune-<name>/SKILL.md`. Qoder discovers and loads them on demand.',
       '',
       '---',
       '> Rune Skill Mesh — https://github.com/rune-kit/rune',

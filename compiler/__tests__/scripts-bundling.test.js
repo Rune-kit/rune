@@ -54,7 +54,7 @@ describe('resolveScriptsPath', () => {
 
 describe('adapter scriptsDir', () => {
   test('flat-file adapters return sibling dir pattern', () => {
-    for (const name of ['cursor', 'windsurf', 'antigravity', 'generic', 'openclaw']) {
+    for (const name of ['generic', 'openclaw']) {
       const adapter = getAdapter(name);
       assert.ok(adapter.scriptsDir, `${name} should have scriptsDir`);
       assert.strictEqual(adapter.scriptsDir('slides'), 'rune-slides-scripts', `${name} scriptsDir mismatch`);
@@ -62,7 +62,17 @@ describe('adapter scriptsDir', () => {
   });
 
   test('directory-per-skill adapters return nested dir pattern', () => {
-    for (const name of ['codex', 'opencode']) {
+    for (const name of [
+      'codex',
+      'opencode',
+      'cursor',
+      'windsurf',
+      'copilot',
+      'qoder',
+      'gemini',
+      'qwen',
+      'antigravity',
+    ]) {
       const adapter = getAdapter(name);
       assert.ok(adapter.scriptsDir, `${name} should have scriptsDir`);
       assert.strictEqual(adapter.scriptsDir('slides'), 'rune-slides/scripts', `${name} scriptsDir mismatch`);
@@ -143,7 +153,7 @@ describe('buildAll with scripts', () => {
     return tmp;
   }
 
-  test('cursor: scripts copied to sibling dir, placeholder resolved', async () => {
+  test('cursor: scripts inside skill directory, placeholder resolved', async () => {
     const tmp = await createTempSkillTree();
     try {
       const outputRoot = path.join(tmp, 'out');
@@ -153,19 +163,19 @@ describe('buildAll with scripts', () => {
       // Scripts copied
       assert.ok(stats.scriptsCopied >= 2, `expected 2+ scripts copied, got ${stats.scriptsCopied}`);
 
-      // Scripts dir exists with files
-      const scriptsOut = path.join(outputRoot, adapter.outputDir, 'rune-test-slide-scripts');
+      // Scripts inside skill dir: .cursor/skills/rune-test-slide/scripts/
+      const scriptsOut = path.join(outputRoot, adapter.outputDir, 'rune-test-slide', 'scripts');
       assert.ok(existsSync(path.join(scriptsOut, 'build-deck.js')), 'build-deck.js missing in output');
       assert.ok(existsSync(path.join(scriptsOut, 'helper.py')), 'helper.py missing in output');
 
-      // Placeholder resolved in .mdc output
-      const mdc = await readFile(path.join(outputRoot, adapter.outputDir, 'rune-test-slide.mdc'), 'utf-8');
-      assert.ok(!mdc.includes('{scripts_dir}'), 'placeholder should be resolved');
-      assert.ok(mdc.includes('.cursor/rules/rune-test-slide-scripts/build-deck.js'), 'resolved path missing');
+      // Placeholder resolved in SKILL.md output
+      const md = await readFile(path.join(outputRoot, adapter.outputDir, 'rune-test-slide', 'SKILL.md'), 'utf-8');
+      assert.ok(!md.includes('{scripts_dir}'), 'placeholder should be resolved');
+      assert.ok(md.includes('.cursor/skills/rune-test-slide/scripts/build-deck.js'), 'resolved path missing');
 
       // Plain skill: no scripts dir created
       assert.ok(
-        !existsSync(path.join(outputRoot, adapter.outputDir, 'rune-test-plain-scripts')),
+        !existsSync(path.join(outputRoot, adapter.outputDir, 'rune-test-plain', 'scripts')),
         'plain skill should not have scripts dir',
       );
     } finally {
@@ -182,7 +192,7 @@ describe('buildAll with scripts', () => {
 
       assert.ok(stats.scriptsCopied >= 2);
 
-      // Scripts inside skill dir: .codex/skills/rune-test-slide/scripts/
+      // Scripts inside skill dir: .agents/skills/rune-test-slide/scripts/
       const scriptsOut = path.join(outputRoot, adapter.outputDir, 'rune-test-slide', 'scripts');
       assert.ok(existsSync(path.join(scriptsOut, 'build-deck.js')), 'build-deck.js missing');
       assert.ok(existsSync(path.join(scriptsOut, 'helper.py')), 'helper.py missing');
@@ -190,7 +200,7 @@ describe('buildAll with scripts', () => {
       // Placeholder resolved
       const md = await readFile(path.join(outputRoot, adapter.outputDir, 'rune-test-slide', 'SKILL.md'), 'utf-8');
       assert.ok(!md.includes('{scripts_dir}'), 'placeholder should be resolved');
-      assert.ok(md.includes('.codex/skills/rune-test-slide/scripts/build-deck.js'), 'resolved path missing');
+      assert.ok(md.includes('.agents/skills/rune-test-slide/scripts/build-deck.js'), 'resolved path missing');
     } finally {
       await rm(tmp, { recursive: true, force: true });
     }
@@ -251,7 +261,7 @@ describe('buildAll with scripts', () => {
 
       const original = await readFile(path.join(tmp, 'skills', 'test-slide', 'scripts', 'build-deck.js'), 'utf-8');
       const copied = await readFile(
-        path.join(outputRoot, adapter.outputDir, 'rune-test-slide-scripts', 'build-deck.js'),
+        path.join(outputRoot, adapter.outputDir, 'rune-test-slide', 'scripts', 'build-deck.js'),
         'utf-8',
       );
       assert.strictEqual(copied, original, 'script content should be identical');
@@ -263,19 +273,19 @@ describe('buildAll with scripts', () => {
   test('multiple adapters resolve different paths', async () => {
     const tmp = await createTempSkillTree();
     try {
-      // Cursor (flat)
+      // Cursor (directory)
       const cursorOut = path.join(tmp, 'out-cursor');
       const cursorAdapter = getAdapter('cursor');
       await buildAll({ runeRoot: tmp, outputRoot: cursorOut, adapter: cursorAdapter });
-      const cursorMdc = await readFile(path.join(cursorOut, '.cursor/rules/rune-test-slide.mdc'), 'utf-8');
-      assert.ok(cursorMdc.includes('.cursor/rules/rune-test-slide-scripts/'), 'cursor path');
+      const cursorMd = await readFile(path.join(cursorOut, '.cursor/skills/rune-test-slide/SKILL.md'), 'utf-8');
+      assert.ok(cursorMd.includes('.cursor/skills/rune-test-slide/scripts/'), 'cursor path');
 
-      // Codex (directory)
+      // Codex (directory, shared .agents/skills standard)
       const codexOut = path.join(tmp, 'out-codex');
       const codexAdapter = getAdapter('codex');
       await buildAll({ runeRoot: tmp, outputRoot: codexOut, adapter: codexAdapter });
-      const codexMd = await readFile(path.join(codexOut, '.codex/skills/rune-test-slide/SKILL.md'), 'utf-8');
-      assert.ok(codexMd.includes('.codex/skills/rune-test-slide/scripts/'), 'codex path');
+      const codexMd = await readFile(path.join(codexOut, '.agents/skills/rune-test-slide/SKILL.md'), 'utf-8');
+      assert.ok(codexMd.includes('.agents/skills/rune-test-slide/scripts/'), 'codex path');
     } finally {
       await rm(tmp, { recursive: true, force: true });
     }

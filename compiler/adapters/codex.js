@@ -1,13 +1,17 @@
 /**
  * OpenAI Codex Adapter
  *
- * Emits SKILL.md files into .codex/skills/{name}/ directories.
+ * Emits SKILL.md files into .agents/skills/{name}/ directories.
  * Codex uses the same SKILL.md frontmatter format (name, description)
  * with markdown body — very close to Rune's native format.
  *
  * Codex project context: AGENTS.md (equivalent to CLAUDE.md)
- * Codex skills dir: .codex/skills/
- * Codex skill format: .codex/skills/{name}/SKILL.md
+ * Codex skills dir: .agents/skills/ (scanned from CWD up to repo root)
+ * Codex skill format: .agents/skills/{name}/SKILL.md
+ *
+ * NOTE: Codex dropped .codex/skills/ from its scan list — .codex/ is config
+ * only (config.toml). Repo skills MUST live in .agents/skills/ to be
+ * auto-discovered. @see https://developers.openai.com/codex/skills
  *
  * MODEL TIER MAPPING (v2.15+):
  * Skill frontmatter `model: opus|sonnet|haiku` (Anthropic naming) is
@@ -37,12 +41,12 @@ const TOOL_MAP = {
 
 export default {
   name: 'codex',
-  outputDir: '.codex/skills',
+  outputDir: '.agents/skills',
   fileExtension: '.md',
   skillPrefix: 'rune-',
   skillSuffix: '',
 
-  // Codex uses directory-per-skill: .codex/skills/{name}/SKILL.md
+  // Codex uses directory-per-skill: .agents/skills/{name}/SKILL.md
   useSkillDirectories: true,
   skillFileName: 'SKILL.md',
 
@@ -105,7 +109,7 @@ export default {
       '',
       '## Skills Directory',
       '',
-      'Skills are located in: .codex/skills/',
+      'Skills are located in: .agents/skills/ (auto-discovered by Codex)',
       '',
       '---',
       '> Rune Skill Mesh — https://github.com/rune-kit/rune',

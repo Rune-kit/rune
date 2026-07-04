@@ -624,17 +624,17 @@
         </div>
 
         <div class="tab-panel" id="install-cursor">
-          <p>Cursor uses <code>.mdc</code> rule files. Rune compiles all 62 skills into Cursor's format.</p>
+          <p>Cursor uses <strong>Agent Skills</strong> (Cursor 2.4+). Rune compiles all 62 skills into <code>.cursor/skills/</code> — loaded on demand.</p>
           <div class="code-wrapper">
             <div class="code-block"><span class="comment"># In your project directory</span>
 <span class="cmd">npx --yes @rune-kit/rune init <span class="flag">--platform cursor</span></span>
 
 <span class="output">  → Detected: cursor</span>
 <span class="output">  ✓ Created rune.config.json</span>
-<span class="output">  ✓ Built 62 skills + 14 extensions to .cursor/rules/</span></div>
+<span class="output">  ✓ Built 62 skills + 14 extensions to .cursor/skills/</span></div>
             <button class="copy-btn" data-copy="npx --yes @rune-kit/rune init --platform cursor">Copy</button>
           </div>
-          <p>Skills are compiled into <code>.cursor/rules/</code>. Cursor picks them up automatically.</p>
+          <p>Skills are compiled into <code>.cursor/skills/</code>. Cursor picks them up automatically.</p>
         </div>
 
         <div class="tab-panel" id="install-windsurf">
@@ -642,7 +642,7 @@
           <div class="code-wrapper">
             <div class="code-block"><span class="cmd">npx --yes @rune-kit/rune init <span class="flag">--platform windsurf</span></span>
 
-<span class="output">  ✓ Built 62 skills + 14 extensions to .windsurf/rules/</span></div>
+<span class="output">  ✓ Built 62 skills + 14 extensions to .windsurf/skills/</span></div>
             <button class="copy-btn" data-copy="npx --yes @rune-kit/rune init --platform windsurf">Copy</button>
           </div>
         </div>
@@ -1006,15 +1006,15 @@
       <h2 id="ide-cursor">Cursor</h2>
 
       <p>
-        Cursor uses <code>.mdc</code> (Markdown Config) rule files. The compiler converts each SKILL.md
-        into Cursor's native format with proper frontmatter.
+        Cursor uses <strong>Agent Skills</strong> (Cursor 2.4+) — directory-per-skill <code>SKILL.md</code> files
+        that the agent loads on demand, keeping context lean.
       </p>
 
       <div class="code-wrapper">
         <div class="code-block"><span class="cmd">npx --yes @rune-kit/rune init <span class="flag">--platform cursor</span></span>
 
-<span class="comment"># Skills appear in .cursor/rules/rune/</span>
-<span class="comment"># Cursor auto-loads them for every conversation</span></div>
+<span class="comment"># Skills appear in .cursor/skills/</span>
+<span class="comment"># Cursor discovers them and loads each on demand</span></div>
       </div>
 
       <h2 id="ide-windsurf">Windsurf</h2>
@@ -1022,7 +1022,7 @@
       <div class="code-wrapper">
         <div class="code-block"><span class="cmd">npx --yes @rune-kit/rune init <span class="flag">--platform windsurf</span></span>
 
-<span class="comment"># Skills appear in .windsurf/rules/rune/</span></div>
+<span class="comment"># Skills appear in .windsurf/skills/</span></div>
       </div>
 
       <h2 id="ide-antigravity">Antigravity</h2>
@@ -1030,13 +1030,13 @@
       <div class="code-wrapper">
         <div class="code-block"><span class="cmd">npx --yes @rune-kit/rune init <span class="flag">--platform antigravity</span></span>
 
-<span class="comment"># Skills appear in .agent/rules/rune/</span></div>
+<span class="comment"># Skills appear in .agents/skills/</span></div>
       </div>
 
       <h2 id="ide-codex">OpenAI Codex</h2>
 
       <p>
-        OpenAI Codex uses a <strong>directory-per-skill</strong> structure inside <code>.codex/skills/</code>.
+        OpenAI Codex uses a <strong>directory-per-skill</strong> structure inside <code>.agents/skills/</code>.
         Each skill gets its own folder with a <code>SKILL.md</code> file — similar to Rune's native format.
       </p>
 
@@ -1044,7 +1044,7 @@
         <div class="code-block"><span class="cmd">npx --yes @rune-kit/rune init <span class="flag">--platform codex</span></span>
 
 <span class="comment"># Output structure:</span>
-<span class="output">  .codex/skills/</span>
+<span class="output">  .agents/skills/</span>
 <span class="output">  ├── rune-cook/SKILL.md</span>
 <span class="output">  ├── rune-debug/SKILL.md</span>
 <span class="output">  ├── rune-fix/SKILL.md</span>

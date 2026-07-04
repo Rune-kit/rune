@@ -34,6 +34,15 @@ function parseFrontmatter(content) {
   let nestedKey = null;
   const _nestedObj = {};
 
+  // Strip outer quotes; for double-quoted scalars also unescape interior \"
+  // so consumers (adapter generateHeader) hold clean text and can re-escape
+  // exactly once. Without this, `\"` survives into skill.description and a
+  // later .replace(/"/g, '\\"') turns it into `\\"` — invalid YAML.
+  const parseScalar = (rawValue) => {
+    const stripped = rawValue.replace(/^["']|["']$/g, '');
+    return rawValue.startsWith('"') ? stripped.replace(/\\"/g, '"') : stripped;
+  };
+
   for (const line of raw.split('\n')) {
     const trimmed = line.trim();
     if (!trimmed) continue;
@@ -60,7 +69,7 @@ function parseFrontmatter(content) {
 
       const kvMatch = trimmed.match(/^(\w[\w-]*):\s*(.+)$/);
       if (kvMatch) {
-        const rawValue = kvMatch[2].replace(/^["']|["']$/g, '');
+        const rawValue = parseScalar(kvMatch[2]);
         // Comma-separated list fields → parse as array
         if (COMMA_LIST_FIELDS.has(kvMatch[1])) {
           frontmatter[nestedKey][kvMatch[1]] = rawValue
@@ -79,7 +88,7 @@ function parseFrontmatter(content) {
     nestedKey = null;
     const kvMatch = trimmed.match(/^(\w[\w-]*):\s*(.+)$/);
     if (kvMatch) {
-      const value = kvMatch[2].replace(/^["']|["']$/g, '');
+      const value = parseScalar(kvMatch[2]);
       // Comma-separated list fields at top level too (Pro/Business packs)
       if (COMMA_LIST_FIELDS.has(kvMatch[1])) {
         frontmatter[kvMatch[1]] = value

@@ -27,10 +27,10 @@ describe('transformSkill', () => {
     assert.strictEqual(result.footer, '');
   });
 
-  test('Cursor adapter transforms cross-refs to .mdc format', () => {
+  test('Cursor adapter transforms cross-refs to skill references', () => {
     const cursor = getAdapter('cursor');
     const result = transformSkill(mockSkill, cursor);
-    assert.ok(result.body.includes('@rune-cook.mdc'));
+    assert.ok(result.body.includes('the rune-cook skill'));
     assert.ok(!result.body.includes('rune:cook'));
   });
 
@@ -44,11 +44,11 @@ describe('transformSkill', () => {
     assert.ok(result.footer.length > 0, 'footer should not be empty for non-Claude');
   });
 
-  test('Cursor header contains frontmatter with description', () => {
+  test('Cursor header contains SKILL.md frontmatter with name and description', () => {
     const cursor = getAdapter('cursor');
     const result = transformSkill(mockSkill, cursor);
+    assert.ok(result.header.includes('name: rune-'));
     assert.ok(result.header.includes('description:'));
-    assert.ok(result.header.includes('alwaysApply:'));
   });
 
   test('Generic adapter transforms refs to descriptive text', () => {

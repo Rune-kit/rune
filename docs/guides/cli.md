@@ -55,7 +55,7 @@ npx @rune-kit/rune init
 
   -> Detected: cursor
   -> Created rune.config.json
-  -> Built 62 skills + 14 extensions to .cursor/rules/
+  -> Built 62 skills + 14 extensions to .cursor/skills/
 ```
 
 **Flags**:
@@ -85,7 +85,7 @@ npx @rune-kit/rune build
   [transform] Resolved 87 tool-name references
   [emit]      62 skills + 14 extensions
 
-  -> Built 67 files to .cursor/rules/
+  -> Built 67 files to .cursor/skills/
 ```
 
 **Flags**:
@@ -135,18 +135,18 @@ Rune compiles to 13 platforms. Each gets skills in its native format.
 | Platform | Output Directory | File Format | Detection Marker |
 |----------|-----------------|-------------|------------------|
 | Claude Code | _(native plugin)_ | `.md` (SKILL.md) | `.claude-plugin/` |
-| Cursor | `.cursor/rules/` | `.mdc` | `.cursor/` |
-| Windsurf | `.windsurf/rules/` | `.md` | `.windsurf/` |
-| Antigravity | `.agent/rules/` | `.md` | `.agent/` |
-| Codex | `.codex/skills/` | `.md` (dir-per-skill) + `AGENTS.md` | `.codex/` |
-| OpenCode | `.opencode/skills/` | `.md` (dir-per-skill) | `.opencode/` |
+| Cursor | `.cursor/skills/` | SKILL.md (dir-per-skill) | `.cursor/` |
+| Windsurf | `.windsurf/skills/` | SKILL.md (dir-per-skill) | `.windsurf/` |
+| Antigravity | `.agents/skills/` | SKILL.md (dir-per-skill) | `.agents/` |
+| Codex | `.agents/skills/` | SKILL.md (dir-per-skill) + `AGENTS.md` | `.codex/` |
+| OpenCode | `.opencode/skills/` | SKILL.md (dir-per-skill) | `.opencode/` |
 | Generic | `.ai/rules/` | `.md` | _(fallback)_ |
 | OpenClaw | `.openclaw/rune/` | `.md` + manifest + TS entry | `.openclaw/` |
 | Aider | `aider/rules/` | `.md` + `.aider.conf.yml` (read array) | `.aider.conf.yml` |
-| GitHub Copilot CLI | `.github/instructions/` | `.instructions.md` (YAML `applyTo`) | `.github/copilot-instructions.md` |
-| Gemini CLI | bundled `GEMINI.md` + `gemini/skills/` (staged) | `.md` (single file context) | `GEMINI.md` |
-| Qoder | `.qoder/rules/` | `.md` + `AGENTS.md` | `.qoder/` |
-| Qwen Coder | `qwen/skills/` + `QWEN.md` (with `@import`) | `.md` (hierarchical) | `QWEN.md` |
+| GitHub Copilot | `.github/skills/` | SKILL.md (dir-per-skill) + `.github/copilot-instructions.md` | `.github/copilot-instructions.md` |
+| Gemini CLI | `.gemini/skills/` | SKILL.md (dir-per-skill) + slim `GEMINI.md` | `GEMINI.md` |
+| Qoder | `.qoder/skills/` | SKILL.md (dir-per-skill) + `AGENTS.md` | `.qoder/` |
+| Qwen Coder | `.qwen/skills/` | SKILL.md (dir-per-skill) + slim `QWEN.md` | `QWEN.md` |
 
 ### Claude Code
 
@@ -168,35 +168,35 @@ Skills load directly from `skills/*/SKILL.md`. The CLI detects `.claude-plugin/`
 
 ### Cursor
 
-Skills compile to `.cursor/rules/*.mdc` (Cursor's rule format).
+Skills compile to `.cursor/skills/rune-<name>/SKILL.md` (Cursor 2.4+ Agent Skills — loaded on demand).
 
 ```bash
 npx @rune-kit/rune init --platform cursor
 ```
 
-Output: `.cursor/rules/rune-cook.mdc`, `.cursor/rules/rune-plan.mdc`, etc.
+Output: `.cursor/skills/rune-cook/SKILL.md`, `.cursor/skills/rune-plan/SKILL.md`, etc.
 
-Each skill file gets a Cursor-compatible header with `alwaysApply: false` frontmatter. Cross-references between skills are rewritten to `rune-<skill-name>` format.
+Each SKILL.md gets standard Agent Skills frontmatter (`name` + `description`). Cross-references between skills are rewritten to `rune-<skill-name>` format.
 
 ### Windsurf
 
-Skills compile to `.windsurf/rules/*.md`.
+Skills compile to `.windsurf/skills/rune-<name>/SKILL.md` (Cascade Skills).
 
 ```bash
 npx @rune-kit/rune init --platform windsurf
 ```
 
-Output: `.windsurf/rules/rune-cook.md`, `.windsurf/rules/rune-plan.md`, etc.
+Output: `.windsurf/skills/rune-cook/SKILL.md`, `.windsurf/skills/rune-plan/SKILL.md`, etc.
 
 ### Antigravity
 
-Skills compile to `.agent/rules/*.md` (Google Antigravity format).
+Skills compile to `.agents/skills/rune-<name>/SKILL.md` (Google Antigravity Agent Skills).
 
 ```bash
 npx @rune-kit/rune init --platform antigravity
 ```
 
-Output: `.agent/rules/rune-cook.md`, `.agent/rules/rune-plan.md`, etc.
+Output: `.agents/skills/rune-cook/SKILL.md`, `.agents/skills/rune-plan/SKILL.md`, etc.
 
 ### Generic
 
@@ -395,8 +395,8 @@ cd /your/project && npx @rune-kit/rune build
 - Claude Code users don't need the CLI -- install as a plugin instead.
 
 **Skills not loading in Cursor**:
-- Verify files exist in `.cursor/rules/`.
-- Check that files have `.mdc` extension.
+- Verify files exist in `.cursor/skills/`.
+- Check that each skill dir contains a `SKILL.md`.
 - Restart Cursor to pick up new rule files.
 
 **Skills not loading in Windsurf / Antigravity**:

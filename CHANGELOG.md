@@ -5,6 +5,22 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed — adapters migrated to native Agent Skills directories
+
+The ecosystem converged on the Agent Skills open standard (dir-per-skill `SKILL.md`, lazy-loaded by description). Seven adapters were emitting to locations their platforms no longer auto-discover — most visibly **codex**, whose `.codex/skills/` output was dropped from Codex's scan list entirely (skills only worked via the AGENTS.md pointer, causing the agent to "re-find" the path every session).
+
+- **codex** — `.codex/skills/` → **`.agents/skills/`** (Codex scans `.agents/skills` from CWD up to repo root; `.codex/` is config-only now). AGENTS.md pointer updated.
+- **cursor** — `.cursor/rules/*.mdc` (always-on rules) → **`.cursor/skills/rune-<n>/SKILL.md`** (Cursor 2.4+ Agent Skills, loaded on demand). No more `alwaysApply`/`globs` frontmatter; cross-refs now prose ("the rune-x skill") instead of `@rune-x.mdc`.
+- **windsurf** — `.windsurf/rules/*.md` → **`.windsurf/skills/rune-<n>/SKILL.md`** (Cascade Skills, progressive disclosure).
+- **copilot** — `.github/instructions/*.instructions.md` (`applyTo` always-on) → **`.github/skills/rune-<n>/SKILL.md`** (Copilot Agent Skills). `copilot-instructions.md` + AGENTS.md pointers updated.
+- **gemini** — `gemini/skills/` staging + GEMINI.md **bundling all skills as always-on context** → **`.gemini/skills/rune-<n>/SKILL.md`** (Gemini CLI native skills, lazy-loaded) + slim GEMINI.md pointer.
+- **qwen** — `qwen/skills/` + QWEN.md `@import` lines (all skills always-on) → **`.qwen/skills/rune-<n>/SKILL.md`** (Qwen Code native skills) + slim QWEN.md pointer.
+- **qoder** — `.qoder/rules/` flat → **`.qoder/skills/rune-<n>/SKILL.md`** (docs.qoder.com/extensions/skills).
+- **antigravity** — scripts now co-located inside the skill dir (`rune-<n>/scripts/`) matching the standard; dead `referencesDir` hook removed.
+- Runtime hooks are **unchanged**: `.cursor/rules` / `.windsurf/rules` remain the correct always-on vehicle for hook context (`rune hooks install`).
+- Big context win for Gemini/Qwen/Cursor/Copilot users: skills are now loaded on demand instead of all-at-once.
+- Unchanged (verified against current docs): claude (native), opencode (`.opencode/skills/`), openclaw, aider (CONVENTIONS.md — no native skill loader), generic (`.ai/rules/` neutral fallback).
+
 ## [2.22.2] - 2026-07-04
 
 ### Fixed — `rune setup` installs tier skills where the plugin runtime looks

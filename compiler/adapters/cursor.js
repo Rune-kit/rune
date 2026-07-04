@@ -1,8 +1,18 @@
 /**
  * Cursor Adapter
  *
- * Emits .mdc rule files for .cursor/rules/ directory.
- * Uses @file references for cross-skill mesh.
+ * Emits SKILL.md files into .cursor/skills/{name}/ directories — Cursor's
+ * native Agent Skills format (Cursor 2.4+, Jan 2026). Skills are loaded
+ * dynamically when the agent decides they're relevant, unlike .cursor/rules
+ * which are always-on context.
+ *
+ * Cursor skills dir: .cursor/skills/
+ * Cursor skill format: .cursor/skills/{name}/SKILL.md
+ * @see https://cursor.com/docs/skills
+ *
+ * NOTE: .cursor/rules/ is still used by the runtime-hooks installer
+ * (adapters/hooks/cursor.js) — rules are the correct vehicle for always-on
+ * hook context. Only skill emission moved to .cursor/skills/.
  *
  * MODEL TIER MAPPING (v2.15+):
  * No-op. Cursor's Anthropic API integration understands `model: opus|sonnet|haiku`
@@ -19,20 +29,24 @@ const TOOL_MAP = {
   Grep: 'search file contents',
   Bash: 'run a terminal command',
   TodoWrite: 'track progress',
-  Skill: 'follow the referenced skill rules',
+  Skill: 'invoke the named skill',
   Agent: 'execute the workflow',
 };
 
 export default {
   name: 'cursor',
-  outputDir: '.cursor/rules',
-  fileExtension: '.mdc',
+  outputDir: '.cursor/skills',
+  fileExtension: '.md',
   skillPrefix: 'rune-',
   skillSuffix: '',
 
+  // Cursor uses directory-per-skill: .cursor/skills/{name}/SKILL.md
+  useSkillDirectories: true,
+  skillFileName: 'SKILL.md',
+
   transformReference(skillName, raw) {
     const isBackticked = raw.startsWith('`') && raw.endsWith('`');
-    const ref = `@rune-${skillName}.mdc`;
+    const ref = `the rune-${skillName} skill`;
     return isBackticked ? `\`${ref}\`` : ref;
   },
 
@@ -41,14 +55,8 @@ export default {
   },
 
   generateHeader(skill) {
-    return [
-      '---',
-      `description: "${skill.description}"`,
-      'globs: []',
-      `alwaysApply: ${skill.layer === 'L0'}`,
-      '---',
-      '',
-    ].join('\n');
+    const desc = (skill.description || '').replace(/"/g, '\\"');
+    return ['---', `name: rune-${skill.name}`, `description: "${desc}"`, '---', '', ''].join('\n');
   },
 
   generateFooter() {
@@ -60,7 +68,7 @@ export default {
   },
 
   scriptsDir(skillName) {
-    return `rune-${skillName}-scripts`;
+    return `rune-${skillName}/scripts`;
   },
 
   postProcess(content) {

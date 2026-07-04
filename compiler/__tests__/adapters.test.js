@@ -29,7 +29,7 @@ test('listPlatforms returns all 13 platform adapters', () => {
 test('getAdapter returns adapter by name', () => {
   const cursor = getAdapter('cursor');
   assert.strictEqual(cursor.name, 'cursor');
-  assert.strictEqual(cursor.fileExtension, '.mdc');
+  assert.strictEqual(cursor.fileExtension, '.md');
 });
 
 test('getAdapter throws for unknown adapter', () => {
@@ -112,18 +112,45 @@ for (const adapterName of ADAPTER_NAMES) {
   });
 }
 
+// --- Frontmatter escaping (regression: descriptions containing quoted phrases) ---
+
+test('generateHeader escapes quoted descriptions exactly once (valid YAML)', () => {
+  // Parser hands adapters CLEAN text (interior \" already unescaped) — the
+  // adapter re-escapes exactly once. Double-escaping produced `\\"` which
+  // prematurely terminates the YAML scalar.
+  const skill = { name: 'docs', layer: 'L2', group: 'workflow', description: 'The "docs are never outdated" skill' };
+  for (const name of ['cursor', 'windsurf', 'copilot', 'codex', 'antigravity', 'opencode', 'gemini', 'qoder', 'qwen']) {
+    const header = getAdapter(name).generateHeader(skill);
+    assert.ok(header.includes('\\"docs are never outdated\\"'), `${name} should escape quotes once`);
+    assert.ok(!header.includes('\\\\"'), `${name} must not double-escape quotes`);
+  }
+});
+
 // --- Cursor-specific ---
 
-test('cursor adapter generates .mdc frontmatter with alwaysApply', () => {
+test('cursor adapter emits Agent Skills (dir-per-skill SKILL.md)', () => {
   const cursor = getAdapter('cursor');
-  const l0Skill = { name: 'router', layer: 'L0', group: 'meta', description: 'Routes tasks' };
-  const l2Skill = { name: 'fix', layer: 'L2', group: 'workflow', description: 'Fix code' };
+  assert.strictEqual(cursor.outputDir, '.cursor/skills');
+  assert.strictEqual(cursor.useSkillDirectories, true);
+  assert.strictEqual(cursor.skillFileName, 'SKILL.md');
 
-  const l0Header = cursor.generateHeader(l0Skill);
-  assert.ok(l0Header.includes('alwaysApply: true'));
+  const header = cursor.generateHeader({ name: 'fix', layer: 'L2', group: 'workflow', description: 'Fix code' });
+  assert.ok(header.includes('name: rune-fix'));
+  assert.ok(header.includes('description: "Fix code"'));
+  assert.ok(!header.includes('alwaysApply'), 'skills format has no alwaysApply');
+});
 
-  const l2Header = cursor.generateHeader(l2Skill);
-  assert.ok(l2Header.includes('alwaysApply: false'));
+// --- Windsurf-specific ---
+
+test('windsurf adapter emits Cascade Skills (dir-per-skill SKILL.md)', () => {
+  const windsurf = getAdapter('windsurf');
+  assert.strictEqual(windsurf.outputDir, '.windsurf/skills');
+  assert.strictEqual(windsurf.useSkillDirectories, true);
+  assert.strictEqual(windsurf.skillFileName, 'SKILL.md');
+
+  const header = windsurf.generateHeader({ name: 'fix', layer: 'L2', group: 'workflow', description: 'Fix code' });
+  assert.ok(header.includes('name: rune-fix'));
+  assert.ok(header.includes('description: "Fix code"'));
 });
 
 // --- Codex-specific ---
@@ -136,26 +163,35 @@ test('codex adapter uses skill directories', () => {
 
 // --- New v2.18 adapters: shape + generateExtraFiles contract ---
 
-test('qoder adapter targets .qoder/rules and emits AGENTS.md', async () => {
+test('qoder adapter targets .qoder/skills (dir-per-skill) and emits AGENTS.md', async () => {
   const qoder = getAdapter('qoder');
-  assert.strictEqual(qoder.outputDir, '.qoder/rules');
-  assert.strictEqual(qoder.useSkillDirectories, false);
+  assert.strictEqual(qoder.outputDir, '.qoder/skills');
+  assert.strictEqual(qoder.useSkillDirectories, true);
+  assert.strictEqual(qoder.skillFileName, 'SKILL.md');
   assert.strictEqual(typeof qoder.generateExtraFiles, 'function');
   const extras = await qoder.generateExtraFiles({ stats: { skillCount: 5, packCount: 1, files: [] } });
-  assert.ok(extras.some((e) => e.path === 'AGENTS.md' && e.content.includes('Rune')));
+  assert.ok(extras.some((e) => e.path === 'AGENTS.md' && e.content.includes('.qoder/skills')));
 });
 
-test('copilot adapter targets .github/instructions with .instructions.md ext', async () => {
+test('copilot adapter targets .github/skills with SKILL.md format', async () => {
   const copilot = getAdapter('copilot');
-  assert.strictEqual(copilot.outputDir, '.github/instructions');
-  assert.strictEqual(copilot.fileExtension, '.instructions.md');
-  const header = copilot.generateHeader({ name: 'cook', layer: 'L1', group: 'orchestrator', description: 'Test' });
-  // Per docs.github.com Copilot CLI custom-instructions spec, only `applyTo` is a
-  // documented frontmatter field. Description and tier-hint must live in the body.
-  assert.ok(header.includes('applyTo: "**"'));
-  assert.ok(!/^description:/m.test(header.split('---')[1] || ''), 'description must NOT appear in frontmatter');
+  assert.strictEqual(copilot.outputDir, '.github/skills');
+  assert.strictEqual(copilot.useSkillDirectories, true);
+  assert.strictEqual(copilot.skillFileName, 'SKILL.md');
+  const header = copilot.generateHeader({
+    name: 'cook',
+    layer: 'L1',
+    group: 'orchestrator',
+    description: 'Test',
+    model: 'opus',
+  });
+  // Agent Skills spec: name + description frontmatter; tier hint stays a body comment.
+  assert.ok(header.includes('name: rune-cook'));
+  assert.ok(header.includes('description: "Test"'));
+  assert.ok(header.includes('<!-- tier-hint: tier:heavy -->'));
+  assert.ok(!header.includes('applyTo'), 'skills format has no applyTo');
   const extras = await copilot.generateExtraFiles({ stats: { skillCount: 5, packCount: 1, files: [] } });
-  assert.ok(extras.some((e) => e.path === '.github/copilot-instructions.md'));
+  assert.ok(extras.some((e) => e.path === '.github/copilot-instructions.md' && e.content.includes('.github/skills')));
   assert.ok(extras.some((e) => e.path === 'AGENTS.md'));
 });
 
@@ -201,21 +237,30 @@ test('aider adapter emits .aider.conf.yml with read array', async () => {
   assert.ok(!conf.content.includes('aider/rules/index.md'));
 });
 
-test('qwen adapter emits QWEN.md with @import lines', async () => {
+test('qwen adapter targets .qwen/skills and emits slim QWEN.md pointer', async () => {
   const qwen = getAdapter('qwen');
-  assert.strictEqual(qwen.outputDir, 'qwen/skills');
+  assert.strictEqual(qwen.outputDir, '.qwen/skills');
+  assert.strictEqual(qwen.useSkillDirectories, true);
+  assert.strictEqual(qwen.skillFileName, 'SKILL.md');
   const extras = await qwen.generateExtraFiles({
-    stats: { skillCount: 2, packCount: 0, files: ['rune-cook.md', 'rune-fix.md'] },
+    stats: { skillCount: 2, packCount: 0, files: ['rune-cook/SKILL.md', 'rune-fix/SKILL.md'] },
   });
   const qwenMd = extras.find((e) => e.path === 'QWEN.md');
   assert.ok(qwenMd);
-  assert.ok(qwenMd.content.includes('@qwen/skills/rune-cook.md'));
-  assert.ok(qwenMd.content.includes('@qwen/skills/rune-fix.md'));
+  assert.ok(qwenMd.content.includes('.qwen/skills/rune-<name>/SKILL.md'));
+  assert.ok(!qwenMd.content.includes('@qwen/skills/'), 'no @import lines — skills are lazy-loaded natively');
 });
 
-test('gemini adapter declares generateExtraFiles for bundled GEMINI.md', () => {
+test('gemini adapter targets .gemini/skills and emits slim GEMINI.md pointer', async () => {
   const gemini = getAdapter('gemini');
-  assert.strictEqual(gemini.outputDir, 'gemini/skills');
-  assert.strictEqual(typeof gemini.generateExtraFiles, 'function');
-  // Full bundle test happens in pipeline test (needs filesystem) — contract checked here.
+  assert.strictEqual(gemini.outputDir, '.gemini/skills');
+  assert.strictEqual(gemini.useSkillDirectories, true);
+  assert.strictEqual(gemini.skillFileName, 'SKILL.md');
+  const extras = await gemini.generateExtraFiles({
+    stats: { skillCount: 2, packCount: 0, files: ['rune-cook/SKILL.md', 'rune-fix/SKILL.md'] },
+  });
+  const geminiMd = extras.find((e) => e.path === 'GEMINI.md');
+  assert.ok(geminiMd);
+  assert.ok(geminiMd.content.includes('.gemini/skills/rune-<name>/SKILL.md'));
+  assert.ok(!geminiMd.content.includes('## rune-cook'), 'no bundled H2 sections — skills are lazy-loaded natively');
 });

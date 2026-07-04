@@ -74,11 +74,7 @@ export default {
   },
 
   scriptsDir(skillName) {
-    return `rune-${skillName}-scripts`;
-  },
-
-  referencesDir(skillName) {
-    return `rune-${skillName}-references`;
+    return `rune-${skillName}/scripts`;
   },
 
   postProcess(content) {
