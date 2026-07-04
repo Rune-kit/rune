@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=2.6.1">
+  <link rel="stylesheet" href="style.css?v=2.7.0">
 </head>
 <body>
   <!-- NAV -->
@@ -501,7 +501,7 @@ npx @rune-kit/rune setup</code></pre>
           <div class="mesh-nodes mesh-nodes-grid">
             <div class="mesh-pack mesh-pack-featured">
               <strong>Context Intelligence</strong>
-              <span>Real-time context % awareness &mdash; Claude saves state before auto-compact hits</span>
+              <span>Glitch-proof context cockpit in your statusline + burn-rate ETA &mdash; Claude saves state before auto-compact wipes it</span>
             </div>
             <div class="mesh-pack mesh-pack-featured">
               <strong>Autopilot</strong>
@@ -851,6 +851,60 @@ npx @rune-kit/rune setup</code></pre>
   </section>
 
   <!-- AUTOPILOT -->
+  <!-- CONTEXT COCKPIT (Pro) -->
+  <section class="section section-dark" id="context-cockpit">
+    <div class="container">
+      <span class="section-badge">PRO</span>
+      <h2>Claude that never loses its train of thought.</h2>
+      <p class="section-sub"><strong>Context Intelligence</strong> turns your statusline into a live cockpit and makes Claude itself aware of context pressure &mdash; so it saves state before auto-compact wipes it.</p>
+
+      <!-- Live statusline mock -->
+      <div class="cc-term">
+        <div class="cc-term-bar"><span class="cc-dot r"></span><span class="cc-dot y"></span><span class="cc-dot g"></span><span class="cc-term-title">claude code &mdash; acme-api</span></div>
+        <div class="cc-term-body">
+          <div class="cc-sl"><span class="cc-model">&#9672; Opus 4.8</span> <span class="cc-sep">&#9474;</span> <span class="cc-fill">&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;</span><span class="cc-empty">&#9617;&#9617;&#9617;</span> <span class="cc-warn">73%</span><span class="cc-sev">WARM</span> <span class="cc-sep">&#9474;</span> <span class="cc-skill">&#11041; cook&#183;L1</span> <span class="cc-sep">&#9474;</span> <span class="cc-cost">$0.91</span> <span class="cc-sep">&#9474;</span> <span class="cc-dim">5h</span> <span class="cc-ok">&#9608;&#9608;</span><span class="cc-empty">&#9617;&#9617;</span> <span class="cc-ok">22%</span> <span class="cc-dim">7d</span> <span class="cc-warn">&#9608;&#9608;&#9608;</span><span class="cc-empty">&#9617;</span> <span class="cc-warn">61%</span></div>
+          <div class="cc-sl cc-sl-2"><span class="cc-dim">~/acme-api</span>  <span class="cc-branch">&#9095; main</span><span class="cc-dirty">*</span></div>
+        </div>
+      </div>
+      <p class="cc-caption">model &middot; real % (color-coded) &middot; active skill&middot;layer &middot; session cost &middot; 5h/7d headroom &middot; git &mdash; refreshed every ~300ms</p>
+
+      <!-- Three differentiators -->
+      <div class="cc-grid">
+        <div class="cc-card">
+          <div class="cc-card-icon">&#9678;</div>
+          <h3>Actually correct</h3>
+          <p>Claude Code sometimes emits a glitch <code>0%</code> frame. Naive meters flash a false zero &mdash; or pin "100% URGENT" during light work. Pulse restores the last-good value and tells a real <code>/compact</code> reset apart from a glitch. The number you see is the number that&rsquo;s true.</p>
+        </div>
+        <div class="cc-card">
+          <div class="cc-card-icon">&#9684;</div>
+          <h3>Predicts, not just reports</h3>
+          <p>From your token burn rate: <em>&ldquo;~4m until auto-compaction.&rdquo;</em> You wrap up on your terms instead of getting cut off mid-thought.</p>
+        </div>
+        <div class="cc-card">
+          <div class="cc-card-icon">&#9638;</div>
+          <h3>Tells you what to trim</h3>
+          <p><em>&ldquo;Context is mostly files 61% &middot; mcp 22% &middot; shell 9%.&rdquo;</em> Compact the biggest source instead of nuking everything blind.</p>
+        </div>
+      </div>
+
+      <!-- What Claude sees -->
+      <div class="cc-inject">
+        <p class="cc-inject-label">And Claude sees it too &mdash; written straight into its context at 80%:</p>
+        <pre class="cc-inject-code">&lt;context-pressure level="save" percent="80"&gt;
+Context window at 80% &mdash; save state now. ~4m until auto-compaction.
+Context is mostly files 61% &middot; mcp 22% &mdash; trim the largest to free room.
+&#8594; save decisions to .rune/ (session-bridge) + neural-memory, then /compact
+&lt;/context-pressure&gt;</pre>
+        <p class="cc-inject-note">Claude persists everything &#8594; you <code>/compact</code> &#8594; <code>session-start</code> reloads <code>.rune/</code> &#8594; it picks up exactly where it left off. <strong>Zero data loss.</strong></p>
+      </div>
+
+      <div class="ap-cta">
+        <p class="ap-tagline">Free guesses. <strong>Pro knows &mdash; and shows you.</strong></p>
+        <p class="ap-price">Included in Pro &mdash; <strong>$49 lifetime</strong></p>
+      </div>
+    </div>
+  </section>
+
   <section class="section" id="autopilot">
     <div class="container">
       <span class="section-badge">PRO</span>
@@ -1030,7 +1084,7 @@ npx @rune-kit/rune setup</code></pre>
           <p class="pricing-who">Best for: product teams, startups, SaaS companies shipping features to real users.</p>
           <ul class="pricing-features">
             <li><strong>Everything in Free, plus:</strong></li>
-            <li><strong>Context Intelligence</strong> &mdash; real-time context window tracking. Claude knows when context is filling up, proactively saves decisions &amp; progress before compact. Zero data loss across sessions</li>
+            <li><strong>Context Intelligence</strong> &mdash; a glitch-proof context cockpit in your statusline (real %, active skill&middot;layer, cost, rate-limits), a burn-rate ETA to auto-compact, and a "what's eating your context" breakdown. Claude sees the pressure and saves decisions &amp; progress before compact &mdash; zero data loss across sessions</li>
             <li><strong>Autopilot</strong> &mdash; autonomous multi-session execution. Approve a plan, walk away. Self-reviews, self-commits, self-resumes across sessions</li>
             <li>Product Management &mdash; PRDs, roadmaps, KPI tracking, release comms</li>
             <li>Sales Enablement &mdash; account research, outreach sequences, pipeline review</li>

@@ -595,14 +595,15 @@ Domain-specific skills that plug into the core mesh:
 
 > *Free Rune makes Claude disciplined. Pro makes Claude self-aware.*
 
-**Context Intelligence** — the headline Pro feature. Claude Code auto-compacts at random, wiping your session context. With Pro, Claude **knows** when context is filling up — and proactively saves decisions, progress, and discoveries before compact hits.
+**Context Intelligence** — the headline Pro feature. Claude Code auto-compacts without warning, wiping your session. Pro turns the statusline into a live **context cockpit** and makes Claude *know* when the window is filling — so it saves decisions, progress, and discoveries before compact hits.
 
 ```
-Free:  Claude is blind to context pressure → auto-compact → amnesia
-Pro:   Claude sees real-time context % → saves state → compact → reloads → zero loss
+◈ Opus 4.8 │ ████████░░░ 73% WARM │ ⬡ cook·L1 │ $0.91 │ 5h ██░░ 22%  7d ███░ 61%
 ```
 
-How it works: `rune-pulse` (statusline) reads `context_window.used_percentage` from Claude Code, writes to temp file. `context-inject` hook injects warnings into Claude's context at 70% / 80% / 90%. Claude triggers `session-bridge` + `neural-memory` to persist everything. After `/compact`, `session-start` reloads `.rune/` state — Claude picks up exactly where it left off.
+Three things a blind meter can't do: a **glitch-proof %** (no phantom 0%, no false "100% URGENT" during light work), a **burn-rate ETA** (*"~4m until auto-compaction"*), and **what's eating your context** (*"files 61% · mcp 22%"* → trim the biggest, don't nuke blind). At 70/80/90% real, `context-inject` writes the pressure into Claude's own context → it triggers `session-bridge` + `neural-memory`, you `/compact`, and `session-start` reloads `.rune/`. Zero loss.
+
+Free ships the blind tool-call counter; the real-% cockpit + predictive intelligence is Pro.
 
 **Autopilot** — approve a plan, walk away. Autonomous multi-session execution with zero-HIGH-tolerance quality gates, baseline regression checks, cross-phase coherence review, and structured completion reports. `cook` gets the job done. `autopilot` gets it done while you sleep.
 

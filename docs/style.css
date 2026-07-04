@@ -1417,3 +1417,37 @@ font[style] > font { vertical-align: unset !important; }
 [data-theme="dark"] .biz-card-badge { background: rgba(139,92,246,0.15); color: #a78bfa; }
 [data-theme="dark"] .compare-divider td { color: #a78bfa; border-bottom-color: rgba(139,92,246,0.3) !important; }
 [data-theme="dark"] .check-biz { color: #a78bfa !important; }
+
+/* ── Context Cockpit (Pro) ───────────────────────────────────────────── */
+.cc-term { max-width: 880px; margin: 32px auto 12px; background: #0b1118; border: 1px solid #1e2d3d; border-radius: var(--radius-lg); overflow: hidden; box-shadow: 0 14px 44px rgba(0,0,0,0.4); }
+.cc-term-bar { display: flex; align-items: center; gap: 7px; padding: 10px 14px; background: #0f171f; border-bottom: 1px solid #1e2d3d; }
+.cc-dot { width: 11px; height: 11px; border-radius: 50%; }
+.cc-dot.r { background: #ff5f56; } .cc-dot.y { background: #ffbd2e; } .cc-dot.g { background: #27c93f; }
+.cc-term-title { margin-left: 8px; color: #5a6b78; font-family: var(--font-mono); font-size: 12px; }
+.cc-term-body { padding: 16px 18px; overflow-x: auto; }
+.cc-sl { white-space: nowrap; font-family: var(--font-mono); font-size: 13.5px; line-height: 1.95; color: #e8eef2; }
+.cc-sl-2 { line-height: 1.6; }
+.cc-sep { color: #33404c; margin: 0 3px; }
+.cc-model { color: #4aa3ff; font-weight: 700; }
+.cc-fill { color: #f5c542; } .cc-ok { color: #3ddc84; } .cc-empty { color: #33404c; }
+.cc-warn { color: #f5c542; font-weight: 700; }
+.cc-sev { color: #f5c542; font-weight: 700; font-size: 11px; margin-left: 5px; letter-spacing: 0.5px; }
+.cc-skill { color: #c084fc; font-weight: 700; }
+.cc-cost { color: #ffcf6b; }
+.cc-dim { color: #5a6b78; }
+.cc-branch { color: #c084fc; } .cc-dirty { color: #ff6b6b; }
+.cc-caption { text-align: center; color: var(--text-muted); font-size: 13px; margin: 0 0 42px; }
+.cc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 40px; }
+.cc-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow-card); transition: transform var(--transition), border-color var(--transition); }
+.cc-card:hover { transform: translateY(-3px); border-color: var(--accent); }
+.cc-card-icon { font-family: var(--font-mono); font-size: 26px; color: var(--accent); margin-bottom: 12px; }
+.cc-card h3 { font-family: var(--font-display); font-size: 18px; margin: 0 0 9px; color: var(--text-primary); }
+.cc-card p { color: var(--text-secondary); font-size: 14px; line-height: 1.65; margin: 0; }
+.cc-card em { color: var(--text-primary); font-style: normal; font-weight: 600; }
+.cc-card code { font-family: var(--font-mono); font-size: 12.5px; background: var(--bg-code); padding: 1px 5px; border-radius: 4px; }
+.cc-inject { max-width: 780px; margin: 0 auto 40px; }
+.cc-inject-label { text-align: center; color: var(--text-muted); font-size: 13.5px; margin: 0 0 12px; }
+.cc-inject-code { background: #0b1118; color: #c9d6e2; border: 1px solid #1e2d3d; border-radius: var(--radius-md); padding: 16px 18px; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.75; overflow-x: auto; white-space: pre; }
+.cc-inject-note { text-align: center; color: var(--text-secondary); font-size: 14px; margin: 16px 0 0; }
+.cc-inject-note code { font-family: var(--font-mono); font-size: 12.5px; background: var(--bg-code); padding: 1px 5px; border-radius: 4px; }
+@media (max-width: 760px) { .cc-grid { grid-template-columns: 1fr; } }
