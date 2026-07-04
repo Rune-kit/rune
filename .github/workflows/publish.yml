@@ -90,9 +90,18 @@ jobs:
           TAG="${GITHUB_REF#refs/tags/}"
           VERSION="${TAG#v}"
           CHANGELOG=$(git log "$(git tag --sort=-v:refname | grep '^v' | sed -n '2p')..${TAG}" --pretty=format:"• %s" --no-merges | head -10)
+          # CLI v0.23+ refuses `clawhub publish` on folders containing plugin markers
+          # (openclaw.plugin.json / src/) — "This looks like a plugin. Use clawhub package
+          # publish". Rune's ClawHub listing is Family: Skill, so stage a skills-only copy
+          # rather than switching to `package publish` (different family, needs
+          # openclaw.compat fields, and may not update the existing Skill listing).
+          # Broke the v2.23.0 publish run before this staging step existed.
+          STAGE=$(mktemp -d)
+          cp -r .openclaw/rune/skills "$STAGE/skills"
+          cp .openclaw/rune/SKILL.md .openclaw/rune/README.md "$STAGE/"
           # ClawHub frequently answers "Timeout" while still committing server-side, so its exit
           # code is unreliable. Tolerate it here; the inspect check below is the real gate.
-          clawhub publish .openclaw/rune \
+          clawhub publish "$STAGE" \
             --slug rune-kit \
             --name "Rune" \
             --version "$VERSION" \
