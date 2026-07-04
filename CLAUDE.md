@@ -103,7 +103,7 @@ When the user's intent matches a skill, invoke it BEFORE writing any code or ana
 
 ## Current Wave
 
-65 core skills built (v2.21.0 — "Convergence — spec↔code gap scan kills the dead-button failure mode").
+65 core skills built (v2.23.0 — "Native Skills" — 7 adapters emit to each platform's native Agent Skills dir: codex/antigravity `.agents/skills/`, cursor `.cursor/skills/`, windsurf `.windsurf/skills/`, copilot `.github/skills/`, gemini `.gemini/skills/`, qwen `.qwen/skills/`, qoder `.qoder/skills/` — dir-per-skill SKILL.md, lazy-loaded; runtime hooks stay on rules dirs).
 
 Convergence layer: new `converge` skill (L3) re-reads spec/plan/contracts as sole intent and scans the ACTUAL code for `missing`/`partial`/`contradicts`/`unrequested` gaps — cook Phase 6.5 loops it until clean (max 2 rounds). Upstream: ba emits story-sliced specs (P1/P2/P3 + Independent Test + Key Entities), plan emits contracts-first boundary artifacts (data-model/contracts/quickstart) with a P1 zero-coverage HARD-GATE. Downstream: verification Level 3.5 INTERACTION WIRED traces button→handler→route, completion-gate Step 4.5 is mandatory for UI+data diffs, deploy warns without wiring evidence (`integration.verified`/`convergence.clean`).
 

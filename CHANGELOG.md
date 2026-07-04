@@ -5,6 +5,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.23.0] - 2026-07-04
+
+"Native Skills" — seven platform adapters move to the Agent Skills open standard, so every platform's own loader discovers Rune skills natively (and lazily) instead of relying on context-file pointers or always-on rule dumps.
+
 ### Changed — adapters migrated to native Agent Skills directories
 
 The ecosystem converged on the Agent Skills open standard (dir-per-skill `SKILL.md`, lazy-loaded by description). Seven adapters were emitting to locations their platforms no longer auto-discover — most visibly **codex**, whose `.codex/skills/` output was dropped from Codex's scan list entirely (skills only worked via the AGENTS.md pointer, causing the agent to "re-find" the path every session).
