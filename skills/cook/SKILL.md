@@ -5,7 +5,7 @@ context: fork
 agent: general-purpose
 metadata:
   author: runedev
-  version: "2.6.1"
+  version: "2.7.0"
   layer: L1
   model: sonnet
   group: orchestrator
@@ -378,6 +378,24 @@ If the coder model needs info from other phases, it's in the Cross-Phase Context
 **Goal**: Write the minimum code to make tests pass.
 
 **REQUIRED SUB-SKILL**: Use `rune:fix`
+
+### Reuse Ladder (climb before you write)
+
+Before writing the code for each task, climb this ladder and stop at the first rung that holds. Advisory, not a gate — it shapes *what* you write, never blocks the phase. Runs AFTER you understand the change (scout done, plan approved), never as a substitute for tracing the real flow.
+
+1. **Needs to exist at all?** Speculative need → skip it, say so in one line (YAGNI).
+2. **Already in this codebase?** A helper, util, type, or pattern that already lives here → reuse it. Re-implementing what sits a few files over is the most common slop — `Grep` before you write.
+3. **Stdlib does it?** Use it.
+4. **Native platform feature covers it?** DB constraint over app code, CSS over JS, `<input type="date">` over a picker lib.
+5. **Already-installed dependency solves it?** Use it. Never add a new dep for what a few lines cover.
+6. **One line?** Make it one line.
+7. **Only then** — the minimum code that makes the test pass.
+
+Two rungs work → take the higher one and move on. Mark a deliberate shortcut with a `// yagni:` comment naming its ceiling + upgrade path (`// yagni: global lock — per-account locks if throughput matters`) so the De-Sloppify Pass and later readers see intent, not ignorance.
+
+**Bug-fix corollary** — the lazy fix IS the root-cause fix: `Grep` every caller of the function you're about to touch, then fix the shared function once. One guard where all callers route through is a smaller diff than one guard per caller — and patching only the path the ticket names leaves every sibling caller still broken.
+
+**Never lazy about**: understanding the problem, input validation at trust boundaries, error handling that prevents data loss, security, accessibility, anything explicitly requested. The ladder shortens the solution, never the reading — a small diff you don't understand is a confident wrong fix, not laziness.
 
 1. Mark Phase 4 as `in_progress`
 2. **Phase-file execution** — if working from a master plan + phase file:

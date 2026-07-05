@@ -3,7 +3,7 @@ name: review
 description: "Code quality review — patterns, security, performance, correctness. Finds bugs, suggests improvements, triggers fix for issues found. Escalates to opus for security-critical code."
 metadata:
   author: runedev
-  version: "1.2.0"
+  version: "1.3.0"
   layer: L2
   model: sonnet
   group: development
@@ -295,6 +295,24 @@ If spec violations found: document them separately from code quality findings in
 Proceed to Step 6 only after Stage 1 passes. Code quality findings (bugs, patterns, security, coverage) are the existing Steps 2–5 above.
 
 The review report MUST show both stages: spec compliance verdict first, then code quality findings.
+
+### Step 5.7: Subtractive Pass (over-engineering lens)
+
+Stage 1 catches SPEC-CREEP (unrequested *features*). This pass goes further: it hunts complexity worth **deleting** even inside requested scope, and reports it as a one-line-per-finding cut list with a net-lines total. Run it on any diff that adds a class, wrapper, config option, or dependency. Skip for pure config/docs/style diffs.
+
+Tag each finding, one line: `<file>:L<line>: <tag> <what>. <replacement>.`
+
+| Tag | Cuts | Replacement |
+|-----|------|-------------|
+| `delete:` | Dead code, unused flexibility, speculative feature | Nothing |
+| `stdlib:` | Hand-rolled thing the standard library ships | Name the function |
+| `native:` | Dependency or code doing what the platform already does | Name the feature |
+| `yagni:` | Abstraction with one implementation, config nobody sets, layer with one caller | Inline it until a 2nd caller exists |
+| `shrink:` | Same logic, fewer lines | Show the shorter form |
+
+End with the only metric that matters: `net: -<N> lines, -<M> deps possible.` Nothing to cut → `Lean already.` and move on.
+
+**Ranking discipline**: these are LOW/MEDIUM findings (complexity, not correctness) — a subtractive suggestion NEVER outranks a real bug. A single smoke test or assert-based self-check is the ponytail minimum, not bloat — never flag it for deletion. This pass lists cuts; it does not apply them (route to `rune:fix`).
 
 ### Step 6: Report
 
@@ -621,7 +639,7 @@ Append to Code Review Report when invoked standalone. Suppress when called as su
 ```yaml
 chain_metadata:
   skill: "rune:review"
-  version: "1.2.0"
+  version: "1.3.0"
   status: "[DONE | DONE_WITH_CONCERNS]"
   domain: "[area reviewed]"
   files_changed: []  # review doesn't change files
