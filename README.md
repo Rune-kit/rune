@@ -83,6 +83,26 @@ _Methodology: Claude Code CLI headless mode (`claude -p --output-format json`), 
 
 ---
 
+## Level Up: Rune Pro
+
+<p align="center">
+  <a href="https://github.com/rune-kit/rune-pro"><img src="assets/pro-upgrade.svg" alt="Rune Pro — Autopilot + Context Intelligence · $49 lifetime" width="100%"></a>
+</p>
+
+Free gives Claude discipline. **Pro** gives it two things the free tier can't:
+
+- **Autopilot** — approve a plan once and walk away. It executes each phase autonomously (self-reviews with zero-HIGH gates, regression-checks against baselines, commits per phase) and **resumes across sessions**. `cook` gets the job done; `autopilot` gets it done while you sleep.
+- **Context Intelligence** — a live **context cockpit** in your statusline (real %, the active skill's mesh layer, cost, predictive "~4m until auto-compaction") that also makes Claude *itself* aware of the pressure, so it saves decisions + progress to `.rune/` **before** compact wipes the session. Zero data loss.
+
+Plus **9 domain packs** (product, sales, data-science, support, growth, media, personal-brand, ecommerce, vietnam). **$49 lifetime, one-time — no subscription.**
+
+<p align="center">
+  <a href="https://github.com/rune-kit/rune-pro"><img src="https://img.shields.io/badge/Unlock_Pro_%2449-lifetime-a855f7?style=for-the-badge" alt="Unlock Rune Pro"></a>
+  <a href="https://rune-kit.github.io/rune#pricing"><img src="https://img.shields.io/badge/See_Pricing-rune--kit.github.io-blue?style=for-the-badge" alt="Pricing"></a>
+</p>
+
+---
+
 ## What's New (v2.23.0 — Native Skills)
 
 > **v2.23.0 (2026-07-04):** Seven platform adapters move to the **Agent Skills open standard** (dir-per-skill `SKILL.md`, discovered and lazy-loaded by each platform's native loader). The headline fix: **Codex** dropped `.codex/skills/` from its scan list, so compiled skills were only findable via the AGENTS.md pointer — agents kept "re-finding" the path mid-session. Codex now emits to **`.agents/skills/`** (scanned CWD → repo root). Same treatment across the fleet: **cursor** `.cursor/rules/*.mdc` → `.cursor/skills/` (Cursor 2.4+ Skills, on-demand instead of always-on), **windsurf** → `.windsurf/skills/` (Cascade Skills), **copilot** → `.github/skills/`, **qoder** → `.qoder/skills/`, and **gemini/qwen** drop their all-skills-always-on context bombs (GEMINI.md bundle, QWEN.md `@import` wall) for native `.gemini/skills/` / `.qwen/skills/` + slim pointer files — a big context-window win on those platforms. Runtime hooks intentionally stay on `.cursor/rules` / `.windsurf/rules` (always-on is correct for hook context). Also fixes a YAML double-escaping bug that corrupted compiled frontmatter for skills with quoted descriptions on 6 platforms, and a duplicate `scripts/` copy in dir-per-skill builds. If you previously built for Codex/Cursor/Windsurf/Copilot/Gemini/Qwen/Qoder: re-run `npx @rune-kit/rune build` and delete the old output dirs. CI 1571/1571.

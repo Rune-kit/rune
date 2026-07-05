@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 220" width="1280" height="220" font-family="'Inter','SF Pro',system-ui,sans-serif">
+  <defs>
+    <linearGradient id="ubg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0c1018"/>
+      <stop offset="1" stop-color="#0a0d16"/>
+    </linearGradient>
+    <linearGradient id="uviolet" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#a855f7" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#a855f7" stop-opacity="0.7"/>
+      <stop offset="1" stop-color="#a855f7" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="uglow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#a855f7" stop-opacity="0.30"/>
+      <stop offset="1" stop-color="#a855f7" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="uglowf"><feGaussianBlur stdDeviation="2.4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+
+  <rect width="1280" height="220" rx="0" fill="url(#ubg)"/>
+  <circle cx="1140" cy="105" r="240" fill="url(#uglow)"/>
+  <circle cx="80" cy="30" r="160" fill="url(#uglow)" opacity="0.5"/>
+
+  <!-- eyebrow -->
+  <g transform="translate(48,40)">
+    <rect x="0" y="-16" width="118" height="22" rx="11" fill="#150e26" stroke="#3b2560"/>
+    <polygon points="16,-5 21,0 16,5 11,0" fill="#a855f7"/>
+    <text x="32" y="0" font-size="11" font-weight="700" fill="#c084fc" letter-spacing="1.5">LEVEL UP</text>
+  </g>
+
+  <!-- headline -->
+  <text x="48" y="84" font-family="'Space Grotesk','SF Pro',system-ui,sans-serif" font-size="27" font-weight="700" fill="#f5f3ff" letter-spacing="-0.5">Ship on autopilot. Never lose context.</text>
+  <text x="48" y="110" font-size="13" fill="#94a3b8">The two things Free can't do — now the statusline shows your real context %, and Claude ships whole plans while you sleep.</text>
+
+  <!-- feature 1 -->
+  <g transform="translate(48,138)">
+    <polygon points="10,0 16,6 16,12 10,18 4,12 4,6" fill="none" stroke="#6ee7b7" stroke-width="1.4"/>
+    <text x="30" y="8" font-size="12.5" font-weight="700" fill="#e2e8f0">CONTEXT COCKPIT</text>
+    <text x="30" y="26" font-size="11.5" fill="#64748b" font-family="'JetBrains Mono',monospace">live % + skill layer · predicts auto-compact · saves state to .rune/</text>
+  </g>
+  <!-- feature 2 -->
+  <g transform="translate(48,180)">
+    <polygon points="10,0 17,9 10,18 3,9" fill="#a855f7"/>
+    <text x="30" y="8" font-size="12.5" font-weight="700" fill="#e2e8f0">AUTOPILOT</text>
+    <text x="30" y="26" font-size="11.5" fill="#64748b" font-family="'JetBrains Mono',monospace">approve a plan once · self-reviews · self-commits · resumes across sessions</text>
+  </g>
+
+  <!-- ============ CTA CARD ============ -->
+  <g transform="translate(900,34)">
+    <rect x="0" y="0" width="332" height="142" rx="14" fill="#0d1420" stroke="#3b2560" stroke-width="1"/>
+
+    <g transform="translate(24,22)">
+      <g filter="url(#uglowf)">
+        <polygon points="11,0 22,11 11,22 0,11" fill="#a855f7"/>
+        <polygon points="11,5 17,11 11,17 5,11" fill="#0d1420" opacity="0.55"/>
+      </g>
+      <text x="34" y="12" font-size="20" font-weight="700" fill="#f5f3ff">Rune <tspan fill="#c084fc">Pro</tspan></text>
+      <text x="34" y="30" font-size="11" fill="#64748b">9 packs · Autopilot · Context Intelligence</text>
+    </g>
+
+    <text x="24" y="86" font-size="24" font-weight="700" fill="#f5f3ff">$49 <tspan font-size="13" font-weight="500" fill="#94a3b8">lifetime</tspan></text>
+    <text x="24" y="104" font-size="10.5" fill="#64748b">one-time · no subscription</text>
+
+    <!-- button -->
+    <g>
+      <rect x="188" y="70" width="120" height="38" rx="10" fill="#a855f7" filter="url(#uglowf)"/>
+      <text x="248" y="94" font-size="13.5" font-weight="700" fill="#1a0b2e" text-anchor="middle">Unlock Pro →</text>
+    </g>
+
+    <line x1="20" y1="118" x2="312" y2="118" stroke="#1e2a3a"/>
+    <text x="24" y="133" font-size="10.5" fill="#475569" font-family="'JetBrains Mono',monospace">github.com/rune-kit/rune-pro</text>
+  </g>
+
+  <!-- animated bottom pulse -->
+  <rect x="0" y="218" width="1280" height="2" fill="url(#uviolet)"/>
+  <circle cy="219" r="2.5" fill="#c084fc" filter="url(#uglowf)">
+    <animate attributeName="cx" values="-20;1300" dur="4s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.9;1" dur="4s" repeatCount="indefinite"/>
+  </circle>
+</svg>
