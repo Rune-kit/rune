@@ -80,7 +80,9 @@ jobs:
           TAG="${GITHUB_REF#refs/tags/}"
           if gh release view "$TAG" &>/dev/null; then
             echo "Release $TAG already exists — updating"
-            gh release edit "$TAG" --title "$TAG" --notes-file release-notes.md --latest
+            # --draft=false: deleting + recreating a tag detaches its release into an
+            # untagged DRAFT; a plain --latest then 422s ("cannot be draft"). Force it published.
+            gh release edit "$TAG" --title "$TAG" --notes-file release-notes.md --draft=false --latest
           else
             gh release create "$TAG" --title "$TAG" --notes-file release-notes.md --latest
           fi
@@ -113,7 +115,9 @@ jobs:
             --version "$VERSION" \
             --changelog "${CHANGELOG}" || echo "publish returned non-zero (often a benign timeout) — verifying via inspect"
           sleep 5
-          LATEST=$(clawhub inspect rune-kit 2>&1 | grep -i "latest:" | grep -oE "[0-9]+\.[0-9]+\.[0-9]+" | head -1)
+          # `clawhub inspect` prints "latest=X.Y.Z" (and "Latest  X.Y.Z"), not "latest:" —
+          # the old colon-anchored grep returned none and false-failed a successful publish.
+          LATEST=$(clawhub inspect rune-kit 2>&1 | grep -iE "latest" | grep -oE "[0-9]+\.[0-9]+\.[0-9]+" | head -1)
           echo "ClawHub latest after publish: ${LATEST:-none} (expected ${VERSION})"
           if [ "$LATEST" != "$VERSION" ]; then
             echo "::error::ClawHub did NOT land ${VERSION} (latest=${LATEST:-none}) — token likely invalid/revoked. This check exists so the ✓ can never lie again."
