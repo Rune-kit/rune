@@ -3,7 +3,7 @@ name: video-creator
 description: "Video content planning. Writes narration scripts, storyboards, shot lists, and asset checklists. Saves plan to marketing/video-plan.md."
 metadata:
   author: runedev
-  version: "0.2.0"
+  version: "0.3.0"
   layer: L3
   model: sonnet
   group: media
@@ -44,7 +44,9 @@ Derive constraints from platform:
 
 ### Step 2: Script
 
-Write a narration script with timing marks:
+Write a narration script with timing marks. **Before writing a single line, apply the
+Narration Craft principles below** — a script the viewer HEARS lives or dies on the
+opening and the flow, not the shot list.
 
 Structure:
 - **Hook** (0–5s): opening line that grabs attention — state the problem or the payoff
@@ -161,6 +163,71 @@ Then output a summary to the calling skill:
 3. Edit using the storyboard as reference
 ```
 
+## Narration Craft (decides whether a script hooks or bores)
+
+A demo script is HEARD by a person, not read off a slide. These principles separate an
+engaging script from generic voiceover — apply them in Step 2, before writing any line.
+
+**The 9 principles:**
+1. **Pain-first opening.** Open on the viewer's biggest pain or a stat already in flight ("Nếu bạn hay phải…", "This repo has 9k stars and…"). NEVER a flat catalogue opener ("Today we'll look at…", "This is a tool that…") — it names no problem and gives zero reason not to scroll.
+2. **Contrast structures.** "not just X but Y", "not X, it's Y", "like X but with Y". Contrast pulls attention.
+3. **2nd-person address.** "you'll see right away", "if you build on an M-series Mac…". Bring the viewer in.
+4. **Demonstrative immediacy.** "right here", "this", "on the timeline now". Concrete and present.
+5. **Specific real names, keep the jargon.** Name actual files, commands, competitors ("Final Cut", "Cursor", "ffmpeg"). Generic terms ("an AI tool", "the framework") are banned. Don't force-translate jargon into awkward words.
+6. **Quantified social proof — ONCE.** "over 9k stars". Never dump stars + forks + issues back-to-back as separate fragments.
+7. **Short clauses, comma-flowed.** "You can trim, replace, or regenerate it." One breath, not bullet fragments.
+8. **Caveat-as-feature.** State one honest limit or a "who should NOT use this". This is the most trust-building line in the video — a retention feature, not filler.
+9. **Use-case landing.** Close on a SPECIFIC viewer scenario, not "go check it out".
+
+**Named + numbered "weapons".** Give each differentiator a title and a number ("Weapon 01/02"). Mine the 2-3 NON-OBVIOUS specifics (a regex, a guard, an algorithm, a fallback) — one precise surprising mechanism beats a generic capability list.
+
+**Connectors between scenes.** Each scene after the first opens with a linguistic connector referring back ("The core of it is…", "Specifically…", "But note…") so the whole video plays as ONE monologue, not N telegraphic captions read in a row. Read the full script aloud in sequence — if it sounds like disconnected soundbites, rewrite.
+
+**Auto-fail patterns — reject the script if any appear:**
+- ❌ Hook/Problem/Solution/CTA fill-in-the-blank treated as isolated fragments
+- ❌ Sidebar stats (stars/forks/issues) as separate one-line scenes
+- ❌ Every sentence restarts as a stand-alone bullet ("X runs one pipeline. Y writes. Z narrates.")
+- ❌ Generic capability claims ("full-featured", "very powerful", "popular in the community")
+- ❌ Describing the README/repo instead of the product
+- ❌ Closing with "go check it out" / "thanks for watching"
+
+## Voiceover: TTS-Safe Narration (when narration is machine-spoken)
+
+When narration will be synthesized by a TTS engine (AI voiceover, not a human reading),
+the spoken `narration` and the on-screen text are SEPARATE channels — one is heard, one
+is read. Optimize each independently; never feed a raw slug, number, or symbol into TTS
+and hope the voice guesses right. (The Vietnamese examples below illustrate the pattern;
+apply the same phonetic + numbers-as-words substitution for whatever language the target
+TTS engine speaks.)
+
+**Numbers → spoken words** (many neural TTS engines can misread bare digits — VN examples):
+
+| Form | TTS misreads | Write as |
+|---|---|---|
+| Version decimal | `GPT 5.5` → "năm rưỡi" | `GPT năm chấm năm` |
+| Stat decimal | `82.7%` | `tám mươi hai phẩy bảy phần trăm` |
+| Spec | `200MP` | `hai trăm megapixel` |
+| Price | `$5` / `21 triệu` | `năm đô` / `hai mươi mốt triệu đồng` |
+| Multiplier / percent | `2x` / `30%` | `gấp đôi` / `ba mươi phần trăm` |
+
+**English/brand names → phonetic in narration, exact spelling on screen:**
+
+| Term | narration (heard) | display (read) |
+|---|---|---|
+| README | `ruýt my` | `README` |
+| ffmpeg | `ép ép em peg` | `ffmpeg` |
+| GitHub / repo | `git hâb` / `rề pô` | `GitHub` / `repo` |
+| API / GPT | `ây pi ai` / `gí pi tí` | `API` / `GPT` |
+
+**Strip from spoken narration:** emoji, URLs (say "github chấm com gạch…"), symbols (`→ & % $ # / @`), slash-commands (say "the plugin install command"), file extensions mid-sentence (say "the YAML file"), camelCase identifiers, ellipsis `…` and em-dash `—` (TTS misreads them — split into two short sentences). End every sentence with `.` or `?` for a natural pause.
+
+**Keep the jargon, natural spoken register.** Write the way a knowledgeable friend SAYS it — but keep the standard technical term ("commit", "endpoint", "prompt" stay in their usual form; a hard translation sounds wrong and loses meaning). Only translate when the local word is the one people actually use.
+
+**Production notes for a spoken video (if it will actually be produced, not just planned):**
+- **One voice, one provider across all scenes** — a voice/provider change mid-video is jarring.
+- **Measure TTS duration FIRST**, then size each scene's visuals to the real audio length — estimating duration then rendering causes A/V drift.
+- **Karaoke captions are the #1 pro-signal** for short-form (TikTok/Reels/Shorts): a bottom-center caption filling word-by-word in sync with the voice, keyword-accented. Muted-autoplay comprehension plus the single strongest "professional" cue — reserve a bottom caption band for it.
+
 ## Note
 
 This skill creates PLANS for video production. Actual recording and editing must be done by a human or a dedicated screen recording tool.
@@ -185,10 +252,15 @@ Known failure modes for this skill. Check these before declaring done.
 | Missing CTA section in script | MEDIUM | CTA (last 10s) is required in every script — no exceptions regardless of duration |
 | Not saving to file (only verbal output) | HIGH | Constraint 3 + Step 6: Write to output_path is mandatory — verbal only = no persistence |
 | Promising an actual deliverable video file | MEDIUM | Note explicitly: this skill creates a PLAN — actual recording is done by a human |
+| Flat catalogue opener ("Today we'll look at…") instead of a pain-first hook | HIGH | Narration Craft #1: open on the viewer's biggest pain — an opener that names no problem loses the scroll in 2 seconds |
+| Raw slugs/numbers/symbols left in narration for TTS ("README", "82.7%", "5.5") | HIGH | Voiceover section: rewrite spoken narration phonetically + numbers-as-words; keep exact spelling only on the display channel |
+| Script reads as N disconnected soundbites | MEDIUM | Narration Craft connectors: each scene after the first opens referring back — read the whole script aloud before declaring done |
 
 ## Done When
 
 - Platform constraints identified and applied to duration/format
+- Narration Craft applied — pain-first opening, cross-scene connectors, ≥1 caveat-as-feature, no auto-fail patterns
+- If narration is TTS-spoken: numbers-as-words + phonetic brand names in the spoken channel, exact spelling on display
 - Script written with timing marks (hook, setup, demo/body, CTA)
 - Storyboard created scene-by-scene with transitions
 - Shot list categorized by type (screen recording, terminal, code, diagram)

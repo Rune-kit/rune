@@ -3,7 +3,7 @@ name: marketing
 description: "Create marketing assets and execute launch strategy. Use when crafting landing copy, social banners, SEO meta, blog posts, or video scripts — coordinates with launch (deploy + announce) and the @rune-pro/growth pack (research / content / CRO)."
 metadata:
   author: runedev
-  version: "0.6.0"
+  version: "0.7.0"
   layer: L2
   model: sonnet
   group: delivery
@@ -183,6 +183,28 @@ Produce ready-to-post content:
 
 **Product Hunt tagline** (under 60 characters)
 
+### Step 4.5 — Caption Doctrine (captions that start conversations)
+
+A social caption's job is NOT to summarize the post/video — it's to HOOK a scroller and
+start a conversation. A caption that re-tells the content is dead weight ("headline, not
+transcript"). Apply this to every caption attached to the Step 4 posts and to any video/
+image ship.
+
+**Format (4 short pieces, whole caption well under ~500 chars):**
+1. **Hook line** (~100 chars max — mobile feeds truncate around ~125 chars and most readers never tap "See more"): tension / curiosity / bold claim, in DIFFERENT words than the content's own hook.
+2. **Optional context line** (~90 chars): ONE extra stake / number / twist the content doesn't spell out. Not a plot summary.
+3. **One genuine open-ended question**: real opinion, many valid answers ("How much do you usually bump budget each time?"). This is the comment engine.
+4. **Soft CTA to the first comment**: "link in the first comment 👇".
+
+**Platform reality checklist (2025):**
+- **Link goes in the FIRST COMMENT, never the caption body.** Top-performing FB content is overwhelmingly linkless and platforms downrank in-body links (widely reported).
+- **No engagement bait.** Meta demotes explicit begging ("comment YES if…", "tag a friend", react/share requests). Genuine opinion questions are exempt and encouraged.
+- **0-1 hashtag, never a wall** — Meta flags an "inordinate amount of hashtags" as spam.
+- **Max 3 emoji** (emotional ones) or none. No em-dash. No superlatives ("best ever", "game-changer", "revolutionary").
+- **NEVER transcript the content.** If the caption reads like the voiceover or the post body, rewrite it.
+
+**Long-form intro posts** (a detailed FB/LinkedIn intro, distinct from a short caption): every paragraph ≤ 2 lines with a blank line between, keep technical terms in their usual form, include one honest caveat, humble tone — no oversell, no hashtag wall, link still in the first comment.
+
 ### Step 5 — SEO metadata
 
 Produce for the landing page:
@@ -318,6 +340,9 @@ Known failure modes for this skill. Check these before declaring done.
 | Counter-playbook without detection mechanism | HIGH | Every scenario needs a monitoring method — "watch for price drops" is useless without specifying WHERE to watch and HOW to automate |
 | Counter-playbook with unrealistic response windows | MEDIUM | If response window is 24h but pre-built assets don't exist, the playbook will fail — either extend window or create assets NOW |
 | Generating counter-playbook for blue ocean products | LOW | Skip Step 3.5 if no direct competitors — counter-strategies need someone to counter |
+| Caption that transcripts/summarizes the content | MEDIUM | Step 4.5: caption is a HOOK, not a recap — if it reads like the post body, rewrite. Add a genuine question to drive comments |
+| Link placed in caption body instead of first comment | MEDIUM | Step 4.5: platforms downrank in-body links — link goes in the first comment; caption body stays linkless |
+| Engagement-bait or hashtag wall in captions | MEDIUM | Step 4.5: Meta demotes "comment YES / tag a friend" and hashtag walls — use 0-1 hashtag and a real opinion question |
 
 ## Done When
 
