@@ -61,32 +61,28 @@ jobs:
           fi
           # Extract codename from CHANGELOG.md if present
           CODENAME=$(grep -oP "## \[${TAG#v}\].*" CHANGELOG.md | head -1 || echo "")
+          # Write to a workspace file (persists across steps in this job). Passing
+          # the multi-line notes as a step OUTPUT and inlining it as an expression
+          # into a later run block is what broke the release step — a notes FILE
+          # avoids all expression interpolation.
           {
-            echo "notes<<CHANGELOG_EOF"
             echo "## What's New"
             echo ""
             echo "$NOTES"
             echo ""
             echo "**Full Changelog**: https://github.com/rune-kit/rune/compare/${PREV_TAG}...${TAG}"
-            echo "CHANGELOG_EOF"
-          } >> "$GITHUB_OUTPUT"
+          } > release-notes.md
 
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG="${GITHUB_REF#refs/tags/}"
-          # Write notes to a file — inlining the multi-line ${{ }} value into the
-          # gh command line breaks arg parsing ("accepts 1 arg(s), received 2")
-          # when the release-edit path runs. --notes-file sidesteps it entirely.
-          cat > "$RUNNER_TEMP/relnotes.md" <<'NOTES_EOF'
-          ${{ steps.changelog.outputs.notes }}
-          NOTES_EOF
           if gh release view "$TAG" &>/dev/null; then
             echo "Release $TAG already exists — updating"
-            gh release edit "$TAG" --title "$TAG" --notes-file "$RUNNER_TEMP/relnotes.md" --latest
+            gh release edit "$TAG" --title "$TAG" --notes-file release-notes.md --latest
           else
-            gh release create "$TAG" --title "$TAG" --notes-file "$RUNNER_TEMP/relnotes.md" --latest
+            gh release create "$TAG" --title "$TAG" --notes-file release-notes.md --latest
           fi
 
       - name: Publish + verify ClawHub
