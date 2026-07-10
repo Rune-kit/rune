@@ -32,7 +32,17 @@ jobs:
         run: npm run doctor
 
       - name: Publish to npm
-        run: npm publish --access public
+        # Idempotent: a re-run after the version is already on npm must not halt
+        # the job before the ClawHub step. Only a version conflict is tolerated;
+        # other publish errors still fail loud.
+        run: |
+          npm publish --access public 2>err.log || {
+            if grep -qiE "cannot publish over|previously published|403" err.log; then
+              echo "npm already has this version — continuing to downstream publish"
+            else
+              cat err.log; exit 1
+            fi
+          }
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -66,17 +76,17 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG="${GITHUB_REF#refs/tags/}"
+          # Write notes to a file — inlining the multi-line ${{ }} value into the
+          # gh command line breaks arg parsing ("accepts 1 arg(s), received 2")
+          # when the release-edit path runs. --notes-file sidesteps it entirely.
+          cat > "$RUNNER_TEMP/relnotes.md" <<'NOTES_EOF'
+          ${{ steps.changelog.outputs.notes }}
+          NOTES_EOF
           if gh release view "$TAG" &>/dev/null; then
             echo "Release $TAG already exists — updating"
-            gh release edit "$TAG" \
-              --title "$TAG" \
-              --notes "${{ steps.changelog.outputs.notes }}" \
-              --latest
+            gh release edit "$TAG" --title "$TAG" --notes-file "$RUNNER_TEMP/relnotes.md" --latest
           else
-            gh release create "$TAG" \
-              --title "$TAG" \
-              --notes "${{ steps.changelog.outputs.notes }}" \
-              --latest
+            gh release create "$TAG" --title "$TAG" --notes-file "$RUNNER_TEMP/relnotes.md" --latest
           fi
 
       - name: Publish + verify ClawHub
