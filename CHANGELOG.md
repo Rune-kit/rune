@@ -5,6 +5,25 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.24.0] - 2026-07-11
+
+"Market Refresh" — model lineup and platform adapters brought in line with the mid-2026 landscape (Opus 4.8 / Sonnet 5 / Haiku 4.5, Codex GPT-5.6, Windsurf→Devin), plus a goal-first advisory layer.
+
+### Changed — model lineup refreshed to current
+- **Claude tiers** across the mesh → Opus 4.8 / Sonnet 5 / Haiku 4.5 (ARCHITECTURE, oracle-mode, session-bridge, mcp-builder, llm-architect, README).
+- **Codex adapter** → GPT-5.6 `sol` / `terra` / `luna` (opus / sonnet / haiku), verified against codex-cli 0.144.1. Generated `AGENTS.md` now suggests a tier→`model_reasoning_effort` mapping (high / medium / low).
+- **Fable 5** positioned as an API-only frontier **oracle** target (not a routing tier) — opus stays the routing ceiling, since Fable leaves subscription plans 2026-07-12.
+- **Windsurf → Devin Desktop** rebrand documented; skill emission kept on `.windsurf/` (Devin reads it as a fallback), the full `.devin/` flip deferred until the fallback is dropped.
+
+### Added — goal-first advisory
+- `plan` and `ba` gained advisory guidance to leverage native goal/outcome commands (Claude Code `/goal`, Managed Agents Outcomes) while keeping the plan/requirements doc as the cross-session source of truth.
+
+### Fixed
+- CRLF line-ending lint errors in `compiler/adapters/hooks/claude.js`, `compiler/bin/rune.js`, `compiler/commands/hooks/presets.js`.
+
+### Tests
+- Adapters suite 91 → 92 (new codex AGENTS.md tier-mapping assertion). Full suite 1572 pass.
+
 ## [2.23.0] - 2026-07-04
 
 "Native Skills" — seven platform adapters move to the Agent Skills open standard, so every platform's own loader discovers Rune skills natively (and lazily) instead of relying on context-file pointers or always-on rule dumps.

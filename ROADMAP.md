@@ -1,6 +1,6 @@
 # Rune Roadmap
 
-> Last updated: July 2026 | Version: 2.23.0
+> Last updated: July 2026 | Version: 2.24.0
 
 ---
 
