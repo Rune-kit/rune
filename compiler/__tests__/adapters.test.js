@@ -161,6 +161,19 @@ test('codex adapter uses skill directories', () => {
   assert.strictEqual(codex.skillFileName, 'SKILL.md');
 });
 
+test('codex AGENTS.md documents the tier→model + reasoning-effort mapping', async () => {
+  const codex = getAdapter('codex');
+  const extras = await codex.generateExtraFiles({
+    stats: { skillCount: 65, crossRefsResolved: 204, packCount: 14, files: [] },
+  });
+  const agents = extras.find((e) => e.path === 'AGENTS.md');
+  assert.ok(agents, 'codex emits AGENTS.md');
+  // Guards against a MODEL_MAP / REASONING_EFFORT_MAP interpolation swap.
+  assert.match(agents.content, /opus → `gpt-5\.6-sol` \(`model_reasoning_effort = "high"`\)/);
+  assert.match(agents.content, /sonnet → `gpt-5\.6-terra` \(`model_reasoning_effort = "medium"`\)/);
+  assert.match(agents.content, /haiku → `gpt-5\.6-luna` \(`model_reasoning_effort = "low"`\)/);
+});
+
 // --- New v2.18 adapters: shape + generateExtraFiles contract ---
 
 test('qoder adapter targets .qoder/skills (dir-per-skill) and emits AGENTS.md', async () => {

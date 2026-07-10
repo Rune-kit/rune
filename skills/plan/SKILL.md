@@ -3,7 +3,7 @@ name: plan
 description: "Create structured implementation plans from requirements. Produces master plan + phase files for enterprise-scale project management. Master plan = overview (<80 lines). Phase files = execution detail (<200 lines each). Each session handles 1 phase. Uses opus for deep reasoning."
 metadata:
   author: runedev
-  version: "1.7.0"
+  version: "1.7.1"
   layer: L2
   model: opus
   group: creation
@@ -21,6 +21,17 @@ Strategic planning engine for the Rune ecosystem. Produces a **master plan + pha
 **Design principle: Plan for the weakest coder.** Phase files are designed so that even an Amateur-level model (Haiku) can execute them with minimal errors. When the plan satisfies the Amateur's needs, every model benefits — Junior (Sonnet) executes near-perfectly, Senior (Opus) executes flawlessly.
 
 This is enterprise-grade project management: BA produces WHAT → Plan produces HOW (structured into phases) → ANY coder executes each phase with full context.
+
+> **Goal-first — leverage native goal/outcome commands (advisory, 2026).** Current
+> agent models (Opus 4.8, Sonnet 5, and the API-only Fable) perform best when handed
+> the full goal + constraints up front, then left to execute at high effort. Some
+> platforms now expose this natively: Claude Code `/goal` sets a run's north-star;
+> Managed Agents **Outcomes** (`user.define_outcome` + rubric) grade-and-iterate to a
+> target. The master plan IS that goal contract in durable form — when a native
+> goal/outcome command is present, seed it from the master plan's Overview +
+> acceptance criteria instead of re-stating the goal loosely. Advisory only: the
+> master plan + phase files stay the source of truth on every platform (goal/Outcome
+> are single-session; the plan survives across sessions and platforms).
 
 <HARD-GATE>
 NEVER produce a single monolithic plan file for non-trivial tasks.
@@ -402,7 +413,7 @@ Append to plan output when invoked standalone. Suppress when called as sub-skill
 ```yaml
 chain_metadata:
   skill: "rune:plan"
-  version: "1.7.0"
+  version: "1.7.1"
   status: "[DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED]"
   domain: "[area planned]"
   files_changed:

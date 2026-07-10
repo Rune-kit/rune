@@ -42,8 +42,9 @@ Emit `oracle.dispatched` carrying `{sessionId, triggerSignal, sourceSkill, targe
 
 | Target model | Protocol |
 |--------------|----------|
-| sonnet-class (gpt-5, gemini-3-flash, claude-sonnet) | Synchronous — block until reply or 60s timeout |
-| opus-class (gpt-5-pro, gemini-3-pro, claude-opus-4-7) | Async — primary agent continues; poll `.rune/oracle-pending/<sessionId>.json` between phases |
+| sonnet-class (gpt-5.6-terra, gemini-3-flash, claude-sonnet-5) | Synchronous — block until reply or 60s timeout |
+| opus-class (gpt-5.6-sol, gemini-3-pro, claude-opus-4-8) | Async — primary agent continues; poll `.rune/oracle-pending/<sessionId>.json` between phases |
+| frontier-class (claude-fable-5, API-only) | Async, heaviest second opinion for the hardest red-team / architecture calls. **API-only** — not available on a subscription runtime, so reach it via an API key or a non-Anthropic CLI, never via the primary Claude Code session's model. Thinking is always on (control depth with `effort`, do not send a `thinking` param) and it can return a `refusal` stop reason — treat a refusal as "no oracle reply", fall back to opus-class. |
 
 ### 5. Validate response
 

@@ -64,21 +64,21 @@ interface ModelConfig {
 
 const MODELS: Record<string, ModelConfig> = {
   fast: {
-    id: 'claude-haiku-4-5-20251001',
+    id: 'claude-haiku-4-5',
     provider: 'anthropic',
     costPer1kTokens: 0.001,
     maxTokens: 4096,
     latencyP50Ms: 200,
   },
   balanced: {
-    id: 'claude-sonnet-4-6',
+    id: 'claude-sonnet-5',
     provider: 'anthropic',
     costPer1kTokens: 0.01,
     maxTokens: 8192,
     latencyP50Ms: 800,
   },
   deep: {
-    id: 'claude-opus-4-6',
+    id: 'claude-opus-4-8',
     provider: 'anthropic',
     costPer1kTokens: 0.05,
     maxTokens: 16384,

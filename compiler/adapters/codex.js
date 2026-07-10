@@ -13,18 +13,33 @@
  * only (config.toml). Repo skills MUST live in .agents/skills/ to be
  * auto-discovered. @see https://developers.openai.com/codex/skills
  *
- * MODEL TIER MAPPING (v2.15+):
+ * MODEL TIER MAPPING (v2.15+, lineup refreshed 2026-07):
  * Skill frontmatter `model: opus|sonnet|haiku` (Anthropic naming) is
  * translated to Codex/OpenAI provider-correct model names so the field
  * is meaningful in the compiled output. Unknown tier values pass through.
+ *
+ * Codex GPT-5.6 tiers (verified against codex-cli 0.144.1 + developers.openai.com/codex/models):
+ *   sol  = flagship/complex → opus
+ *   terra = balanced everyday → sonnet
+ *   luna = fast/affordable → haiku
+ * Codex also exposes `model_reasoning_effort = minimal|low|medium|high|xhigh`
+ * (a config.toml key, not per-skill frontmatter) — Rune surfaces the tier→effort
+ * suggestion in AGENTS.md rather than emitting a speculative per-skill field.
  */
 
 import { BRANDING_FOOTER } from '../transforms/branding.js';
 
 const MODEL_MAP = {
-  opus: 'gpt-5-pro',
-  sonnet: 'gpt-5',
-  haiku: 'gpt-5-mini',
+  opus: 'gpt-5.6-sol',
+  sonnet: 'gpt-5.6-terra',
+  haiku: 'gpt-5.6-luna',
+};
+
+// Suggested config.toml `model_reasoning_effort` per tier (global key, documented in AGENTS.md).
+const REASONING_EFFORT_MAP = {
+  opus: 'high',
+  sonnet: 'medium',
+  haiku: 'low',
 };
 
 const TOOL_MAP = {
@@ -110,6 +125,16 @@ export default {
       '## Skills Directory',
       '',
       'Skills are located in: .agents/skills/ (auto-discovered by Codex)',
+      '',
+      '## Model Tiers',
+      '',
+      'Rune skills carry a tier hint (`opus`/`sonnet`/`haiku`). Suggested Codex mapping:',
+      '',
+      `- opus → \`${MODEL_MAP.opus}\` (\`model_reasoning_effort = "${REASONING_EFFORT_MAP.opus}"\`) — architecture / security / planning`,
+      `- sonnet → \`${MODEL_MAP.sonnet}\` (\`model_reasoning_effort = "${REASONING_EFFORT_MAP.sonnet}"\`) — code / edit / review`,
+      `- haiku → \`${MODEL_MAP.haiku}\` (\`model_reasoning_effort = "${REASONING_EFFORT_MAP.haiku}"\`) — scan / read-only`,
+      '',
+      'Set `model` + `model_reasoning_effort` in `~/.codex/config.toml` to match the tier of the task.',
       '',
       '---',
       '> Rune Skill Mesh — https://github.com/rune-kit/rune',

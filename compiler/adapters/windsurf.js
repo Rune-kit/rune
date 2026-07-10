@@ -1,14 +1,21 @@
 /**
  * Windsurf Adapter
  *
- * Emits SKILL.md files into .windsurf/skills/{name}/ directories — Windsurf's
- * native Cascade Skills format. Cascade uses progressive disclosure: only the
- * skill's name and description are shown to the model by default; the full
- * SKILL.md is loaded when Cascade invokes the skill (or via @skill-name).
+ * Emits SKILL.md files into .windsurf/skills/{name}/ directories — the native
+ * Cascade Skills format. Cascade uses progressive disclosure: only the skill's
+ * name and description are shown to the model by default; the full SKILL.md is
+ * loaded when Cascade invokes the skill (or via @skill-name).
  *
- * Windsurf skills dir: .windsurf/skills/
- * Windsurf skill format: .windsurf/skills/{name}/SKILL.md
- * @see https://docs.windsurf.com/windsurf/cascade/skills
+ * REBRAND (2026-06-02): Windsurf is now "Devin Desktop" (Cognition), rolled out
+ * over-the-air. Devin Desktop PREFERS `.devin/skills/` + `.devin/rules/` but
+ * still reads `.windsurf/skills/` + `.windsurf/rules/` as a documented fallback
+ * (docs.devin.ai). Rune keeps emitting to `.windsurf/` for maximum compat — it
+ * works on both current Devin and any un-migrated Windsurf install. The CLI flag
+ * stays `--platform windsurf`. Flip the emission dirs to `.devin/` only once
+ * Devin deprecates the `.windsurf/` fallback. @see docs.devin.ai/desktop
+ *
+ * Windsurf/Devin skills dir: .windsurf/skills/  (Devin also reads .devin/skills/)
+ * Skill format: .windsurf/skills/{name}/SKILL.md
  *
  * NOTE: .windsurf/rules/ is still used by the runtime-hooks installer
  * (adapters/hooks/windsurf.js) — rules are the correct vehicle for always-on

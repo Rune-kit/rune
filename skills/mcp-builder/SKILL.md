@@ -370,8 +370,8 @@ When building MCP servers that call AI providers, support **dual-model configura
 ```typescript
 // config.ts
 const config = {
-  primaryModel: process.env.PRIMARY_MODEL || 'claude-sonnet-4-20250514',
-  backgroundModel: process.env.BACKGROUND_MODEL || 'claude-haiku-4-5-20251001',
+  primaryModel: process.env.PRIMARY_MODEL || 'claude-sonnet-5',
+  backgroundModel: process.env.BACKGROUND_MODEL || 'claude-haiku-4-5',
 };
 ```
 

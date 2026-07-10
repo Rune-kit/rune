@@ -553,7 +553,7 @@ When `oracle.dispatched` arrives, payload contains:
 - `sessionId` — caller-provided unique id
 - `triggerSignal` — `agent.stuck` or manual
 - `sourceSkill` — `debug` | `fix` | manual
-- `targetModel` — concrete model name (e.g. `gpt-5-pro`, `gemini-3-pro`, `claude-opus-4-7`)
+- `targetModel` — concrete model name (e.g. `gpt-5.6-sol`, `gemini-3-pro`, `claude-opus-4-8`; API-only frontier: `claude-fable-5`)
 - `bundleHash` — sha256 of the bundled context (idempotency key)
 
 ### Step D2 — Idempotency check
@@ -570,7 +570,7 @@ Create `.rune/oracle-pending/<sessionId>.json`:
   "dispatchedAt": "2026-04-27T12:34:56Z",
   "triggerSignal": "agent.stuck",
   "sourceSkill": "debug",
-  "targetModel": "claude-opus-4-7",
+  "targetModel": "claude-opus-4-8",
   "bundleHash": "sha256:9f3a...",
   "status": "pending",
   "timeoutAt": "2026-04-27T12:44:56Z",

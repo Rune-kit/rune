@@ -25,19 +25,19 @@ const baseSkill = {
 describe('codex adapter model mapping', () => {
   const codex = getAdapter('codex');
 
-  test('opus translates to gpt-5-pro', () => {
+  test('opus translates to gpt-5.6-sol', () => {
     const header = codex.generateHeader({ ...baseSkill, model: 'opus' });
-    assert.match(header, /model: gpt-5-pro/);
+    assert.match(header, /model: gpt-5\.6-sol/);
   });
 
-  test('sonnet translates to gpt-5', () => {
+  test('sonnet translates to gpt-5.6-terra', () => {
     const header = codex.generateHeader({ ...baseSkill, model: 'sonnet' });
-    assert.match(header, /model: gpt-5(?!-)/);
+    assert.match(header, /model: gpt-5\.6-terra/);
   });
 
-  test('haiku translates to gpt-5-mini', () => {
+  test('haiku translates to gpt-5.6-luna', () => {
     const header = codex.generateHeader({ ...baseSkill, model: 'haiku' });
-    assert.match(header, /model: gpt-5-mini/);
+    assert.match(header, /model: gpt-5\.6-luna/);
   });
 
   test('omitted model produces no model line', () => {

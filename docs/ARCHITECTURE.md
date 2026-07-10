@@ -61,12 +61,28 @@ Rule 4: If blocked → escalate to L1 orchestrator
 ```
 Read-only / scan?           → haiku   (cheapest)
 Write / edit / generate?    → sonnet  (default)
-Architecture / security?    → opus    (deep reasoning)
+Architecture / security?    → opus    (deep reasoning, ceiling)
 
 Override: priority=critical → always opus
 Override: budget constraint → downgrade
 Override: user preference   → manual in config
 ```
+
+The three tiers map to what a subscription runtime (Claude Code, Cursor, etc.)
+can actually run. `opus` is the routing ceiling on purpose. A hypothetical
+"most-capable" tier above opus (Anthropic Fable, API-only) is **not** a routing
+tier — it is unavailable to subscription users and would resolve to nothing on
+the primary audience. Fable-class API models belong in **oracle-mode /
+cross-model-escalation** (adversary, session-bridge), where Rune deliberately
+calls OUT to an external, colder, different-architecture model for a second
+opinion — see `skills/adversary/references/oracle-mode.md`.
+
+The starting model is irrelevant to routing correctness: a skill's `model:`
+hint pins the tier when the skill is spawned as a subagent, so an orchestrator
+running at any tier delegates execution down to the hinted tier. A more capable
+starting model just means richer top-level planning before work is delegated
+down — the ideal shape for the hardest tasks (state the full goal up front, run
+high-effort, delegate to sub-agents).
 
 ### Behavioral Modes (v2.16+)
 
@@ -90,9 +106,21 @@ SKILL.md frontmatter uses Anthropic-native tier names (`opus`/`sonnet`/`haiku`) 
 
 | Tier | claude / cursor / windsurf | codex | antigravity | opencode / openclaw / generic / qoder | qwen | gemini | aider / copilot |
 |------|---------------------------|-------|-------------|---------------------------------------|------|--------|------------------|
-| opus | claude-opus-4-7 (no-op) | gpt-5-pro | gemini-3-pro | tier:heavy | qwen3-coder-plus | gemini-2.5-pro | tier-hint inline |
-| sonnet | claude-sonnet-4-6 (no-op) | gpt-5 | gemini-3-flash | tier:mid | qwen3-coder | gemini-2.5-flash | tier-hint inline |
-| haiku | claude-haiku-4-5 (no-op) | gpt-5-mini | gemini-3-flash-lite | tier:light | qwen3-coder-flash | gemini-2.0-flash-lite | tier-hint inline |
+| opus | claude-opus-4-8 (no-op) | gpt-5.6-sol | gemini-3-pro | tier:heavy | qwen3-coder-plus | gemini-2.5-pro | tier-hint inline |
+| sonnet | claude-sonnet-5 (no-op) | gpt-5.6-terra | gemini-3-flash | tier:mid | qwen3-coder | gemini-2.5-flash | tier-hint inline |
+| haiku | claude-haiku-4-5 (no-op) | gpt-5.6-luna | gemini-3-flash-lite | tier:light | qwen3-coder-flash | gemini-2.0-flash-lite | tier-hint inline |
+
+> **Verified at source (2026-07): Claude** (Opus 4.8 / Sonnet 5 / Haiku 4.5,
+> Anthropic catalog) and **Codex** (GPT-5.6 sol/terra/luna, developers.openai.com/codex/models).
+> Codex also gained a per-config reasoning control — `model_reasoning_effort =
+> minimal|low|medium|high|xhigh` (and `plan_mode_reasoning_effort`). The codex
+> adapter now surfaces a suggested tier→effort mapping (opus→high, sonnet→medium,
+> haiku→low) in the generated `AGENTS.md` — not as per-skill frontmatter, since
+> `model_reasoning_effort` is a global `config.toml` key. **Still pending verification:**
+> gemini and qwen provider IDs. Note: **Gemini CLI retired 2026-06-18 → Antigravity
+> CLI** (free/individual tier); the `gemini` adapter target is legacy for that
+> audience. **Windsurf is now Devin Desktop (2026-06-02)** — rules moved to
+> `.devin/rules/` (with `.windsurf/rules/` fallback), skills to `.devin/skills/`.
 
 Rules:
 - Anthropic-backed adapters (claude/cursor/windsurf) understand the native names — adapter is no-op
@@ -110,7 +138,7 @@ Rune compiles core skills + extension packs into 13 platform-native formats. Eac
 |---------|--------|--------------|-------------|------------|
 | **claude** | (passthrough) | native SKILL.md | — | Anthropic Claude Code |
 | **cursor** | `.cursor/skills/rune-<n>/SKILL.md` | dir-per-skill Agent Skills (Cursor 2.4+) | — | cursor.com/docs/skills |
-| **windsurf** | `.windsurf/skills/rune-<n>/SKILL.md` | dir-per-skill Cascade Skills | — | docs.windsurf.com |
+| **windsurf** | `.windsurf/skills/rune-<n>/SKILL.md` | dir-per-skill Cascade Skills | — | docs.devin.ai (Windsurf → Devin Desktop 2026-06-02; `.devin/skills` preferred, `.windsurf/` still read as fallback — emission kept for max compat) |
 | **antigravity** | `.agents/skills/rune-<n>/SKILL.md` | dir-per-skill, Gemini model map | — | antigravity.google/docs/skills |
 | **codex** | `.agents/skills/rune-<n>/SKILL.md` | dir-per-skill, OpenAI tier | `AGENTS.md` | developers.openai.com/codex/skills |
 | **opencode** | `.opencode/skills/rune-<n>/SKILL.md` | dir-per-skill, tier hints | — | opencode.ai/docs |
