@@ -18,7 +18,7 @@ These principles guide every roadmap decision:
 
 ---
 
-## Current State (v2.23.0 — "Native Skills")
+## Current State (v2.24.0 — "Market Refresh")
 
 | Layer | Count | Status |
 |-------|-------|--------|
