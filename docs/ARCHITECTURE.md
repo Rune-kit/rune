@@ -529,8 +529,10 @@ scaffold → skill-forge (scaffold identifies reusable skill patterns)
 sentinel → plan       (security.blocked triggers re-planning)
 
 # council (decorrelated multi-perspective primitive)
-council ← adversary   (Step 0.6: CRITICAL-tier plan critique — one-way-door decisions, auth/payment/crypto/user-data)
-council ← review      (Step 1.6: high-blast-radius bug-finding — 50+ callers + HIGH severity)
+council ← adversary       (Step 0.6: CRITICAL-tier plan critique — one-way-door decisions, auth/payment/crypto/user-data)
+council ← review          (Step 1.6: high-blast-radius bug-finding — 50+ callers + HIGH severity)
+council ← brainstorm      (Step 3.75: Design-It-Twice candidate judgment — N=4 remote/external dependency, marginal diversity band, or explicit user request)
+council ← problem-solver  (Step 6.5: high-stakes conclusion judgment — one-way-door decision with high-impact solution, or severe ethical concern)
 ```
 
 ## Master Plan + Phase Files (Amateur-Proof Architecture)

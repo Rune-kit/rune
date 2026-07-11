@@ -107,8 +107,9 @@ diversity = 1 - mean(similarity(d_i, d_j) for all i < j)
    - **Locality** — where change concentrates
    - **Seam placement** — internal vs external; ports yes/no
    - **Common-case trivial-ness** — how much work for the default path
-3. **Opinionated recommendation** — strongest design + concrete hedge condition for when to pick a different one
-4. **Hybrid synthesis (optional Step 4.5)** — if 2 designs have complementary strengths, propose a 4th synthesized option that combines them
+3. **Council check (SKILL.md Step 3.75)** — if the narrow high-stakes trigger fired, note `[council-verified]`/`[council-dissent]` tags inline in the comparison table or as a short addendum. If `decorrelation: NO_DECORRELATION`, say so plainly — never present it as a second opinion.
+4. **Opinionated recommendation** — strongest design + concrete hedge condition for when to pick a different one
+5. **Hybrid synthesis (optional Step 4.5)** — if 2 designs have complementary strengths, propose a 4th synthesized option that combines them
 
 Skip the comparison table if N=2 (just 1 contrast, prose handles it).
 
@@ -152,4 +153,6 @@ chain_metadata:
     constraints_used: [C1, C2, C4]
     recommendation: <design-id>
     hybrid_proposed: <true|false>
+    council_invoked: <true|false>
+    council_decorrelation: <MULTI_FAMILY|NO_DECORRELATION|null>
 ```

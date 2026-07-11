@@ -3,7 +3,7 @@ name: problem-solver
 description: "Structured reasoning frameworks for complex problems. 19 analytical frameworks, 12 cognitive bias detectors, 10 decomposition methods, 10 mental models, Cynefin domain classification, ethical dimension check, and 6 communication patterns. McKinsey-grade problem solving for AI coding assistants."
 metadata:
   author: runedev
-  version: "0.4.0"
+  version: "0.5.0"
   layer: L3
   model: sonnet
   group: reasoning
@@ -20,7 +20,7 @@ Inspired by McKinsey problem-solving methodology and cognitive science research 
 
 ## Calls (outbound)
 
-None — pure L3 reasoning utility.
+- `council` (L3): Step 6.5 — decorrelated judgment on whether a high-stakes framework conclusion holds, narrow trigger only (documented L3→L3 coordination — see Step 6.5)
 
 ## Called By (inbound)
 
@@ -281,6 +281,21 @@ From the framework output, derive 2-3 actionable solutions. For each:
 
 Rank solutions by impact/effort ratio.
 
+### Step 6.5 — Decorrelated Judgment (council, high-stakes only)
+
+Step 2's bias check and Step 4's framework application are one model's reasoning, however structured. For the subset of problems where being wrong is expensive and hard to undo, call `rune:council` (mode=judge) on the tentative conclusion before Step 7's communication structuring — the same discipline `adversary` Step 0.6 applies to plans.
+
+**Trigger — call council when ANY of:**
+- Step 3b's Reversibility Filter classified the decision as a one-way door (irreversible) AND the top-ranked solution from Step 6 has `impact: high`
+- Step 5.5's Ethical Dimension Check surfaced a Harm or Fairness concern rated severe
+- User explicitly asks for a second opinion or "gut check" before committing to the conclusion
+
+**Do NOT call council for**: two-way-door decisions, decompositions, root-cause analyses, or any solution ranked `impact: low`/`medium` — council is opt-in overhead reserved for high-stakes/irreversible judgment calls, not a default tax on every problem-solver invocation.
+
+**Request**: `{ question: <problem statement + selected framework + reasoning chain + top-ranked solution — self-contained>, mode: "judge", n: 3, diversity: { prefer_model_families: true }, evidence_required: [reasoning] }`.
+
+**Consume**: fold `agreement.consensus_claims` into Step 6's top solution as a `[council-verified]` note that the framework's application and conclusion hold up under independent scrutiny. Fold `agreement.dissent` into that solution's "Bias risk" line, tagged `[council-dissent]` — dissent is surfaced, not resolved by picking a side. If `decorrelation: NO_DECORRELATION`, state plainly that no independent model family was reachable — do not claim the conclusion was externally validated.
+
 ### Step 7 — Select Communication Structure
 
 Choose how to present the analysis based on audience:
@@ -305,6 +320,7 @@ Structure the output report using the selected pattern.
 - Do not produce more than 3 recommended solutions — prioritize quality over quantity
 - Max 5 evaluation criteria in Weighted Matrix — more causes choice overload
 - Decompositions MUST pass MECE test — no overlapping or missing branches
+- [council] MUST NOT call council for every high-stakes-looking problem — narrow trigger only (one-way-door decision with a high-impact solution, or a severe ethical concern); when invoked, council output supplements Step 6, it does not replace bias-check/framework discipline
 
 ## Output Format
 
@@ -314,6 +330,7 @@ Structure the output report using the selected pattern.
 - **Domain**: [Clear / Complicated / Complex / Chaotic / Confused] — [one-line justification]
 - **Framework**: [chosen framework and reason]
 - **Confidence**: high | medium | low
+- **Council**: [not invoked | MULTI_FAMILY (N families) | NO_DECORRELATION — same-family subagents only]
 
 ### Bias Warnings
 - ⚠️ [Bias 1]: [how it might affect this analysis] → [debiasing action taken]
@@ -362,6 +379,7 @@ Structure the output report using the selected pattern.
 | Strawmanning the least-favored option | MEDIUM | Steel Manning: build strongest case for option you dislike before dismissing |
 | Running full PESTLE on a purely technical problem | LOW | PESTLE is for macro-environment — skip for algorithm/implementation choices |
 | Skipping ethics check on user-facing decisions | MEDIUM | Step 5.5: lightweight check — warnings not gates, but don't skip for stakeholder-affecting decisions |
+| (council) Reporting council output as consensus when decorrelation is NO_DECORRELATION | CRITICAL | Step 6.5 consume rule: report the decorrelation stamp plainly, never imply independent validation from same-family subagents |
 
 ## Done When
 
@@ -374,6 +392,7 @@ Structure the output report using the selected pattern.
 - 2-3 solutions ranked by impact/effort ratio with bias risk noted
 - Next Action identified (single most important immediate step)
 - Analysis Report emitted with communication structure
+- (council) If high-stakes trigger matched (Step 6.5): council invoked before Step 7, decorrelation stamp reported plainly, consensus/dissent folded into the top solution
 
 ## Cost Profile
 

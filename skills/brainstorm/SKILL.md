@@ -3,7 +3,7 @@ name: brainstorm
 description: "Creative ideation and solution exploration. Generates multiple approaches with trade-offs, uses structured frameworks (SCAMPER, First Principles), and hands off to plan for structuring."
 metadata:
   author: runedev
-  version: "0.7.0"
+  version: "0.8.0"
   layer: L2
   model: opus
   group: creation
@@ -57,6 +57,7 @@ Activated when exploring alternative *interface shapes* for a deepening candidat
 3. Diversity score MUST be >= 0.4 before presenting (re-spawn once if below)
 4. Recommendation MUST be opinionated with a concrete hedge condition — "it depends" is BLOCKED
 5. Hybrid synthesis (Step 4.5) is opt-in when 2 designs have complementary strengths
+6. council (Step 3.75) is opt-in per the narrow trigger — MUST NOT fire on every design-it-twice run, and its output MUST NOT replace the diversity-score mechanism, only supplement it
 
 Full doctrine: [references/design-it-twice.md](references/design-it-twice.md).
 
@@ -110,6 +111,7 @@ Direct API call ≠ Wrapper/middleware layer ≠ Reverse engineering ≠ Browser
 - `trend-scout` (L3): market context and trends for product-oriented brainstorming
 - `problem-solver` (L3): structured reasoning frameworks (SCAMPER, First Principles, 6 Hats)
 - `sequential-thinking` (L3): evaluating approaches with many variables
+- `council` (L3): Step 3.75 — decorrelated judgment on which Design-It-Twice candidate is strongest, narrow trigger only (Design-It-Twice Mode)
 
 ## Called By (inbound)
 
@@ -126,6 +128,7 @@ Direct API call ≠ Wrapper/middleware layer ≠ Reverse engineering ≠ Browser
 
 - `brainstorm` ↔ `plan` — bidirectional: brainstorm generates options → plan structures the chosen one, plan needs exploration → brainstorm ideates
 - `brainstorm` → `ba` — a standalone brainstorm that picks an approach for a NEW feature with no requirements spec routes to `ba` first (WHAT before HOW). Suppressed when `ba` is the caller — that direction is `ba` → `brainstorm` and re-invoking would loop.
+- `brainstorm` → `council` — Design-It-Twice candidates ready + high-stakes trigger fires (Step 3.75) → decorrelated judgment on the strongest candidate before Step 4 Recommend
 
 ## Reasoning Frameworks
 
@@ -300,6 +303,21 @@ diversity = 1 - mean(pairwise_jaccard(feature_vectors))
 
 Emit `diversity_score` in chain_metadata.
 
+### Step 3.75 — Decorrelated Judgment (council, Design-It-Twice Mode only)
+
+The diversity score (Step 3.5) measures how DIFFERENT the candidate designs are — it says nothing about which one is BEST. For high-stakes interface decisions, that judgment call benefits from a second architecture's opinion, the same discipline `adversary` Step 0.6 and `review` Step 1.6 already apply.
+
+**Trigger — call council (mode=judge) when ANY of:**
+- N=4 was spawned (dependency category `remote-owned` or `true-external`, per Step 2.5 — the same tier that already signals higher stakes)
+- Diversity landed in the 0.4–0.59 marginal band (Step 3.5) and a re-spawn still didn't clearly separate the candidates
+- User explicitly asks for a second opinion on which design to pick
+
+**Do NOT call council for**: routine Design-It-Twice runs where diversity ≥ 0.6 on an in-process/local-substitutable dependency (N=3) — this is opt-in overhead on top of the existing subagent fan-out, not a default tax on every design-it-twice run.
+
+**Request**: `{ question: <the candidate designs' interface/usage/tradeoffs YAML + "which design is strongest given constraints X">, mode: "judge", n: 3, diversity: { prefer_model_families: true }, evidence_required: [reasoning] }`. Self-contained — council's voices never saw the subagent spawns.
+
+**Consume**: fold `agreement.consensus_claims` into Step 4's recommendation as a `[council-verified]` signal alongside (never instead of) the diversity score. Fold `agreement.dissent` into the hedge condition, tagged `[council-dissent]`. If `decorrelation: NO_DECORRELATION`, say so plainly — do NOT describe the judgment as independent confirmation from same-family subagents; the diversity-score mechanism remains the primary signal in that case.
+
 ### Step 4 — Recommend
 
 Select ONE approach as the recommendation. State:
@@ -419,6 +437,7 @@ If the user rejects the recommendation, return to Step 2 with adjusted constrain
 9. [Design-It-Twice Mode] MUST spawn parallel subagents with one constraint pinned per agent — fake diversity (one agent producing N options) is BLOCKED
 10. [Design-It-Twice Mode] MUST emit `diversity_score` and re-spawn (once) if below 0.4 floor
 11. [Design-It-Twice Mode] MUST NOT produce "it depends" recommendations — pick one design with a concrete hedge condition
+12. [Design-It-Twice Mode] MUST NOT call council on every run — narrow trigger only (N=4 remote/external dependency, marginal diversity band, or explicit user request); when invoked, council output supplements (never replaces) the diversity-score mechanism
 
 ## Output Format
 
@@ -486,6 +505,7 @@ Known failure modes for this skill. Check these before declaring done.
 | [Design-It-Twice] Diversity score below 0.4 ignored | HIGH | Step 3.5 gate — re-spawn once; if still low, present with explicit "low-diversity" warning |
 | [Design-It-Twice] "It depends" recommendation | HIGH | Step 4 — must pick one with a hedge; if genuinely tied, propose hybrid (Step 4.5) and recommend that |
 | [Design-It-Twice] Forgetting to include CONTEXT.md domain terms in subagent prompt | MEDIUM | Step 2.5 spawn template requires domain glossary be passed through |
+| [Design-It-Twice] Reporting council output as consensus when decorrelation is NO_DECORRELATION | CRITICAL | Step 3.75 consume rule: report the decorrelation stamp plainly, never imply independent confirmation from same-family subagents |
 
 ## Done When
 
@@ -496,6 +516,7 @@ Known failure modes for this skill. Check these before declaring done.
 - Constraints for plan phase listed explicitly
 - Step 5 spec-presence gate evaluated — routed to `ba` (new feature, no spec, standalone) or `plan` (spec exists, or ba/cook was the caller, or no new behavior)
 - Next skill (`ba` or `plan`) called with the approved approach and constraints
+- (Design-It-Twice) If council's high-stakes trigger matched (Step 3.75): council invoked before Step 4, decorrelation stamp reported plainly, consensus/dissent folded into the recommendation alongside the diversity score
 
 ## Cost Profile
 

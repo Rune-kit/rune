@@ -28,6 +28,8 @@ If fewer than 2 distinct real `model_family` values answered (excluding `is_fall
 
 - Called by `adversary` — Step 0.6, mode=critique, for plans flagged high-risk/critical-path/expensive-to-reverse
 - Called by `review` — Step 1.6, mode=review, when blast radius is 50+ callers with a HIGH-severity change
+- Called by `brainstorm` — Step 3.75, mode=judge, Design-It-Twice Mode only, when N=4 spawned for a remote/external dependency, diversity landed in the 0.4-0.59 marginal band, or the user requests a second opinion on which candidate design is strongest
+- Called by `problem-solver` — Step 6.5, mode=judge, when a one-way-door decision has a high-impact top solution, or the ethical dimension check surfaced a severe harm/fairness concern
 - `/rune council <question>` — manual multi-perspective gathering on any question
 - Auto-trigger: none (always explicit — council is expensive relative to a single pass, callers opt in)
 
@@ -39,6 +41,8 @@ None at the skill level — council dispatches via `Bash` (external CLI bridge) 
 
 - `adversary` (L2): Step 0.6 — decorrelated critique before red-teaming a high-risk plan
 - `review` (L2): Step 1.6 — decorrelated bug-finding when blast radius escalation fires
+- `brainstorm` (L2): Step 3.75 — decorrelated judgment on which Design-It-Twice candidate is strongest, narrow trigger only
+- `problem-solver` (L3): Step 6.5 — decorrelated judgment on whether a high-stakes framework conclusion holds (documented L3→L3 coordination)
 - User: `/rune council` direct invocation
 
 ## Data Flow
@@ -47,6 +51,8 @@ None at the skill level — council dispatches via `Bash` (external CLI bridge) 
 
 - `adversary` (L2): `CouncilResult.agreement` → seeds Step 6 Verdict with cross-family-verified findings instead of (or alongside) single-pass analysis
 - `review` (L2): `CouncilResult.agreement` → seeds Step 6 Report's CRITICAL/HIGH findings for the escalated symbol
+- `brainstorm` (L2): `CouncilResult.agreement` → seeds Step 4 Recommend with cross-family-verified judgment on the strongest candidate design, alongside (never replacing) the diversity score
+- `problem-solver` (L3): `CouncilResult.agreement` → seeds Step 6's top solution with a cross-family-verified soundness check before Step 7 communication structuring
 - `.rune/council/run-*.json`: every run's full result — free tier owns this schema; Pro Council Cockpit (deferred, Phase 2) reads it for a live panel
 
 ### Fed By ←
@@ -77,12 +83,15 @@ Contract source of truth: `.rune/council-voice-contract.md` (Voice v2). This sec
 
 ### Step 3: DISPATCH + DEGRADE
 
+0. **Skeleton write** (live-status entry point): before dispatching anything, write `.rune/council/run-<request.id>.json` with every allocated slot present and `status: "queued"` (no claims yet). This is what makes the run file useful for a live reader (e.g. Pro Council Cockpit, deferred to Phase 2) — without this write, a run in progress is indistinguishable from a run that hasn't started.
+
 For each allocated slot:
 
-1. **External slot** (`source: external-cli`): dispatch per `references/dispatch-protocol.md` §Dispatch, with `budget.per_voice_timeout_s` enforced. On timeout or non-zero exit → mark `is_fallback: true` and immediately dispatch a subagent for that slot instead (do not drop the slot).
-2. **Subagent slot** (`source: subagent`): dispatch via `Task` with the persona/constraint from Step 2.4 baked into the prompt. `runtime: "internal"`, `model_family: "anthropic"`, `is_fallback: false` if this was the slot's original allocation, `is_fallback: true` if it's covering a dead external slot.
+1. **External slot** (`source: external-cli`): update that voice's `status: "running"` in the run file, dispatch per `references/dispatch-protocol.md` §Dispatch with `budget.per_voice_timeout_s` enforced. On timeout or non-zero exit → mark `is_fallback: true` and immediately dispatch a subagent for that slot instead (do not drop the slot) — update `status` back to `"running"` for the fallback attempt, not straight to failed.
+2. **Subagent slot** (`source: subagent`): update `status: "running"`, dispatch via `Task` with the persona/constraint from Step 2.4 baked into the prompt. `runtime: "internal"`, `model_family: "anthropic"`, `is_fallback: false` if this was the slot's original allocation, `is_fallback: true` if it's covering a dead external slot.
 3. Run all slots in parallel (single message, multiple tool calls) — sequential dispatch defeats the purpose of gathering independent perspectives at reasonable cost.
-4. Record `latency_ms` per voice and populate `runtime_report.used` / `runtime_report.degraded_to_subagent`.
+4. As each slot resolves (raw response received, whether or not it will later pass GATE), record `latency_ms` and update that voice's `status: "complete"` in the run file — GATE (Step 4) may still later flip a completed voice to `"dropped"`, but "complete" at this point means "produced a raw answer," not "counted toward the result." Populate `runtime_report.used` / `runtime_report.degraded_to_subagent` at the same time.
+5. **Write after every status transition**, not just at the end — overwrite `.rune/council/run-<request.id>.json` each time a voice moves `queued → running → complete`. This is a small file; the incremental writes are what make "live per-voice status" (per the Voice Contract) real rather than aspirational. A caller or Cockpit reading the file mid-run sees genuine progress, not a stale skeleton.
 
 ### Step 4: GATE
 
@@ -91,6 +100,7 @@ For each raw voice response, before it counts toward anything:
 1. **Well-formed check**: does the response parse into the expected Voice shape (stance + claims, each claim with `text` and optionally `anchor`/`evidence`)? Malformed → `validity.well_formed: fail`, `dropped_by: "council.gate"`, add to `voices_dropped[]` with the raw-output reason. Do not attempt to salvage a malformed response by re-prompting mid-run — that's a retry loop the contract doesn't budget for.
 2. **On-topic check (the Agy fix)**: extract what the voice *thinks* it answered into `question_echo`, compare against `request.question`. If the voice answered a different question than asked (common failure mode for wrapper CLIs that inject their own system framing) → `validity.on_topic: fail`, `dropped_by: "council.gate"`, drop it.
 3. Every dropped voice MUST appear in `voices_dropped[]` with `{runtime, reason, dropped_by}` — no silent drops. A voice that fails gate is not "missing," it's "dropped for reason X" — the caller and any human reading the run file need to know a slot was spent and produced nothing usable.
+4. Flip that voice's `status: "complete" → "dropped"` in the run file for anything gated out here (per Step 3.5's incremental-write convention) — a live reader should see the drop, not just infer it from the voice being absent later.
 
 ### Step 5: NORMALIZE (claim-matching)
 
@@ -110,7 +120,7 @@ Determines whether two voices made "the same claim" — meaningless until define
 4. Check the perturbation slot (Step 2.3): did the claims that survive the inverted framing match the claims from the standard framing? Agreement that survives inversion is trustworthy; agreement that doesn't is flagged in dissent as "framing-sensitive."
 5. Check the devil's-advocate slot (skip if `n == 2` — no such slot was reserved per Step 2.3): if it produced no substantive counter-claims after genuinely trying, note that in Strength Notes-equivalent (the forming majority held up under a mandated attack) — this is useful positive signal, not a wasted slot.
 6. Set `needs_decision: true` if dissent contains a CRITICAL/HIGH-severity claim that no consensus resolves — the caller (adversary/review) should surface this to the user rather than silently picking a side.
-7. Write `.rune/council/run-<request.id>.json` with the full `CouncilResult` (schema: `.rune/council-voice-contract.md`).
+7. Final write of `.rune/council/run-<request.id>.json` with the full `CouncilResult` (schema: `.rune/council-voice-contract.md`) — this overwrites the skeleton/incremental versions from Step 3.0/3.5/4.4 with the complete arbitrated result; every voice's `status` should now read `complete` or `dropped`, never `queued`/`running`.
 8. Emit `council.dispatched` at Step 3 start, `council.result` after Step 6 write completes.
 
 ## Output Format
@@ -174,7 +184,7 @@ Determines whether two voices made "the same claim" — meaningless until define
 | External CLI hangs past `per_voice_timeout_s`, stalling the whole run | MEDIUM | Step 3.1: timeout triggers immediate subagent fallback for that slot, not a wait-and-retry |
 | Devil's-advocate/perturbation slots quietly reused as regular voices under time pressure | MEDIUM | Step 2.3 reserves them explicitly in ALLOCATE — Step 6.4/6.5 checks they were actually applied before arbitrating |
 | Bundle/prompt interpolated into shell args for external dispatch | CRITICAL | `references/dispatch-protocol.md` inherits adversary's stdin-only transport — never inline `-p "<bundle>"` |
-| Council invoked for every trivial decision, burning cost on low-stakes calls | MEDIUM | Triggers section: council is opt-in per caller (adversary high-risk gate, review blast-radius gate) — never auto-fires on every plan/diff |
+| Council invoked for every trivial decision, burning cost on low-stakes calls | MEDIUM | Triggers section: council is opt-in per caller (adversary high-risk gate, review blast-radius gate, brainstorm Design-It-Twice high-stakes gate, problem-solver one-way-door/ethics gate) — never auto-fires on every plan/diff/design/analysis |
 | **"Confirmed" `model_family` is CLI-brand identity, not verified runtime-backend identity** — a user pointing 2+ "confirmed" CLIs (e.g. `claude` + `codex`, or an IDE CLI like `agy` with a model picker) at the same actual backend via BYOK/proxy/gateway override collapses the real distinct-family count without tripping the `is_fallback`/`unknown` exclusions. Found via a real council self-test dispatch (2026-07-11, grok + 2 subagent voices independently converged on this). | CRITICAL, currently UNCLOSED | Step 5.5's near-verbatim check now fires regardless of family label (previous version only fired for same-family/unknown, which this exact scenario bypassed). There is no mechanical way to verify a CLI's actual serving backend from user-space today — council cannot cryptographically close this gap, only flag the behavioral symptom. Documented here rather than falsely claimed solved. |
 | GATE's `question_echo` on-topic check is self-reported by the same voice being graded — a shallow-but-parseable non-answer that echoes the question passes | MEDIUM | Partial: the arbiter reads the echoed question against the actual answer content at Step 6, not just the schema shape, so an echo with no substantive claims behind it still contributes little to consensus/dissent even if it technically passes GATE |
 
@@ -190,6 +200,7 @@ SELF-VALIDATION (run before emitting output):
 - [ ] No claim's verified_by equals its producing voice id
 - [ ] Perturbation slot dispatched with its reserved framing; devil's-advocate slot too (unless n==2, where only perturbation is reserved per Step 2.3)
 - [ ] .rune/council/run-<id>.json written with full CouncilResult
+- [ ] Run file was written incrementally (skeleton at Step 3.0, status updates through 3.5/4.4), not only once at the end — a live reader mid-run would have seen real progress
 IF ANY check fails → fix before reporting done. Do NOT defer to completion-gate.
 ```
 
