@@ -1,6 +1,6 @@
 {
   "name": "@rune-kit/rune",
-  "version": "2.24.0",
+  "version": "2.25.0",
   "description": "65-skill mesh for AI coding assistants — runtime auto-discipline via native hooks (Claude/Cursor/Windsurf/Antigravity), 5-layer architecture, 204 connections + 43 signals, multi-platform compiler. converge (L3) scans spec vs code so dead-button/frontend-only implementations can't ship.",
   "type": "module",
   "bin": {

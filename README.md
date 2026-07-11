@@ -103,7 +103,11 @@ Plus **9 domain packs** (product, sales, data-science, support, growth, media, p
 
 ---
 
-## What's New (v2.24.0 — Market Refresh)
+## What's New (v2.25.0 — Council)
+
+> **v2.25.0 (2026-07-11):** New **`council`** L3 primitive — genuinely decorrelated multi-perspective gathering. Detects installed AI CLIs, fans a question across distinct model families (external CLIs when present, subagents when not), gates off-topic/malformed voices, normalizes claims (anchor-first + shared-evidence arbiter fallback — prose similarity never counts), and arbitrates inline with an honest `NO_DECORRELATION` stamp when fewer than 2 real model families answered. Wired into 4 consumers: `adversary` (CRITICAL-tier plans), `review` (high-blast-radius diffs), `brainstorm` (Design-It-Twice candidate judgment), `problem-solver` (high-stakes conclusions) — every integration explicitly refuses to launder a same-family run as independent confirmation. **Live-dogfooded same day**: a real 3-voice self-test (external `grok` dispatch + 2 subagent fallbacks) independently converged on a real gap — "confirmed" `model_family` was CLI-brand identity, not verified backend identity, letting two CLIs redirected to the same backend (BYOK/proxy override) defeat the gate — fixed before shipping. **Pro**: `council-cockpit` (separate repo) adds a read-only live panel + cost-aware allocation + history-informed family weighting, PRE-council advisory only — Free never depends on Pro. Mesh now 66 skills / 208 connections / 45 signals.
+
+### Previous (v2.24.0 — Market Refresh)
 
 > **v2.24.0 (2026-07-11):** Model lineup + platform adapters refreshed to the mid-2026 landscape. Claude tiers across the mesh → **Opus 4.8 / Sonnet 5 / Haiku 4.5**; the **Codex** adapter → **GPT-5.6** `sol` / `terra` / `luna` (verified against codex-cli 0.144.1), with a suggested tier→`model_reasoning_effort` mapping in the generated `AGENTS.md`. **Fable 5** is positioned as an API-only frontier **oracle** target rather than a routing tier (opus stays the ceiling). **Windsurf → Devin Desktop** rebrand documented (emission kept on `.windsurf/`, which Devin still reads). New **goal-first advisory** in `plan`/`ba` to leverage native `/goal` + Managed Agents Outcomes. CI 1572/1572.
 

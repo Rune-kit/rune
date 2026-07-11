@@ -1,6 +1,6 @@
 # Rune Roadmap
 
-> Last updated: July 2026 | Version: 2.24.0
+> Last updated: July 2026 | Version: 2.25.0
 
 ---
 
@@ -18,7 +18,7 @@ These principles guide every roadmap decision:
 
 ---
 
-## Current State (v2.24.0 — "Market Refresh")
+## Current State (v2.25.0 — "Council")
 
 | Layer | Count | Status |
 |-------|-------|--------|

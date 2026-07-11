@@ -5,6 +5,22 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.25.0] - 2026-07-11
+
+"Council" — a new L3 primitive for genuinely decorrelated multi-perspective gathering: detects installed AI CLIs, fans a question across distinct model families, degrades gracefully to subagents, and arbitrates inline with an honest `NO_DECORRELATION` stamp when independence can't be confirmed. Live-dogfooded same-day (real external dispatch via the `1devtool-agent` bridge), which caught and fixed a real gap in the min-decorrelation gate before shipping downstream consumers.
+
+### Added — council L3 primitive
+- **`council`** (L3, new) — DETECT → ALLOCATE → DISPATCH → DEGRADE → GATE → NORMALIZE → ARBITRATE pipeline. Voice Contract v2 (`.rune/council-voice-contract.md`): anchor-first claim matching with shared-evidence arbiter fallback (prose similarity never counts), `verified_by` self-certification rejection, perturbation + devil's-advocate framing slots, and a HARD-GATE that refuses "consensus" language when fewer than 2 distinct confirmed model families answered.
+- Wired into **4 consumers**: `adversary` (Step 0.6, CRITICAL-tier plans — one-way-door decisions, auth/payment/crypto/user-data), `review` (Step 1.6, blast radius 50+ callers with HIGH severity), `brainstorm` (Step 3.75, Design-It-Twice candidate judgment), `problem-solver` (Step 6.5, high-stakes/irreversible conclusions). Every integration explicitly refuses to launder a `NO_DECORRELATION` run as independent confirmation.
+- Incremental live-status writes to `.rune/council/run-*.json` (skeleton → per-voice `queued`/`running`/`complete`/`dropped` → final) — real infrastructure for a live reader, not just a post-hoc report.
+- **Pro**: `council-cockpit` (separate repo, `rune-pro`) — read-only viewer + cost-aware allocation + history-informed family weighting + cross-run analytics, PRE-council advisory seam (Free never depends on Pro).
+
+### Fixed — decorrelation-penalty gap (found via live dogfood)
+- The min-decorrelation gate's correlated-agreement penalty was gated on matching/unknown `model_family`, so it structurally could not catch two "confirmed" CLIs secretly sharing a backend (BYOK/proxy/gateway override) — the exact scenario the gate exists to prevent. Now fires on near-verbatim text regardless of family label. Documented as an honestly UNCLOSED Sharp Edge: no mechanical way to verify a CLI's actual serving backend from user-space today.
+
+### Mesh
+- 66 skills, 208 connections, 45 signals (was 65 / 204 / 43).
+
 ## [2.24.0] - 2026-07-11
 
 "Market Refresh" — model lineup and platform adapters brought in line with the mid-2026 landscape (Opus 4.8 / Sonnet 5 / Haiku 4.5, Codex GPT-5.6, Windsurf→Devin), plus a goal-first advisory layer.
