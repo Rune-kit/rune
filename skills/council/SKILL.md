@@ -62,7 +62,7 @@ Contract source of truth: `.rune/council-voice-contract.md` (Voice v2). This sec
 
 1. Check for a cached runtime report at `.rune/runtimes.json`. If it exists and is from the current session (same date), reuse it — skip to Step 2.
 2. Otherwise probe for the `1devtool-agent` bridge (the local CLI that fans prompts out to installed AI coding agents — Claude, Codex, Gemini, Antigravity, Cline, Amp, OpenCode, Qwen, Grok, Aider). Detection and family-mapping details: `references/dispatch-protocol.md` §Detect.
-3. Write `.rune/runtimes.json`: `{ detected: [{runtime, model_family, version}], checked_at: <session marker> }`.
+3. Write `.rune/runtimes.json`: `{ detected: [{runtime, status, model_family, version}], checked_at: <session marker>, bridge_path: <resolved path> }` — exact field list owned by `references/dispatch-protocol.md` §Detect, keep the two in sync.
 4. No bridge found → `runtime_report.detected = []`. This is not an error — proceed straight to subagent-only mode (Step 3 DEGRADE).
 
 ### Step 2: ALLOCATE
@@ -80,7 +80,7 @@ Contract source of truth: `.rune/council-voice-contract.md` (Voice v2). This sec
 For each allocated slot:
 
 1. **External slot** (`source: external-cli`): dispatch per `references/dispatch-protocol.md` §Dispatch, with `budget.per_voice_timeout_s` enforced. On timeout or non-zero exit → mark `is_fallback: true` and immediately dispatch a subagent for that slot instead (do not drop the slot).
-2. **Subagent slot** (`source: subagent`): dispatch via `Task` with the persona/constraint from Step 2.4 baked into the prompt. `model_family: "anthropic"`, `is_fallback: false` if this was the slot's original allocation, `is_fallback: true` if it's covering a dead external slot.
+2. **Subagent slot** (`source: subagent`): dispatch via `Task` with the persona/constraint from Step 2.4 baked into the prompt. `runtime: "internal"`, `model_family: "anthropic"`, `is_fallback: false` if this was the slot's original allocation, `is_fallback: true` if it's covering a dead external slot.
 3. Run all slots in parallel (single message, multiple tool calls) — sequential dispatch defeats the purpose of gathering independent perspectives at reasonable cost.
 4. Record `latency_ms` per voice and populate `runtime_report.used` / `runtime_report.degraded_to_subagent`.
 
@@ -100,7 +100,7 @@ Determines whether two voices made "the same claim" — meaningless until define
 2. **Arbiter cluster (fallback for keyless claims)**: for claims without a matching anchor, group by semantic similarity — but a cluster is only a valid match if the grouped claims **share at least one `evidence.ref`**. Prose/wording similarity ALONE never establishes a match — two voices using similar phrasing because they were trained on similar data is exactly the correlation this primitive exists to detect and discount, not average away.
 3. Record `matched_by: {method: "anchor"|"arbiter", model: <this council run's identity>}` on every match.
 4. **Verification gate**: a claim's `evidence.verified` MUST be set by a `verified_by` that is NOT the voice that produced the claim (mechanical check — run the test/repro yourself, or have a different-family voice check it — never trust self-certification). Claims with `verified: unchecked` or self-certified `verified_by` do not count toward consensus, regardless of how many voices repeated them.
-5. **Correlated-agreement penalty**: if 2+ voices' claim text is near-verbatim (same phrasing, same examples) AND they come from the same `model_family` or a wrapper CLI with unconfirmed backend — treat this as a correlation signal, not independent confirmation. Note it in `agreement.dissent` reasoning even if the claim itself is correct, so the caller doesn't over-weight it.
+5. **Correlated-agreement penalty**: if 2+ voices' claim text is near-verbatim (same phrasing, same examples), treat this as a correlation signal — **regardless of what `model_family` label those voices carry.** Do NOT gate this check on "same family or unknown family" — `model_family` is itself an unverified, CLI-brand-based label (see Sharp Edges: "confirmed" family is not runtime-verified), so requiring the labels to already look correlated before checking for textual correlation defeats the one heuristic that could catch a family-label error behaviorally. Near-verbatim text from voices with DIFFERENT confirmed families is not proof of a mislabeling, but it is not free confirmation either — flag it in `agreement.dissent` as "near-verbatim across confirmed-distinct families — either genuine convergent reasoning or a sign the family labels don't reflect the actual backends" and do NOT let it anchor a `consensus_claims` entry on textual similarity alone (Step 5.2's anchor/shared-evidence.ref requirement still applies). Near-verbatim text from the same family or an unconfirmed wrapper is the stronger, unambiguous case — note it in `agreement.dissent` even if the claim itself is correct, so the caller doesn't over-weight it.
 
 ### Step 6: ARBITRATE (inline)
 
@@ -175,6 +175,8 @@ Determines whether two voices made "the same claim" — meaningless until define
 | Devil's-advocate/perturbation slots quietly reused as regular voices under time pressure | MEDIUM | Step 2.3 reserves them explicitly in ALLOCATE — Step 6.4/6.5 checks they were actually applied before arbitrating |
 | Bundle/prompt interpolated into shell args for external dispatch | CRITICAL | `references/dispatch-protocol.md` inherits adversary's stdin-only transport — never inline `-p "<bundle>"` |
 | Council invoked for every trivial decision, burning cost on low-stakes calls | MEDIUM | Triggers section: council is opt-in per caller (adversary high-risk gate, review blast-radius gate) — never auto-fires on every plan/diff |
+| **"Confirmed" `model_family` is CLI-brand identity, not verified runtime-backend identity** — a user pointing 2+ "confirmed" CLIs (e.g. `claude` + `codex`, or an IDE CLI like `agy` with a model picker) at the same actual backend via BYOK/proxy/gateway override collapses the real distinct-family count without tripping the `is_fallback`/`unknown` exclusions. Found via a real council self-test dispatch (2026-07-11, grok + 2 subagent voices independently converged on this). | CRITICAL, currently UNCLOSED | Step 5.5's near-verbatim check now fires regardless of family label (previous version only fired for same-family/unknown, which this exact scenario bypassed). There is no mechanical way to verify a CLI's actual serving backend from user-space today — council cannot cryptographically close this gap, only flag the behavioral symptom. Documented here rather than falsely claimed solved. |
+| GATE's `question_echo` on-topic check is self-reported by the same voice being graded — a shallow-but-parseable non-answer that echoes the question passes | MEDIUM | Partial: the arbiter reads the echoed question against the actual answer content at Step 6, not just the schema shape, so an echo with no substantive claims behind it still contributes little to consensus/dissent even if it technically passes GATE |
 
 ## Self-Validation
 

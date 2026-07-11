@@ -11,20 +11,20 @@ council's bridge is the `1devtool-agent` shim — a local CLI that fans a prompt
 1. Try `1devtool-agent list --json` on PATH.
 2. If not found on PATH, check the conventional per-user install location for the current OS (e.g. `~/.1devtool/bin/1devtool-agent` on POSIX, `%USERPROFILE%\.1devtool\bin\1devtool-agent.cmd` on Windows). Do not hardcode a specific user's path into the skill — resolve relative to the current user's home directory at run time.
 3. Neither found → `runtime_report.detected = []`. This is the expected, common case. Proceed to subagent-only mode. Do not surface this as a warning or error to the user — it's a normal degradation, not a misconfiguration.
-4. Found → run `list --json`, parse the returned CLI statuses (`detected` / `not-found` / version), and cache:
+4. Found → run `list --json`, parse the returned CLI statuses (`detected` / `not-found` / version), map each `detected` entry's `--to=` id to its `model_family` per the table below, and cache:
 
 ```json
 {
   "checked_at": "<session-scoped marker, not a wall-clock timestamp>",
   "bridge_path": "<resolved path>",
   "detected": [
-    { "runtime": "codex", "status": "detected", "version": "..." },
-    { "runtime": "gemini", "status": "detected", "version": "..." }
+    { "runtime": "codex", "status": "detected", "model_family": "openai", "version": "..." },
+    { "runtime": "gemini", "status": "detected", "model_family": "google", "version": "..." }
   ]
 }
 ```
 
-to `.rune/runtimes.json`. Reuse this cache for the rest of the session — do not re-run `list` on every council invocation.
+to `.rune/runtimes.json` — this is the canonical schema; `skills/council/SKILL.md` Step 1.3 must match it field-for-field. Reuse this cache for the rest of the session — do not re-run `list` on every council invocation. Only entries with `status: "detected"` are eligible for allocation in Step 2.
 
 ### Model family map
 
@@ -41,6 +41,8 @@ to `.rune/runtimes.json`. Reuse this cache for the rest of the session — do no
 | `cline` / `amp` / `opencode` / `aider` | `unknown` | **wrapper CLI — backend model is user-configured and not reported by `list --json`** |
 
 Wrapper CLIs (`cline`, `amp`, `opencode`, `aider`) route to whatever backend model the user configured for them — frequently Claude or GPT. Labeling one of these as a distinct family without confirmation is exactly the "decorrelation theater" the min-decorrelation gate exists to prevent. Default `model_family: "unknown"` for these and **exclude `unknown` from the distinct-family count** in council's Step 6 ARBITRATE, same as `is_fallback` voices. If a future version can read the wrapper's actual configured backend (e.g. from its config file), promote it to a confirmed family — until then, treat it as unconfirmed.
+
+**"Confirmed" here means "this CLI is vendor-dedicated by product design," not "this specific invocation's response was verified to come from that vendor's model."** The distinction matters: any of the six "confirmed" rows above can, in principle, be redirected to a different backend by the user (BYOK / base-URL override / corporate LLM gateway) or, for IDE-style CLIs, a built-in model picker — and `1devtool-agent list --json` reports CLI identity, not the identity of the model that actually generated a given response. This table has no mechanism to detect that redirection; it is a real, currently-unclosed limitation (see `skills/council/SKILL.md` Sharp Edges), not something resolved by this table alone. Do not extend the `unknown` treatment to these six rows without confirmed evidence a specific one is commonly reconfigured — that would just move the same unverified-assumption problem, not fix it — but do not read "confirmed" here as cryptographically verified either.
 
 ## §Dispatch
 
