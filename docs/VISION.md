@@ -30,7 +30,7 @@ Rune is a **skill mesh** — not a skill collection, not a pipeline, not an AI a
 
 **Technical definition:**
 
-> **Rune = 64 skills × 203 sync connections × 40 async signals × cross-session memory × multi-platform compiler**
+> **Rune = 66 skills × 206 sync connections × 45 async signals × cross-session memory × multi-platform compiler**
 
 All three components are equally essential:
 - Remove connections → becomes a collection (The Bloat wins)

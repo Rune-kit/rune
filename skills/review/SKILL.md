@@ -3,7 +3,7 @@ name: review
 description: "Code quality review — patterns, security, performance, correctness. Finds bugs, suggests improvements, triggers fix for issues found. Escalates to opus for security-critical code."
 metadata:
   author: runedev
-  version: "1.3.0"
+  version: "1.4.0"
   layer: L2
   model: sonnet
   group: development
@@ -44,6 +44,7 @@ Every review MUST cite at least one specific concern, suggestion, or explicit ap
 - `sast` (L3): static analysis security scan on reviewed code
 - L4 extension packs: domain-specific review patterns when context matches (e.g., @rune/ui for frontend, @rune/security for auth code)
 - `neural-memory` | After review complete | Capture code quality insight
+- `council` (L3): Step 1.6 — decorrelated bug-finding on the diff when blast radius is 50+ callers with a HIGH-severity change, mode=review
 
 ## Called By (inbound)
 
@@ -63,6 +64,7 @@ Every review MUST cite at least one specific concern, suggestion, or explicit ap
 - `review` → `improve-architecture` — when reviewer flag mentions "shallow", "wrapper", "indirection", or pass-through pattern
 - `review` ← `fix` — complex fix requests self-review
 - `review` → `sentinel` — security-critical code → sentinel deep scan
+- `review` → `council` — blast radius 50+ callers with HIGH-severity change → decorrelated bug-finding on the diff
 
 ## Execution
 
@@ -94,6 +96,31 @@ Use Grep to count direct callers/importers of each modified symbol:
 <HARD-GATE>
 Modifying a symbol with 50+ callers + HIGH severity change (logic, types, behavior) → adversarial analysis REQUIRED. Quick review is NOT sufficient for high-blast-radius changes.
 </HARD-GATE>
+
+### Step 1.6: Decorrelated Bug-Finding (council, high-blast-radius only)
+
+review's own pass is one model reading the diff once. For the same 50+ caller / HIGH-severity
+symbols that trigger the Step 1.5 HARD-GATE, call `rune:council` (mode=review) on the diff
+itself BEFORE writing up Step 2's findings — a second architecture reading the same code
+independently catches bugs a single pass rationalizes past.
+
+This is complementary to (not a replacement for) the existing adversary escalation: council
+here examines the ALREADY-WRITTEN diff for bugs; adversary examines plan-level risk before
+code exists. Both can fire on the same high-blast-radius change.
+
+**Request**: `{ question: <the diff, symbol name, and blast radius context — self-contained>,
+mode: "review", n: 3, diversity: { prefer_model_families: true },
+evidence_required: [repro, reasoning] }`.
+
+**Consume**: fold `agreement.consensus_claims` into Step 2's CRITICAL/HIGH findings, tagged
+`[council-verified]`. Fold `agreement.dissent` into MEDIUM findings or the report's NEEDS
+DISCUSSION section, tagged `[council-dissent]`. If `decorrelation: NO_DECORRELATION`, do not
+claim independent confirmation in the report — say plainly that no second model family was
+reachable.
+
+**Skip if**: blast radius is under 50 callers, or the change is not HIGH-severity — council is
+opt-in overhead reserved for the same tier that already requires adversarial escalation, not a
+default tax on every review.
 
 ### Step 2: Logic Check (Production-Critical Focus)
 
@@ -577,6 +604,7 @@ LOW       — style inconsistency, naming suggestion, minor refactor opportunity
 - **Files Reviewed**: [count]
 - **Findings**: [count by severity]
 - **Review Commit**: [git hash at time of review]
+- **Council**: [not invoked | MULTI_FAMILY (N families) | NO_DECORRELATION — same-family subagents only]
 - **Overall**: APPROVE | REQUEST CHANGES | NEEDS DISCUSSION
 
 ### Spec Compliance
@@ -672,6 +700,8 @@ chain_metadata:
 | Review loop exceeds 3 iterations without resolution | MEDIUM | Cap at 3 review loops. After 3rd iteration with unresolved findings → surface to user with "these findings persist after 3 fix attempts — needs human decision" |
 | Auto-fixing something that should have been ASK | HIGH | When in doubt, ASK. AUTO-FIX only for mechanical issues (dead imports, console.log). Anything involving intent or trade-offs = ASK |
 | Scope drift flagged on intentional refactoring | LOW | Scope drift is informational, not blocking. User can override with "intentional" — don't re-flag after override |
+| (council) Reporting council output as consensus when decorrelation is NO_DECORRELATION | CRITICAL | Step 1.6 consume rule: report the decorrelation stamp plainly, never imply independent confirmation from same-family subagents |
+| (council) Calling council on every review, not just high-blast-radius | MEDIUM | Step 1.6 skip condition matches the existing Step 1.5 HARD-GATE threshold exactly — no separate lower bar |
 
 ## Done When
 
@@ -681,7 +711,8 @@ chain_metadata:
 - Test coverage gaps identified and documented
 - UI anti-pattern checks ran for any frontend files in diff (or confirmed not applicable)
 - Structured report emitted with APPROVE / REQUEST CHANGES / NEEDS DISCUSSION verdict
+- (council) If blast radius 50+ with HIGH severity: council invoked on the diff, decorrelation stamp reported plainly, consensus/dissent folded into findings
 
 ## Cost Profile
 
-~3000-6000 tokens input, ~1000-2000 tokens output. Sonnet default, opus for security-critical reviews. Runs once per implementation cycle.
+~3000-6000 tokens input, ~1000-2000 tokens output. Sonnet default, opus for security-critical reviews. Runs once per implementation cycle. When Step 1.6 fires (high-blast-radius only): add council's cost profile (~1500-4000 tokens per voice × 2-5 voices) — reserved for the same tier that already requires adversarial escalation.

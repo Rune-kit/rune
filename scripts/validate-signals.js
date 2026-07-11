@@ -34,6 +34,8 @@ export const INTENTIONAL_BROADCAST_SIGNALS = new Set([
   'architecture.shallow.flagged', // improve-architecture → terminal review output, no in-mesh consumer
   'architecture.deletion.passed', // improve-architecture → terminal review output, no in-mesh consumer
   'invariants.seeded', // onboard → one-shot bootstrap event after first invariant capture, no chain consumer
+  'council.dispatched', // council → observability (voice fan-out started); Pro Cockpit (Phase 2) reads run-*.json directly, not via listen
+  'council.result', // council → observability (run complete); Pro Cockpit (Phase 2) reads run-*.json directly, not via listen
 ]);
 
 /**

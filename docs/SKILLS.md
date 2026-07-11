@@ -216,6 +216,7 @@ Clone, port, or convert features from any GitHub repo into your project. Underst
 | **git** | Semantic commits, PR descriptions, branch naming, changelog generation |
 | **doc-processor** | Generate/parse office documents — PDF, DOCX, XLSX, PPTX, CSV |
 | **sentinel-env** | Environment pre-flight — OS, runtime versions, tools, ports, env vars |
+| **council** | Decorrelated multi-perspective gathering — external CLIs (model-family fan-out) or subagent fallback, inline arbitration, honest `NO_DECORRELATION` stamp |
 
 ---
 

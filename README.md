@@ -5,7 +5,7 @@
 <p align="center">
   <strong>Less skills. Deeper connections.</strong><br>
   A lean, interconnected skill ecosystem for AI coding assistants.<br>
-  65 skills · 204 connections · 43 signals · 13 platforms · MIT
+  66 skills · 206 connections · 45 signals · 13 platforms · MIT
 </p>
 
 <p align="center">
@@ -23,7 +23,7 @@
 
 Most skill ecosystems are either **too many isolated skills** (540+ that don't talk to each other) or **rigid pipelines** (A → B → C, if B fails everything stops).
 
-Rune is a **mesh** — 65 skills with 204 connections + 43 signals across a 5-layer architecture. Skills call each other bidirectionally, forming resilient workflows that adapt when things go wrong.
+Rune is a **mesh** — 66 skills with 206 connections + 45 signals across a 5-layer architecture. Skills call each other bidirectionally, forming resilient workflows that adapt when things go wrong.
 
 ```
 Pipeline:  A → B → C → D         (B fails = stuck)
@@ -249,7 +249,7 @@ cook ───emit:phase.complete────→ session-bridge
 
 ## What Rune Is (and Isn't)
 
-Rune started as a **Claude Code plugin** and now compiles to **every major AI IDE**. Same 65 skills, same mesh connections, same workflows — zero knowledge loss across platforms.
+Rune started as a **Claude Code plugin** and now compiles to **every major AI IDE**. Same 66 skills, same mesh connections, same workflows — zero knowledge loss across platforms.
 
 | | Rune Provides | Claude Code Provides |
 |---|---|---|
@@ -341,14 +341,14 @@ npx @rune-kit/rune init --platform windsurf
 npx @rune-kit/rune init --platform antigravity
 ```
 
-This compiles all 65 skills into your IDE's rules format. Same knowledge, same workflows.
+This compiles all 66 skills into your IDE's rules format. Same knowledge, same workflows.
 
 ### Platform Comparison
 
 | Feature | Claude Code | Cursor / Windsurf / Others |
 |---------|-------------|---------------------------|
-| Skills available | 64/64 | 64/64 |
-| Mesh connections | 204 sync + 43 signals (programmatic) | 204 sync + 43 signals (rule references) |
+| Skills available | 66/66 | 66/66 |
+| Mesh connections | 206 sync + 45 signals (programmatic) | 206 sync + 45 signals (rule references) |
 | Workflows & HARD-GATEs | Full | Full |
 | Extension packs | 14 | 14 |
 | Subagent parallelism | Native | Sequential fallback |
@@ -702,7 +702,7 @@ See [docs/MULTI-PLATFORM.md](docs/MULTI-PLATFORM.md) for the full architecture.
 | Doc | What's inside |
 |-----|---------------|
 | [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md) | Your first 5 minutes with Rune — install to first `/rune cook` |
-| [`docs/SKILLS.md`](docs/SKILLS.md) | All 65 skills, searchable by intent and layer |
+| [`docs/SKILLS.md`](docs/SKILLS.md) | All 66 skills, searchable by intent and layer |
 | [`docs/SIGNALS.md`](docs/SIGNALS.md) | Canonical signal inventory — 25 events, emit/listen graph |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | 5-layer mesh architecture reference |
 | [`docs/VISION.md`](docs/VISION.md) | Philosophy — what Rune is and isn't |
@@ -715,10 +715,10 @@ See [docs/MULTI-PLATFORM.md](docs/MULTI-PLATFORM.md) for the full architecture.
 ## Numbers
 
 ```
-Core Skills:       64 (L0: 1 │ L1: 5 │ L2: 30 │ L3: 28)
+Core Skills:       66 (L0: 1 │ L1: 5 │ L2: 30 │ L3: 30)
 Extension Packs:   14 free + 9 pro + 4 business
-Mesh Connections:  203 sync calls (rune doctor)
-Mesh Signals:      43 signals · 55 emit/listen edges (rune doctor)
+Mesh Connections:  206 sync calls (rune doctor)
+Mesh Signals:      45 signals · 55 emit/listen edges (rune doctor)
 Connections/Skill: 3.2 avg
 Platforms:         8 (Claude Code, Cursor, Windsurf, Antigravity, Codex, OpenCode, OpenClaw, Generic)
 Compiler:          ~1400 LOC (parser + 8 transforms + 8 adapters + CLI)

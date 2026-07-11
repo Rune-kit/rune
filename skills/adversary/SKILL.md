@@ -3,7 +3,7 @@ name: adversary
 description: "Pre-implementation red-team analysis. Use when a plan is high-risk, critical path, or expensive to reverse. Challenges plans before code is written — finds edge cases, security holes, scalability bottlenecks, error propagation risks, and integration conflicts. Catches flaws at plan time (10x cheaper than post-implementation)."
 metadata:
   author: runedev
-  version: "0.4.0"
+  version: "0.5.0"
   layer: L2
   model: opus
   group: quality
@@ -41,6 +41,7 @@ Every finding MUST reference the specific plan section, file, or assumption it c
 - `hallucination-guard` (L3): verify that APIs, packages, or patterns referenced in the plan actually exist
 - `context-engine` (L3): (oracle-mode) emit `context.preview` before bundle build to gate token cost
 - `session-bridge` (L3): (oracle-mode) detach protocol when target model is opus-class for non-blocking dispatch
+- `council` (L3): Step 0.6 — decorrelated multi-perspective critique for CRITICAL-tier plans (one-way-door decisions, auth/payment/crypto/user-data), mode=critique
 
 ## Called By (inbound)
 
@@ -58,6 +59,7 @@ Every finding MUST reference the specific plan section, file, or assumption it c
 - `adversary` → `perf` — scalability concern raised → perf quantifies the bottleneck
 - `adversary` → `scout` — integration risk flagged → scout finds affected code
 - `adversary` → `plan` — CRITICAL findings → plan revises before implementation
+- `adversary` → `council` — CRITICAL-tier plan (one-way-door decision, or auth/payment/crypto/user-data) → decorrelated critique before red-teaming
 
 ## Execution
 
@@ -92,6 +94,35 @@ you applied per dimension — don't ask the user to pick. Dialectic's synthesis 
 produces concrete remediations (likely HARDEN), but maps to REVISE if it exposes a
 structural flaw in the chosen approach; Socratic's surfaced assumptions and Pre-mortem's
 narratives become findings.
+
+### Step 0.6: Decorrelated Multi-Perspective Gathering (council, CRITICAL-tier only)
+
+adversary's own single pass is one model's opinion, however rigorous. For the subset of plans
+where being wrong is expensive enough to justify it, call `rune:council` (mode=critique) before
+Steps 1-5, instead of (or in addition to) solo analysis.
+
+**Trigger — call council when ANY of:**
+- Step 0.5 selected the **Dialectic** or **Pre-mortem** lens (one-way-door architecture/vendor
+  decisions, irreversible migrations — exactly the cases where a second architecture's blind
+  spots differing from yours has the highest expected value)
+- The plan touches auth, payment, crypto, or user data at a severity that would otherwise
+  trigger mandatory `sentinel` escalation (Step 2)
+- The user explicitly asks for a second opinion or "gut check" before committing
+
+**Do NOT call council for**: Quick Challenge mode plans, plans under 3 files with no
+auth/payment/data logic, or routine feature work — council is opt-in overhead, not a default
+tax on every adversary run (see council's own Sharp Edges: never auto-fires on every plan).
+
+**Request**: `{ question: <steelmanned thesis + the specific risk being tested>, mode: "critique",
+n: 3, diversity: { prefer_model_families: true }, evidence_required: [reasoning, citation] }`.
+The question MUST be self-contained — council's voices have no access to this conversation.
+
+**Consume**: fold `CouncilResult.agreement.consensus_claims` into the relevant dimension's
+findings below, tagged `[council-verified]`. Fold `agreement.dissent` into that dimension's
+findings too, but tagged `[council-dissent]` — dissent is information, not something to
+resolve by picking a side. If `decorrelation: NO_DECORRELATION`, do not describe the result as
+a second opinion in the report — say plainly that no independent model family was reachable and
+the additional voices were same-family subagents.
 
 ### Step 1: Edge Case Analysis
 
@@ -212,6 +243,9 @@ Synthesize all findings into an actionable report.
 - 3+ HIGH findings → **REVISE**
 - HIGH findings with clear remediations → **HARDEN** (add remediations to plan, then proceed)
 - Only MEDIUM/LOW findings → **PROCEED** (note findings for implementation awareness)
+- If council was invoked (Step 0.6) and returned `needs_decision: true` → the verdict cannot be
+  PROCEED regardless of adversary's own findings; surface the unresolved dissent to the user
+  instead of silently picking a side
 
 After reporting:
 - If verdict is REVISE: return to `plan` with findings attached as constraints
@@ -225,6 +259,7 @@ After reporting:
 - **Plan analyzed**: [path to plan file]
 - **Dimensions checked**: [which of the 5 were relevant]
 - **Reasoning lens**: [Red Team | Pre-mortem | Evidence Audit | Dialectic | Socratic — and why]
+- **Council**: [not invoked | MULTI_FAMILY (N families) | NO_DECORRELATION — same-family subagents only]
 - **Findings**: [count by severity]
 - **Verdict**: REVISE | HARDEN | PROCEED
 
@@ -347,6 +382,8 @@ See `references/oracle-mode.md` for the full protocol and integration with `debu
 | (cross-model) External CLI invoked without authorization or in non-interactive run | CRITICAL | Per-call user authorization required; non-interactive → skip + announce. See `references/cross-model-escalation.md` |
 | (cross-model) Bundle interpolated into shell args — embedded `$(...)` executes | CRITICAL | Always pass via stdin from a temp file; read-only sandbox. Never inline `-p "<bundle>"` |
 | (cross-model) Rubber-stamping the external reviewer's verdict | MEDIUM | Reply is data, not ruling — reconcile against the artifact; classify each finding |
+| (council) Reporting council output as consensus when decorrelation is NO_DECORRELATION | CRITICAL | Step 0.6 consume rule: report the decorrelation stamp plainly, never imply independent validation from same-family subagents |
+| (council) Calling council on every plan, not just CRITICAL-tier | MEDIUM | Step 0.6 trigger list is explicit — Dialectic/Pre-mortem lens, auth/payment/crypto/user-data, or explicit user request only |
 
 ## Done When
 
@@ -358,6 +395,7 @@ See `references/oracle-mode.md` for the full protocol and integration with `debu
 - Findings formatted for consumption by cook Phase 3 (if PROCEED) or plan (if REVISE)
 - Strength Notes section acknowledges well-designed aspects of the plan
 - (oracle-mode) If dispatched: response cited file:line for each claim, or `oracle.failed` emitted with rejection reason
+- (council) If CRITICAL-tier trigger matched: council invoked before Steps 1-5, its decorrelation stamp reported plainly, consensus/dissent folded into the relevant dimension findings
 
 ## Returns
 
@@ -371,6 +409,6 @@ See `references/oracle-mode.md` for the full protocol and integration with `debu
 
 ## Cost Profile
 
-~4000-8000 tokens input (plan + codebase context), ~2000-3000 tokens output. Opus model for adversarial depth. Runs once per feature plan — high cost justified by preventing wasted implementation cycles.
+~4000-8000 tokens input (plan + codebase context), ~2000-3000 tokens output. Opus model for adversarial depth. Runs once per feature plan — high cost justified by preventing wasted implementation cycles. When Step 0.6 fires (CRITICAL-tier only): add council's cost profile (~1500-4000 tokens per voice × 2-5 voices) — reserved for the minority of plans where being wrong is expensive.
 
 **Scope guardrail:** adversary reviews THE PLAN only — never audits existing codebase quality or rewrites code.

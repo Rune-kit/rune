@@ -200,7 +200,7 @@ Adapters with `generateExtraFiles()` emit additional context files alongside per
 | Group | Skills |
 |-------|--------|
 | KNOWLEDGE | research, docs-seeker, trend-scout |
-| REASONING | problem-solver, sequential-thinking |
+| REASONING | problem-solver, sequential-thinking, council |
 | VALIDATION | verification, hallucination-guard, integrity-check, completion-gate, constraint-check, sast, converge |
 | STATE | context-engine, context-pack, journal, session-bridge, neural-memory |
 | MONITORING | watchdog, scope-guard |
@@ -343,6 +343,8 @@ Lowercase, dot-separated: `<domain>.<event>` (e.g. `code.changed`, `tests.failed
 | `outofscope.recorded` | ba, review-intake | *(observability — discovered via .out-of-scope/ file scan)* |
 | `quarantine.notice.emitted` | quarantine | sentinel, integrity-check |
 | `external.content.received` | *(external — runtime hook on `mcp__*` / WebFetch / upload-Read)* | quarantine |
+| `council.dispatched` | council | *(observability — Pro Cockpit reads `.rune/council/run-*.json` directly)* |
+| `council.result` | council | *(observability — Pro Cockpit reads `.rune/council/run-*.json` directly)* |
 
 ### Validation
 
@@ -525,6 +527,10 @@ rescue → retro        (post-rescue retrospective)
 launch → retro        (post-launch retrospective)
 scaffold → skill-forge (scaffold identifies reusable skill patterns)
 sentinel → plan       (security.blocked triggers re-planning)
+
+# council (decorrelated multi-perspective primitive)
+council ← adversary   (Step 0.6: CRITICAL-tier plan critique — one-way-door decisions, auth/payment/crypto/user-data)
+council ← review      (Step 1.6: high-blast-radius bug-finding — 50+ callers + HIGH severity)
 ```
 
 ## Master Plan + Phase Files (Amateur-Proof Architecture)
