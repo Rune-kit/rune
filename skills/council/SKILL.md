@@ -58,7 +58,7 @@ None at the skill level — council dispatches via `Bash` (external CLI bridge) 
 ### Fed By ←
 
 - Caller's `PerspectiveRequest` — question, mode, n, diversity constraints, evidence requirements (see `.rune/council-voice-contract.md`)
-- `.rune/runtimes.json` — cached CLI detection from the current session
+- `.rune/runtimes.json` — cached CLI detection from the current session (council writes this in Step 1, OR `sentinel-env --agents` may have pre-written it during env pre-flight — same council-owned schema, council's Step 1.1 cache-reuse path picks up whichever wrote first)
 
 ## Workflow
 

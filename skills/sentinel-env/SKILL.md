@@ -3,11 +3,11 @@ name: sentinel-env
 description: "Environment-aware pre-flight check. Use when starting work in a new environment, switching machines, or when 'works on my machine' bugs surface. Validates OS, runtime versions, installed tools, port availability, env vars, and disk space BEFORE coding starts. Like sentinel but for the environment, not the code."
 metadata:
   author: runedev
-  version: "0.4.0"
+  version: "0.5.0"
   layer: L3
   model: haiku
   group: validation
-  tools: "Bash, Read, Glob, Grep"
+  tools: "Bash, Read, Write, Glob, Grep"
 ---
 
 # sentinel-env
@@ -28,7 +28,7 @@ This is the environment counterpart to `sentinel` (which checks code security) a
 
 ## Calls (outbound)
 
-None — sentinel-env is a pure read-only utility. It checks and reports, never modifies.
+None — sentinel-env never calls another Rune skill and never modifies the developer's machine/environment (no install/update). In `--agents` mode it writes ONE Rune-owned advisory cache file, `.rune/runtimes.json` (a Rune state file, not the dev's environment — same category as the files `journal`/`session-bridge`/`council` write).
 
 ## Called By (inbound)
 
@@ -36,6 +36,13 @@ None — sentinel-env is a pure read-only utility. It checks and reports, never 
 - `scaffold` (L1): post-bootstrap environment validation
 - `onboard` (L2): developer onboarding verification
 - User: `/rune env-check` direct invocation
+- User: `/rune env-check --agents` — also run AI-Agent Fleet Detection (Step 6.6)
+
+## Data Flow
+
+### Feeds Into →
+
+- `council` (L3): `.rune/runtimes.json` — when `--agents` mode ran during env pre-flight, it PRE-WARMS council's Step 1 DETECT cache (council reuses a same-session cache instead of re-probing the bridge). Schema + model-family map are OWNED by `skills/council/references/dispatch-protocol.md` §Detect — sentinel-env writes that exact shape, it does not define its own.
 
 ## Execution
 
@@ -135,6 +142,7 @@ Detect and verify tools the project depends on:
 
    **Verdict:**
    - Tool found via any tier → PASS (log which tier + version)
+   - Tool resolves to DIFFERENT paths across tiers (e.g. a `~/.local/bin` copy AND a PATH copy, or two PATH entries) → **WARN [ENV-AMBIG]**: `'<tool>' resolves to N paths — the shell picks <selected>, but <other> also exists`. This is the "wrong binary runs" class of "works on my machine" (stale/shadowed installs, two Pythons, two npms). Don't stop at the first tier hit for the ambiguity check — after a PASS, cheaply confirm PATH (`where`/`which -a`) doesn't disagree with the winning tier. List all paths + versions so the developer can prune the shadow.
    - Tool NOT found → **BLOCK** with per-OS install guidance:
      ```
      [ENV-XXX] Required tool '<tool>' not found (9-tier lookup exhausted)
@@ -193,6 +201,18 @@ Quick system health check:
    - **macOS**: Check Xcode CLI tools if native modules detected (`node-gyp` in dependencies)
    - **Linux**: Check file watcher limit if large project (`fs.inotify.max_user_watches`)
 
+### Step 6.6: AI-Agent Fleet Detection (opt-in — `--agents` flag, or when called by `council`)
+
+Skip this step unless `--agents` was passed or `council` requested it. It answers ONE question: *"how many distinct AI model families can this machine reach for a decorrelated council run?"* — and pre-warms council's cache so its first invocation skips a redundant probe.
+
+**Schema and model-family map are OWNED by `skills/council/references/dispatch-protocol.md` §Detect. Do NOT redefine them here — read that file and write its exact shape.** This keeps a single source of truth; if that reference changes, this step follows it.
+
+1. **Resolve the bridge**: look for `1devtool-agent` on PATH, then the per-user location for the current OS (`~/.1devtool/bin/1devtool-agent` POSIX, `%USERPROFILE%\.1devtool\bin\1devtool-agent.cmd` Windows). Resolve relative to the current user's home — never hardcode a specific user's path.
+2. **Bridge found** → `1devtool-agent list --json`; for each `status: detected` entry map its id → `model_family` per the council reference table (claude→anthropic, codex→openai, gemini/agy→google, grok→xai, qwen→alibaba, wrapper CLIs cline/amp/opencode/aider→`unknown`). Reading `~/.1devtool/state/cli-registry.json` directly is an acceptable faster path (it is the pre-scanned manifest `list` returns).
+3. **Bridge NOT found** → `detected: []`, `bridge_path: null`. This is normal, not an error. Optionally 9-tier detect raw AI-agent binaries for the human report only ("5 AI CLIs installed but no 1devtool bridge → council will run subagent-only"), but do NOT put unbridged binaries in `detected[]` — council can't dispatch to them.
+4. **Write** `.rune/runtimes.json` in the council-owned schema (`checked_at` session marker, `bridge_path`, `detected[]`). Only bridge-reachable `status: detected` entries belong in `detected[]`.
+5. **Count distinct CONFIRMED families** (exclude `unknown` wrappers) → report `MULTI_FAMILY-capable` (≥2) or `NO_DECORRELATION-only` (<2). **Honesty (inherit council's caveat): "confirmed" = the CLI is vendor-dedicated by product design, NOT that a given response was verified to come from that vendor's backend** (BYOK / base-URL / gateway override can collapse families invisibly). Report the count as advisory availability, never as a decorrelation guarantee — that call is council's at run time.
+
 ### Step 7: Report
 
 Produce a structured environment report:
@@ -227,11 +247,17 @@ For each finding, include a specific remediation command the developer can copy-
 - [ENV-005] Git 2.44.0 ✓
 - [ENV-006] Docker 25.0.3 ✓
 - [ENV-007] Disk space: 42 GB available ✓
+
+### AI AGENTS (only when --agents / council mode ran)
+- Bridge: 1devtool-agent ✓ (or: not found → council runs subagent-only)
+- Reachable: codex (openai), grok (xai), gemini (google), agy (google) — 3 distinct confirmed families
+- council capability: MULTI_FAMILY-capable (advisory — not a decorrelation guarantee; backend override can collapse families)
+- Wrote .rune/runtimes.json (pre-warms council DETECT)
 ```
 
 ## Constraints
 
-1. MUST be read-only — never install, update, or modify anything on the developer's machine
+1. MUST NOT install, update, or modify anything on the developer's MACHINE/environment (no `apt install`, no version switches, no PATH edits). Writing the Rune-owned advisory cache `.rune/runtimes.json` in `--agents` mode is the ONE exception and is not a machine modification — it is Rune state, same as `journal`/`council` run files.
 2. MUST NOT log environment variable VALUES — only check key presence (security)
 3. MUST provide copy-paste remediation commands for every BLOCK and WARN finding
 4. MUST handle cross-platform differences (Windows/macOS/Linux) gracefully
@@ -249,6 +275,9 @@ For each finding, include a specific remediation command the developer can copy-
 | Over-checking — flagging optional tools as required | MEDIUM | Only check tools evidenced by config files, not speculative |
 | Missing hard dependency — project wraps external CLI but tool not checked | HIGH | Step 3.6: scan for `shutil.which`, `subprocess.run`, `child_process.exec` → verify tool exists on PATH |
 | Hard dep found but wrong version — tool exists but API changed | MEDIUM | Log version for manual review. Version compatibility is project-specific — don't guess |
+| `--agents` writes `.rune/runtimes.json` with a schema that drifts from council's | HIGH | Schema + family map are OWNED by `skills/council/references/dispatch-protocol.md` §Detect — sentinel-env writes that shape, never its own; if the reference changes, this step follows it |
+| Reporting an installed-but-unbridged AI CLI as council-reachable | HIGH | Step 6.6.3: only bridge-reachable `status: detected` entries go in `detected[]`; unbridged binaries are report-only text, never dispatchable state |
+| Claiming a distinct-family count as a decorrelation guarantee | MEDIUM | Step 6.6.5: report as advisory availability only; "confirmed" ≠ backend-verified (BYOK/gateway override) — the real decorrelation call is council's at run time |
 
 ## Done When
 
@@ -259,6 +288,7 @@ For each finding, include a specific remediation command the developer can copy-
 - Disk space verified adequate
 - Structured report with READY / READY WITH WARNINGS / BLOCKED verdict
 - Every BLOCK/WARN finding has a copy-paste remediation command
+- In `--agents` mode only: `.rune/runtimes.json` written in council's canonical schema and a distinct-family count reported (advisory, not a decorrelation guarantee)
 
 ## Cost Profile
 
