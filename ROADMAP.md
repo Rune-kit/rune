@@ -1,6 +1,6 @@
 # Rune Roadmap
 
-> Last updated: July 2026 | Version: 2.25.0
+> Last updated: July 2026 | Version: 2.26.0
 
 ---
 
@@ -18,7 +18,7 @@ These principles guide every roadmap decision:
 
 ---
 
-## Current State (v2.25.0 — "Council")
+## Current State (v2.26.0 — "Motion Craft")
 
 | Layer | Count | Status |
 |-------|-------|--------|

@@ -5,7 +5,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
-## [2.25.0] - 2026-07-11
+## [2.26.0] - 2026-07-18
+
+"Motion Craft" — Rune's UI mesh gains a deep, canonical motion authority. Animation was the shallowest corner of the design mesh: `design` covered style/palette/type but only a thin timing table for motion. This wave grafts design-engineering motion expertise (MIT-sourced, rewritten in Rune's voice, no source branding) into three existing hubs — advisory-first, no new skills, no new HARD-GATEs.
+
+### Added — MOTION-CRAFT.md motion authority
+- **`skills/design/MOTION-CRAFT.md`** (new reference) — the canonical motion source all UI-generating skills cite: should-it-animate frequency gate (never animate keyboard/100+-per-day actions), easing decision tree + strong custom curves, per-element duration budgets (UI under 300ms; modals/drawers exempt to 500ms), physicality (never `scale(0)`, origin-aware popovers, press `scale(0.97)`), interruptibility (transitions vs keyframes, `@starting-style`), spring physics (damping/response, velocity handoff, momentum projection, rubber-banding), motion performance, reduced-motion + hover gating, and a reverse-lookup vocabulary glossary.
+- **`design` v0.8.0** — Step 0 loads MOTION-CRAFT.md whenever a domain involves motion; a MOTION-CRAFT-wins precedence rule resolves conflicts with the baseline DESIGN-REFERENCE tables; new advisory motion-audit mode ("improve the animations" / "what could be animated here").
+- **`review` v1.5.0** — new **Motion Craft Checks** section: advisory, fires only when a diff touches motion, MEDIUM default / HIGH for feel-breaking regressions (ease-in on UI, `scale(0)` entrances, animation on high-frequency actions, layout-property animation). References MOTION-CRAFT for exact remediation values; findings feed the existing Report/Fix-First triage.
+- **`perf` v0.6.0** — new **Step 5.5 Motion Performance**: `MOTION_*` findings for non-GPU property animation, Framer Motion shorthand (not hardware-accelerated), CSS-variable-driven child transforms (recalc storm), `will-change` misuse, and keyframes on interruptible motion. WARN default, ranked in the Cost Impact Hierarchy.
+
+### Fixed
+- Cross-file motion inconsistencies surfaced during graft review: `DESIGN-REFERENCE.md` button-click easing corrected `ease-in` → `ease-out`; `--ease-out` token collision resolved (MOTION-CRAFT's punchy variant renamed `--ease-out-strong`); stale `review` `chain_metadata.version` synced to frontmatter.
+
+### Mesh
+- 66 skills, 208 connections, 45 signals (unchanged — enrichment only, no new skills/signals).
 
 "Council" — a new L3 primitive for genuinely decorrelated multi-perspective gathering: detects installed AI CLIs, fans a question across distinct model families, degrades gracefully to subagents, and arbitrates inline with an honest `NO_DECORRELATION` stamp when independence can't be confirmed. Live-dogfooded same-day (real external dispatch via the `1devtool-agent` bridge), which caught and fixed a real gap in the min-decorrelation gate before shipping downstream consumers.
 
