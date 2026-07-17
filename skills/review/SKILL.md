@@ -3,7 +3,7 @@ name: review
 description: "Code quality review — patterns, security, performance, correctness. Finds bugs, suggests improvements, triggers fix for issues found. Escalates to opus for security-critical code."
 metadata:
   author: runedev
-  version: "1.4.0"
+  version: "1.5.0"
   layer: L2
   model: sonnet
   group: development
@@ -559,6 +559,29 @@ className="focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
 - iOS target: solid-background cards (iOS 26 Liquid Glass deprecates this visual language) — should use translucent/blur surfaces
 - Android target: hardcoded hex colors instead of `MaterialTheme.colorScheme` tokens → not adaptive to dynamic color
 
+## Motion Craft Checks
+
+Apply **only** when the diff touches motion. Strong signals: `@keyframes`, `motion.`, `animate={`, `useSpring`, `cubic-bezier`, `@starting-style`, `transition:` / `transition-`. Weak signals: bare `transform` or `ease-` — these also match static layout transforms (`translate(-50%,-50%)`) and non-motion identifiers, so treat them as a trigger only when they co-occur with a strong signal. Skip entirely for diffs with no motion code.
+
+These are **advisory** — default severity MEDIUM. Escalate to HIGH only for *feel-breaking* regressions (the first five triggers below). Motion is a taste call: when feel can't be judged from source, say so and recommend a slow-motion / frame-by-frame check rather than asserting a defect. **For every finding, cite the exact remediation value from `skills/design/MOTION-CRAFT.md`** — do not restate its tables here.
+
+**Escalation triggers — flag on sight (first five = HIGH, feel-breaking):**
+- `ease-in` on any UI interaction (delays the moment the user watches most)
+- `scale(0)` or pure-fade entrances with no initial transform (nothing appears from nothing → initial scale + opacity per MOTION-CRAFT §5)
+- Animation on a keyboard shortcut / command-palette toggle / 100+/day action (should have none)
+- Animating layout properties (`width`/`height`/`margin`/`padding`/`top`/`left`) instead of `transform`/`opacity` (off-GPU, drops frames)
+- UI animation duration over the budget with no stated reason (duration budget + modals/drawers exemption per MOTION-CRAFT §4)
+- `transition: all` — unbounded property animation (MEDIUM)
+- `transform-origin: center` on a trigger-anchored popover/dropdown/tooltip (should scale from trigger; modals exempt) (MEDIUM)
+- Keyframes on toasts/toggles/anything triggered rapidly (can't retarget → use CSS transitions or springs) (MEDIUM)
+- Framer Motion `x`/`y`/`scale` shorthands on motion that runs while the page is busy (not hardware-accelerated → full `transform` string) (MEDIUM)
+- Driving a child transform via a CSS variable on the parent (style-recalc storm) (MEDIUM)
+- Missing `prefers-reduced-motion` handling on movement, or ungated `:hover` motion (missing `@media (hover: hover) and (pointer: fine)`) (MEDIUM)
+- Symmetric enter/exit timing on a press-and-release or hold interaction (deliberate phase should be slower, response snappier) (LOW–MEDIUM)
+- Everything-at-once entrance where a stagger belongs (stagger interval per MOTION-CRAFT §11) (LOW)
+
+**Remedial preference (propose the earliest that applies):** delete the animation (high-frequency / no purpose) → reduce it → fix the easing → fix origin/physicality → make it interruptible → move it to the GPU → asymmetric timing → polish (blur/stagger/`@starting-style`/spring). Pull the exact curve, duration, or spring config from MOTION-CRAFT.md. Findings feed the existing Report + Fix-First triage — do not create a parallel output path.
+
 ## Weighted Composite Scoring
 
 When a review is part of a recurring quality-gate cycle (e.g., sprint review, pre-release gate), produce a **composite quality score** alongside the findings list. This makes review output numeric and comparable across runs.
@@ -667,7 +690,7 @@ Append to Code Review Report when invoked standalone. Suppress when called as su
 ```yaml
 chain_metadata:
   skill: "rune:review"
-  version: "1.3.0"
+  version: "1.5.0"
   status: "[DONE | DONE_WITH_CONCERNS]"
   domain: "[area reviewed]"
   files_changed: []  # review doesn't change files

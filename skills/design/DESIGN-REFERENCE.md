@@ -196,7 +196,7 @@ xl:  1280px  — desktop
 | Trigger | Animation | Duration | Easing |
 |---------|-----------|----------|--------|
 | Hover on card | scale(1.02) + shadow lift | 200ms | ease-out |
-| Button click | scale(0.97) | 100ms | ease-in |
+| Button click | scale(0.97) | 100ms | ease-out |
 | Page transition | fade + slide 8px | 200ms | ease |
 | Data loading | Skeleton shimmer | loop | linear |
 | Toast notification | slide-in from edge | 300ms | cubic-bezier(0.34, 1.56, 0.64, 1) |

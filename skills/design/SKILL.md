@@ -3,7 +3,7 @@ name: design
 description: "Design system reasoning. Maps product domain to style, palette, typography, and platform-specific patterns. Generates .rune/design-system.md as the shared design contract for all UI-generating skills."
 metadata:
   author: runedev
-  version: "0.7.0"
+  version: "0.8.0"
   layer: L2
   model: sonnet
   group: creation
@@ -57,6 +57,9 @@ Load the design knowledge base before reasoning:
 2. If no user override → `Read` the baseline: `skills/design/DESIGN-REFERENCE.md` (shipped with Rune)
 3. The loaded reference provides: font pairings, chart selection, component architecture, color principles, UX checklist, interaction patterns, anti-pattern signatures
 4. Apply reference knowledge throughout Steps 3-5 (domain reasoning, token generation, checklist)
+5. **When the domain involves any UI motion** (transitions, animations, gestures, springs, micro-interactions) → also `Read` `skills/design/MOTION-CRAFT.md`. It is the canonical motion authority: the should-it-animate frequency gate, easing/duration budgets, physicality (never `scale(0)`, origin-aware popovers), spring physics, gesture handoff, motion performance, reduced-motion, and a reverse-lookup vocabulary. Cite its exact values in the design-system motion section; never approximate curves or durations. **When MOTION-CRAFT.md and DESIGN-REFERENCE.md disagree on a motion detail (easing, duration, interaction timing), MOTION-CRAFT.md wins** — it is the deeper, motion-specific source; DESIGN-REFERENCE.md's Animation Timing / Interaction Patterns tables are the general baseline.
+
+> **Advisory motion-audit mode**: When asked to "improve the animations" / "make this feel better" / "what could be animated here", operate read-only — survey the motion surface against MOTION-CRAFT.md, report frequency-gated findings (and deliberately rejected candidates), and hand precise recipes to `cook`/`fix`. Suggesting motion everywhere is worse than useless; expect to reject most candidates.
 
 > **Why two layers**: The baseline ships "good enough" universal design knowledge. Users who care about aesthetics create their own `design-dna.md` with curated palettes, font pairings, and style preferences. The design skill works well with either — it just works _better_ with a curated reference.
 

@@ -3,7 +3,7 @@ name: perf
 description: "Performance regression gate. Detects N+1 queries, sync-in-async, missing indexes, memory leaks, and bundle bloat before they reach production. Ranks findings by Cost Impact Hierarchy (architecture > data transfer > compute > DB > caching) so fix priority maps to actual unit-cost reduction."
 metadata:
   author: runedev
-  version: "0.5.0"
+  version: "0.6.0"
   layer: L2
   model: sonnet
   group: quality
@@ -211,6 +211,16 @@ Do NOT downgrade this gate.
 
 If no URL available (dev-only environment): log `INFO: no URL for Lighthouse — run manually before deploy`
 If Lighthouse MCP not installed: log `INFO: Lighthouse MCP not available — run lighthouse [url] --output json manually`
+
+### Step 5.5 — Motion / Animation Performance (frontend only)
+
+Apply only when the diff touches motion. Strong signals: `@keyframes`, `motion.`, `animate={`, `useSpring`, `will-change`, `transition:` / `transition-`. Weak signals: bare `transition` / `animation` / `transform` — these also match non-motion code and prose (state-machine "transition", `AnimationController`, static layout transforms), so treat them as a trigger only when they co-occur with a strong signal (mirrors `review`'s Motion Craft Checks). These are frame-budget regressions — a dropped frame is a 16.7ms miss at 60fps. Findings are **WARN** by default (jank degrades feel, rarely blocks a merge); escalate to **BLOCK** only when motion runs on a hot, always-on path (scroll handler, drag loop, list with many animated rows). Rank within the Cost Impact Hierarchy under *compute* (main-thread work) — note this is client-side compute: the cost is UX/conversion degradation and engineering-hour ROI, not a cloud-billing multiplier like Tier 3's infra examples. For remediation values and the full rationale, point to `skills/design/MOTION-CRAFT.md §9`.
+
+- **Non-GPU property animation** — animating `width`/`height`/`margin`/`padding`/`top`/`left` (or `transition: all`) triggers layout + paint every frame. Finding: `MOTION_LAYOUT_THRASH — [file:line] — animating [prop] forces layout/paint per frame — use transform/opacity`
+- **Framer Motion shorthands under load** — `x`/`y`/`scale` props run on the main thread via rAF and drop frames while the page is busy. Finding: `MOTION_NOT_HW_ACCEL — [file:line] — FM x/y/scale shorthand — use full transform string for GPU compositing`
+- **CSS-variable-driven child transforms** — updating a variable on a parent to drive children recalculates styles for every child (recalc storm). Finding: `MOTION_RECALC_STORM — [file:line] — parent CSS var drives child transform — set transform on the element directly`
+- **`will-change` misuse** — missing on imminent, frequently-triggered motion, or left on permanently (permanent layer promotion wastes GPU memory). Finding: `MOTION_WILL_CHANGE — [file:line] — [missing on hot path | left on permanently]`
+- **Keyframes on rapidly-triggered / interruptible motion** — restart-from-zero causes visible jank under rapid retriggering; CSS transitions or springs retarget smoothly. Finding: `MOTION_NON_INTERRUPTIBLE — [file:line] — keyframes on rapidly-triggered element`
 
 ### Step 6 — Framework-Specific Checks
 
