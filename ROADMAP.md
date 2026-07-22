@@ -1,6 +1,6 @@
 # Rune Roadmap
 
-> Last updated: July 2026 | Version: 2.26.0
+> Last updated: July 2026 | Version: 2.26.1
 
 ---
 
@@ -18,7 +18,7 @@ These principles guide every roadmap decision:
 
 ---
 
-## Current State (v2.26.0 — "Motion Craft")
+## Current State (v2.26.1 — "Codex Wiring")
 
 | Layer | Count | Status |
 |-------|-------|--------|

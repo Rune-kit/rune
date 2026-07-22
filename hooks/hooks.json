@@ -26,7 +26,7 @@
     ],
     "PreToolUse": [
       {
-        "matcher": "Read|Write|Edit",
+        "matcher": "Read|Write|Edit|apply_patch|view_image",
         "hooks": [
           {
             "type": "command",
@@ -46,7 +46,7 @@
         ]
       },
       {
-        "matcher": "Bash",
+        "matcher": "Bash|shell_command",
         "hooks": [
           {
             "type": "command",
@@ -58,7 +58,7 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "Edit|Write",
+        "matcher": "Edit|Write|apply_patch",
         "hooks": [
           {
             "type": "command",
@@ -73,7 +73,7 @@
         ]
       },
       {
-        "matcher": "Skill|Task|Agent",
+        "matcher": "Skill|Task|Agent|spawn_agent",
         "hooks": [
           {
             "type": "command",
@@ -83,7 +83,7 @@
         ]
       },
       {
-        "matcher": "mcp__.*|WebFetch|Read",
+        "matcher": "mcp__.*|WebFetch|Read|web_search",
         "hooks": [
           {
             "type": "command",

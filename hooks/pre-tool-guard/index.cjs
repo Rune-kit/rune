@@ -50,6 +50,26 @@ function appendGateOutcome(gate, outcome, detail) {
   }
 }
 
+/**
+ * Path a Codex `apply_patch` call is about to write.
+ *
+ * Codex has no Edit/Write tool — file writes arrive as one `apply_patch` call
+ * whose payload is raw patch text, so there is no `file_path` to read. The
+ * target is in the patch header. Without this the privacy gate is a no-op on
+ * Codex: every write sails past.
+ *
+ * @param {string} toolName
+ * @param {object} toolInput
+ * @returns {string} target path, or '' when this is not a patch we understand
+ */
+function patchTargetPath(toolName, toolInput) {
+  if (toolName !== 'apply_patch') return '';
+  const patch = typeof toolInput === 'string' ? toolInput : toolInput.input || toolInput.patch || '';
+  if (typeof patch !== 'string') return '';
+  const match = patch.match(/^\*\*\* (?:Update|Add|Delete) File:\s*(.+)$/m);
+  return match ? match[1].trim() : '';
+}
+
 // Read tool_input from Claude Code hook stdin
 let input = '';
 process.stdin.setEncoding('utf-8');
@@ -66,7 +86,7 @@ process.stdin.on('end', () => {
     process.exit(0);
   }
 
-  const filePath = toolInput.file_path || toolInput.path || '';
+  const filePath = toolInput.file_path || toolInput.path || patchTargetPath(toolName, toolInput);
   if (!filePath) process.exit(0);
 
   const basename = path.basename(filePath);

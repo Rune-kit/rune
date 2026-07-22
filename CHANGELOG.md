@@ -5,6 +5,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.26.1] - 2026-07-22
+
+"Codex Wiring" — Rune's runtime hooks were silently inert on Codex CLI. `hooks/hooks.json` is loaded by both Claude Code and Codex (Codex reads `<plugin>/hooks/hooks.json` — the same path — and maps the event names), but every tool matcher named only Claude's tools. Codex has no `Read`, `Write`, `Edit` or `Bash` tool: it issues `shell_command`, `exec`, `apply_patch`, `view_image`, `spawn_agent`. So the privacy gate and the secret scanner matched nothing and never fired for Codex users.
+
+### Fixed
+- **Tool matchers now name both platforms' tools.** `pre-tool-guard` adds `apply_patch|view_image`, `secrets-scan` adds `shell_command`, `auto-format`/`typecheck` add `apply_patch`, `metrics-collector` adds `spawn_agent`, `quarantine` adds `web_search`. Plain alternation, so Claude behaviour is byte-for-byte unchanged.
+- **`pre-tool-guard` understands Codex `apply_patch` payloads.** Codex has no Edit/Write tool — a file write arrives as raw patch text with no `file_path`, so even a matching hook had nothing to check. The guard now reads the target from the patch header (`*** Update File: <path>`), which is what makes it an actual gate on Codex rather than a no-op.
+
+### Tests
+- 11 new hook tests: every tool matcher is asserted against both its Claude and its Codex tool names, matchers are asserted look-around-free (Codex compiles them with the Rust `regex` crate, which rejects look-around outright), and `pre-tool-guard` is exercised end-to-end with real `apply_patch` payloads. 1,570 tests pass.
+
+### Known limitation
+Codex does not support `async` hooks yet — it skips them with a warning at startup. Rune's six background hooks (`intent-router`, `context-watch`, `auto-format`, `typecheck`, `metrics-collector`, `quarantine`) are therefore inactive on Codex regardless of their matchers. `async` is kept because Claude Code honours it and dropping it would make those hooks blocking on the primary platform; tracking upstream instead.
+
 ## [2.26.0] - 2026-07-18
 
 "Motion Craft" — Rune's UI mesh gains a deep, canonical motion authority. Animation was the shallowest corner of the design mesh: `design` covered style/palette/type but only a thin timing table for motion. This wave grafts design-engineering motion expertise (MIT-sourced, rewritten in Rune's voice, no source branding) into three existing hubs — advisory-first, no new skills, no new HARD-GATEs.

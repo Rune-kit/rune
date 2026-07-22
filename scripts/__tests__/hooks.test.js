@@ -405,3 +405,103 @@ describe('governance-collector: blocked counts from gate-outcomes.jsonl', () => 
     assert.strictEqual(gov.decisions.length, 0, 'decisions always empty in Phase 3');
   });
 });
+
+// --- Cross-platform hook wiring ---
+//
+// `hooks/hooks.json` is loaded by BOTH Claude Code and Codex CLI (Codex reads
+// `<plugin>/hooks/hooks.json` — the same path — and maps the event names). Codex
+// has none of Claude's tool names, so a matcher listing only `Read|Write|Edit`
+// or `Bash` silently never fires there. Every tool matcher must therefore name
+// the Codex equivalent too.
+
+describe('hooks.json: cross-platform tool matchers', () => {
+  const manifest = JSON.parse(fs.readFileSync(path.join(HOOKS_DIR, 'hooks.json'), 'utf-8'));
+
+  /** Matchers that select on tool name (as opposed to `.*` or lifecycle reasons). */
+  const TOOL_MATCHERS = [
+    { event: 'PreToolUse', hook: 'pre-tool-guard', codex: ['apply_patch', 'view_image'] },
+    { event: 'PreToolUse', hook: 'secrets-scan', codex: ['shell_command'] },
+    { event: 'PostToolUse', hook: 'auto-format', codex: ['apply_patch'] },
+    { event: 'PostToolUse', hook: 'typecheck', codex: ['apply_patch'] },
+    { event: 'PostToolUse', hook: 'metrics-collector', codex: ['spawn_agent'] },
+    { event: 'PostToolUse', hook: 'quarantine', codex: ['web_search'] },
+  ];
+
+  function matcherFor(event, hookName) {
+    for (const group of manifest.hooks[event] || []) {
+      if ((group.hooks || []).some((h) => h.command.includes(` ${hookName}`))) return group.matcher;
+    }
+    return null;
+  }
+
+  for (const { event, hook, codex } of TOOL_MATCHERS) {
+    test(`${hook} matches its Codex tool names`, () => {
+      const matcher = matcherFor(event, hook);
+      assert.ok(matcher, `no ${event} matcher found for ${hook}`);
+      const re = new RegExp(`^(?:${matcher})$`);
+      for (const tool of codex) {
+        assert.ok(re.test(tool), `${hook} matcher "${matcher}" does not match Codex tool "${tool}"`);
+      }
+    });
+  }
+
+  test('matchers stay free of look-around (Codex compiles them with Rust regex)', () => {
+    for (const groups of Object.values(manifest.hooks)) {
+      for (const group of groups) {
+        const m = group.matcher || '';
+        assert.ok(!/\(\?[=!<]/.test(m), `matcher "${m}" uses look-around, which Codex rejects`);
+      }
+    }
+  });
+
+  test('Claude tool names are still matched', () => {
+    for (const [event, hook, tool] of [
+      ['PreToolUse', 'pre-tool-guard', 'Edit'],
+      ['PreToolUse', 'secrets-scan', 'Bash'],
+      ['PostToolUse', 'auto-format', 'Write'],
+      ['PostToolUse', 'metrics-collector', 'Task'],
+      ['PostToolUse', 'quarantine', 'WebFetch'],
+    ]) {
+      const matcher = matcherFor(event, hook);
+      assert.ok(new RegExp(`^(?:${matcher})$`).test(tool), `${hook} lost Claude tool "${tool}"`);
+    }
+  });
+});
+
+describe('pre-tool-guard: Codex apply_patch payloads', () => {
+  test('BLOCKs a patch that writes a private key', () => {
+    const patch = '*** Begin Patch\n*** Update File: config/id_rsa\n@@\n+secret\n*** End Patch';
+    const { exitCode } = runHook(
+      'pre-tool-guard',
+      JSON.stringify({ tool_name: 'apply_patch', tool_input: { input: patch } }),
+    );
+    assert.strictEqual(exitCode, 2, 'apply_patch on a private key must block');
+  });
+
+  test('WARNs on a patch that writes .env', () => {
+    const patch = '*** Begin Patch\n*** Add File: .env\n@@\n+TOKEN=1\n*** End Patch';
+    const { stdout, exitCode } = runHook(
+      'pre-tool-guard',
+      JSON.stringify({ tool_name: 'apply_patch', tool_input: { input: patch } }),
+    );
+    assert.strictEqual(exitCode, 0);
+    assert.match(stdout, /\.env/);
+  });
+
+  test('allows an ordinary source patch', () => {
+    const patch = '*** Begin Patch\n*** Update File: src/app.ts\n@@\n+const a = 1;\n*** End Patch';
+    const { exitCode } = runHook(
+      'pre-tool-guard',
+      JSON.stringify({ tool_name: 'apply_patch', tool_input: { input: patch } }),
+    );
+    assert.strictEqual(exitCode, 0);
+  });
+
+  test('a patch with no parsable header exits cleanly', () => {
+    const { exitCode } = runHook(
+      'pre-tool-guard',
+      JSON.stringify({ tool_name: 'apply_patch', tool_input: { input: 'garbage' } }),
+    );
+    assert.strictEqual(exitCode, 0);
+  });
+});
