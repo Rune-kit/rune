@@ -115,15 +115,30 @@ jobs:
             --version "$VERSION" \
             --changelog "${CHANGELOG}" || echo "publish returned non-zero (often a benign timeout) — verifying via inspect"
           sleep 5
-          # `clawhub inspect` prints "latest=X.Y.Z" (and "Latest  X.Y.Z"), not "latest:" —
-          # the old colon-anchored grep returned none and false-failed a successful publish.
-          LATEST=$(clawhub inspect rune-kit 2>&1 | grep -iE "latest" | grep -oE "[0-9]+\.[0-9]+\.[0-9]+" | head -1)
-          echo "ClawHub latest after publish: ${LATEST:-none} (expected ${VERSION})"
-          if [ "$LATEST" != "$VERSION" ]; then
-            echo "::error::ClawHub did NOT land ${VERSION} (latest=${LATEST:-none}) — token likely invalid/revoked. This check exists so the ✓ can never lie again."
+          # What this gate is for: a revoked token once left ClawHub stale for a month behind a
+          # false green check. So the question to ask is "does ClawHub KNOW this version?", not
+          # "is it already the latest tag" — ClawHub promotes `latest` only after its LLM
+          # moderation pass, which lands hours later (v2.26.0: published 02:04, moderated 02:29;
+          # v2.26.1 failed this step 10s after a successful publish). Anchoring on `latest`
+          # therefore fails every first publish and taught us to ignore a red release run.
+          #
+          # `clawhub inspect` prints "latest=X.Y.Z" (and "Latest  X.Y.Z"), not "latest:" — the
+          # colon-anchored grep before this one returned none and false-failed a good publish.
+          INSPECT=$(clawhub inspect rune-kit 2>&1 || true)
+          LATEST=$(printf '%s' "$INSPECT" | grep -iE "latest" | grep -oE "[0-9]+\.[0-9]+\.[0-9]+" | head -1)
+          # A re-publish of a version ClawHub already accepted is refused by name — the most
+          # direct proof the upload landed, and it works while moderation is still pending.
+          REPUBLISH=$(clawhub publish "$STAGE" --slug rune-kit --name "Rune" --version "$VERSION" 2>&1 || true)
+          echo "ClawHub latest: ${LATEST:-none} (this release: ${VERSION})"
+          if [ "$LATEST" = "$VERSION" ]; then
+            echo "✅ ClawHub verified at ${VERSION} (latest tag promoted)"
+          elif printf '%s' "$REPUBLISH" | grep -qiE "already exists"; then
+            echo "::notice::ClawHub accepted ${VERSION}; latest is still ${LATEST:-none} pending moderation. Not a failure."
+          else
+            echo "::error::ClawHub does NOT have ${VERSION} (latest=${LATEST:-none}) — token likely invalid/revoked. This check exists so the ✓ can never lie again."
+            printf '%s\n' "$REPUBLISH" | tail -5
             exit 1
           fi
-          echo "✅ ClawHub verified at ${VERSION}"
 
       - name: Summary
         run: |
