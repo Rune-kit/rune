@@ -4,7 +4,7 @@ description: "Validates agent claims against evidence trail. Use when verifying 
 user-invocable: false
 metadata:
   author: runedev
-  version: "1.9.0"
+  version: "1.10.0"
   layer: L3
   model: haiku
   group: validation
@@ -57,6 +57,33 @@ CLAIM PATTERNS:
 ```
 
 Extract each claim as: `{ claim: string, source_skill: string }`
+
+### Step 1a — Type Each Claim (Claim Discipline)
+<MUST-READ path="references/claim-discipline.md" trigger="always — before matching evidence"/>
+
+Before hunting for evidence, type the claim by the grammar it was written in. **Hallucination is an unverified claim wearing the grammar of an observation** — the grammar is the tell, and it is readable in the sentence itself.
+
+| Type | Meaning | Grammar it may wear |
+|------|---------|---------------------|
+| **OBSERVED** | Seen this session: ran it, read it, measured it | "X is / does / returns …" |
+| **DERIVED** | Follows from OBSERVED facts via a statable mechanism | "X should / will / implies …" + the why |
+| **PRIOR** | Training knowledge, may be stale | "X is typically … / was, as of …" |
+| **ASSUMED** | Unverified and required by the conclusion | "I am assuming X — if wrong, then …" |
+
+This changes what the gate is looking for in Step 2:
+
+- **OBSERVED** → demands an evidence artifact. No artifact = FAIL. This is the existing gate.
+- **DERIVED** → demands the mechanism be stated, and its OBSERVED inputs to be present.
+- **PRIOR / ASSUMED** → **not a failure.** A claim honestly delivered as assumed is the correct output when the check was not run. Record it as an open item; never score it as a lie.
+
+<HARD-GATE>
+A hedge is not a defect. Do NOT fail a claim for being marked ASSUMED or PRIOR — fail it for
+wearing OBSERVED grammar with nothing behind it. Treating honest uncertainty as a failure
+teaches the next agent to delete its hedges, which is the exact behavior this gate exists to
+catch.
+</HARD-GATE>
+
+Claims are promoted only by tools — checking a PRIOR makes it OBSERVED. Restating it more confidently does not. Confidence that grew from effort, repetition or fluent prose resets to the last evidence-backed level.
 
 ### Step 1b — Stub Detection (Existence Theater Check)
 
@@ -145,8 +172,10 @@ IF evidence exists AND evidence supports claim:
   → CONFIRMED
 IF evidence exists BUT contradicts claim:
   → CONTRADICTED (most serious — agent is wrong)
-IF no evidence found:
-  → UNCONFIRMED (agent may be right but didn't prove it)
+IF no evidence found AND claim was typed PRIOR/ASSUMED (Step 1a):
+  → DECLARED (honest gap — record as an open item, not a failure)
+IF no evidence found AND claim wore OBSERVED grammar:
+  → UNCONFIRMED (the claim asserted more than the agent checked)
 ```
 
 **3-Axis verification** — categorize each claim into one of three axes, then ensure all axes are covered:
@@ -172,21 +201,25 @@ If an axis has ZERO claims → flag as gap: "No [Completeness/Correctness/Cohere
 ## Completion Gate Report
 - **Status**: CONFIRMED | UNCONFIRMED | CONTRADICTED
 - **Claims Checked**: [count]
-- **Confirmed**: [count] | **Unconfirmed**: [count] | **Contradicted**: [count]
+- **Confirmed**: [count] | **Unconfirmed**: [count] | **Contradicted**: [count] | **Declared**: [count]
 
 ### Claim Validation
-| # | Claim | Evidence | Verdict |
-|---|---|---|---|
-| 1 | "All tests pass" | Bash: `npm test` → "42 passed, 0 failed" | CONFIRMED |
-| 2 | "Build succeeds" | No build command output found | UNCONFIRMED |
-| 3 | "No lint errors" | Bash: `npm run lint` → "3 errors" | CONTRADICTED |
+| # | Claim | Type | Evidence | Verdict |
+|---|---|---|---|---|
+| 1 | "All tests pass" | OBSERVED | Bash: `npm test` → "42 passed, 0 failed" | CONFIRMED |
+| 2 | "Build succeeds" | OBSERVED | No build command output found | UNCONFIRMED |
+| 3 | "No lint errors" | OBSERVED | Bash: `npm run lint` → "3 errors" | CONTRADICTED |
+| 4 | "Assuming the migration already ran in staging" | ASSUMED | — (declared, not claimed) | DECLARED |
 
 ### Gaps (if any)
 - Claim 2: Re-run `npm run build` and capture output
 - Claim 3: Agent claimed clean but lint shows 3 errors — fix required
 
+### Open (declared, not failures)
+- Claim 4: Verify the staging migration before this reaches prod
+
 ### Verdict
-UNCONFIRMED — 1 claim lacks evidence, 1 contradicted. Cannot proceed to commit.
+UNCONFIRMED — 1 claim lacks evidence, 1 contradicted. Cannot proceed to commit. (1 declared assumption carried forward — not blocking.)
 ```
 
 ### Step 4.5 — Integration Check (Cross-Phase + Cross-Layer)

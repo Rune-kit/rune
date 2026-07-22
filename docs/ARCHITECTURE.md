@@ -69,13 +69,14 @@ Override: user preference   → manual in config
 ```
 
 The three tiers map to what a subscription runtime (Claude Code, Cursor, etc.)
-can actually run. `opus` is the routing ceiling on purpose. A hypothetical
-"most-capable" tier above opus (Anthropic Fable, API-only) is **not** a routing
-tier — it is unavailable to subscription users and would resolve to nothing on
-the primary audience. Fable-class API models belong in **oracle-mode /
-cross-model-escalation** (adversary, session-bridge), where Rune deliberately
-calls OUT to an external, colder, different-architecture model for a second
-opinion — see `skills/adversary/references/oracle-mode.md`.
+can actually run. `opus` is the routing ceiling on purpose — not because
+nothing above it exists, but because a fourth tier buys little: the tier hint
+pins a *subagent's* model, and a session started on a more capable model
+already does richer top-level planning before delegating down. Frontier-class
+models are wired instead through **oracle-mode / cross-model-escalation**
+(adversary, session-bridge), where Rune deliberately calls OUT to a colder,
+different-architecture model for a second opinion — see
+`skills/adversary/references/oracle-mode.md`.
 
 The starting model is irrelevant to routing correctness: a skill's `model:`
 hint pins the tier when the skill is spawned as a subagent, so an orchestrator

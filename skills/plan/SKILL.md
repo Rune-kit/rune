@@ -23,7 +23,7 @@ Strategic planning engine for the Rune ecosystem. Produces a **master plan + pha
 This is enterprise-grade project management: BA produces WHAT → Plan produces HOW (structured into phases) → ANY coder executes each phase with full context.
 
 > **Goal-first — leverage native goal/outcome commands (advisory, 2026).** Current
-> agent models (Opus 4.8, Sonnet 5, and the API-only Fable) perform best when handed
+> agent models (Opus 4.8, Sonnet 5, Fable 5) perform best when handed
 > the full goal + constraints up front, then left to execute at high effort. Some
 > platforms now expose this natively: Claude Code `/goal` sets a run's north-star;
 > Managed Agents **Outcomes** (`user.define_outcome` + rubric) grade-and-iterate to a

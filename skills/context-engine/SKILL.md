@@ -4,7 +4,7 @@ description: "Context window management. Auto-triggered when context is filling 
 user-invocable: false
 metadata:
   author: runedev
-  version: "1.2.0"
+  version: "1.3.0"
   layer: L3
   model: haiku
   group: state
@@ -379,10 +379,30 @@ When Context Budget Warning fires, append to Context Health report:
 - **Recommendation**: Disable [server] to save ~[N]k tokens
 ```
 
-## Output Density Mode (Caveman)
+## Output Modes
+<MUST-READ path="references/output-modes.md" trigger="when any output mode is active OR two modes are active at once"/>
+
+Rune ships more than one opinion about response shape, and they conflict. `references/output-modes.md` is the layer that holds them: the mode registry, the shared activation contract (activate → persist → release, identical for every mode), and the precedence rule for when two active modes want opposite things.
+
+**The precedence, in short — shape is negotiable, substance is not:**
+
+1. Calibration outranks every style — a style compresses prose, never a claim into stronger grammar than its evidence supports (`completion-gate` → `references/claim-discipline.md`).
+2. Evidence outranks brevity — what was run and what it returned is not filler.
+3. A skill's `## Output Format` outranks every style — shape the prose inside the sections, never drop a section or a finding.
+4. Safety outranks all shaping — destructive/irreversible confirmations revert to full prose.
+5. Actionability outranks economy — when both are on, the steps survive and the prose around them compresses.
+
+| Mode | Optimizes for | Reference |
+|------|---------------|-----------|
+| `caveman` | Token economy | `references/caveman-mode.md` |
+| `actionable` | Legibility — next action first, state restated each turn | `references/actionable-mode.md` |
+
+### Output Density Mode (Caveman)
 <MUST-READ path="references/caveman-mode.md" trigger="when context reaches ORANGE/RED OR user says 'caveman'/'be brief'/'less tokens'"/>
 
 Caveman is a terse output mode that strips filler, articles, hedging, and pleasantries while preserving full technical accuracy. ~75% output token reduction with no information loss when applied per the rules in `references/caveman-mode.md`.
+
+**Hedging is the one deletion with a hard limit.** Filler hedges (`I think`, `basically`) die; a hedge carrying real uncertainty (`I am assuming the migration ran`) stays — cutting it promotes an ASSUMED claim to OBSERVED grammar, which precedence rule 1 forbids. Terse and overconfident is worse than verbose.
 
 ### Activation triggers
 
@@ -405,6 +425,18 @@ Auto-activation emits `output.density.set` signal carrying `{mode: caveman, scop
 ### Anti-pattern
 
 Caveman in the FIRST response of a task. The user can't calibrate severity from a single output yet — verbose first response is fine. Caveman starts on response 2+.
+
+### Actionable Output Mode
+<MUST-READ path="references/actionable-mode.md" trigger="user says 'adhd mode'/'actionable'/'just tell me what to do' OR the deliverable is steps a human will execute"/>
+
+Shapes a response so it can be *acted on* rather than merely understood: next action first, multi-step work numbered, position restated every turn ("step 3 of 5 done"), estimates in real units, one concrete next action at the end. Optimizes distance-to-doing, where caveman optimizes token count — the two stack, and rule 5 above resolves them.
+
+| Trigger | Source | Persistence |
+|---------|--------|-------------|
+| User says "adhd mode" / "actionable" / "action first" / "just tell me what to do" | Explicit user signal | Until "stop adhd mode" / "normal mode" |
+| Deliverable is steps a human executes (runbook, incident response, onboarding) | Skill-initiated | Scoped to that deliverable |
+
+Not a diagnosis and not a persona — it is the right shape for anyone reading mid-incident, on a phone, or in a second language. Full rules, exceptions and pre-send check in `references/actionable-mode.md`.
 
 ## Mode: preview (v1.1.0)
 

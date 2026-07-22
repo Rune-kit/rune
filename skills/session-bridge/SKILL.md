@@ -553,7 +553,7 @@ When `oracle.dispatched` arrives, payload contains:
 - `sessionId` — caller-provided unique id
 - `triggerSignal` — `agent.stuck` or manual
 - `sourceSkill` — `debug` | `fix` | manual
-- `targetModel` — concrete model name (e.g. `gpt-5.6-sol`, `gemini-3-pro`, `claude-opus-4-8`; API-only frontier: `claude-fable-5`)
+- `targetModel` — concrete model name (e.g. `gpt-5.6-sol`, `gemini-3-pro`, `claude-opus-4-8`, `claude-fable-5`)
 - `bundleHash` — sha256 of the bundled context (idempotency key)
 
 ### Step D2 — Idempotency check

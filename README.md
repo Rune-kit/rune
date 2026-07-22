@@ -103,11 +103,15 @@ Plus **9 domain packs** (product, sales, data-science, support, growth, media, p
 
 ---
 
-## What's New (v2.26.2 — Hook Output Contract)
+## What's New (v2.27.0 — Calibrated Output)
+
+> **v2.27.0 (2026-07-22):** Rune had one opinion about response shape — `caveman`, optimising token count — and no rule for what a style may **not** compress. That gap had teeth: caveman's "hedging dies" list auto-activates at ORANGE/RED context and deleted phrases like *"I'm assuming the migration ran"*, promoting an unverified claim into observed grammar at exactly the point in a session where the agent is most likely to be wrong. New **output-mode layer** (`context-engine`) holds every mode behind one activation contract and a five-rule precedence list — **shape is negotiable, substance is not**: calibration > evidence > a skill's `## Output Format` > safety > actionability > economy. New **`actionable` mode** optimises distance-to-doing (next action first, steps numbered, position restated each turn) and stacks with caveman. New **claim discipline** in `completion-gate` types every load-bearing statement OBSERVED / DERIVED / PRIOR / ASSUMED — *hallucination is an unverified claim wearing the grammar of an observation* — and adds a `DECLARED` verdict so an honest hedge is recorded as an open item, never scored as a lie.
+
+### Previous (v2.26.2 — Hook Output Contract)
 
 > **v2.26.2 (2026-07-22):** The other half of the Codex wiring fix — v2.26.1 made the hook matchers fire, this makes the hooks **succeed**. Codex parses hook stdout as JSON and reports anything else as `hook: <Event> Failed`, discarding the output; Rune's hooks printed bare `[Rune: ...]` lines, so every hook that loaded on Codex ran, exited 0, and had its output thrown away. Hooks now emit the envelope both runtimes accept — `hookSpecificOutput.additionalContext` for context events, `systemMessage` otherwise — which is Claude Code's documented contract too, not a Codex branch. Verified live against codex-cli 0.145: the same hook goes `SessionStart Failed` → `SessionStart Completed`.
 
-### Previous (v2.26.1 — Codex Wiring)
+#### Earlier (v2.26.1 — Codex Wiring)
 
 > **v2.26.1 (2026-07-22):** Rune's runtime hooks were silently inert on **Codex CLI**. `hooks/hooks.json` is loaded by both Claude Code and Codex — Codex reads `<plugin>/hooks/hooks.json`, the same path, and maps the event names — but every tool matcher named only Claude's tools. Codex has no `Read`, `Write`, `Edit` or `Bash` tool; it issues `shell_command`, `exec`, `apply_patch`, `view_image`, `spawn_agent`. So the privacy gate and the secret scanner matched nothing and never fired. Matchers now name both platforms' tools (plain alternation — Claude behaviour is byte-for-byte unchanged), and `pre-tool-guard` reads the target path out of a Codex `apply_patch` payload (`*** Update File: <path>`), which is what makes it an actual gate there instead of a no-op. Note that Codex does not support `async` hooks yet and skips them, so Rune's six background hooks stay inactive on Codex — `async` is kept because Claude Code honours it.
 

@@ -1,6 +1,6 @@
 # Rune Roadmap
 
-> Last updated: July 2026 | Version: 2.26.2
+> Last updated: July 2026 | Version: 2.27.0
 
 ---
 
@@ -18,7 +18,7 @@ These principles guide every roadmap decision:
 
 ---
 
-## Current State (v2.26.2 — "Hook Output Contract")
+## Current State (v2.27.0 — "Calibrated Output")
 
 | Layer | Count | Status |
 |-------|-------|--------|

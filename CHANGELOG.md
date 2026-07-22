@@ -5,6 +5,22 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.27.0] - 2026-07-22
+
+"Calibrated Output" — Rune had exactly one opinion about response shape (`caveman`, optimising token count) and no rule for what a style is *not* allowed to compress. That gap had teeth: caveman's "hedging dies" list, auto-activated whenever context hits ORANGE/RED, deleted phrases like *"I'm assuming the migration ran"* — turning an unverified claim into one wearing observed grammar, at exactly the point in a session where the agent is most likely to be wrong. This wave adds the layer that resolves it, plus a second output mode that has somewhere to live now.
+
+### Added — output-mode layer
+- **`context-engine/references/output-modes.md`** (new, `context-engine` v1.3.0) — the registry, the shared activation contract (activate → persist → release, identical for every mode, no drift back mid-session), and a five-rule precedence list for when two active modes want opposite things. The general form: **shape is negotiable, substance is not.** Calibration > evidence > a skill's `## Output Format` > safety > actionability > economy.
+- **`context-engine/references/actionable-mode.md`** (new) — second output mode, optimising distance-to-doing rather than token count: next action first, multi-step work numbered, position restated every turn, estimates in real units, one concrete next action at the end. Stacks with `caveman`; rule 5 resolves them. Not a persona — the right shape for anyone reading mid-incident, on a phone, or in a second language.
+
+### Added — claim discipline
+- **`completion-gate/references/claim-discipline.md`** (new, `completion-gate` v1.10.0) — types every load-bearing statement OBSERVED / DERIVED / PRIOR / ASSUMED, with the grammar each is allowed to wear. **Hallucination is an unverified claim wearing the grammar of an observation** — and the grammar is visible in the sentence, before any gate runs. The gate catches a false claim after the work; this stops it being written.
+- **`completion-gate` Step 1a** — types claims before matching evidence, and adds a `DECLARED` verdict. A claim honestly delivered as assumed is now the *correct* output when the check was not run, recorded as an open item rather than scored as a lie. New HARD-GATE: **a hedge is not a defect** — failing one teaches the next agent to delete its hedges, which is the behaviour this gate exists to catch.
+
+### Fixed
+- **`caveman` no longer strips hedges that carry real uncertainty.** Filler hedges (`I think`, `basically`) still die; a hedge that marks an unverified claim stays, per precedence rule 1.
+- **Fable 5 is no longer documented as API-only.** It is available on subscription plans; `docs/ARCHITECTURE.md`, `plan`, `session-bridge` and `adversary`'s oracle-mode table asserted otherwise as fact. The routing ceiling stays at `opus` — but now for the reason that actually holds (a tier hint pins a *subagent's* model, so a stronger starting model already plans richer and delegates down), not because a fourth tier would resolve to nothing.
+
 ## [2.26.2] - 2026-07-22
 
 "Hook Output Contract" — the other half of the Codex wiring fix. v2.26.1 made the matchers fire; this makes the hooks actually succeed. Codex parses hook stdout as its `HookUniversalOutputWire` JSON and reports anything else as `hook: <Event> Failed`, discarding the output. Rune's hooks printed bare `[Rune: ...]` lines, so every hook that loaded on Codex ran, exited 0, and had its output thrown away — the failure was reported once per event, with no indication which hook or why.
