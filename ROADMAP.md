@@ -1,6 +1,6 @@
 # Rune Roadmap
 
-> Last updated: July 2026 | Version: 2.26.1
+> Last updated: July 2026 | Version: 2.26.2
 
 ---
 
@@ -18,7 +18,7 @@ These principles guide every roadmap decision:
 
 ---
 
-## Current State (v2.26.1 — "Codex Wiring")
+## Current State (v2.26.2 — "Hook Output Contract")
 
 | Layer | Count | Status |
 |-------|-------|--------|

@@ -15,6 +15,12 @@
 const fs = require('fs');
 const path = require('path');
 
+const { captureConsole } = require('../lib/hook-output.cjs');
+// Hook stdout is a JSON contract, not free text (Codex rejects bare lines and
+// discards the output). Capture the prints below and emit one envelope on exit.
+captureConsole('PreToolUse');
+
+
 /**
  * Append a structured gate-outcome record to .rune/metrics/gate-outcomes.jsonl
  * relative to process.cwd(). Best-effort: any error is silently swallowed so

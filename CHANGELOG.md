@@ -5,6 +5,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.26.2] - 2026-07-22
+
+"Hook Output Contract" — the other half of the Codex wiring fix. v2.26.1 made the matchers fire; this makes the hooks actually succeed. Codex parses hook stdout as its `HookUniversalOutputWire` JSON and reports anything else as `hook: <Event> Failed`, discarding the output. Rune's hooks printed bare `[Rune: ...]` lines, so every hook that loaded on Codex ran, exited 0, and had its output thrown away — the failure was reported once per event, with no indication which hook or why.
+
+### Fixed
+- **Hooks emit the JSON envelope both runtimes accept.** `session-start` and `pre-compact`/`post-session-reflect`/`pre-tool-guard` now write `{"hookSpecificOutput":{"hookEventName":…,"additionalContext":…}}` (context events) or `{"systemMessage":…}` (everything else) instead of raw text. Claude Code documents and accepts both forms, so this is not a Codex branch — it is the correct output contract.
+- **Multi-line hook output collapses into one envelope.** The envelope is a single JSON object, so a hook that prints across several branches buffers and emits once at exit — including on the `process.exit(2)` BLOCK paths, whose message would otherwise be lost.
+
+### Added
+- **`hooks/lib/hook-output.cjs`** — `outputBuffer()` / `captureConsole()`. Capture happens at the boundary rather than by rewriting each print site: the message logic is untouched, and no branch can silently reintroduce bare text.
+
+### Verified
+Against `codex-cli 0.145` on a live session: the same hook reports `SessionStart Failed` with text output and `SessionStart Completed` with the envelope. `secrets-scan` needed no change — it already wrote its BLOCK to stderr, which is not parsed as the contract.
+
+### Tests
+- 7 new tests: envelope validity (top-level keys checked against the field set Codex accepts — it rejects unknown fields), single-line output, `additionalContext` vs `systemMessage` per event, exit code 2 preserved through the BLOCK path, and silence staying silent. 1,577 tests pass.
+
 ## [2.26.1] - 2026-07-22
 
 "Codex Wiring" — Rune's runtime hooks were silently inert on Codex CLI. `hooks/hooks.json` is loaded by both Claude Code and Codex (Codex reads `<plugin>/hooks/hooks.json` — the same path — and maps the event names), but every tool matcher named only Claude's tools. Codex has no `Read`, `Write`, `Edit` or `Bash` tool: it issues `shell_command`, `exec`, `apply_patch`, `view_image`, `spawn_agent`. So the privacy gate and the secret scanner matched nothing and never fired for Codex users.

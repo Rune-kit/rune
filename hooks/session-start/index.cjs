@@ -4,6 +4,11 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const { captureConsole } = require('../lib/hook-output.cjs');
+// Hook stdout is a JSON contract, not free text (Codex rejects bare lines and
+// discards the output). Capture the prints below and emit one envelope on exit.
+captureConsole('SessionStart');
+
 
 const cwd = process.cwd();
 const runeDir = path.join(cwd, '.rune');

@@ -505,3 +505,101 @@ describe('pre-tool-guard: Codex apply_patch payloads', () => {
     assert.strictEqual(exitCode, 0);
   });
 });
+
+// --- Hook stdout contract ---
+//
+// Claude Code tolerates bare text on hook stdout; Codex CLI parses it as its
+// HookUniversalOutputWire JSON and reports anything else as `hook: <Event>
+// Failed`, discarding the output. Every hook that speaks must therefore emit the
+// envelope both runtimes accept — verified experimentally against codex-cli
+// 0.145: the same hook goes Failed → Completed when its output becomes JSON.
+
+describe('hook stdout is a valid JSON envelope', () => {
+  /** Keys Codex accepts at the top level (it rejects unknown fields). */
+  const TOP_LEVEL = new Set([
+    'decision',
+    'reason',
+    'continue',
+    'stopReason',
+    'suppressOutput',
+    'systemMessage',
+    'hookSpecificOutput',
+  ]);
+
+  function parseEnvelope(stdout) {
+    assert.notStrictEqual(stdout.trim(), '', 'expected output');
+    const parsed = JSON.parse(stdout);
+    for (const key of Object.keys(parsed)) {
+      assert.ok(TOP_LEVEL.has(key), `"${key}" is not a field Codex accepts`);
+    }
+    return parsed;
+  }
+
+  test('pre-tool-guard WARN emits one systemMessage envelope', () => {
+    const { stdout, exitCode } = runHook('pre-tool-guard', '{"tool_input": {"file_path": ".env"}}');
+    const parsed = parseEnvelope(stdout);
+    assert.strictEqual(exitCode, 0);
+    assert.match(parsed.systemMessage, /Sensitive file/);
+    assert.strictEqual(stdout.trim().split('\n').length, 1, 'must be a single JSON line');
+  });
+
+  test('pre-tool-guard BLOCK still exits 2 and its message survives process.exit', () => {
+    const { stdout, exitCode } = runHook('pre-tool-guard', '{"tool_input": {"file_path": "id_rsa"}}');
+    assert.strictEqual(exitCode, 2, 'BLOCK must keep exit code 2');
+    assert.match(parseEnvelope(stdout).systemMessage, /BLOCKED/);
+  });
+
+  test('session-start emits additionalContext, not a systemMessage', () => {
+    const { stdout } = runHook('session-start', '{}');
+    const parsed = parseEnvelope(stdout);
+    assert.strictEqual(parsed.hookSpecificOutput.hookEventName, 'SessionStart');
+    assert.ok(typeof parsed.hookSpecificOutput.additionalContext === 'string');
+  });
+
+  test('a silent hook emits nothing at all', () => {
+    // A path with no findings must stay quiet — an empty envelope is still output.
+    const { stdout, exitCode } = runHook('pre-tool-guard', '{"tool_input": {"file_path": "src/app.ts"}}');
+    assert.strictEqual(exitCode, 0);
+    assert.strictEqual(stdout.trim(), '');
+  });
+
+  test('multi-line hook output collapses into one envelope', () => {
+    const { stdout } = runHook('pre-tool-guard', '{"tool_input": {"file_path": "id_rsa"}}');
+    const parsed = parseEnvelope(stdout);
+    assert.ok(parsed.systemMessage.includes('\n'), 'lines are joined inside the envelope');
+    assert.strictEqual(stdout.trim().split('\n').length, 1, 'but printed as a single line');
+  });
+});
+
+describe('hook-output envelope helper', () => {
+  const { outputBuffer } = require('../../hooks/lib/hook-output.cjs');
+
+  test('SessionStart and UserPromptSubmit carry additionalContext', () => {
+    for (const event of ['SessionStart', 'UserPromptSubmit']) {
+      const buf = outputBuffer(event);
+      buf.line('hello');
+      const written = [];
+      const orig = process.stdout.write;
+      process.stdout.write = (s) => {
+        written.push(s);
+        return true;
+      };
+      try {
+        buf.emit();
+      } finally {
+        process.stdout.write = orig;
+      }
+      const parsed = JSON.parse(written.join(''));
+      assert.strictEqual(parsed.hookSpecificOutput.hookEventName, event);
+      assert.strictEqual(parsed.hookSpecificOutput.additionalContext, 'hello');
+    }
+  });
+
+  test('blank lines never produce an envelope', () => {
+    const buf = outputBuffer('Stop');
+    buf.line('   ');
+    buf.line('');
+    buf.line(undefined);
+    assert.ok(buf.isEmpty());
+  });
+});
