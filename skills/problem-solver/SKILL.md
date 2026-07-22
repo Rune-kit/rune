@@ -3,7 +3,7 @@ name: problem-solver
 description: "Structured reasoning frameworks for complex problems. 19 analytical frameworks, 12 cognitive bias detectors, 10 decomposition methods, 10 mental models, Cynefin domain classification, ethical dimension check, and 6 communication patterns. McKinsey-grade problem solving for AI coding assistants."
 metadata:
   author: runedev
-  version: "0.5.0"
+  version: "0.6.0"
   layer: L3
   model: sonnet
   group: reasoning
@@ -77,6 +77,10 @@ NEVER skip bias detection. Every problem has biases — explicitly address them.
 This is the #1 value-add from structured reasoning. Without it, solutions are just dressed-up gut feelings.
 </HARD-GATE>
 
+Two catalogs run here, not one: the biases of the people and organisation in the problem, and the failure modes of the model doing the analysis. Skipping the second is how a rigorous-looking analysis reaches a confidently wrong conclusion.
+
+#### Human and organisational biases
+
 Scan the problem statement and context for bias indicators. Check the top 6 most dangerous biases:
 
 | Bias | Detection Question | Debiasing Strategy |
@@ -95,6 +99,32 @@ Additional biases to check when relevant:
 - **Loss Aversion**: Are we avoiding an option primarily because of what we might lose, rather than evaluating the full picture?
 - **Survivorship Bias**: Are we only looking at successful cases? Who tried this approach and failed?
 - **Recency Bias**: Are we extrapolating from the last few data points instead of looking at 5-10 years of data?
+
+#### Model failure modes (the reasoner's own biases — ALSO run)
+
+The table above catalogs how *humans and organisations* misjudge. It says nothing about how
+*you* misjudge. These are the failure modes of the thing doing the analysis, and naming one
+is the first countermeasure — they are invisible from the inside precisely because each one
+feels like competence.
+
+| Failure mode | What it feels like | Countermeasure |
+|--------------|--------------------|----------------|
+| **Pattern-match satisfaction** | The first explanation that fits a familiar template feels like the diagnosis | Familiarity is retrieval, not verification. Hold a second hypothesis before investigating the first |
+| **Template hijack** | A question whose surface matches a stored template ("flaky test → add retry", "slow query → add index") fires the template's answer before this question's constraints are read | Re-derive from *this* problem's details. Familiarity raises the risk, not lowers it |
+| **Fluent ≠ true** | Confidence rises as well-formed prose flows; the argument feels stronger the longer it gets | Confidence tracks evidence, not token count. Audit each point where it rose and name what moved it |
+| **Prior-as-fact** | Training knowledge stated in the grammar of observed fact | Type the claim (`completion-gate` → `references/claim-discipline.md`). Priors decay — APIs, defaults, prices, versions |
+| **Frame adoption** | The asker's framing inherited as fact ("the cache is broken again") | Trust their goal absolutely; treat their diagnosis as testimony to verify |
+| **Completion pressure** | Producing something answer-shaped now feels better than checking one more thing | An answer-shaped non-answer is worse than "here is what I verified, here is what is still open" |
+| **Surface blindness** | Any claim about the form of your own output — which symbols it contains, how many units it has — read back as true | You see tokens, not characters; a re-read always passes. Verify unit by unit or by tool (`verification` → Constraint Loop) |
+
+**Three tells you are inside one right now**: the answer arrived instantly with high
+confidence; your draft never used one of the problem's stated details; two or three attempts
+failed inside the same framing. Any tell means stop and re-derive — never repeat a failed
+probe harder.
+
+**Output**: alongside the human-bias warnings, name any model failure mode active in THIS
+analysis and what you did about it. "None apparent" is a valid answer only if you can say
+which tell you checked.
 
 **Steel Manning** (apply when evaluating competing options):
 Before dismissing any option, construct the STRONGEST possible version of the argument for it. If you can't articulate why a smart, informed person would choose it, you haven't understood it yet. Steel Manning prevents strawman dismissals and forces genuine evaluation.
@@ -335,6 +365,7 @@ Structure the output report using the selected pattern.
 ### Bias Warnings
 - ⚠️ [Bias 1]: [how it might affect this analysis] → [debiasing action taken]
 - ⚠️ [Bias 2]: [how it might affect this analysis] → [debiasing action taken]
+- 🤖 [Model failure mode]: [which tell fired] → [what was re-derived or verified]
 
 ### Reasoning Chain
 1. [step with evidence or reasoning]

@@ -3,7 +3,7 @@ name: design
 description: "Design system reasoning. Maps product domain to style, palette, typography, and platform-specific patterns. Generates .rune/design-system.md as the shared design contract for all UI-generating skills."
 metadata:
   author: runedev
-  version: "0.8.0"
+  version: "0.9.0"
   layer: L2
   model: sonnet
   group: creation
@@ -27,6 +27,7 @@ Design system reasoning layer. Converts a product description into a concrete de
 
 - `scout` (L2): detect existing design tokens, component library, platform targets
 - `asset-creator` (L3): generate base visual assets (logo, OG image) from design system
+- `browser-pilot` (L3): render the surface and inspect it before claiming any visual property holds (Step 5.4)
 - `review` (L2): accessibility violations found → flag for fix in next code review
 
 ## Called By (inbound)
@@ -477,20 +478,46 @@ sm: 6px | md: 8px | lg: 12px | xl: 16px | full: 9999px
 [detected library or "custom"]
 
 ## Pre-Delivery Checklist
-- [ ] Color contrast ≥ 4.5:1 for all text
-- [ ] Focus-visible ring on ALL interactive elements (never outline-none alone)
-- [ ] Touch targets ≥ 44×44px on mobile / ≥ 24×24px on desktop, with 8px gap between targets (matches Step 2.9 Rule 1)
+> Items marked 👁 describe what a human would SEE — tick them only from a render, or mark them ASSUMED (Step 5.4).
+- [ ] 👁 Color contrast ≥ 4.5:1 for all text
+- [ ] 👁 Focus-visible ring on ALL interactive elements (never outline-none alone)
+- [ ] 👁 Touch targets ≥ 44×44px on mobile / ≥ 24×24px on desktop, with 8px gap between targets (matches Step 2.9 Rule 1)
 - [ ] All icon-only buttons have aria-label
 - [ ] All inputs have associated <label> or aria-label
-- [ ] Empty state, error state, loading state for all async data
+- [ ] 👁 Empty state, error state, loading state for all async data
 - [ ] cursor-pointer on all clickable non-button elements
 - [ ] prefers-reduced-motion respected for all animations
 - [ ] Dark mode support (or explicit reasoning why not)
-- [ ] Responsive tested at 375px / 768px / 1024px / 1440px
+- [ ] 👁 Responsive tested at 375px / 768px / 1024px / 1440px
 - [ ] No pure #000 or #fff in semantic tokens (use oklch neutrals)
 - [ ] No lorem ipsum / placeholder copy in shipped output (use real data or labelled `[ PLACEHOLDER: ... ]` blocks)
 - [ ] If multi-language: CJK-capable font listed FIRST in stack (`"Noto Sans SC", "Inter", ...`)
 ```
+
+### Step 5.4 — Render Blindness (advisory)
+
+A checklist item ticked from source is a prediction, not an observation. You emit markup and
+imagine the result, and **the imagined render is always flattering** — overflow, wrapping,
+contrast failure, misalignment and collision are invisible in source form. Every item in the
+checklist above that describes what a human would *see* is unverified until the surface is
+rendered and inspected, or the specific property is computed.
+
+| Claim | What source-reading proves | What actually settles it |
+|-------|---------------------------|--------------------------|
+| "Contrast ≥ 4.5:1" | The token values were chosen | Compute the ratio for the rendered pair — a token used on an unexpected background fails anyway |
+| "Responsive at 375px" | Breakpoints exist | Render at 375px and look: wrapping, overflow, tap-target collision |
+| "No overflow / clean alignment" | Nothing | Render — this class of failure has no textual signature |
+| "Focus ring visible" | The CSS rule exists | Tab through it; a parent `overflow:hidden` or a later rule can eat it |
+| "Empty / error / loading states work" | The branches exist | Render each one; the happy path is the only state most designs are ever seen in |
+
+**Advisory, not a gate.** When the runtime grants a browser, `browser-pilot` is the strongest
+check available and costs one call — take it, then report what was seen. When it does not,
+say so: mark the visual items **ASSUMED (not rendered)** rather than ticking them. A checklist
+of predictions labelled as observations is worse than a short one that is honest — see
+`completion-gate` → `references/claim-discipline.md`.
+
+Highest-yield renders, when budget allows only a few: narrowest breakpoint, longest realistic
+content string, empty state, dark mode.
 
 ### Step 5.5 — UI Design Contract (UI-SPEC.md)
 

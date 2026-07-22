@@ -5,6 +5,27 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.28.0] - 2026-07-22
+
+"Reasoner's Blind Spots" — completes the reasoning wave started in v2.27.0. Every addition here targets the same class of failure: a check that *feels* done because the model re-read its own work and agreed with itself. Advisory throughout — no new skills, no new HARD-GATEs except where a claim is asserted without the act behind it.
+
+### Added — `problem-solver` v0.6.0: the reasoner's own biases
+- **Model failure-mode table**, run alongside the existing bias check. The old table catalogs how *humans and organisations* misjudge (sunk cost, groupthink, planning fallacy) and says nothing about how the analysing model misjudges. The new one names seven: pattern-match satisfaction, template hijack, fluent≠true, prior-as-fact, frame adoption, completion pressure, surface blindness — each with what it *feels* like, because they are invisible from the inside precisely by feeling like competence.
+- **Three tells**, promoted to the front: the answer arrived instantly with high confidence; the draft never used one of the problem's stated details; two or three attempts failed inside the same framing. Any tell means re-derive — never repeat a failed probe harder.
+- Report gains a `🤖` line: which model failure mode was active in *this* analysis and what was done about it. "None apparent" is valid only with the tell that was checked.
+
+### Added — `verification` v0.8.0: the Constraint Loop
+- **Surface-constraint verification** for deliverables carrying a mechanically checkable constraint on their own form — banned or required characters, exact counts, positional patterns, strict formats, a diff that must not touch a listed path. Rune had no coverage for this class at all.
+- Five steps: expand the constraint (and decide how to count) *before* drafting → draft away from the deliverable → verify with the strongest granted tool → repair and re-scan the **whole** artifact → ship byte-for-byte, because any post-verification rewording invalidates the check.
+- New HARD-GATE: "the output satisfies the constraint" is verified only after the check ran against the exact delivered text. **Re-reading the output and judging that it complies is not verification** — a re-read always passes; models read their own output as tokens, not characters.
+
+### Added — `design` v0.9.0: render blindness
+- **Step 5.4** — a checklist item ticked from source is a prediction, not an observation, and the imagined render is always flattering. Overflow, wrapping, contrast failure, misalignment and collision have no textual signature. Table maps each visual claim to what actually settles it.
+- Visual items in the Pre-Delivery Checklist are now marked **👁** — tick them from a render, or mark them ASSUMED. `browser-pilot` added as an outbound call: when a browser is granted it is the strongest check available and costs one call. Advisory, not a gate — an honest short checklist beats a complete one full of predictions labelled as observations.
+
+### Notes
+The 👁 convention and the ASSUMED marker both lean on `completion-gate` → `references/claim-discipline.md` (v2.27.0). This wave is where that vocabulary starts paying off across skills rather than living in one gate.
+
 ## [2.27.0] - 2026-07-22
 
 "Calibrated Output" — Rune had exactly one opinion about response shape (`caveman`, optimising token count) and no rule for what a style is *not* allowed to compress. That gap had teeth: caveman's "hedging dies" list, auto-activated whenever context hits ORANGE/RED, deleted phrases like *"I'm assuming the migration ran"* — turning an unverified claim into one wearing observed grammar, at exactly the point in a session where the agent is most likely to be wrong. This wave adds the layer that resolves it, plus a second output mode that has somewhere to live now.

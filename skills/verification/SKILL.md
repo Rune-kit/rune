@@ -3,7 +3,7 @@ name: verification
 description: "Universal verification runner. Runs lint, type-check, tests, and build. Use after any code change to verify nothing is broken."
 metadata:
   author: runedev
-  version: "0.7.0"
+  version: "0.8.0"
   layer: L3
   model: haiku
   group: validation
@@ -206,6 +206,47 @@ Verification MUST check actual command output for success indicators, not just e
 Exit 0 without a confirming output artifact or success string = UNVERIFIED.
 Report the specific line that confirmed success (e.g., "3 passed, 0 failed").
 </HARD-GATE>
+
+### Surface-Constraint Verification (the Constraint Loop)
+
+Everything above verifies *behaviour* with a tool. Some deliverables instead carry a
+constraint on their own **surface form**: a banned or required character, an exact word or
+line count, a positional pattern, a strict format, a naming scheme every entry must follow,
+a diff that must not touch a listed path. These look trivial and are the opposite — a model
+generates meaning-first and reads its own output as tokens, not characters, so the
+constraint sits exactly where its perception is weakest. The most natural wording for the
+topic is usually the likeliest violator.
+
+**Re-reading the output and judging that it complies is not verification.** A re-read always
+passes. That is the whole failure mode.
+
+Run this loop whenever a deliverable carries a mechanically checkable surface constraint:
+
+1. **Expand the constraint before producing anything.** Restate it as a test every governed
+   unit must pass, and decide *how you will count* before there is anything to count. List
+   the on-topic vocabulary most likely to violate it — starting with the subject's own name,
+   which the constraint may rule out — and pick compliant substitutes up front.
+2. **Draft away from the final answer** — a scratch file or reasoning space, never straight
+   into the deliverable.
+3. **Verify mechanically, strongest tool available.** A script, `grep`, `wc`, a formatter's
+   `--check`, a schema validator — seconds of work and the strongest possible evidence. With
+   no tool available, decompose the text into the units the constraint governs and test each
+   one explicitly (spell the word out; count with a running index). Manual decomposition is
+   the fallback for tool-poor runtimes, not a substitute where a tool exists.
+4. **Repair and re-verify the whole artifact.** A fix can introduce a new violation
+   elsewhere, so re-scan everything — one green check on the edited line says nothing about
+   its neighbours. Loop until one complete pass over the final text is clean.
+5. **Ship the verified text byte-for-byte.** Any post-verification rewording, however small,
+   invalidates the check — touch one unit and step 3 runs again.
+
+<HARD-GATE name="surface-constraint">
+"The output satisfies the constraint" is a verified claim only after step 3 has run against
+the EXACT delivered text. Asserted from a re-read, it is an assumption wearing the grammar of
+an observation — see `completion-gate` → `references/claim-discipline.md`. Report the check
+that was run, not the conclusion.
+</HARD-GATE>
+
+Report it like any other phase: `Constraint: <the rule> | Check: <command or method> | Units tested: N | Violations: 0`.
 
 ## Error Recovery
 

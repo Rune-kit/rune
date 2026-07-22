@@ -103,11 +103,15 @@ Plus **9 domain packs** (product, sales, data-science, support, growth, media, p
 
 ---
 
-## What's New (v2.27.0 — Calibrated Output)
+## What's New (v2.28.0 — Reasoner's Blind Spots)
+
+> **v2.28.0 (2026-07-22):** Completes the reasoning wave. Every addition targets one failure class: **a check that feels done because the model re-read its own work and agreed with itself.** `problem-solver` (v0.6.0) gains a **model failure-mode table** beside its human-bias table — pattern-match satisfaction, template hijack, fluent≠true, prior-as-fact, completion pressure, surface blindness — plus three tells that you are inside one right now (instant confident answer; a stated detail your draft never used; two failed attempts in the same framing). `verification` (v0.8.0) gains the **Constraint Loop** for deliverables carrying a mechanically checkable constraint on their own surface form (banned characters, exact counts, strict formats) — a class Rune had no coverage for: expand the constraint before drafting, verify with a tool, re-scan the whole artifact, ship byte-for-byte. `design` (v0.9.0) gains **render blindness** — a checklist item ticked from source is a prediction, and the imagined render is always flattering; visual items are marked 👁 and are ticked from a render or marked ASSUMED. Advisory throughout, no new skills.
+
+### Previous (v2.27.0 — Calibrated Output)
 
 > **v2.27.0 (2026-07-22):** Rune had one opinion about response shape — `caveman`, optimising token count — and no rule for what a style may **not** compress. That gap had teeth: caveman's "hedging dies" list auto-activates at ORANGE/RED context and deleted phrases like *"I'm assuming the migration ran"*, promoting an unverified claim into observed grammar at exactly the point in a session where the agent is most likely to be wrong. New **output-mode layer** (`context-engine`) holds every mode behind one activation contract and a five-rule precedence list — **shape is negotiable, substance is not**: calibration > evidence > a skill's `## Output Format` > safety > actionability > economy. New **`actionable` mode** optimises distance-to-doing (next action first, steps numbered, position restated each turn) and stacks with caveman. New **claim discipline** in `completion-gate` types every load-bearing statement OBSERVED / DERIVED / PRIOR / ASSUMED — *hallucination is an unverified claim wearing the grammar of an observation* — and adds a `DECLARED` verdict so an honest hedge is recorded as an open item, never scored as a lie.
 
-### Previous (v2.26.2 — Hook Output Contract)
+#### Earlier (v2.26.2 — Hook Output Contract)
 
 > **v2.26.2 (2026-07-22):** The other half of the Codex wiring fix — v2.26.1 made the hook matchers fire, this makes the hooks **succeed**. Codex parses hook stdout as JSON and reports anything else as `hook: <Event> Failed`, discarding the output; Rune's hooks printed bare `[Rune: ...]` lines, so every hook that loaded on Codex ran, exited 0, and had its output thrown away. Hooks now emit the envelope both runtimes accept — `hookSpecificOutput.additionalContext` for context events, `systemMessage` otherwise — which is Claude Code's documented contract too, not a Codex branch. Verified live against codex-cli 0.145: the same hook goes `SessionStart Failed` → `SessionStart Completed`.
 
