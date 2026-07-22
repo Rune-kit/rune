@@ -25,15 +25,15 @@ These principles guide every roadmap decision:
 | L0 Router | 1 | ✅ Complete |
 | L1 Orchestrators | 5 | ✅ Complete |
 | L2 Workflow Hubs | 30 | ✅ Complete |
-| L3 Utilities | 29 | ✅ Complete |
+| L3 Utilities | 30 | ✅ Complete |
 | L4 Free Extension Packs | 14 | ✅ Complete |
 | Pro Packs (9) | 60+ skills | ✅ Shipped |
 | Business Packs (4) | 26 skills | ✅ Shipped |
-| Tests | 1,565 | ✅ Passing |
-| Mesh Signals | 43 | ✅ Active |
+| Tests | 1,598 | ✅ Passing |
+| Mesh Signals | 45 | ✅ Active |
 | Runtime Hooks | 4 platforms | ✅ Claude / Cursor / Windsurf / Antigravity |
 | Tier Stacking | Free + Pro + Business | ✅ `--tier` flag |
-| Platforms | 8 | ✅ Active (cross-provider model mapping for codex/antigravity/opencode/openclaw/generic) |
+| Platforms | 13 | ✅ Active (cross-provider model mapping for codex/antigravity/opencode/openclaw/generic) |
 
 ---
 

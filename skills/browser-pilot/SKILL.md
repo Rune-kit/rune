@@ -25,6 +25,7 @@ Browser automation for testing and verification using MCP Playwright tools. Navi
 - `launch` (L1): verify live site after deployment
 - `perf` (L2): Lighthouse / Core Web Vitals measurement
 - `audit` (L2): visual verification during quality assessment
+- `design` (L2): render the surface before any visual property is claimed (design Step 5.4 — render blindness)
 
 ## Calls (outbound)
 

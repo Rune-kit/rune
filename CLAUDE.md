@@ -3,7 +3,7 @@
 ## Overview
 
 Rune is an interconnected skill ecosystem for AI coding assistants.
-66 core skills | 5-layer mesh architecture | 206 connections + 45 signals | Multi-platform.
+66 core skills | 5-layer mesh architecture | 209 connections + 45 signals | Multi-platform.
 Philosophy: "Less skills. Deeper connections."
 
 Works on: Claude Code (native plugin) · Cursor · Windsurf · Google Antigravity · OpenAI Codex · OpenCode · Aider · GitHub Copilot CLI · Gemini CLI · Qoder · Qwen Coder · any AI IDE.
@@ -94,7 +94,7 @@ When the user's intent matches a skill, invoke it BEFORE writing any code or ana
 - Project dashboard: `node compiler/bin/rune.js status` (tiered neofetch)
 - Comprehension dashboard: `node compiler/bin/rune.js dashboard` (self-contained HTML — Verdict/Govern/Measure/Understand/Improve tabs; tier-aware: Pro = My Lens, Business = full Govern)
 - Mesh visualizer: `node compiler/bin/rune.js visualize` (interactive graph)
-- Run tests: `npm test` (1,559 tests — compiler + signals + hooks + tier-hooks + scripts + status + visualizer + setup wizard + dashboard)
+- Run tests: `npm test` (1,598 tests — compiler + signals + hooks + tier-hooks + scripts + status + visualizer + setup wizard + dashboard)
 - Install runtime hooks (manual): `node compiler/bin/rune.js hooks install --preset gentle [--global]` (add `--tier pro` / `--tier business` to stack paid tiers)
 - Run tests with coverage: `npm run test:coverage` (c8 + lcov)
 - Lint: `npm run lint` (Biome)
@@ -103,7 +103,11 @@ When the user's intent matches a skill, invoke it BEFORE writing any code or ana
 
 ## Current Wave
 
-66 core skills built (v2.23.0 — "Native Skills" — 7 adapters emit to each platform's native Agent Skills dir: codex/antigravity `.agents/skills/`, cursor `.cursor/skills/`, windsurf `.windsurf/skills/`, copilot `.github/skills/`, gemini `.gemini/skills/`, qwen `.qwen/skills/`, qoder `.qoder/skills/` — dir-per-skill SKILL.md, lazy-loaded; runtime hooks stay on rules dirs).
+66 core skills built. Current release **v2.28.0 "Reasoner's Blind Spots"** — see `CHANGELOG.md` for the full history; the sections below describe the layers that are live.
+
+**Reasoning + output layer (v2.27.0–v2.28.0)**: `context-engine` owns an output-mode layer (`references/output-modes.md`) — a mode registry, one shared activation contract, and a precedence rule for when two modes conflict: **shape is negotiable, substance is not** (calibration > evidence > a skill's `## Output Format` > safety > actionability > economy). Modes: `caveman` (token economy) and `actionable` (distance-to-doing). `completion-gate` owns claim discipline (`references/claim-discipline.md`) — every load-bearing claim is typed OBSERVED / DERIVED / PRIOR / ASSUMED, because hallucination is an unverified claim wearing the grammar of an observation; an honest hedge is a `DECLARED` open item, never a failure. `problem-solver` checks the model's own failure modes alongside human bias, `verification` runs the Constraint Loop for surface-form constraints, and `design` marks visual checklist items 👁 (ticked from a render, or marked ASSUMED).
+
+**Native skills (v2.23.0)**: 7 adapters emit to each platform's native Agent Skills dir — codex/antigravity `.agents/skills/`, cursor `.cursor/skills/`, windsurf `.windsurf/skills/`, copilot `.github/skills/`, gemini `.gemini/skills/`, qwen `.qwen/skills/`, qoder `.qoder/skills/` — dir-per-skill SKILL.md, lazy-loaded. Runtime hooks stay on rules dirs. Hook matchers name BOTH Claude and Codex tool names, and hook stdout is a JSON envelope (v2.26.1–v2.26.2) — Codex discards anything else.
 
 Convergence layer: new `converge` skill (L3) re-reads spec/plan/contracts as sole intent and scans the ACTUAL code for `missing`/`partial`/`contradicts`/`unrequested` gaps — cook Phase 6.5 loops it until clean (max 2 rounds). Upstream: ba emits story-sliced specs (P1/P2/P3 + Independent Test + Key Entities), plan emits contracts-first boundary artifacts (data-model/contracts/quickstart) with a P1 zero-coverage HARD-GATE. Downstream: verification Level 3.5 INTERACTION WIRED traces button→handler→route, completion-gate Step 4.5 is mandatory for UI+data diffs, deploy warns without wiring evidence (`integration.verified`/`convergence.clean`).
 

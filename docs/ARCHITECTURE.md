@@ -7,7 +7,7 @@
 | **L0** | **Router** | **1** | **L1-L3 (routing)** | **Every message** | **Stateless (rule-based)** |
 | L1 | Orchestrators | 5 | L2, L3 | L0, User | Stateful (workflow) |
 | L2 | Workflow Hubs | 30 | L2 (cross-hub), L3 | L1, L2 | Stateful (task) |
-| L3 | Utilities | 28 | Nothing (pure)* | L1, L2 | Stateless |
+| L3 | Utilities | 30 | Nothing (pure)* | L1, L2 | Stateless |
 | L4 | Extension Packs | 14 free + 9 pro + 4 business | L3 | L2 (domain match) | Config-based |
 
 ### L0 — The Enforcement Layer
@@ -91,7 +91,8 @@ Mode-based execution variants that activate inside existing skills based on sign
 
 | Mode | Skill | Activation | Behavior |
 |------|-------|------------|----------|
-| **Caveman Output** | `context-engine` (broadcast) | Auto on context ORANGE / RED, manual via `/caveman` / "be brief" | Strips filler / articles / hedging while preserving full technical accuracy. ~75% output reduction. Auto-clarity exception for security warnings, irreversible-action confirmations, multi-step sequences. |
+| **Caveman Output** | `context-engine` (broadcast) | Auto on context ORANGE / RED, manual via `/caveman` / "be brief" | Strips filler / articles / pleasantries while preserving full technical accuracy. ~75% output reduction. Hedges carrying real uncertainty survive (precedence rule 1). Auto-clarity exception for security warnings, irreversible-action confirmations, multi-step sequences. |
+| **Actionable Output** | `context-engine` | Manual via "adhd mode" / "actionable", or skill-initiated when the deliverable is steps a human executes | Next action first, multi-step work numbered, position restated each turn, estimates in real units, one concrete next action at the end. Stacks with Caveman — conflicts resolved by the precedence list in `references/output-modes.md`. |
 | **Synthesis** | `ba` (Step 1.4) | Pasted spec > 200 words, conversation > 1000 words, continuation session, filled issue template, explicit "synthesize" | Extract Requirements Document from existing context with mandatory source citations, then confirm instead of re-interview. Skip 5-question elicitation if all 5 dimensions filled. |
 | **Vertical Slice** | `plan` (Step 3) | Default for any feature with 3+ phases | Tracer-bullet task decomposition: each task = end-to-end path through schema + API + UI + test, demoable on its own. AFK / HITL classification. Replaces horizontal layer planning. |
 | **Feedback Loop (Step 0)** | `debug` | Repro is slow / non-deterministic / multi-component / intermittent | Construct fast deterministic pass/fail signal from 10-rank ladder BEFORE forming hypotheses. Skip if existing repro is one command, deterministic, < 5s. > 10 min construction → 3-Fix Escalation (architecture, not bug). |
@@ -210,7 +211,7 @@ Adapters with `generateExtraFiles()` emit additional context files alongside per
 | WORKSPACE | worktree |
 | GIT | git |
 | DOCUMENTS | doc-processor |
-| SECURITY | sentinel-env |
+| SECURITY | sentinel-env, quarantine |
 
 ## Runtime Layer (v2.12.0)
 

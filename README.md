@@ -5,7 +5,7 @@
 <p align="center">
   <strong>Less skills. Deeper connections.</strong><br>
   A lean, interconnected skill ecosystem for AI coding assistants.<br>
-  66 skills · 206 connections · 45 signals · 13 platforms · MIT
+  66 skills · 209 connections · 45 signals · 13 platforms · MIT
 </p>
 
 <p align="center">
@@ -23,7 +23,7 @@
 
 Most skill ecosystems are either **too many isolated skills** (540+ that don't talk to each other) or **rigid pipelines** (A → B → C, if B fails everything stops).
 
-Rune is a **mesh** — 66 skills with 206 connections + 45 signals across a 5-layer architecture. Skills call each other bidirectionally, forming resilient workflows that adapt when things go wrong.
+Rune is a **mesh** — 66 skills with 209 connections + 45 signals across a 5-layer architecture. Skills call each other bidirectionally, forming resilient workflows that adapt when things go wrong.
 
 ```
 Pipeline:  A → B → C → D         (B fails = stuck)
