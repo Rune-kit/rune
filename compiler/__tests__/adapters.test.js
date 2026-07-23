@@ -171,7 +171,10 @@ test('codex AGENTS.md documents the tier→model + reasoning-effort mapping', as
   // Guards against a MODEL_MAP / REASONING_EFFORT_MAP interpolation swap.
   assert.match(agents.content, /opus → `gpt-5\.6-sol` \(`model_reasoning_effort = "high"`\)/);
   assert.match(agents.content, /sonnet → `gpt-5\.6-terra` \(`model_reasoning_effort = "medium"`\)/);
-  assert.match(agents.content, /haiku → `gpt-5\.6-luna` \(`model_reasoning_effort = "low"`\)/);
+  assert.match(agents.content, /haiku → `gpt-5\.6-terra` \(`model_reasoning_effort = "low"`\)/);
+  assert.ok(extras.some((e) => e.path === '.codex/agents/rune-heavy.toml'));
+  assert.ok(extras.some((e) => e.path === '.codex/agents/rune-standard.toml'));
+  assert.ok(extras.some((e) => e.path === '.codex/agents/rune-fast.toml'));
 });
 
 // --- New v2.18 adapters: shape + generateExtraFiles contract ---

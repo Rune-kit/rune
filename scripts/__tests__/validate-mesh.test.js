@@ -165,7 +165,7 @@ None
       assert.ok(issues[0].includes('fix'));
     });
 
-    test('detects missing calls entry', () => {
+    test('allows additional inbound conditional caller declarations', () => {
       mkdirSync(join(tempDir, 'cook'));
       writeFileSync(
         join(tempDir, 'cook', 'SKILL.md'),
@@ -205,8 +205,7 @@ None
       );
 
       const { issues } = validateMesh(tempDir);
-      assert.strictEqual(issues.length, 1);
-      assert.ok(issues[0].includes('cook'));
+      assert.strictEqual(issues.length, 0);
     });
 
     test('ignores User in calledBy', () => {
@@ -238,10 +237,7 @@ None
     test('validates actual Rune skills directory', () => {
       const { skillCount, issues } = validateMesh(join(__dirname, '../../skills'));
       assert.ok(skillCount >= 50, `Expected 50+ skills, got ${skillCount}`);
-      // Log but don't fail — mesh may have known issues
-      if (issues.length > 0) {
-        console.log(`  Mesh has ${issues.length} connection issues (known)`);
-      }
+      assert.deepStrictEqual(issues, []);
     });
   });
 });

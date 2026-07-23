@@ -4,7 +4,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const os = require('os');
+const { stateFile } = require('../lib/context-key.cjs');
 const { captureConsole } = require('../lib/hook-output.cjs');
 // Hook stdout is a JSON contract, not free text (Codex rejects bare lines and
 // discards the output). Capture the prints below and emit one envelope on exit.
@@ -12,12 +12,17 @@ captureConsole('Stop');
 
 
 const cwd = process.cwd();
-const hash = Buffer.from(cwd).toString('base64url').slice(0, 16);
+let sessionId;
+try {
+  sessionId = JSON.parse(fs.readFileSync(0, 'utf-8')).session_id;
+} catch {
+  // Older runtimes may not provide hook input.
+}
 
 // === H3: Flush Session Metrics ===
 
-const metricsJsonl = path.join(os.tmpdir(), `rune-metrics-${hash}.jsonl`);
-const counterFile = path.join(os.tmpdir(), `rune-context-watch-${hash}.json`);
+const metricsJsonl = stateFile('rune-metrics', sessionId, cwd).replace(/\.json$/, '.jsonl');
+const counterFile = stateFile('rune-context-watch', sessionId, cwd);
 const runeMetricsDir = path.join(cwd, '.rune', 'metrics');
 
 // Resolve skill names → expected model from agent frontmatter
@@ -101,33 +106,69 @@ function flushMetrics() {
   const modelsUsed = resolveSkillModels(skillCounts);
 
   // Use session ID from context-watch (shared) or generate new
-  const sessionId = watchState.sessionId
+  const metricSessionId = sessionId
+    || watchState.sessionId
     || `s-${now.slice(0, 10).replace(/-/g, '')}-${now.slice(11, 19).replace(/:/g, '')}`;
 
-  // 1. Append to sessions.jsonl
+  // 1. Upsert sessions.jsonl. Stop can fire more than once in one session;
+  // appending every time inflated session counts and duration metrics.
+  let previousSession = null;
+  const sessionsFile = path.join(runeMetricsDir, 'sessions.jsonl');
+  let sessionEntries = [];
+  if (fs.existsSync(sessionsFile)) {
+    sessionEntries = fs
+      .readFileSync(sessionsFile, 'utf-8')
+      .trim()
+      .split('\n')
+      .filter(Boolean)
+      .flatMap((line) => {
+        try {
+          return [JSON.parse(line)];
+        } catch {
+          return [];
+        }
+      });
+    previousSession = [...sessionEntries].reverse().find((entry) => entry.id === metricSessionId) || null;
+  }
+
+  const mergedSkillCounts = { ...(previousSession?.skill_counts || {}) };
+  for (const [skill, count] of Object.entries(skillCounts)) {
+    mergedSkillCounts[skill] = (mergedSkillCounts[skill] || 0) + count;
+  }
+  const mergedSkillDurations = { ...(previousSession?.skill_durations || {}) };
+  for (const [skill, duration] of Object.entries(skillDurations)) {
+    mergedSkillDurations[skill] = (mergedSkillDurations[skill] || 0) + duration;
+  }
+  const mergedModels = { ...(previousSession?.models_used || {}) };
+  for (const [model, count] of Object.entries(modelsUsed)) {
+    mergedModels[model] = (mergedModels[model] || 0) + count;
+  }
+  const mergedSkills = Object.keys(mergedSkillCounts);
+  const mergedPrimarySkill = Object.entries(mergedSkillCounts)
+    .sort((a, b) => b[1] - a[1])[0]?.[0]
+    || previousSession?.primary_skill
+    || primarySkill;
+
   const sessionEntry = {
-    id: sessionId,
+    id: metricSessionId,
     date: now.slice(0, 10),
     duration_min: durationMin,
     tool_calls: watchState.count,
     tool_distribution: watchState.toolCounts,
-    skill_invocations: skillEvents.length,
-    skills_used: Object.keys(skillCounts),
-    primary_skill: primarySkill,
-    models_used: modelsUsed,
-    skill_durations: Object.keys(skillDurations).length > 0 ? skillDurations : undefined
+    skill_invocations: Object.values(mergedSkillCounts).reduce((sum, count) => sum + count, 0),
+    skills_used: mergedSkills,
+    primary_skill: mergedPrimarySkill,
+    models_used: mergedModels,
+    skill_counts: Object.keys(mergedSkillCounts).length > 0 ? mergedSkillCounts : undefined,
+    skill_durations: Object.keys(mergedSkillDurations).length > 0 ? mergedSkillDurations : undefined
   };
 
-  const sessionsFile = path.join(runeMetricsDir, 'sessions.jsonl');
-  fs.appendFileSync(sessionsFile, JSON.stringify(sessionEntry) + '\n');
-
-  // Cap at 100 sessions (rotate oldest)
-  try {
-    const allLines = fs.readFileSync(sessionsFile, 'utf-8').trim().split('\n').filter(Boolean);
-    if (allLines.length > 100) {
-      fs.writeFileSync(sessionsFile, allLines.slice(-100).join('\n') + '\n');
-    }
-  } catch { /* cap is best-effort */ }
+  sessionEntries = sessionEntries.filter((entry) => entry.id !== metricSessionId);
+  sessionEntries.push(sessionEntry);
+  fs.writeFileSync(
+    sessionsFile,
+    `${sessionEntries.slice(-100).map((entry) => JSON.stringify(entry)).join('\n')}\n`,
+  );
 
   // 2. Merge into skills.json (running totals)
   const skillsFile = path.join(runeMetricsDir, 'skills.json');
@@ -153,7 +194,7 @@ function flushMetrics() {
   if (skillChain.length > 0) {
     const chainsFile = path.join(runeMetricsDir, 'chains.jsonl');
     const chainEntry = {
-      session: sessionId,
+      session: metricSessionId,
       chain: skillChain,
       depth: skillChain.length
     };
@@ -170,7 +211,7 @@ function flushMetrics() {
     .map(([s, c]) => `${s}(${c})`)
     .join(', ');
 
-  console.log(`\n📊 [Rune metrics] Session ${sessionId} — ${durationMin}min, ${watchState.count} tool calls, ${skillEvents.length} skill invocations`);
+  console.log(`\n📊 [Rune metrics] Session ${metricSessionId} — ${durationMin}min, ${watchState.count} tool calls, ${skillEvents.length} new skill invocations`);
   if (skillList) console.log(`   Skills: ${skillList}`);
   console.log(`   Saved to .rune/metrics/\n`);
 }

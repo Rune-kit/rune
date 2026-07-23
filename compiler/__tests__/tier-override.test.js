@@ -11,7 +11,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { describe, test } from 'node:test';
-import { discoverTieredPacks } from '../emitter.js';
+import { discoverTieredPacks, discoverTieredSkills } from '../emitter.js';
 
 /**
  * Create a temp directory structure with PACK.md files for testing
@@ -192,6 +192,47 @@ describe('discoverTieredPacks', () => {
       const tradingPack = packs.find((p) => p.dirName === 'trading');
       assert.ok(tradingPack, 'trading should exist');
       assert.deepStrictEqual(tradingPack.overrides, []);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('discoverTieredSkills', () => {
+  test('includes standalone Pro and Business skills and applies tier priority', async () => {
+    const root = mkdtempSync(path.join(tmpdir(), 'rune-tier-skills-'));
+    try {
+      const freeSkills = path.join(root, 'Free', 'skills');
+      const proExtensions = path.join(root, 'Pro', 'extensions');
+      const businessExtensions = path.join(root, 'Business', 'extensions');
+      for (const [skillsDir, names] of [
+        [freeSkills, ['cook', 'shared']],
+        [path.join(root, 'Pro', 'skills'), ['autopilot', 'shared']],
+        [path.join(root, 'Business', 'skills'), ['launch-product', 'shared']],
+      ]) {
+        for (const name of names) {
+          const dir = path.join(skillsDir, name);
+          mkdirSync(dir, { recursive: true });
+          writeFileSync(path.join(dir, 'SKILL.md'), `---\nname: ${name}\n---\n# ${name}\n`);
+        }
+      }
+      mkdirSync(proExtensions, { recursive: true });
+      mkdirSync(businessExtensions, { recursive: true });
+
+      const skills = await discoverTieredSkills(freeSkills, {
+        pro: proExtensions,
+        business: businessExtensions,
+      });
+
+      assert.deepStrictEqual(
+        skills.map(({ name, tier }) => [name, tier]),
+        [
+          ['autopilot', 'pro'],
+          ['cook', 'free'],
+          ['launch-product', 'business'],
+          ['shared', 'business'],
+        ],
+      );
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

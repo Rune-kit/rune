@@ -1,6 +1,6 @@
 # Rune CLI
 
-The Rune CLI compiles 61 AI coding skills into any IDE platform. One skill mesh, every editor.
+The Rune CLI compiles 66 AI coding skills into 13 platform-native formats. One skill mesh, every editor.
 
 ---
 
@@ -31,7 +31,7 @@ claude
 npx @rune-kit/rune doctor
 ```
 
-That's it. 62 skills are now active in your AI assistant.
+That's it. 66 skills are now active in your AI assistant.
 
 > **Pro Tip**: For Claude Code, skip the CLI entirely. Install Rune as a plugin:
 > `claude plugin add rune-kit/rune` -- skills load natively with zero compilation.
@@ -55,7 +55,7 @@ npx @rune-kit/rune init
 
   -> Detected: cursor
   -> Created rune.config.json
-  -> Built 62 skills + 14 extensions to .cursor/skills/
+  -> Built 66 skills + 14 extensions to .cursor/skills/
 ```
 
 **Flags**:
@@ -83,7 +83,7 @@ npx @rune-kit/rune build
   [transform] Platform: cursor
   [transform] Resolved 142 cross-references
   [transform] Resolved 87 tool-name references
-  [emit]      62 skills + 14 extensions
+  [emit]      66 skills + 14 extensions
 
   -> Built 67 files to .cursor/skills/
 ```
@@ -138,7 +138,7 @@ Rune compiles to 13 platforms. Each gets skills in its native format.
 | Cursor | `.cursor/skills/` | SKILL.md (dir-per-skill) | `.cursor/` |
 | Windsurf | `.windsurf/skills/` | SKILL.md (dir-per-skill) | `.windsurf/` |
 | Antigravity | `.agents/skills/` | SKILL.md (dir-per-skill) | `.agents/` |
-| Codex | `.agents/skills/` | SKILL.md (dir-per-skill) + `AGENTS.md` | `.codex/` |
+| Codex | `.agents/skills/` | SKILL.md + managed `AGENTS.md` + `.codex/agents/*.toml` + `.codex/hooks.json` | `.codex/` |
 | OpenCode | `.opencode/skills/` | SKILL.md (dir-per-skill) | `.opencode/` |
 | Generic | `.ai/rules/` | `.md` | _(fallback)_ |
 | OpenClaw | `.openclaw/rune/` | `.md` + manifest + TS entry | `.openclaw/` |
@@ -197,6 +197,26 @@ npx @rune-kit/rune init --platform antigravity
 ```
 
 Output: `.agents/skills/rune-cook/SKILL.md`, `.agents/skills/rune-plan/SKILL.md`, etc.
+
+### OpenAI Codex
+
+Install Rune as a native Codex plugin, then compile project-scoped roles and wire synchronous hooks:
+
+```bash
+codex plugin marketplace add rune-kit/rune
+codex plugin add rune@rune-kit
+npx @rune-kit/rune setup --here --platform codex
+```
+
+Inside Codex, open `/hooks` to review and trust the installed definitions. Project output includes `.agents/skills/`, a Rune-managed block in `AGENTS.md`, `.codex/agents/rune-{heavy,standard,fast}.toml`, and `.codex/hooks.json`.
+
+If you only want source compilation without installing the plugin:
+
+```bash
+npx @rune-kit/rune init --platform codex
+```
+
+Codex's `[tui].status_line` supports built-in footer items only. The full rich Pro Pulse display runs as an external watcher/HUD, not as an arbitrary executable status-line hook.
 
 ### Generic
 
@@ -293,11 +313,13 @@ If no marker is found, Rune shows the available platforms and asks you to choose
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `platform` | string | Target platform (cursor, windsurf, antigravity, generic) |
+| `platform` | string | One of the 13 targets listed above |
 | `source` | string | Path to Rune installation (auto-set by init) |
 | `skills.disabled` | string[] | Skills to exclude from compilation |
 | `extensions.enabled` | string[] or null | Extension packs to include (`null` = all) |
 | `output.index` | boolean | Generate index file listing all compiled skills |
+| `tiers.pro` | string | Optional path to the Pro `extensions/` directory |
+| `tiers.business` | string | Optional path to the Business `extensions/` directory |
 
 Edit this file directly, then run `rune build` to recompile.
 

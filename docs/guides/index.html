@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Rune Guides — From Install to Production</title>
-  <meta name="description" content="Complete guide to using Rune — the 62-skill mesh for AI coding assistants. Install, configure, and master every workflow.">
+  <meta name="description" content="Complete guide to using Rune — the 66-skill mesh for AI coding assistants. Install, configure, and master every workflow.">
   <meta property="og:title" content="Rune Guides — From Install to Production">
-  <meta property="og:description" content="Learn how to use Rune's 62-skill mesh to supercharge your AI coding assistant.">
+  <meta property="og:description" content="Learn how to use Rune's 66-skill mesh across 13 AI coding platforms.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://rune-kit.github.io/rune/guides/">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -549,7 +549,7 @@
       <h1>Rune Guides</h1>
       <p class="page-desc">
         Everything you need to go from install to production. Rune turns your AI coding assistant into a
-        structured engineering team with 58 interconnected skills.
+        structured engineering team with 66 interconnected skills.
       </p>
 
       <!-- ═══════════════════════════════════ -->
@@ -559,7 +559,7 @@
       <h2 id="what-is-rune">What is Rune?</h2>
 
       <p>
-        <strong>Rune is a 62-skill mesh ecosystem</strong> for AI coding assistants. Instead of giving your AI one prompt at a time,
+        <strong>Rune is a 66-skill mesh ecosystem</strong> for AI coding assistants. Instead of giving your AI one prompt at a time,
         Rune gives it structured workflows where skills call each other automatically.
       </p>
 
@@ -600,6 +600,7 @@
           <button class="tab-btn" data-tab="install-cursor">Cursor</button>
           <button class="tab-btn" data-tab="install-windsurf">Windsurf</button>
           <button class="tab-btn" data-tab="install-antigravity">Antigravity</button>
+          <button class="tab-btn" data-tab="install-codex">OpenAI Codex</button>
           <button class="tab-btn" data-tab="install-openclaw">OpenClaw</button>
         </div>
 
@@ -614,7 +615,7 @@
 
 <span class="comment"># Verify it's loaded</span>
 <span class="cmd">claude</span>
-<span class="output">  62 skills loaded from rune</span></div>
+<span class="output">  66 skills loaded from rune</span></div>
             <button class="copy-btn" data-copy="claude plugin marketplace add rune-kit/rune && claude plugin install rune">Copy</button>
           </div>
           <div class="callout callout-tip">
@@ -624,14 +625,14 @@
         </div>
 
         <div class="tab-panel" id="install-cursor">
-          <p>Cursor uses <strong>Agent Skills</strong> (Cursor 2.4+). Rune compiles all 62 skills into <code>.cursor/skills/</code> — loaded on demand.</p>
+          <p>Cursor uses <strong>Agent Skills</strong> (Cursor 2.4+). Rune compiles all 66 skills into <code>.cursor/skills/</code> — loaded on demand.</p>
           <div class="code-wrapper">
             <div class="code-block"><span class="comment"># In your project directory</span>
 <span class="cmd">npx --yes @rune-kit/rune init <span class="flag">--platform cursor</span></span>
 
 <span class="output">  → Detected: cursor</span>
 <span class="output">  ✓ Created rune.config.json</span>
-<span class="output">  ✓ Built 62 skills + 14 extensions to .cursor/skills/</span></div>
+<span class="output">  ✓ Built 66 skills + 14 extensions to .cursor/skills/</span></div>
             <button class="copy-btn" data-copy="npx --yes @rune-kit/rune init --platform cursor">Copy</button>
           </div>
           <p>Skills are compiled into <code>.cursor/skills/</code>. Cursor picks them up automatically.</p>
@@ -642,7 +643,7 @@
           <div class="code-wrapper">
             <div class="code-block"><span class="cmd">npx --yes @rune-kit/rune init <span class="flag">--platform windsurf</span></span>
 
-<span class="output">  ✓ Built 62 skills + 14 extensions to .windsurf/skills/</span></div>
+<span class="output">  ✓ Built 66 skills + 14 extensions to .windsurf/skills/</span></div>
             <button class="copy-btn" data-copy="npx --yes @rune-kit/rune init --platform windsurf">Copy</button>
           </div>
         </div>
@@ -652,7 +653,7 @@
           <div class="code-wrapper">
             <div class="code-block"><span class="cmd">npx --yes @rune-kit/rune init <span class="flag">--platform antigravity</span></span>
 
-<span class="output">  ✓ Built 62 skills + 14 extensions to .agents/skills/</span></div>
+<span class="output">  ✓ Built 66 skills + 14 extensions to .agents/skills/</span></div>
             <button class="copy-btn" data-copy="npx --yes @rune-kit/rune init --platform antigravity">Copy</button>
           </div>
           <div class="callout callout-info">
@@ -662,12 +663,28 @@
           </div>
         </div>
 
+        <div class="tab-panel" id="install-codex">
+          <p>Codex loads Rune as a native plugin and keeps project skills in <code>.agents/skills/</code>.</p>
+          <div class="code-wrapper">
+            <div class="code-block"><span class="comment"># Add the Rune marketplace once</span>
+<span class="cmd">codex plugin marketplace add rune-kit/rune</span>
+
+<span class="comment"># Install Rune, then compile roles and wire synchronous hooks</span>
+<span class="cmd">codex plugin add rune@rune-kit</span>
+<span class="cmd">npx --yes @rune-kit/rune setup --here --platform codex</span>
+
+<span class="comment"># Inside Codex: inspect and trust the installed hooks</span>
+<span class="cmd">/hooks</span></div>
+            <button class="copy-btn" data-copy="codex plugin marketplace add rune-kit/rune && codex plugin add rune@rune-kit && npx --yes @rune-kit/rune setup --here --platform codex">Copy</button>
+          </div>
+        </div>
+
         <div class="tab-panel" id="install-openclaw">
           <p>OpenClaw uses Rune as a unified mesh package from <strong>ClawHub</strong>.</p>
           <div class="code-wrapper">
             <div class="code-block"><span class="cmd">clawhub install rune-kit</span>
 
-<span class="comment"># All 62 skills installed as one mesh package</span>
+<span class="comment"># All 66 skills installed as one mesh package</span>
 <span class="comment"># Works with any OpenClaw-compatible agent</span></div>
             <button class="copy-btn" data-copy="clawhub install rune-kit">Copy</button>
           </div>
@@ -748,7 +765,7 @@
       </div>
 
       <p>
-        204 connections + 40 signals across 64 skills. When <code>debug</code> can't find the cause,
+        248 connections + 45 signals across 66 skills. When <code>debug</code> can't find the cause,
         it escalates to <code>problem-solver</code>. When <code>cook</code> hits a wall 3 times,
         it pivots to <code>brainstorm</code>. When <code>sentinel</code> finds a vulnerability,
         it blocks the commit. The mesh is self-healing.
@@ -782,19 +799,19 @@
           <tr>
             <td><span class="layer-badge l2">L2</span></td>
             <td>Workflow Hubs</td>
-            <td>27</td>
+            <td>30</td>
             <td>plan, debug, fix, test, review, sentinel, design, ba, adversary...</td>
           </tr>
           <tr>
             <td><span class="layer-badge l3">L3</span></td>
             <td>Utilities</td>
-            <td>24</td>
+            <td>30</td>
             <td>research, verification, git, session-bridge, sentinel-env...</td>
           </tr>
           <tr>
             <td><span class="layer-badge l4">L4</span></td>
             <td>Extension Packs</td>
-            <td>13</td>
+            <td>14</td>
             <td>@rune/trading, @rune/saas, @rune/ai-ml, @rune/gamedev...</td>
           </tr>
         </tbody>
@@ -1036,12 +1053,21 @@
       <h2 id="ide-codex">OpenAI Codex</h2>
 
       <p>
-        OpenAI Codex uses a <strong>directory-per-skill</strong> structure inside <code>.agents/skills/</code>.
-        Each skill gets its own folder with a <code>SKILL.md</code> file — similar to Rune's native format.
+        OpenAI Codex is a first-class Rune runtime. Native plugin installation supplies Rune's skills and
+        lifecycle integration; project compilation emits directory-per-skill files in <code>.agents/skills/</code>,
+        a managed <code>AGENTS.md</code> block, and project-scoped roles in <code>.codex/agents/</code>.
       </p>
 
       <div class="code-wrapper">
-        <div class="code-block"><span class="cmd">npx --yes @rune-kit/rune init <span class="flag">--platform codex</span></span>
+        <div class="code-block"><span class="comment"># Native plugin installation</span>
+<span class="cmd">codex plugin marketplace add rune-kit/rune</span>
+<span class="cmd">codex plugin add rune@rune-kit</span>
+
+<span class="comment"># Project-local skills, roles, and synchronous lifecycle hooks</span>
+<span class="cmd">npx --yes @rune-kit/rune setup <span class="flag">--here</span> <span class="flag">--platform codex</span></span>
+
+<span class="comment"># Source-only alternative when you do not install the plugin</span>
+<span class="cmd">npx --yes @rune-kit/rune init <span class="flag">--platform codex</span></span>
 
 <span class="comment"># Output structure:</span>
 <span class="output">  .agents/skills/</span>
@@ -1050,18 +1076,28 @@
 <span class="output">  ├── rune-fix/SKILL.md</span>
 <span class="output">  ├── rune-plan/SKILL.md</span>
 <span class="output">  ├── rune-test/SKILL.md</span>
-<span class="output">  └── ... (62 skills total)</span></div>
+<span class="output">  └── ... (66 skills total)</span>
+<span class="output">  .codex/agents/rune-{heavy,standard,fast}.toml</span>
+<span class="output">  .codex/hooks.json</span>
+<span class="output">  AGENTS.md  (Rune-managed block; existing content preserved)</span></div>
       </div>
 
       <p>
         Codex skills use <strong>YAML frontmatter</strong> with <code>name</code> and <code>description</code> fields,
-        matching Codex's native skill format. The compiler also maps tool names to
-        Codex-compatible descriptions (e.g., <code>Read</code> → <code>read the file</code>).
+        matching Codex's native skill format. The compiler maps model tiers to project roles and tool names to
+        Codex-compatible descriptions. Codex lifecycle handlers are synchronous because Codex skips async handlers.
       </p>
 
       <div class="callout callout-info">
-        <strong>Codex project config:</strong> Codex uses <code>AGENTS.md</code> (equivalent to Claude's <code>CLAUDE.md</code>).
-        Rune skills work alongside your existing <code>AGENTS.md</code> without conflicts.
+        <strong>Hook trust is explicit:</strong> after setup, open <code>/hooks</code> in Codex, review the
+        commands in <code>.codex/hooks.json</code>, and trust the definitions you want enabled. Rune preserves
+        human-authored <code>AGENTS.md</code> content and replaces only its managed block.
+      </div>
+
+      <div class="callout callout-info">
+        <strong>Pulse on Codex:</strong> <code>[tui].status_line</code> can show Codex's built-in footer items only.
+        The full rich Pro Pulse display runs as an external watcher/HUD; Codex does not expose Claude's arbitrary
+        executable <code>statusLine</code> hook.
       </div>
 
       <h2 id="ide-opencode">OpenCode</h2>
@@ -1109,17 +1145,17 @@
       <div class="code-wrapper">
         <div class="code-block"><span class="cmd">clawhub install rune-kit</span>
 
-<span class="comment"># All 62 skills + 14 extension packs as one mesh package</span>
+<span class="comment"># All 66 skills + 14 extension packs as one mesh package</span>
 <span class="comment"># Slug: rune-kit on clawhub.ai</span></div>
       </div>
 
       <div class="callout callout-warn">
         <strong>Important:</strong> Rune skills are NOT published individually on ClawHub.
-        The mesh requires all 204 connections + 40 signals to function — installing skills separately would break routing.
+        The mesh uses 248 connections + 45 signals for routing — installing skills separately would break those workflows.
       </div>
 
       <div class="callout callout-info">
-        <strong>All platforms get the same 62 skills.</strong> The compiler handles format differences.
+        <strong>All 13 platforms get the same 66 skills.</strong> The compiler handles format differences.
         Cross-references, tool names, and model hints are adapted per platform.
       </div>
 
@@ -1158,6 +1194,7 @@
         <div class="skill-card"><strong>@rune/content</strong><span>CMS patterns, markdown processing, SEO</span></div>
         <div class="skill-card"><strong>@rune/analytics</strong><span>Tracking, dashboards, SQL patterns, data validation</span></div>
         <div class="skill-card"><strong>@rune/chrome-ext</strong><span>Browser extensions, content scripts, popup UI</span></div>
+        <div class="skill-card"><strong>@rune/zalo</strong><span>Zalo OA messaging, Mini Apps, webhooks, and rate-limit-aware integrations</span></div>
       </div>
 
       <h2 id="ext-creating">Creating Your Own Pack</h2>
@@ -1256,7 +1293,7 @@
 
       <h3>Is Rune free?</h3>
       <p>
-        Yes. The full 62-skill mesh + 14 extension packs are <strong>free forever, MIT license</strong>.
+        Yes. The full 66-skill mesh + 14 extension packs are <strong>free forever, MIT license</strong>.
         <a href="../#pricing">Rune Pro</a> ($49 lifetime) adds business department skills (Product, Sales, Data Science).
       </p>
 

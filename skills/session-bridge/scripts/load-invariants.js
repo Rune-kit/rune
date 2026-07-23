@@ -132,7 +132,7 @@ export function parseInvariants(text) {
   let current = null;
 
   const flush = () => {
-    if (current && current.title) rules.push(current);
+    if (current?.title) rules.push(current);
     current = null;
   };
 

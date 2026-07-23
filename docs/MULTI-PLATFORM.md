@@ -219,7 +219,7 @@ module.exports = {
       "",
       "---",
       "> Rune Skill Mesh — https://github.com/rune-kit/rune",
-      "> Full experience with subagents, hooks, and adaptive routing: use Rune on Claude Code.",
+      "> Full native experience: install Rune on Claude Code or OpenAI Codex.",
     ].join("\n");
   },
 
@@ -278,7 +278,7 @@ module.exports = {
       "",
       "---",
       "> Rune Skill Mesh — https://github.com/rune-kit/rune",
-      "> Full experience with subagents, hooks, and adaptive routing: use Rune on Claude Code.",
+      "> Full native experience: install Rune on Claude Code or OpenAI Codex.",
     ].join("\n");
   },
 
@@ -682,9 +682,9 @@ Every compiled skill file includes a footer that:
 
 ```markdown
 ---
-> **Rune Skill Mesh** — 49 skills, 170+ connections
+> **Rune Skill Mesh** — 66 skills, 248 connections
 > Source: https://github.com/rune-kit/rune
-> For the full experience with subagents, hooks, adaptive routing, and mesh analytics — use Rune as a Claude Code plugin.
+> For the full experience, install Rune as a native Claude Code or OpenAI Codex plugin.
 ```
 
 ### 12.2 Rules
@@ -692,7 +692,7 @@ Every compiled skill file includes a footer that:
 - Footer is appended to EVERY compiled file (not just some)
 - Footer is a markdown blockquote (visually distinct, not mixed with instructions)
 - No "Lite" branding anywhere — the skills ARE Rune, not a reduced version
-- The CTA mentions specific features that only Claude Code provides (subagents, hooks, adaptive routing)
+- The CTA points to native plugin runtimes; Claude Code and Codex both support Rune subagents and lifecycle hooks
 - No pricing or upsell language — Rune is free everywhere
 
 ## 13. Personalization Flow

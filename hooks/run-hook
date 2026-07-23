@@ -8,7 +8,7 @@ if (!hookName) {
   process.exit(1);
 }
 
-const hookPath = path.join(__dirname, hookName, 'index.js');
+const hookPath = path.join(__dirname, hookName, 'index.cjs');
 try {
   require(hookPath);
 } catch (e) {

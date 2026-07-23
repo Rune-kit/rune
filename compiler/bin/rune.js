@@ -63,9 +63,10 @@ function detectPlatform(projectRoot) {
   if (existsSync(path.join(projectRoot, '.claude-plugin'))) return 'claude';
   if (existsSync(path.join(projectRoot, '.cursor'))) return 'cursor';
   if (existsSync(path.join(projectRoot, '.windsurf'))) return 'windsurf';
-  if (existsSync(path.join(projectRoot, '.agents'))) return 'antigravity';
-  if (existsSync(path.join(projectRoot, '.openclaw'))) return 'openclaw';
   if (existsSync(path.join(projectRoot, '.codex'))) return 'codex';
+  if (existsSync(path.join(projectRoot, '.agents', 'skills'))) return 'codex';
+  if (existsSync(path.join(projectRoot, '.antigravity'))) return 'antigravity';
+  if (existsSync(path.join(projectRoot, '.openclaw'))) return 'openclaw';
   if (existsSync(path.join(projectRoot, '.opencode'))) return 'opencode';
   return null;
 }
@@ -655,7 +656,7 @@ async function cmdHooks(projectRoot, args, subcommand) {
       '    status [--platform <name>|all] [--tier pro|business]          Show active preset, wired skills, tier coverage',
     );
     log('');
-    log('  Platforms: claude, cursor, windsurf, antigravity (auto-detected if omitted)');
+    log('  Platforms: claude, codex, cursor, windsurf, antigravity (auto-detected if omitted)');
     log('  Tiers: pro, business — requires $RUNE_PRO_ROOT / $RUNE_BUSINESS_ROOT env var or monorepo sibling.');
     log('  Options:');
     log('    --dry    Preview changes without writing');
@@ -899,7 +900,7 @@ async function main() {
       log('               [--days <n>]  Lookback window for gate counts (default: 30)');
       log('    hooks      Install/uninstall/status for multi-platform auto-discipline');
       log(
-        '               hooks install [--preset gentle|strict|off] [--platform claude|cursor|windsurf|antigravity|all] [--global]',
+        '               hooks install [--preset gentle|strict|off] [--platform claude|codex|cursor|windsurf|antigravity|all] [--global]',
       );
       log('               hooks uninstall [--platform <name>|all]');
       log('               hooks status [--platform <name>|all]');

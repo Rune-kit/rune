@@ -1,6 +1,6 @@
 # Rune Roadmap
 
-> Last updated: July 2026 | Version: 2.28.0
+> Last updated: July 2026 | Version: 2.29.0
 
 ---
 
@@ -18,7 +18,7 @@ These principles guide every roadmap decision:
 
 ---
 
-## Current State (v2.28.0 — "Reasoner's Blind Spots")
+## Current State (v2.29.0 — "Codex Native")
 
 | Layer | Count | Status |
 |-------|-------|--------|

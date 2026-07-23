@@ -297,8 +297,8 @@ describe('hookStatus (claude adapter)', () => {
 
   test('--platform all surfaces every adapter', async () => {
     const result = await hookStatus(tmpRoot, RUNE_ROOT, { platform: 'all' });
-    assert.strictEqual(result.results.length, 4);
-    for (const id of ['claude', 'cursor', 'windsurf', 'antigravity']) {
+    assert.strictEqual(result.results.length, 5);
+    for (const id of ['claude', 'codex', 'cursor', 'windsurf', 'antigravity']) {
       const r = result.results.find((x) => x.platform === id);
       assert.ok(r, `result for ${id} must be present`);
       assert.ok(r.capability, `capability matrix for ${id} must be present`);

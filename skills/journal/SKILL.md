@@ -39,6 +39,7 @@ None — pure L3 state management utility.
 - `graft` (L2): auto-log graft operations — source URL, mode, challenge score, files changed
 - `retro` (L2): record retrospective insights and decisions
 - `improve-architecture` (L2): record an ADR when the user rejects a deepening candidate with a load-bearing reason
+- `logic-guardian` (L2): record guarded logic changes for cross-session persistence
 
 ## Files Managed
 

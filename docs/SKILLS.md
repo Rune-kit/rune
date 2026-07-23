@@ -1,9 +1,9 @@
-# Skill Index — All 62 Core Skills
+# Skill Index — All 66 Core Skills
 
 > **Need a skill?** Invoke via `/rune <skill-name>` in Claude Code, or `@rune:<skill-name>` in Cursor/Windsurf.
 > Every skill has a `SKILL.md` at `skills/<name>/SKILL.md` — read that for the full spec.
 
-**Total:** 62 skills across 5 layers · 215+ mesh connections
+**Total:** 66 skills across 5 layers · 248 mesh connections
 **Quick find:** use Ctrl+F on this page
 
 ---
@@ -64,7 +64,7 @@ Autonomous project bootstrapper — 0 to production-ready. Orchestrates ba → p
 
 ---
 
-## L2 — Workflow Hubs (29)
+## L2 — Workflow Hubs (30)
 
 ### ba
 Business Analyst — elicits requirements with 5 probing questions, maps stakeholders, produces a Requirements Document.
@@ -182,9 +182,13 @@ Engineering retrospective. Analyzes commit history, work patterns, code quality 
 Clone, port, or convert features from any GitHub repo into your project. Understand before copy, challenge before implement.
 **Use when:** stealing patterns from other repos. 4 modes: port, compare, copy, improve.
 
+### improve-architecture
+Find architectural friction and score deepening opportunities by leverage, locality, and interface depth. Read-only.
+**Use when:** identifying refactor candidates before handing a focused proposal to `surgeon` or `review`.
+
 ---
 
-## L3 — Utilities (27)
+## L3 — Utilities (30)
 
 | Skill | Purpose |
 |-------|---------|
@@ -200,6 +204,7 @@ Clone, port, or convert features from any GitHub repo into your project. Underst
 | **constraint-check** | Audits whether HARD-GATEs and constraints were followed |
 | **sast** | Static analysis runner — ESLint, Semgrep, Bandit, Clippy, govulncheck |
 | **integrity-check** | Detects prompt injection, memory poisoning in `.rune/` files |
+| **quarantine** | Marks untrusted MCP, fetched, or uploaded content as data rather than instructions |
 | **context-engine** | Context window management, artifact folding, auto-compaction |
 | **context-pack** | Structured handoff briefings between agents |
 | **journal** | Persistent state tracking — ADRs, decisions, progress |
@@ -241,7 +246,7 @@ Domain packs bundle multiple skills for a specific vertical.
 | `@rune/chrome-ext` | Chrome extensions — manifest v3 |
 | `@rune/zalo` | Zalo Mini Apps |
 
-**Paid packs** (separate repos): [`@rune-pro/*`](https://rune-kit.github.io/rune#pricing) ($49) and [`@rune-business/*`](https://rune-kit.github.io/rune#pricing) ($149).
+**Paid packs** (separate repos): [`@rune-pro/*`](https://rune-kit.github.io/rune#pricing) — Pro ($49) and Business ($149) use the same canonical pack namespace.
 
 ---
 

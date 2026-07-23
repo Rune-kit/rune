@@ -41,6 +41,7 @@ Solve the #1 developer complaint: context loss across sessions. Session-bridge a
 - `context-pack` (L3): coordinate state for sub-agent handoff
 - `neural-memory` (L3): sync key decisions back to `.rune/` files after Capture Mode
 - `adversary` (L2): (oracle-mode) detach protocol when target model is opus-class for non-blocking dispatch
+- `logic-guardian` (L2): preserve logic-manifest state across sessions
 
 ## State Files Managed
 

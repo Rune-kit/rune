@@ -65,7 +65,7 @@ describe('checkHookDrift', () => {
     assert.match(missing[0].expected, /completion-gate/);
   });
 
-  test('ignores tier-emitted entries (${RUNE_PRO_ROOT})', async () => {
+  test(`ignores tier-emitted entries (\${RUNE_PRO_ROOT})`, async () => {
     const settings = buildPreset('gentle');
     // Inject a Pro-tier entry alongside Free preset entries
     settings.hooks.PostToolUse.push({
@@ -73,7 +73,7 @@ describe('checkHookDrift', () => {
       hooks: [
         {
           type: 'command',
-          command: 'node "${RUNE_PRO_ROOT}/hooks/run-hook.cjs" context-sense',
+          command: `node "\${RUNE_PRO_ROOT}/hooks/run-hook.cjs" context-sense`,
           async: false,
         },
       ],

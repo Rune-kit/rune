@@ -2,6 +2,7 @@ import assert from 'node:assert';
 import { describe, test } from 'node:test';
 import { addBranding } from '../transforms/branding.js';
 import { transformCrossReferences } from '../transforms/cross-references.js';
+import { transformSubagents } from '../transforms/subagents.js';
 import { transformToolNames } from '../transforms/tool-names.js';
 
 // --- Mock adapter ---
@@ -72,6 +73,20 @@ describe('transformToolNames', () => {
     const result = transformToolNames(input, mockAdapter);
     // Should not touch bare "Read" without backticks in tool pattern
     assert.ok(result.includes('Read'));
+  });
+});
+
+describe('transformSubagents', () => {
+  const input = 'Launch 3 parallel agents as independent Task agents.';
+
+  test('preserves native Codex subagent instructions', () => {
+    assert.strictEqual(transformSubagents(input, { name: 'codex' }), input);
+  });
+
+  test('keeps sequential fallback for platforms without native subagents', () => {
+    const result = transformSubagents(input, { name: 'generic' });
+    assert.notStrictEqual(result, input);
+    assert.match(result, /sequentially/);
   });
 });
 

@@ -66,14 +66,14 @@ function appendGateOutcome(gate, outcome, detail) {
  *
  * @param {string} toolName
  * @param {object} toolInput
- * @returns {string} target path, or '' when this is not a patch we understand
+ * @returns {string[]} target paths
  */
-function patchTargetPath(toolName, toolInput) {
-  if (toolName !== 'apply_patch') return '';
-  const patch = typeof toolInput === 'string' ? toolInput : toolInput.input || toolInput.patch || '';
-  if (typeof patch !== 'string') return '';
-  const match = patch.match(/^\*\*\* (?:Update|Add|Delete) File:\s*(.+)$/m);
-  return match ? match[1].trim() : '';
+function patchTargetPaths(toolName, toolInput) {
+  if (toolName !== 'apply_patch') return [];
+  const patch =
+    typeof toolInput === 'string' ? toolInput : toolInput.command || toolInput.input || toolInput.patch || '';
+  if (typeof patch !== 'string') return [];
+  return Array.from(patch.matchAll(/^\*\*\* (?:Update|Add|Delete) File:\s*(.+)$/gm), (match) => match[1].trim());
 }
 
 // Read tool_input from Claude Code hook stdin
@@ -92,11 +92,9 @@ process.stdin.on('end', () => {
     process.exit(0);
   }
 
-  const filePath = toolInput.file_path || toolInput.path || patchTargetPath(toolName, toolInput);
-  if (!filePath) process.exit(0);
-
-  const basename = path.basename(filePath);
-  const normalized = filePath.replace(/\\/g, '/');
+  const directPath = toolInput.file_path || toolInput.path;
+  const filePaths = directPath ? [directPath] : patchTargetPaths(toolName, toolInput);
+  if (filePaths.length === 0) process.exit(0);
 
   // Load project-specific privacy config
   const privacyConfig = loadPrivacyConfig();
@@ -147,33 +145,37 @@ process.stdin.on('end', () => {
   const activeSkill = process.env.RUNE_ACTIVE_SKILL || '';
   const isElevated = elevatedSkills.has(activeSkill);
 
-  const isSafe = safeExceptions.some((p) => p.test(basename) || p.test(normalized));
-  if (isSafe) process.exit(0);
+  for (const filePath of filePaths) {
+    const basename = path.basename(filePath);
+    const normalized = filePath.replace(/\\/g, '/');
+    const isSafe = safeExceptions.some((p) => p.test(basename) || p.test(normalized));
+    if (isSafe) continue;
 
-  const isBlocked = blockPatterns.some((p) => p.test(basename) || p.test(normalized));
-  if (isBlocked) {
-    // Append block outcome BEFORE printing/exiting — fail-safe, never affects exit code.
-    // Only "blocked" is captured here; "passed" and "bypassed" are not observable
-    // at this layer and intentionally remain uncaptured (see GAP-1 in governance-collector.js).
-    appendGateOutcome('privacy-mesh', 'blocked', `file matched BLOCK-tier pattern: ${basename}`);
+    const isBlocked = blockPatterns.some((p) => p.test(basename) || p.test(normalized));
+    if (isBlocked) {
+      // Append block outcome BEFORE printing/exiting — fail-safe, never affects exit code.
+      // Only "blocked" is captured here; "passed" and "bypassed" are not observable
+      // at this layer and intentionally remain uncaptured (see GAP-1 in governance-collector.js).
+      appendGateOutcome('privacy-mesh', 'blocked', `file matched BLOCK-tier pattern: ${basename}`);
 
-    console.log(`\n🚫 [Rune privacy-mesh] BLOCKED: ${filePath}`);
-    console.log('  This file matches a BLOCK-tier pattern (private keys, certificates).');
-    console.log('  Override: add path to .rune/privacy.json "allow" list if intentional.\n');
-    process.exit(2); // Exit code 2 = BLOCK
-  }
-
-  const isWarned = warnPatterns.some((p) => p.test(basename) || p.test(normalized));
-  if (isWarned && !isElevated) {
-    // Content-aware check: scan first 4KB for secret patterns
-    const contentWarning = scanContentForSecrets(filePath);
-
-    console.log(`\n⚠ [Rune privacy-mesh] Sensitive file: ${filePath}`);
-    if (contentWarning) {
-      console.log(`  Content scan: ${contentWarning}`);
+      console.log(`\n🚫 [Rune privacy-mesh] BLOCKED: ${filePath}`);
+      console.log('  This file matches a BLOCK-tier pattern (private keys, certificates).');
+      console.log('  Override: add path to .rune/privacy.json "allow" list if intentional.\n');
+      process.exit(2); // Exit code 2 = BLOCK
     }
-    console.log('  This file may contain secrets. Confirm access is intentional.');
-    console.log('  Elevated skills (sentinel, review, audit) bypass this warning.\n');
+
+    const isWarned = warnPatterns.some((p) => p.test(basename) || p.test(normalized));
+    if (isWarned && !isElevated) {
+      // Content-aware check: scan first 4KB for secret patterns
+      const contentWarning = scanContentForSecrets(filePath);
+
+      console.log(`\n⚠ [Rune privacy-mesh] Sensitive file: ${filePath}`);
+      if (contentWarning) {
+        console.log(`  Content scan: ${contentWarning}`);
+      }
+      console.log('  This file may contain secrets. Confirm access is intentional.');
+      console.log('  Elevated skills (sentinel, review, audit) bypass this warning.\n');
+    }
   }
 
   process.exit(0);

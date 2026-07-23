@@ -397,6 +397,65 @@ describe('runSetup — Pro skill installation (regression: rune:autopilot Unknow
 
     assert.deepStrictEqual(result.skillResults, []);
   });
+
+  test('installs Codex tier skills into project .agents/skills', async () => {
+    const projectRoot = path.join(tmpRoot, 'codex-project');
+    await mkdir(path.join(projectRoot, '.codex'), { recursive: true });
+    await seedTier(projectRoot, 'pro', { skills: ['autopilot'] });
+    const runeRoot = await seedFakeRuneRoot(tmpRoot);
+
+    const result = await runSetup({
+      projectRoot,
+      runeRoot,
+      args: { here: true, platform: 'codex', preset: 'gentle', tier: 'pro' },
+    });
+
+    assert.strictEqual(result.skillTarget.source, 'codex-project');
+    assert.deepStrictEqual(result.platforms, ['codex']);
+    assert.ok(existsSync(path.join(projectRoot, '.codex', 'hooks.json')));
+    const installed = path.join(projectRoot, '.agents', 'skills', 'rune-autopilot', 'SKILL.md');
+    assert.ok(existsSync(installed));
+    const content = readFileSync(installed, 'utf-8');
+    assert.match(content, /^name: rune-autopilot$/m);
+    assert.doesNotMatch(content, /^context: fork$/m);
+    assert.doesNotMatch(content, /^agent: general-purpose$/m);
+  });
+
+  test('installs tier skills into every detected non-Claude platform using native adapters', async () => {
+    const projectRoot = path.join(tmpRoot, 'multi-project');
+    await mkdir(path.join(projectRoot, '.cursor'), { recursive: true });
+    await mkdir(path.join(projectRoot, '.windsurf'), { recursive: true });
+    await seedTier(projectRoot, 'business', { skills: ['quarterly-review'] });
+    const runeRoot = await seedFakeRuneRoot(tmpRoot);
+
+    const result = await runSetup({
+      projectRoot,
+      runeRoot,
+      args: { here: true, platform: 'all', preset: 'gentle', tier: 'business' },
+    });
+
+    assert.deepStrictEqual(result.platforms.sort(), ['cursor', 'windsurf']);
+    assert.ok(existsSync(path.join(projectRoot, '.cursor', 'skills', 'rune-quarterly-review', 'SKILL.md')));
+    assert.ok(existsSync(path.join(projectRoot, '.windsurf', 'skills', 'rune-quarterly-review', 'SKILL.md')));
+    assert.deepStrictEqual(result.skillResults.map((entry) => entry.platform).sort(), ['cursor', 'windsurf']);
+  });
+
+  test('Codex dry-run reports tier skills on a fresh project without creating directories', async () => {
+    const projectRoot = path.join(tmpRoot, 'fresh-codex-project');
+    await mkdir(projectRoot, { recursive: true });
+    await seedTier(projectRoot, 'business', { skills: ['launch-product'] });
+    const runeRoot = await seedFakeRuneRoot(tmpRoot);
+
+    const result = await runSetup({
+      projectRoot,
+      runeRoot,
+      args: { here: true, platform: 'codex', preset: 'gentle', tier: 'business', dry: true },
+    });
+
+    assert.deepStrictEqual(result.skillResults[0].installed, ['launch-product']);
+    assert.strictEqual(result.skillResults[0].reason, null);
+    assert.ok(!existsSync(path.join(projectRoot, '.agents')));
+  });
 });
 
 describe('formatSetupResult', () => {

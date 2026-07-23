@@ -6,10 +6,26 @@
 // Zero false-positive tolerance on BLOCK patterns.
 
 const { execSync } = require('child_process');
+const fs = require('fs');
+const { captureConsole } = require('../lib/hook-output.cjs');
+
+captureConsole('PreToolUse', { captureError: true });
 
 // Only intercept git commit commands
-const input = JSON.parse(process.env.CLAUDE_TOOL_INPUT || '{}');
-const command = (input.command || '').trim();
+let rawInput = '';
+try {
+  rawInput = fs.readFileSync(0, 'utf-8');
+} catch {
+  // Claude compatibility fallback below.
+}
+let event = {};
+try {
+  event = JSON.parse(rawInput.trim() || process.env.CLAUDE_TOOL_INPUT || '{}');
+} catch {
+  process.exit(0);
+}
+const toolInput = event.tool_input || event;
+const command = (toolInput.command || '').trim();
 
 // Check if this is a git commit command
 if (!/^git\s+commit\b/.test(command)) {

@@ -8,6 +8,7 @@
 import { existsSync } from 'node:fs';
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
+import { parseSkillConnections } from './doctor.js';
 import { parseSkill } from './parser.js';
 
 // ─── Constants ───
@@ -73,6 +74,7 @@ export async function collectStats(runeRoot, tierSources = {}) {
   const layers = { L0: 0, L1: 0, L2: 0, L3: 0 };
   const skillNames = [];
   let signalCount = 0;
+  let totalConnections = 0;
   const signalMap = { emitters: {}, listeners: {} };
   const parsedSkills = [];
 
@@ -85,6 +87,7 @@ export async function collectStats(runeRoot, tierSources = {}) {
 
       const content = await readFile(skillFile, 'utf-8');
       const parsed = parseSkill(content, skillFile);
+      totalConnections += parseSkillConnections(content, entry.name).calls.length;
       parsedSkills.push(parsed);
       skillNames.push(parsed.name);
 
@@ -106,11 +109,6 @@ export async function collectStats(runeRoot, tierSources = {}) {
     signalCount = allSignals.size;
   }
 
-  // Count connections
-  let totalConnections = 0;
-  for (const skill of parsedSkills) {
-    totalConnections += new Set((skill.crossRefs ?? []).map((r) => r.skillName)).size;
-  }
   const avgConnections = parsedSkills.length > 0 ? (totalConnections / parsedSkills.length).toFixed(1) : '0';
 
   // Count free packs
@@ -302,8 +300,7 @@ export function renderStatusJson(stats, { version = '', platform = '', projectNa
 
 function formatPackName(dirName, tier = 'free') {
   const baseName = dirName.replace(/^(pro|business)-/, '');
-  if (tier === 'business') return `@rune-biz/${baseName}`.padEnd(26);
-  if (tier === 'pro') return `@rune-pro/${baseName}`.padEnd(26);
+  if (tier === 'business' || tier === 'pro') return `@rune-pro/${baseName}`.padEnd(26);
   return `@rune/${baseName}`.padEnd(26);
 }
 

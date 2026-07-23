@@ -30,7 +30,7 @@ Rune is a **skill mesh** — not a skill collection, not a pipeline, not an AI a
 
 **Technical definition:**
 
-> **Rune = 66 skills × 206 sync connections × 45 async signals × cross-session memory × multi-platform compiler**
+> **Rune = 66 skills × 248 sync connections × 45 async signals × cross-session memory × multi-platform compiler**
 
 All three components are equally essential:
 - Remove connections → becomes a collection (The Bloat wins)
@@ -211,13 +211,13 @@ Rune operates on three time horizons. The roadmap is intentionally non-prescript
 
 **Implementation**: Zero new L1-L3 skills added. 1 new hook (`metrics-collector`), 3 modified hooks, 4 extended skills (`audit`, `cook`, `skill-router`, `onboard`), 2 new commands (`/rune metrics`, `/rune pack`).
 
-**Constraint:** Core mesh expanded to 62 skills (v2.1.0+). Further growth happens in L4 and community packs.
+**Constraint:** Core mesh is 66 skills. Further growth happens primarily in L4 and community packs.
 
 ### H4 — Runtime Discipline ✅ COMPLETE (v2.12)
 
 **Goal:** Move mesh discipline from "invoke the skill" (opt-in) to "the platform fires it" (automatic).
 
-- ✅ **Native hooks across 4 platforms** — `rune hooks install` wires `preflight`, `sentinel`, `completion-gate`, `dependency-doctor` as pre-tool-use hooks on Claude Code, Cursor, Windsurf, Antigravity
+- ✅ **Runtime adapters across 5 platforms** — `rune hooks install` provides native auto-fire on Claude Code and Codex, with documented rule/workflow fallbacks on Cursor, Windsurf, and Antigravity
 - ✅ **Three presets** — `strict` (blocking), `gentle` (warnings, default), `off` (uninstall). Idempotent with full user-hook restore
 - ✅ **Tier-tagged manifests** — `--tier pro` / `--tier business` stack paid-tier hooks on top of Free via `$<TIER>_ROOT/hooks/manifest.json`. Free compiler stays tier-agnostic (MIT-clean)
 - ✅ **Cross-platform tier coverage doctor** — `rune doctor` warns when a tier's hooks are installed unevenly across detected platforms
@@ -234,7 +234,7 @@ Rune operates on three time horizons. The roadmap is intentionally non-prescript
 *Rune is successful when these are true. Not when the feature list is long.*
 
 ### Mesh Health
-- **Connection density** ≥ 3.0 connections/skill (currently: 3.2 at 204 connections / 64 skills) — do not let this drop below 2.5
+- **Connection density** ≥ 3.0 connections/skill (currently: 3.8 at 248 connections / 66 skills) — do not let this drop below 2.5
 - **Dead nodes** = 0 — every skill has ≥1 inbound and ≥1 outbound connection
 - **Max chain depth used** < 6 in practice (ceiling is 8) — if chains regularly hit 8, the mesh needs restructuring
 - **Bloat Index** = 0.00 — dead nodes / total skills

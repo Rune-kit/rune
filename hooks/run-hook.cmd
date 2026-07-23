@@ -1,1 +1,1 @@
-@node "%~dp0run-hook.js" %*
+@node "%~dp0run-hook.cjs" %*

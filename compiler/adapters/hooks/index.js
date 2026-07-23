@@ -15,11 +15,13 @@
 
 import * as antigravity from './antigravity.js';
 import * as claude from './claude.js';
+import * as codex from './codex.js';
 import * as cursor from './cursor.js';
 import * as windsurf from './windsurf.js';
 
 export const ADAPTERS = Object.freeze({
   claude,
+  codex,
   cursor,
   windsurf,
   antigravity,
@@ -54,6 +56,14 @@ export const CAPABILITIES = Object.freeze({
     postToolEdit: true,
     stop: true,
     notes: 'Full hook parity — PreToolUse/PostToolUse/Stop all supported.',
+  },
+  codex: {
+    maturity: 'stable',
+    preToolEdit: true,
+    preToolBash: true,
+    postToolEdit: true,
+    stop: true,
+    notes: 'Native hooks via `.codex/hooks.json`; operator trust is required before first execution.',
   },
   cursor: {
     maturity: 'beta',

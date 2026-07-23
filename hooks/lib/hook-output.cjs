@@ -79,16 +79,24 @@ function emit(hookEventName, text) {
  * `console.error` is untouched — stderr is not parsed as the output contract.
  *
  * @param {string} hookEventName
+ * @param {{captureError?: boolean}} [options]
  * @returns {{buffer: ReturnType<typeof outputBuffer>, restore: () => void}}
  */
-function captureConsole(hookEventName) {
+function captureConsole(hookEventName, options = {}) {
   const buffer = outputBuffer(hookEventName);
-  const original = console.log;
+  const originalLog = console.log;
+  const originalError = console.error;
   console.log = (...args) => {
     buffer.line(args.map((a) => (typeof a === 'string' ? a : String(a))).join(' '));
   };
+  if (options.captureError) {
+    console.error = (...args) => {
+      buffer.line(args.map((a) => (typeof a === 'string' ? a : String(a))).join(' '));
+    };
+  }
   const restore = () => {
-    console.log = original;
+    console.log = originalLog;
+    console.error = originalError;
   };
   // Fires for a natural end AND for process.exit(), which is how the BLOCK
   // paths leave — those messages must survive too.

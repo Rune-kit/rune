@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Rune — Less skills. Deeper connections.</title>
-  <meta name="description" content="65-skill mesh ecosystem for AI coding assistants. Works on Claude Code, Cursor, Windsurf, and any AI IDE.">
+  <meta name="description" content="66-skill mesh ecosystem for AI coding assistants across 13 platforms, including native Claude Code and OpenAI Codex runtimes.">
   <meta property="og:title" content="Rune — AI Skill Mesh">
-  <meta property="og:description" content="66 skills, 209 connections + 45 signals, 13 platforms. From idea to production.">
+  <meta property="og:description" content="66 skills, 248 connections + 45 signals, 13 platforms. From idea to production.">
   <meta property="og:image" content="https://raw.githubusercontent.com/rune-kit/rune/master/assets/banner.svg">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://rune-kit.github.io/rune">
@@ -64,7 +64,7 @@
       <canvas id="mesh-canvas"></canvas>
     </div>
     <div class="hero-content">
-      <p class="hero-badge">v2.28.0 &mdash; 66 skills &bull; 13 platforms &bull; MIT</p>
+      <p class="hero-badge">v2.29.0 &mdash; 66 skills &bull; 13 platforms &bull; MIT</p>
       <h1>Less skills.<br><span class="accent">Deeper connections.</span></h1>
       <p class="hero-sub">A mesh ecosystem for AI coding assistants. Skills call each other bidirectionally, forming resilient workflows that adapt when things go wrong.</p>
       <div class="hero-actions">
@@ -212,16 +212,16 @@ D &harr; E &harr; F
           <div class="layer-label">L2</div>
           <div class="layer-content">
             <strong>Workflow Hubs</strong>
-            <span class="layer-count">27 skills</span>
-            <p>plan &bull; debug &bull; fix &bull; test &bull; review &bull; sentinel &bull; design &bull; ba &bull; docs &bull; and 18 more</p>
+            <span class="layer-count">30 skills</span>
+            <p>plan &bull; debug &bull; fix &bull; test &bull; review &bull; sentinel &bull; design &bull; ba &bull; docs &bull; and 21 more</p>
           </div>
         </div>
         <div class="layer layer-3">
           <div class="layer-label">L3</div>
           <div class="layer-content">
             <strong>Utilities</strong>
-            <span class="layer-count">27 skills</span>
-            <p>research &bull; problem-solver &bull; verification &bull; git &bull; session-bridge &bull; and 20 more</p>
+            <span class="layer-count">30 skills</span>
+            <p>research &bull; problem-solver &bull; verification &bull; git &bull; session-bridge &bull; and 25 more</p>
           </div>
         </div>
         <div class="layer layer-4">
@@ -305,7 +305,7 @@ D &harr; E &harr; F
         <div class="feature-card">
           <div class="feature-icon">&#9851;</div>
           <h3>Mesh Resilience</h3>
-          <p>209 connections + 45 signals. If debug fails, problem-solver takes over. If scout fails, research + docs-seeker route around. Max depth 8, max 2 visits.</p>
+          <p>248 connections + 45 signals. If debug fails, problem-solver takes over. If scout fails, research + docs-seeker route around. Max depth 8, max 2 visits.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">&#128274;</div>
@@ -340,6 +340,22 @@ npx @rune-kit/rune setup</code></pre>
           <p>Full mesh: subagents, hooks, adaptive routing, analytics. The wizard auto-detects Pro/Business if installed.</p>
         </div>
         <div class="install-card">
+          <h3>OpenAI Codex</h3>
+          <p class="install-badge">Native Plugin</p>
+          <pre class="code-block"><code># 1. Add marketplace (one-time)
+codex plugin marketplace add rune-kit/rune
+
+# 2. Install plugin
+codex plugin add rune@rune-kit
+
+# 3. Compile project roles + wire synchronous hooks
+npx @rune-kit/rune setup --here --platform codex
+
+# 4. In Codex, inspect and trust the installed hooks
+/hooks</code></pre>
+          <p>Native Agent Skills, project-scoped roles, subagents, and lifecycle hooks. Codex keeps hook trust explicit.</p>
+        </div>
+        <div class="install-card">
           <h3>Cursor / Windsurf / Any IDE</h3>
           <p class="install-badge">Native Agent Skills</p>
           <pre class="code-block"><code>npx @rune-kit/rune init</code></pre>
@@ -372,7 +388,7 @@ npx @rune-kit/rune setup</code></pre>
           <span class="guide-icon">&#9670;</span>
           <div>
             <strong>Mesh Architecture</strong>
-            <span>How 209 connections + 45 signals work</span>
+            <span>How 248 connections + 45 signals work</span>
           </div>
         </a>
         <a href="guides/#wf-cook" class="guide-link">
@@ -422,7 +438,7 @@ npx @rune-kit/rune setup</code></pre>
           <div class="mesh-tier-header">
             <span class="mesh-tier-badge mesh-badge-free">FREE</span>
             <strong>Core Mesh</strong>
-            <span class="mesh-tier-stats">66 skills &bull; 209 connections + 45 signals</span>
+            <span class="mesh-tier-stats">66 skills &bull; 248 connections + 45 signals</span>
           </div>
           <div class="mesh-layers">
             <div class="mesh-layer">
@@ -496,12 +512,12 @@ npx @rune-kit/rune setup</code></pre>
           <div class="mesh-tier-header">
             <span class="mesh-tier-badge mesh-badge-pro">PRO $49</span>
             <strong>Department Skills</strong>
-            <span class="mesh-tier-stats">+35 skills &bull; +57 connections into core</span>
+            <span class="mesh-tier-stats">+58 pack skills &bull; +57 connections into core</span>
           </div>
           <div class="mesh-nodes mesh-nodes-grid">
             <div class="mesh-pack mesh-pack-featured">
               <strong>Context Intelligence</strong>
-              <span>Glitch-proof context cockpit in your statusline + burn-rate ETA &mdash; Claude saves state before auto-compact wipes it</span>
+              <span>Full native cockpit on Claude; built-in Codex footer plus an external Pro Pulse HUD &mdash; both preserve state before compact</span>
             </div>
             <div class="mesh-pack mesh-pack-featured">
               <strong>Autopilot</strong>
@@ -542,9 +558,9 @@ npx @rune-kit/rune setup</code></pre>
 
         <div class="mesh-tier mesh-tier-biz">
           <div class="mesh-tier-header">
-            <span class="mesh-tier-badge mesh-badge-biz">BUSINESS $169</span>
+            <span class="mesh-tier-badge mesh-badge-biz">BUSINESS $149</span>
             <strong>Enterprise Skills</strong>
-            <span class="mesh-tier-stats">+26 skills &bull; includes all Pro skills</span>
+            <span class="mesh-tier-stats">+28 pack skills + 4 orchestrators &bull; includes all Pro skills</span>
           </div>
           <div class="mesh-nodes mesh-nodes-grid">
             <div class="mesh-pack">
@@ -605,8 +621,8 @@ npx @rune-kit/rune setup</code></pre>
           <!-- Stats row -->
           <div class="biz-dash-stats">
             <div class="biz-dash-stat">
-              <span class="biz-dash-num">87</span>
-              <span class="biz-dash-label">Total Skills</span>
+              <span class="biz-dash-num">28</span>
+              <span class="biz-dash-label">Pack Skills</span>
             </div>
             <div class="biz-dash-stat">
               <span class="biz-dash-num">40</span>
@@ -712,23 +728,23 @@ npx @rune-kit/rune setup</code></pre>
       <!-- ROI strip -->
       <div class="biz-roi">
         <div class="biz-roi-item">
-          <span class="biz-roi-num">87</span>
-          <span class="biz-roi-label">Skills across<br>8 departments</span>
+          <span class="biz-roi-num">28</span>
+          <span class="biz-roi-label">Pack skills across<br>4 departments</span>
         </div>
         <div class="biz-roi-divider"></div>
         <div class="biz-roi-item">
-          <span class="biz-roi-num">~50h</span>
-          <span class="biz-roi-label">Saved per week<br>vs manual workflows</span>
+          <span class="biz-roi-num">4</span>
+          <span class="biz-roi-label">Business<br>orchestrators</span>
         </div>
         <div class="biz-roi-divider"></div>
         <div class="biz-roi-item">
-          <span class="biz-roi-num">1 prompt</span>
-          <span class="biz-roi-label">Replaces 8&ndash;12<br>manual steps</span>
+          <span class="biz-roi-num">12</span>
+          <span class="biz-roi-label">Automation<br>scripts</span>
         </div>
         <div class="biz-roi-divider"></div>
         <div class="biz-roi-item">
-          <span class="biz-roi-num">&lt;1 week</span>
-          <span class="biz-roi-label">ROI payback<br>at $169 lifetime</span>
+          <span class="biz-roi-num">124</span>
+          <span class="biz-roi-label">Domain<br>reference files</span>
         </div>
       </div>
 
@@ -855,8 +871,8 @@ npx @rune-kit/rune setup</code></pre>
   <section class="section section-dark" id="context-cockpit">
     <div class="container">
       <span class="section-badge">PRO</span>
-      <h2>Claude that never loses its train of thought.</h2>
-      <p class="section-sub"><strong>Context Intelligence</strong> turns your statusline into a live cockpit and makes Claude itself aware of context pressure &mdash; so it saves state before auto-compact wipes it.</p>
+      <h2>Context that survives compaction.</h2>
+      <p class="section-sub"><strong>Context Intelligence</strong> gives Claude a native executable statusline and Codex a built-in <code>[tui].status_line</code> footer plus an optional external Pro Pulse HUD. Both runtimes can save state before compaction.</p>
 
       <!-- Live statusline mock -->
       <div class="cc-term">
@@ -873,7 +889,7 @@ npx @rune-kit/rune setup</code></pre>
         <div class="cc-card">
           <div class="cc-card-icon">&#9678;</div>
           <h3>Actually correct</h3>
-          <p>Claude Code sometimes emits a glitch <code>0%</code> frame. Naive meters flash a false zero &mdash; or pin "100% URGENT" during light work. Pulse restores the last-good value and tells a real <code>/compact</code> reset apart from a glitch. The number you see is the number that&rsquo;s true.</p>
+          <p>Claude Code sometimes emits a glitch <code>0%</code> frame. Naive meters flash a false zero &mdash; or pin "100% URGENT" during light work. Pulse restores the last-good value and tells a real <code>/compact</code> reset apart from a glitch.</p>
         </div>
         <div class="cc-card">
           <div class="cc-card-icon">&#9684;</div>
@@ -889,13 +905,13 @@ npx @rune-kit/rune setup</code></pre>
 
       <!-- What Claude sees -->
       <div class="cc-inject">
-        <p class="cc-inject-label">And Claude sees it too &mdash; written straight into its context at 80%:</p>
+        <p class="cc-inject-label">And the active runtime sees it too &mdash; written straight into context at 80%:</p>
         <pre class="cc-inject-code">&lt;context-pressure level="save" percent="80"&gt;
 Context window at 80% &mdash; save state now. ~4m until auto-compaction.
 Context is mostly files 61% &middot; mcp 22% &mdash; trim the largest to free room.
 &#8594; save decisions to .rune/ (session-bridge) + neural-memory, then /compact
 &lt;/context-pressure&gt;</pre>
-        <p class="cc-inject-note">Claude persists everything &#8594; you <code>/compact</code> &#8594; <code>session-start</code> reloads <code>.rune/</code> &#8594; it picks up exactly where it left off. <strong>Zero data loss.</strong></p>
+        <p class="cc-inject-note">The agent persists decisions and progress &#8594; compaction runs &#8594; <code>session-start</code> reloads <code>.rune/</code> &#8594; work resumes from durable state.</p>
       </div>
 
       <div class="ap-cta">
@@ -1060,9 +1076,9 @@ Context is mostly files 61% &middot; mcp 22% &mdash; trim the largest to free ro
           <ul class="pricing-features">
             <li>66 core skills (L0&ndash;L3)</li>
             <li>14 domain extension packs</li>
-            <li>209 connections + 45 signals</li>
+            <li>248 connections + 45 signals</li>
             <li>5-layer architecture</li>
-            <li>Multi-platform compiler (8 targets)</li>
+            <li>Multi-platform compiler (13 targets)</li>
             <li>Phase-aware execution</li>
             <li>Security gates (sentinel, sast)</li>
             <li>Adaptive model routing</li>
@@ -1084,7 +1100,7 @@ Context is mostly files 61% &middot; mcp 22% &mdash; trim the largest to free ro
           <p class="pricing-who">Best for: product teams, startups, SaaS companies shipping features to real users.</p>
           <ul class="pricing-features">
             <li><strong>Everything in Free, plus:</strong></li>
-            <li><strong>Context Intelligence</strong> &mdash; a glitch-proof context cockpit in your statusline (real %, active skill&middot;layer, cost, rate-limits), a burn-rate ETA to auto-compact, and a "what's eating your context" breakdown. Claude sees the pressure and saves decisions &amp; progress before compact &mdash; zero data loss across sessions</li>
+            <li><strong>Context Intelligence</strong> &mdash; Claude gets the full native executable statusline. Codex gets built-in footer items through <code>[tui].status_line</code>; the full rich Pulse display runs as an external Pro watcher/HUD because Codex does not expose an arbitrary executable status-line hook. Both runtimes receive context-pressure persistence hooks</li>
             <li><strong>Autopilot</strong> &mdash; autonomous multi-session execution. Approve a plan, walk away. Self-reviews, self-commits, self-resumes across sessions</li>
             <li>Product Management &mdash; PRDs, roadmaps, KPI tracking, release comms</li>
             <li>Sales Enablement &mdash; account research, outreach sequences, pipeline review</li>
@@ -1103,7 +1119,7 @@ Context is mostly files 61% &middot; mcp 22% &mdash; trim the largest to free ro
           <div class="pricing-tier">
             <span class="pricing-badge pricing-badge-best">&#9733; BEST VALUE</span>
             <h3>Rune Business</h3>
-            <div class="pricing-price">$169<span class="pricing-period"> lifetime</span></div>
+            <div class="pricing-price">$149<span class="pricing-period"> lifetime</span></div>
           </div>
           <p class="pricing-desc">Full department coverage &mdash; every business function, one purchase.</p>
 
@@ -1118,10 +1134,10 @@ Context is mostly files 61% &middot; mcp 22% &mdash; trim the largest to free ro
               </ul>
             </div>
             <div class="includes-box includes-box-biz">
-              <strong>Rune Business</strong> <span class="includes-value">$120 value</span>
+              <strong>Rune Business</strong> <span class="includes-value">$100 value</span>
               <ul>
                 <li>Finance Ops, Legal &amp; Compliance, HR &amp; Recruiting</li>
-                <li>Enterprise Search + Priority support</li>
+                <li>Enterprise Search + executive report templates</li>
               </ul>
             </div>
           </div>
@@ -1138,7 +1154,7 @@ Context is mostly files 61% &middot; mcp 22% &mdash; trim the largest to free ro
             <li>All future Pro + Business packs included</li>
             <li>Lifetime access &mdash; no subscriptions ever</li>
           </ul>
-          <button class="btn btn-biz" style="width:100%" onclick="openPayment('rune-biz')">Get Rune Business &mdash; $169</button>
+          <button class="btn btn-biz" style="width:100%" onclick="openPayment('rune-biz')">Get Rune Business &mdash; $149</button>
           <p class="pricing-note pricing-guarantee">&#128176; 14-Day Money-Back Guarantee &mdash; no questions asked</p>
         </div>
       </div>
@@ -1152,7 +1168,7 @@ Context is mostly files 61% &middot; mcp 22% &mdash; trim the largest to free ro
               <th>Capability</th>
               <th>Free</th>
               <th>Pro <span class="table-price">$49</span></th>
-              <th>Business <span class="table-price">$169</span></th>
+              <th>Business <span class="table-price">$149</span></th>
             </tr>
           </thead>
           <tbody>
@@ -1278,7 +1294,7 @@ Context is mostly files 61% &middot; mcp 22% &mdash; trim the largest to free ro
               <td class="check check-biz">&#10003;</td>
             </tr>
             <tr>
-              <td>Priority support</td>
+              <td>Executive report templates (2)</td>
               <td class="dash">&mdash;</td>
               <td class="dash">&mdash;</td>
               <td class="check check-biz">&#10003;</td>

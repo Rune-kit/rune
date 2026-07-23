@@ -3,7 +3,7 @@ import { execFileSync } from 'node:child_process';
 import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { afterEach, beforeEach, describe, test } from 'node:test';
+import { afterEach, describe, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -17,6 +17,7 @@ function seedFixture(version, { withRoadmapTitle = true, withMarketplace = true 
   const root = mkdtempSync(join(tmpdir(), 'rune-bump-'));
   mkdirSync(join(root, 'docs'), { recursive: true });
   mkdirSync(join(root, '.claude-plugin'), { recursive: true });
+  mkdirSync(join(root, '.codex-plugin'), { recursive: true });
   mkdirSync(join(root, 'scripts'), { recursive: true });
 
   // type: module required so the ESM bump-version.js can be executed from this fixture root
@@ -26,6 +27,7 @@ function seedFixture(version, { withRoadmapTitle = true, withMarketplace = true 
     JSON.stringify({ name: '@rune-kit/rune', version, type: 'module' }, null, 2),
   );
   writeFileSync(join(root, '.claude-plugin', 'plugin.json'), JSON.stringify({ name: 'rune', version }, null, 2));
+  writeFileSync(join(root, '.codex-plugin', 'plugin.json'), JSON.stringify({ name: 'rune', version }, null, 2));
   if (withMarketplace) {
     writeFileSync(
       join(root, '.claude-plugin', 'marketplace.json'),
@@ -97,6 +99,9 @@ describe('bump-version', () => {
 
     const plugin = JSON.parse(readFileSync(join(root, '.claude-plugin', 'plugin.json'), 'utf8'));
     assert.strictEqual(plugin.version, '2.17.0');
+
+    const codexPlugin = JSON.parse(readFileSync(join(root, '.codex-plugin', 'plugin.json'), 'utf8'));
+    assert.strictEqual(codexPlugin.version, '2.17.0');
 
     const marketplace = JSON.parse(readFileSync(join(root, '.claude-plugin', 'marketplace.json'), 'utf8'));
     assert.strictEqual(marketplace.plugins[0].version, '2.17.0');

@@ -26,14 +26,14 @@ const PRO_MANIFEST = {
       skill: 'context-inject',
       event: 'UserPromptSubmit',
       matcher: '.*',
-      command: 'node "${RUNE_PRO_ROOT}/hooks/run-hook.cjs" context-inject',
+      command: `node "\${RUNE_PRO_ROOT}/hooks/run-hook.cjs" context-inject`,
     },
     {
       id: 'context-sense',
       skill: 'context-sense',
       event: 'PreToolUse',
       matcher: 'Edit|Write',
-      command: 'node "${RUNE_PRO_ROOT}/hooks/run-hook.cjs" context-sense',
+      command: `node "\${RUNE_PRO_ROOT}/hooks/run-hook.cjs" context-sense`,
     },
   ],
 };
@@ -71,9 +71,7 @@ async function seedTierHooksOn(root, platform, tier) {
         UserPromptSubmit: [
           {
             matcher: '.*',
-            hooks: [
-              { type: 'command', command: 'node "${RUNE_' + tier.toUpperCase() + '_ROOT}/hooks/run-hook.cjs" ctx' },
-            ],
+            hooks: [{ type: 'command', command: `node "\${RUNE_${tier.toUpperCase()}_ROOT}/hooks/run-hook.cjs" ctx` }],
           },
         ],
       },

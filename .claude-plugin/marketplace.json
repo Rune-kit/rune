@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "rune-kit",
-  "description": "Less skills. Deeper connections. A lean, interconnected skill ecosystem for Claude Code — 65 skills, 5-layer mesh, runtime auto-discipline.",
+  "description": "Less skills. Deeper connections. A lean, interconnected skill ecosystem for Claude Code — 66 skills, 248 connections, 45 signals, and runtime auto-discipline.",
   "owner": {
     "name": "Rune Contributors"
   },
@@ -9,8 +9,8 @@
     {
       "name": "rune",
       "source": "./",
-      "description": "65 skills wired into a self-aware 5-layer mesh — 204 sync connections + 43 async signals, adaptive routing, mesh analytics, logic preservation. Runs as native hooks (preflight/sentinel/completion-gate/quarantine auto-fire before tool use) or invoked library. Multi-platform: Claude Code, Cursor, Windsurf, Antigravity. Use rune:cook for any code task, rune:team for parallel work, rune:launch for deploy, rune:rescue for legacy code.",
-      "version": "2.28.0",
+      "description": "66 skills wired into a 5-layer mesh — 248 connections + 45 signals, adaptive routing, mesh analytics, logic preservation, and native lifecycle hooks. The compiler targets 13 runtimes including Claude Code and OpenAI Codex.",
+      "version": "2.29.0",
       "author": {
         "name": "Rune Contributors"
       },
@@ -95,6 +95,12 @@
       "name": "@rune/chrome-ext",
       "source": "./extensions/chrome-ext",
       "description": "Chrome Extension — manifest v3, service workers, content scripts, popup UI",
+      "category": "domain"
+    },
+    {
+      "name": "@rune/zalo",
+      "source": "./extensions/zalo",
+      "description": "Zalo platform integration — Official Account API, webhooks, MCP, and risk-gated personal automation",
       "category": "domain"
     }
   ]

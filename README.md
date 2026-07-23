@@ -5,7 +5,7 @@
 <p align="center">
   <strong>Less skills. Deeper connections.</strong><br>
   A lean, interconnected skill ecosystem for AI coding assistants.<br>
-  66 skills · 209 connections · 45 signals · 13 platforms · MIT
+  66 skills · 248 connections · 45 signals · 13 platforms · MIT
 </p>
 
 <p align="center">
@@ -23,7 +23,7 @@
 
 Most skill ecosystems are either **too many isolated skills** (540+ that don't talk to each other) or **rigid pipelines** (A → B → C, if B fails everything stops).
 
-Rune is a **mesh** — 66 skills with 209 connections + 45 signals across a 5-layer architecture. Skills call each other bidirectionally, forming resilient workflows that adapt when things go wrong.
+Rune is a **mesh** — 66 skills with 248 connections + 45 signals across a 5-layer architecture. Every declared outbound call is acknowledged by its target, forming resilient workflows that adapt when things go wrong.
 
 ```
 Pipeline:  A → B → C → D         (B fails = stuck)
@@ -89,10 +89,10 @@ _Methodology: Claude Code CLI headless mode (`claude -p --output-format json`), 
   <a href="https://github.com/rune-kit/rune-pro"><img src="assets/pro-upgrade.svg" alt="Rune Pro — Autopilot + Context Intelligence · $49 lifetime" width="100%"></a>
 </p>
 
-Free gives Claude discipline. **Pro** gives it two things the free tier can't:
+Free gives the agent discipline. **Pro** adds two capabilities the free tier does not:
 
 - **Autopilot** — approve a plan once and walk away. It executes each phase autonomously (self-reviews with zero-HIGH gates, regression-checks against baselines, commits per phase) and **resumes across sessions**. `cook` gets the job done; `autopilot` gets it done while you sleep.
-- **Context Intelligence** — a live **context cockpit** in your statusline (real %, the active skill's mesh layer, cost, predictive "~4m until auto-compaction") that also makes Claude *itself* aware of the pressure, so it saves decisions + progress to `.rune/` **before** compact wipes the session. Zero data loss.
+- **Context Intelligence** — a live **context cockpit** with real %, active mesh layer, cost, and predictive compaction timing. Claude Code hosts the executable statusline natively; Codex uses its built-in footer plus the full Pro watcher/HUD. Hooks save decisions and progress to `.rune/` before compaction.
 
 Plus **9 domain packs** (product, sales, data-science, support, growth, media, personal-brand, ecommerce, vietnam). **$49 lifetime, one-time — no subscription.**
 
@@ -103,11 +103,15 @@ Plus **9 domain packs** (product, sales, data-science, support, growth, media, p
 
 ---
 
-## What's New (v2.28.0 — Reasoner's Blind Spots)
+## What's New (v2.29.0 — Codex Native)
+
+> **v2.29.0 (2026-07-23):** Codex stops being a compile target that happens to work and becomes a **first-class native runtime**. The Codex adapter now emits everything current Codex supports natively — `.agents/skills/`, project-scoped agent TOML (`.codex/agents/rune-{heavy,standard,fast}.toml`), a dedicated synchronous hook adapter targeting `.codex/hooks.json` (Codex silently skips async handlers), MCP config, and tier-aware compilation so Free/Pro/Business stacks resolve exactly as on Claude Code. The mesh validator was fixed at the root — `Calls (outbound)` is now the single authoritative edge inventory, acknowledged by the target's `Called By` — moving the canonical count from 209 to **248 connections** (same mesh, honest count; doctor now fails CI on any stale claim). Doctor also grew a cross-tier audit: Business metadata (28 pack skills, 4 orchestrators), $149 pricing, 13-platform count, and JSON-schema validation of the new `docs/config-schema.json` + hooks manifest schema. All XLabs remote-MCP references now go through `XLABS_MCP_TOKEN` — plaintext bearer values are forbidden. 1,615 tests pass.
+
+### Previous (v2.28.0 — Reasoner's Blind Spots)
 
 > **v2.28.0 (2026-07-22):** Completes the reasoning wave. Every addition targets one failure class: **a check that feels done because the model re-read its own work and agreed with itself.** `problem-solver` (v0.6.0) gains a **model failure-mode table** beside its human-bias table — pattern-match satisfaction, template hijack, fluent≠true, prior-as-fact, completion pressure, surface blindness — plus three tells that you are inside one right now (instant confident answer; a stated detail your draft never used; two failed attempts in the same framing). `verification` (v0.8.0) gains the **Constraint Loop** for deliverables carrying a mechanically checkable constraint on their own surface form (banned characters, exact counts, strict formats) — a class Rune had no coverage for: expand the constraint before drafting, verify with a tool, re-scan the whole artifact, ship byte-for-byte. `design` (v0.9.0) gains **render blindness** — a checklist item ticked from source is a prediction, and the imagined render is always flattering; visual items are marked 👁 and are ticked from a render or marked ASSUMED. Advisory throughout, no new skills.
 
-### Previous (v2.27.0 — Calibrated Output)
+#### Earlier (v2.27.0 — Calibrated Output)
 
 > **v2.27.0 (2026-07-22):** Rune had one opinion about response shape — `caveman`, optimising token count — and no rule for what a style may **not** compress. That gap had teeth: caveman's "hedging dies" list auto-activates at ORANGE/RED context and deleted phrases like *"I'm assuming the migration ran"*, promoting an unverified claim into observed grammar at exactly the point in a session where the agent is most likely to be wrong. New **output-mode layer** (`context-engine`) holds every mode behind one activation contract and a five-rule precedence list — **shape is negotiable, substance is not**: calibration > evidence > a skill's `## Output Format` > safety > actionability > economy. New **`actionable` mode** optimises distance-to-doing (next action first, steps numbered, position restated each turn) and stacks with caveman. New **claim discipline** in `completion-gate` types every load-bearing statement OBSERVED / DERIVED / PRIOR / ASSUMED — *hallucination is an unverified claim wearing the grammar of an observation* — and adds a `DECLARED` verdict so an honest hedge is recorded as an open item, never scored as a lie.
 
@@ -117,7 +121,7 @@ Plus **9 domain packs** (product, sales, data-science, support, growth, media, p
 
 #### Earlier (v2.26.1 — Codex Wiring)
 
-> **v2.26.1 (2026-07-22):** Rune's runtime hooks were silently inert on **Codex CLI**. `hooks/hooks.json` is loaded by both Claude Code and Codex — Codex reads `<plugin>/hooks/hooks.json`, the same path, and maps the event names — but every tool matcher named only Claude's tools. Codex has no `Read`, `Write`, `Edit` or `Bash` tool; it issues `shell_command`, `exec`, `apply_patch`, `view_image`, `spawn_agent`. So the privacy gate and the secret scanner matched nothing and never fired. Matchers now name both platforms' tools (plain alternation — Claude behaviour is byte-for-byte unchanged), and `pre-tool-guard` reads the target path out of a Codex `apply_patch` payload (`*** Update File: <path>`), which is what makes it an actual gate there instead of a no-op. Note that Codex does not support `async` hooks yet and skips them, so Rune's six background hooks stay inactive on Codex — `async` is kept because Claude Code honours it.
+> **v2.26.1 (2026-07-22):** Rune's runtime hooks were silently inert on **Codex CLI**. `hooks/hooks.json` is loaded by both Claude Code and Codex — Codex reads `<plugin>/hooks/hooks.json`, the same path, and maps the event names — but every tool matcher named only Claude's tools. Codex has no `Read`, `Write`, `Edit` or `Bash` tool; it issues `shell_command`, `exec`, `apply_patch`, `view_image`, `spawn_agent`. So the privacy gate and the secret scanner matched nothing and never fired. Matchers now name both platforms' tools (plain alternation — Claude behaviour is byte-for-byte unchanged), and `pre-tool-guard` reads the target path out of a Codex `apply_patch` payload (`*** Update File: <path>`), which is what makes it an actual gate there instead of a no-op. Codex skips `async` hooks; current releases therefore ship a separate synchronous `hooks/codex-hooks.json` through the native Codex plugin manifest.
 
 #### Earlier (v2.26.0 — Motion Craft)
 
@@ -129,7 +133,7 @@ Plus **9 domain packs** (product, sales, data-science, support, growth, media, p
 
 ### Previous (v2.24.0 — Market Refresh)
 
-> **v2.24.0 (2026-07-11):** Model lineup + platform adapters refreshed to the mid-2026 landscape. Claude tiers across the mesh → **Opus 4.8 / Sonnet 5 / Haiku 4.5**; the **Codex** adapter → **GPT-5.6** `sol` / `terra` / `luna` (verified against codex-cli 0.144.1), with a suggested tier→`model_reasoning_effort` mapping in the generated `AGENTS.md`. **Fable 5** is positioned as an API-only frontier **oracle** target rather than a routing tier (opus stays the ceiling). **Windsurf → Devin Desktop** rebrand documented (emission kept on `.windsurf/`, which Devin still reads). New **goal-first advisory** in `plan`/`ba` to leverage native `/goal` + Managed Agents Outcomes. CI 1572/1572.
+> **v2.24.0 (2026-07-11):** Model lineup + platform adapters refreshed to the mid-2026 landscape. Claude tiers across the mesh → **Opus 4.8 / Sonnet 5 / Haiku 4.5**; the **Codex** adapter initially targeted GPT-5.6 `sol` / `terra` / `luna`. Current releases use `sol` plus `terra` at different reasoning efforts because `luna` is not a valid current Codex model. **Fable 5** is positioned as an API-only frontier **oracle** target rather than a routing tier (opus stays the ceiling). **Windsurf → Devin Desktop** rebrand documented (emission kept on `.windsurf/`, which Devin still reads). New **goal-first advisory** in `plan`/`ba` to leverage native `/goal` + Managed Agents Outcomes. CI 1572/1572.
 
 > **v2.23.0 (2026-07-04):** Seven platform adapters move to the **Agent Skills open standard** (dir-per-skill `SKILL.md`, discovered and lazy-loaded by each platform's native loader). The headline fix: **Codex** dropped `.codex/skills/` from its scan list, so compiled skills were only findable via the AGENTS.md pointer — agents kept "re-finding" the path mid-session. Codex now emits to **`.agents/skills/`** (scanned CWD → repo root). Same treatment across the fleet: **cursor** `.cursor/rules/*.mdc` → `.cursor/skills/` (Cursor 2.4+ Skills, on-demand instead of always-on), **windsurf** → `.windsurf/skills/` (Cascade Skills), **copilot** → `.github/skills/`, **qoder** → `.qoder/skills/`, and **gemini/qwen** drop their all-skills-always-on context bombs (GEMINI.md bundle, QWEN.md `@import` wall) for native `.gemini/skills/` / `.qwen/skills/` + slim pointer files — a big context-window win on those platforms. Runtime hooks intentionally stay on `.cursor/rules` / `.windsurf/rules` (always-on is correct for hook context). Also fixes a YAML double-escaping bug that corrupted compiled frontmatter for skills with quoted descriptions on 6 platforms, and a duplicate `scripts/` copy in dir-per-skill builds. If you previously built for Codex/Cursor/Windsurf/Copilot/Gemini/Qwen/Qoder: re-run `npx @rune-kit/rune build` and delete the old output dirs. CI 1571/1571.
 
@@ -184,7 +188,7 @@ Plus **9 domain packs** (product, sales, data-science, support, growth, media, p
 - **`adversary` v0.2.0 — Mode: oracle** — when `agent.stuck` fires from `debug` (3 disproved hypotheses) or `fix` (2+ failed attempts), oracle-mode dispatches a stateless second-model pass with explicit "no prior context" framing. Bundle format is regex-validated (`[SYSTEM]` invariant role-priming + `[USER]` template + `### File N`), token-capped (100k bundle, 4k per file, 12 files max), citation-required reply contract. Secrets auto-redacted. Breaks the confirmation-bias loop that scout's zoom-out (structural pivot) cannot.
 - **`session-bridge` v0.8.0 — Detach Mode** — async escalation primitive. Heavy-model second-opinion calls (1-10 min wall time) no longer block the primary agent. `.rune/oracle-pending/<sessionId>.json` is the rendezvous file; idempotent dispatch (bundleHash-keyed); 10min default timeout; 24h orphan cleanup on session start. `cook` Phase 4 and `team` Phase 3 reattach via filesystem poll between adjacent tasks.
 - **`context-engine` v1.1.0 — Mode: preview** — pre-flight cost gate. Caller emits `context.preview` BEFORE bundle build with file list + estimated tokens (chars × 0.25). Per-caller thresholds: adversary 50k/100k, team 30k/80k (per worker), review 40k/100k, audit 60k/120k. Action enum `proceed | warn | block`. Override via `RUNE_CONTEXT_THRESHOLDS_<CALLER>`. Stops `team` parallel workstreams from silently blowing $20 of Opus tokens.
-- **Cross-provider model mapping** — 5 non-Anthropic adapters now translate `model: opus|sonnet|haiku` to provider-correct names. **codex** → gpt-5.6-sol / gpt-5.6-terra / gpt-5.6-luna. **antigravity** → gemini-3-pro / gemini-3-flash / gemini-3-flash-lite. **opencode / openclaw / generic** → tier:heavy / tier:mid / tier:light (provider-agnostic). claude / cursor / windsurf remain no-op (Anthropic backend understands native names).
+- **Cross-provider model mapping** — 5 non-Anthropic adapters now translate `model: opus|sonnet|haiku` to provider-correct names. **codex** → gpt-5.6-sol / gpt-5.6-terra / gpt-5.6-terra. **antigravity** → gemini-3-pro / gemini-3-flash / gemini-3-flash-lite. **opencode / openclaw / generic** → tier:heavy / tier:mid / tier:light (provider-agnostic). claude / cursor / windsurf remain no-op (Anthropic backend understands native names).
 - **Routing clarity sweep** — all 63 SKILL.md descriptions now double-quoted (YAML safety). 13 ambiguous-name skills got explicit "Use when…" routing hints so skill-router doesn't have to guess: ba, completion-gate, constraint-check, doc-processor, integrity-check, logic-guardian, onboard, preflight, sentinel-env, watchdog, worktree, hallucination-guard, mcp-builder.
 - **4 new mesh signals** — `oracle.dispatched`, `oracle.response`, `oracle.failed`, `context.preview`. All registered in Signal Catalog with full emit/listen mapping. `agent.stuck` listeners updated to include adversary in addition to scout.
 - **1,331 tests** — +71 from v2.14.0 across 5 new test files: adapter-model-mapping (18), oracle-bundle-format (19), oracle-pending-schema (16), context-preview-signal (13), skill-description-quality (5).
@@ -275,19 +279,24 @@ cook ───emit:phase.complete────→ session-bridge
 
 Rune started as a **Claude Code plugin** and now compiles to **every major AI IDE**. Same 66 skills, same mesh connections, same workflows — zero knowledge loss across platforms.
 
-| | Rune Provides | Claude Code Provides |
+OpenAI Codex is now a first-class native runtime too: Rune ships
+`.codex-plugin/plugin.json`, synchronous Codex lifecycle hooks, project-scoped
+`.codex/agents/*.toml` roles, and `.agents/skills/` output. Codex hook trust is
+still explicit; review newly installed definitions with `/hooks`.
+
+| | Rune Provides | Agent Runtime Provides |
 |---|---|---|
-| **Workflows** | 8-phase TDD cycle (cook), parallel DAG execution (team), rescue pipelines | Basic tool calling |
+| **Workflows** | 8-phase TDD cycle (cook), parallel DAG execution (team), rescue pipelines | Tool calling |
 | **Quality Gates** | preflight + sentinel + review + completion-gate (parallel) | None built-in |
 | **Domain Knowledge** | 14 extension packs (trading, SaaS, mobile, etc.) | General-purpose |
 | **Cross-Session State** | .rune/ directory (decisions, conventions, progress) | Conversation only |
-| **Mesh Resilience** | 203 skill connections + 40 mesh signals, fail-loud-route-around | Linear execution |
-| **Cost Optimization** | Auto model selection (haiku/sonnet/opus per task) | Single model |
+| **Mesh Resilience** | 248 skill connections + 45 mesh signals, fail-loud-route-around | Runtime execution |
+| **Cost Optimization** | Model-role hints and task routing | Available models |
 | | | |
-| **Sandbox & Permissions** | — | Claude Code handles this |
-| **Agent Spawning** | — | Claude Code's Task/Agent system |
-| **MCP Integration** | — | Claude Code's MCP protocol |
-| **File System Access** | — | Claude Code's tool permissions |
+| **Sandbox & Permissions** | — | The runtime handles this |
+| **Agent Spawning** | Orchestration policy | Claude Task/Agent, Codex `spawn_agent`, or runtime equivalent |
+| **MCP Integration** | Connector workflows | The runtime's MCP client |
+| **File System Access** | — | The runtime's permissions |
 
 ### Common Misconceptions
 
@@ -297,14 +306,14 @@ Rune started as a **Claude Code plugin** and now compiles to **every major AI ID
 | CI quality gates | `verification` skill: lint + typecheck + tests + build (actual commands, not LLM review) |
 | Memory / state | `session-bridge` + `journal`: cross-session decisions, conventions, ADRs, module health |
 | Multi-model strategy | Every skill has assigned model: haiku (scan), sonnet (code), opus (architecture) |
-| Agent specialization | 62 specialized skills with dedicated roles (architect, coder, reviewer, scanner, researcher, BA, scaffolder) — each runs as a Task agent via Claude Code |
+| Agent specialization | 66 specialized skills plus native role definitions; Claude uses Task/Agent and Codex uses `spawn_agent` collaboration primitives |
 | Security scanning | `sentinel`: OWASP patterns, secret scanning, dependency audit. `sast`: static analysis |
 
 ## Install
 
 ### One-Command Setup (recommended)
 
-After installing the plugin, run the wizard once to wire hooks the way you want them — pick scope, pick tiers, done:
+After installing Rune, run the wizard once to wire native hooks and platform-compiled skills — pick scope, runtime, and tiers:
 
 ```bash
 npx @rune-kit/rune setup
@@ -332,13 +341,13 @@ Preset [g/s] (default g): g
   Verify: rune doctor --hooks
 ```
 
-**What does the wizard do?** It writes Rune-managed entries to `.claude/settings.json` (project-local OR global) so Claude Code auto-fires `preflight`, `sentinel`, `dependency-doctor`, `completion-gate`, and `quarantine` at the right moments. With `--tier pro`, it also wires `loop-circuit-breaker` (auto-engages only in autopilot sessions).
+**What does the wizard do?** It installs Rune-managed lifecycle hooks in the selected runtime's native configuration and installs tier skills in that runtime's native skill directory. For Claude this is `.claude/settings.json`; for Codex it is `.codex/hooks.json` plus `.agents/skills/`. With `--tier pro`, it also wires `loop-circuit-breaker` (auto-engages only in autopilot sessions).
 
 **Non-interactive mode** (CI / scripted):
 
 ```bash
-npx @rune-kit/rune setup --here --preset gentle --tier pro
-npx @rune-kit/rune setup --global --preset strict --tier pro,business
+npx @rune-kit/rune setup --here --platform codex --preset gentle --tier pro
+npx @rune-kit/rune setup --here --platform all --preset strict --tier pro,business
 npx @rune-kit/rune setup --here --no-tier --dry      # preview without writing
 ```
 
@@ -352,6 +361,20 @@ claude plugin add rune-kit/rune
 Or add manually in `~/.claude/settings.json` under `installed_plugins`.
 
 Full mesh: subagents, hooks, adaptive routing, mesh analytics. **Run `npx @rune-kit/rune setup` afterward to wire hooks** (see One-Command Setup above).
+
+### OpenAI Codex (Native Plugin)
+
+```bash
+# From the project that should receive Rune
+npx @rune-kit/rune setup --here --platform codex
+
+# Paid tiers are compiled through the Codex adapter too
+npx @rune-kit/rune setup --here --platform codex --tier pro,business
+```
+
+Rune emits `.agents/skills/`, project-scoped `.codex/agents/rune-{heavy,standard,fast}.toml`,
+a managed `AGENTS.md` block, and synchronous `.codex/hooks.json` definitions. Review and
+trust newly installed hooks with `/hooks`.
 
 ### Cursor / Windsurf / Antigravity / Any IDE
 
@@ -369,18 +392,20 @@ This compiles all 66 skills into your IDE's rules format. Same knowledge, same w
 
 ### Platform Comparison
 
-| Feature | Claude Code | Cursor / Windsurf / Others |
-|---------|-------------|---------------------------|
-| Skills available | 66/66 | 66/66 |
-| Mesh connections | 206 sync + 45 signals (programmatic) | 206 sync + 45 signals (rule references) |
-| Workflows & HARD-GATEs | Full | Full |
-| Extension packs | 14 | 14 |
-| Subagent parallelism | Native | Sequential fallback |
-| Lifecycle hooks | 8 hooks (JS runtime) | Inline MUST/NEVER constraints |
-| Adaptive model routing | haiku/sonnet/opus | Single model |
-| Mesh analytics | Real-time metrics | Not available |
+| Feature | Claude Code | OpenAI Codex | Other compiled targets |
+|---------|-------------|--------------|------------------------|
+| Skills available | 66/66 | 66/66 | 66/66 |
+| Mesh connections | 248 + 45 signals | 248 + 45 signals | 248 + 45 signals as native rules/skills |
+| Workflows & HARD-GATEs | Full | Full | Full knowledge, runtime-dependent enforcement |
+| Extension packs | 14 | 14 | 14 |
+| Subagent parallelism | Native Task/Agent | Native `spawn_agent` | Sequential fallback unless supported |
+| Lifecycle hooks | Native executable hooks | Native synchronous hooks | Native where supported; inline constraints otherwise |
+| Role/model routing | Claude model roles | Project-scoped Codex agent roles | Adapter-specific |
+| Mesh analytics | Runtime metrics | Runtime metrics | Adapter-dependent |
 
-**Same power, different delivery.** Claude Code gets execution efficiency; other IDEs get the same knowledge and workflows.
+**Same mesh, platform-native delivery.** Claude Code and Codex receive native agents and
+lifecycle hooks; the remaining adapters preserve the workflows and constraints in the best
+format each runtime supports.
 
 ## Quick Start
 
@@ -639,15 +664,18 @@ Domain-specific skills that plug into the core mesh:
 
 ### Rune Pro — $49 lifetime
 
-> *Free Rune makes Claude disciplined. Pro makes Claude self-aware.*
+> *Free Rune makes the agent disciplined. Pro makes the workflow context-aware.*
 
-**Context Intelligence** — the headline Pro feature. Claude Code auto-compacts without warning, wiping your session. Pro turns the statusline into a live **context cockpit** and makes Claude *know* when the window is filling — so it saves decisions, progress, and discoveries before compact hits.
+**Context Intelligence** — the headline Pro feature. On Claude Code, Pulse runs as an
+executable native statusline. Codex CLI's built-in `[tui].status_line` supports its own footer
+items but does not execute an arbitrary statusline command, so full Rune Pulse runs as the
+Pro external watcher/HUD while Rune's hooks preserve context before compaction.
 
 ```
 ◈ Opus 4.8 │ ████████░░░ 73% WARM │ ⬡ cook·L1 │ $0.91 │ 5h ██░░ 22%  7d ███░ 61%
 ```
 
-Three things a blind meter can't do: a **glitch-proof %** (no phantom 0%, no false "100% URGENT" during light work), a **burn-rate ETA** (*"~4m until auto-compaction"*), and **what's eating your context** (*"files 61% · mcp 22%"* → trim the biggest, don't nuke blind). At 70/80/90% real, `context-inject` writes the pressure into Claude's own context → it triggers `session-bridge` + `neural-memory`, you `/compact`, and `session-start` reloads `.rune/`. Zero loss.
+Three things a blind meter can't do: a **glitch-proof %** (no phantom 0%, no false "100% URGENT" during light work), a **burn-rate ETA** (*"~4m until auto-compaction"*), and **what's eating your context** (*"files 61% · mcp 22%"* → trim the biggest, don't nuke blind). At 70/80/90% real, `context-inject` writes pressure into the active agent context → it triggers `session-bridge` + `neural-memory`; after compaction, `session-start` reloads `.rune/`.
 
 Free ships the blind tool-call counter; the real-% cockpit + predictive intelligence is Pro.
 
@@ -684,7 +712,9 @@ Business packs don't just add skills — they **wire departments together**. Fin
 | **HR** | JD generation, resume screening, structured interviews, comp benchmarking, onboarding workflows |
 | **Enterprise Search** | Cross-system knowledge retrieval with permission-aware filtering and knowledge graph |
 
-4 packs, 26 skills, 118 reference files, 11 automation scripts. Business includes all Pro features because it depends on Pro data — finance can't forecast without sales pipeline, legal can't audit without product specs.
+4 packs, 28 pack skills, 124 reference files, 12 tracked automation scripts, plus 4
+cross-department orchestrators. Business includes all Pro features because it depends on Pro
+data — finance can't forecast without sales pipeline, legal can't audit without product specs.
 
 **[Get Rune Business](https://rune-kit.github.io/rune#pricing)** — [rune-kit/rune-business](https://github.com/rune-kit/rune-business)
 
@@ -741,12 +771,12 @@ See [docs/MULTI-PLATFORM.md](docs/MULTI-PLATFORM.md) for the full architecture.
 ```
 Core Skills:       66 (L0: 1 │ L1: 5 │ L2: 30 │ L3: 30)
 Extension Packs:   14 free + 9 pro + 4 business
-Mesh Connections:  206 sync calls (rune doctor)
+Mesh Connections:  248 sync calls (rune status --json)
 Mesh Signals:      45 signals · 55 emit/listen edges (rune doctor)
 Connections/Skill: 3.2 avg
-Platforms:         8 (Claude Code, Cursor, Windsurf, Antigravity, Codex, OpenCode, OpenClaw, Generic)
-Compiler:          ~1400 LOC (parser + 8 transforms + 8 adapters + CLI)
-Tests:             1,152+ (compiler + signals + status + visualizer + hooks + scripts + tier-hooks)
+Platforms:         13 (Claude, Cursor, Windsurf, Antigravity, Generic, OpenClaw, Codex, OpenCode, Aider, Copilot, Gemini, Qoder, Qwen)
+Compiler:          13 adapters plus parser, transforms, hooks, and CLI
+Tests:             1,600+ (compiler + signals + status + visualizer + hooks + scripts + tier-hooks)
 Pack Depth:        27 packs total (14 free + 9 pro + 4 business, all free packs rated Deep)
 ```
 

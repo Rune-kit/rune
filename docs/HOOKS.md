@@ -16,11 +16,14 @@ The wizard handles 95% of cases. Use the explicit flags below only for CI / scri
 ## Manual flags
 
 ```bash
-# Auto-detect platforms (.claude/, .cursor/, .windsurf/, .antigravity/)
+# Auto-detect platforms (.claude/, .codex/, .cursor/, .windsurf/, .antigravity/)
 rune hooks install --preset gentle
 
 # Install GLOBALLY — every Claude Code session, regardless of project
 rune hooks install --preset gentle --global
+
+# Install globally for Codex
+rune hooks install --preset gentle --global --platform codex
 
 # Target a specific platform (force-creates the platform dir if missing)
 rune hooks install --preset strict --platform cursor
@@ -133,24 +136,28 @@ Presets:
 | Platform    | Maturity     | Pre-edit  | Pre-Bash   | Post-edit | Stop (completion-gate) | Native artifact                     |
 |-------------|--------------|-----------|------------|-----------|------------------------|-------------------------------------|
 | Claude Code | **stable**   | auto-fire | auto-fire  | auto-fire | **auto-fire**          | `.claude/settings.json` (JSON)      |
+| OpenAI Codex | **stable**  | auto-fire | auto-fire  | auto-fire | **auto-fire**          | `.codex/hooks.json` (JSON)          |
 | Cursor      | beta         | rule-inject | —        | —         | —                      | `.cursor/rules/rune-*.mdc`          |
 | Windsurf    | beta         | workflow + cascade-rule | workflow | — | —                      | `.windsurf/workflows/` + `.windsurf/rules/` |
 | Antigravity | experimental | rule-inject | —        | —         | —                      | `.antigravity/rules/rune-*.md`      |
 
 ### Pro tier (`--tier pro`)
 
-| Entry          | Claude     | Cursor         | Windsurf                 | Antigravity    | Notes                                      |
-|----------------|------------|----------------|--------------------------|----------------|--------------------------------------------|
-| context-inject | auto-fire  | rule-alwaysApply | workflow + cascade-rule | rule-alwaysApply | UserPromptSubmit event, runs per prompt   |
-| context-sense  | auto-fire  | rule-glob      | workflow + cascade-rule  | rule-glob      | PreToolUse Edit\|Write, glob-scoped        |
-| rune-pulse     | statusLine | —              | —                        | —              | Claude statusline only — other IDEs skip   |
+| Entry          | Claude     | Codex     | Cursor         | Windsurf                 | Antigravity    | Notes                                      |
+|----------------|------------|-----------|----------------|--------------------------|----------------|--------------------------------------------|
+| context-inject | auto-fire  | auto-fire | rule-alwaysApply | workflow + cascade-rule | rule-alwaysApply | UserPromptSubmit event, runs per prompt   |
+| context-sense  | auto-fire  | auto-fire | rule-glob      | workflow + cascade-rule  | rule-glob      | PreToolUse edit matcher, session-keyed     |
+| loop-circuit-breaker | auto-fire | auto-fire | — | — | — | Claude/Codex tool names share one budget guard |
+| rune-pulse     | native executable `statusLine` | built-in `[tui].status_line` footer / external Pro HUD | — | — | — | Codex does not expose an arbitrary executable status-line hook |
 
 **Capability reading:**
 
-- `auto-fire` / `statusLine` = native Claude primitive, true runtime behavior.
+- `auto-fire` = a native lifecycle primitive with true runtime behavior.
+- Claude's executable `statusLine` can run the full Rune Pulse renderer inside the native footer.
+- Codex's `[tui].status_line` supports built-in footer items only. The full rich Rune Pulse display runs separately as the Pro watcher/HUD (`node "$RUNE_PRO_ROOT/hooks/rune-pulse-codex/index.cjs" watch`); it is not a native executable status-line hook.
 - `rule-alwaysApply` / `rule-glob` = best-effort rule injection, agent still decides.
 - `workflow + cascade-rule` = user-invoked `/rune-pro-context-inject` + a cascade reminder.
-- `—` = platform can't host the entry (e.g., no statusLine primitive). `rune hooks status` lists skipped entries per-tier.
+- `—` = platform can't host the entry. `rune hooks status` lists skipped entries per-tier.
 
 Install with:
 

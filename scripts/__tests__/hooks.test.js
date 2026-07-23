@@ -22,7 +22,7 @@ const { resolveStateKey } = require('../../hooks/lib/context-key.cjs');
  * Run a hook with given stdin input and environment
  * @returns {{ stdout: string, exitCode: number }}
  */
-function runHook(hookName, stdinInput, env = {}) {
+function runHook(hookName, stdinInput, env = {}, cwd) {
   const hookPath = path.join(HOOKS_DIR, hookName, 'index.cjs');
   try {
     const stdout = execFileSync('node', [hookPath], {
@@ -30,12 +30,18 @@ function runHook(hookName, stdinInput, env = {}) {
       encoding: 'utf-8',
       stdio: ['pipe', 'pipe', 'pipe'],
       env: { ...process.env, ...env },
+      cwd,
       timeout: 5000,
     });
     return { stdout, exitCode: 0 };
   } catch (err) {
     return { stdout: err.stdout || '', exitCode: err.status || 1 };
   }
+}
+
+function statePath(prefix, sessionId, cwd, extension = '.json') {
+  const key = resolveStateKey(sessionId, cwd);
+  return path.join(os.tmpdir(), `${prefix}-${key}${extension}`);
 }
 
 // --- Pre-Tool Guard (Privacy Mesh) ---
@@ -468,12 +474,35 @@ describe('hooks.json: cross-platform tool matchers', () => {
   });
 });
 
+describe('Codex plugin manifest and native hooks', () => {
+  const plugin = JSON.parse(fs.readFileSync(path.join(HOOKS_DIR, '..', '.codex-plugin', 'plugin.json'), 'utf-8'));
+  const codexHooks = JSON.parse(fs.readFileSync(path.join(HOOKS_DIR, 'codex-hooks.json'), 'utf-8'));
+
+  test('manifest points to packaged skills and Codex-specific hooks', () => {
+    assert.strictEqual(plugin.skills, './skills/');
+    assert.strictEqual(plugin.hooks, './hooks/codex-hooks.json');
+  });
+
+  test('Codex plugin hooks are synchronous and do not carry ignored async flags', () => {
+    const commands = Object.values(codexHooks.hooks)
+      .flat()
+      .flatMap((group) => group.hooks);
+    assert.ok(commands.length > 0);
+    assert.ok(commands.every((hook) => hook.async === undefined));
+  });
+
+  test('prompt and stop hooks omit matchers that Codex ignores', () => {
+    assert.strictEqual(codexHooks.hooks.UserPromptSubmit[0].matcher, undefined);
+    assert.strictEqual(codexHooks.hooks.Stop[0].matcher, undefined);
+  });
+});
+
 describe('pre-tool-guard: Codex apply_patch payloads', () => {
   test('BLOCKs a patch that writes a private key', () => {
     const patch = '*** Begin Patch\n*** Update File: config/id_rsa\n@@\n+secret\n*** End Patch';
     const { exitCode } = runHook(
       'pre-tool-guard',
-      JSON.stringify({ tool_name: 'apply_patch', tool_input: { input: patch } }),
+      JSON.stringify({ tool_name: 'apply_patch', tool_input: { command: patch } }),
     );
     assert.strictEqual(exitCode, 2, 'apply_patch on a private key must block');
   });
@@ -482,7 +511,7 @@ describe('pre-tool-guard: Codex apply_patch payloads', () => {
     const patch = '*** Begin Patch\n*** Add File: .env\n@@\n+TOKEN=1\n*** End Patch';
     const { stdout, exitCode } = runHook(
       'pre-tool-guard',
-      JSON.stringify({ tool_name: 'apply_patch', tool_input: { input: patch } }),
+      JSON.stringify({ tool_name: 'apply_patch', tool_input: { command: patch } }),
     );
     assert.strictEqual(exitCode, 0);
     assert.match(stdout, /\.env/);
@@ -492,7 +521,7 @@ describe('pre-tool-guard: Codex apply_patch payloads', () => {
     const patch = '*** Begin Patch\n*** Update File: src/app.ts\n@@\n+const a = 1;\n*** End Patch';
     const { exitCode } = runHook(
       'pre-tool-guard',
-      JSON.stringify({ tool_name: 'apply_patch', tool_input: { input: patch } }),
+      JSON.stringify({ tool_name: 'apply_patch', tool_input: { command: patch } }),
     );
     assert.strictEqual(exitCode, 0);
   });
@@ -500,9 +529,120 @@ describe('pre-tool-guard: Codex apply_patch payloads', () => {
   test('a patch with no parsable header exits cleanly', () => {
     const { exitCode } = runHook(
       'pre-tool-guard',
-      JSON.stringify({ tool_name: 'apply_patch', tool_input: { input: 'garbage' } }),
+      JSON.stringify({ tool_name: 'apply_patch', tool_input: { command: 'garbage' } }),
     );
     assert.strictEqual(exitCode, 0);
+  });
+
+  test('checks every file header in a multi-file patch', () => {
+    const patch = [
+      '*** Begin Patch',
+      '*** Update File: src/app.ts',
+      '@@',
+      '+const safe = true;',
+      '*** Add File: config/id_ed25519',
+      '+secret',
+      '*** End Patch',
+    ].join('\n');
+    const { exitCode } = runHook(
+      'pre-tool-guard',
+      JSON.stringify({ tool_name: 'apply_patch', tool_input: { command: patch } }),
+    );
+    assert.strictEqual(exitCode, 2, 'a later sensitive target must not bypass the guard');
+  });
+});
+
+describe('secrets-scan: Codex Bash payloads', () => {
+  test('reads git commit command from stdin and blocks a staged secret', () => {
+    const tmpCwd = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'rune-secret-hook-')));
+    try {
+      execFileSync('git', ['init'], { cwd: tmpCwd, stdio: 'ignore' });
+      fs.mkdirSync(path.join(tmpCwd, 'src'), { recursive: true });
+      fs.writeFileSync(path.join(tmpCwd, 'src', 'config.js'), 'export const key = "AKIA0000000000000000";\n');
+      execFileSync('git', ['add', 'src/config.js'], { cwd: tmpCwd, stdio: 'ignore' });
+
+      const event = JSON.stringify({
+        tool_name: 'Bash',
+        tool_input: { command: 'git commit -m "test"' },
+      });
+      const { exitCode } = runHook('secrets-scan', event, {}, tmpCwd);
+      assert.strictEqual(exitCode, 2, 'Codex stdin payload must reach the staged-secret scan');
+    } finally {
+      fs.rmSync(tmpCwd, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('hook lifecycle state continuity', () => {
+  test('PreCompact reads the session-keyed context-watch state', () => {
+    const tmpCwd = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'rune-compact-')));
+    const sessionId = 'codex-compact-123';
+    const counterFile = statePath('rune-context-watch', sessionId, tmpCwd);
+    try {
+      fs.writeFileSync(
+        counterFile,
+        JSON.stringify({
+          count: 17,
+          sessionStart: '2026-07-23T00:00:00.000Z',
+          sessionId,
+          toolCounts: { apply_patch: 4 },
+        }),
+      );
+      const { exitCode } = runHook('pre-compact', JSON.stringify({ session_id: sessionId }), {}, tmpCwd);
+      assert.strictEqual(exitCode, 0);
+      const snapshot = fs.readFileSync(path.join(tmpCwd, '.rune', 'pre-compact-snapshot.md'), 'utf-8');
+      assert.match(snapshot, /Tool calls: 17/);
+      assert.match(snapshot, /apply_patch\(4\)/);
+    } finally {
+      fs.rmSync(counterFile, { force: true });
+      fs.rmSync(tmpCwd, { recursive: true, force: true });
+    }
+  });
+
+  test('Stop flushes session-keyed watch and skill metrics together', () => {
+    const tmpCwd = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'rune-stop-')));
+    const sessionId = 'codex-stop-123';
+    const counterFile = statePath('rune-context-watch', sessionId, tmpCwd);
+    const metricsFile = statePath('rune-metrics', sessionId, tmpCwd, '.jsonl');
+    try {
+      fs.writeFileSync(
+        counterFile,
+        JSON.stringify({
+          count: 9,
+          sessionStart: new Date().toISOString(),
+          sessionId,
+          toolCounts: { apply_patch: 2 },
+        }),
+      );
+      fs.writeFileSync(metricsFile, `${JSON.stringify({ skill: 'review' })}\n`);
+      const { exitCode } = runHook('post-session-reflect', JSON.stringify({ session_id: sessionId }), {}, tmpCwd);
+      assert.strictEqual(exitCode, 0);
+      const sessions = fs
+        .readFileSync(path.join(tmpCwd, '.rune', 'metrics', 'sessions.jsonl'), 'utf-8')
+        .trim()
+        .split('\n')
+        .map((line) => JSON.parse(line));
+      assert.strictEqual(sessions.at(-1).id, sessionId);
+      assert.strictEqual(sessions.at(-1).tool_calls, 9);
+      assert.deepStrictEqual(sessions.at(-1).skills_used, ['review']);
+      assert.ok(!fs.existsSync(metricsFile), 'flushed skill metrics should be removed');
+
+      fs.writeFileSync(metricsFile, `${JSON.stringify({ skill: 'fix' })}\n`);
+      const second = runHook('post-session-reflect', JSON.stringify({ session_id: sessionId }), {}, tmpCwd);
+      assert.strictEqual(second.exitCode, 0);
+      const updatedSessions = fs
+        .readFileSync(path.join(tmpCwd, '.rune', 'metrics', 'sessions.jsonl'), 'utf-8')
+        .trim()
+        .split('\n')
+        .map((line) => JSON.parse(line));
+      assert.strictEqual(updatedSessions.length, 1, 'repeated Stop must upsert, not duplicate the session');
+      assert.strictEqual(updatedSessions[0].skill_invocations, 2);
+      assert.deepStrictEqual(updatedSessions[0].skills_used.sort(), ['fix', 'review']);
+    } finally {
+      fs.rmSync(counterFile, { force: true });
+      fs.rmSync(metricsFile, { force: true });
+      fs.rmSync(tmpCwd, { recursive: true, force: true });
+    }
   });
 });
 

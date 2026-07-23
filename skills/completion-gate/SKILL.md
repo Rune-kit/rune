@@ -148,11 +148,11 @@ For each claim, look for corresponding evidence in the conversation context:
 
 | Claim Type | Required Evidence | Where to Find |
 |---|---|---|
-| "tests pass" | Test runner stdout with pass count | Bash output from test command |
-| "build succeeds" | Build command stdout showing success | Bash output from build command |
-| "lint clean" | Linter stdout (even if empty = 0 errors) | Bash output from lint command |
-| "fixed" | Git diff showing the change + test proving fix | Edit/Write tool calls + test output |
-| "implemented" | Files created/modified matching the plan | Write/Edit tool calls vs plan |
+| "tests pass" | Test runner stdout with pass count | Shell output from test command |
+| "build succeeds" | Build command stdout showing success | Shell output from build command |
+| "lint clean" | Linter stdout (even if empty = 0 errors) | Shell output from lint command |
+| "fixed" | Git diff showing the change + test proving fix | File-edit evidence + test output |
+| "implemented" | Files created/modified matching the plan | File changes compared with the plan |
 | "no security issues" | Sentinel report with PASS verdict | Sentinel skill output |
 | "coverage ≥ X%" | Coverage tool output with actual percentage | Test runner with coverage flag |
 

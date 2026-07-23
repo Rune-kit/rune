@@ -742,7 +742,7 @@ export async function checkMeshIntegrity(runeRoot) {
 /**
  * Parse skill connections from SKILL.md content
  */
-function parseSkillConnections(content, skillName) {
+export function parseSkillConnections(content, skillName) {
   const result = {
     name: skillName,
     calls: [],
@@ -777,13 +777,15 @@ function parseSkillConnections(content, skillName) {
   }
 
   // Extract Calls section
-  const callsMatch = content.match(/## Calls \(outbound\)\s*\n([\s\S]*?)(?=\n## |\n---|Z)/);
+  const callsMatch = content.match(/## Calls \(outbound(?: connections)?\)\s*\r?\n([\s\S]*?)(?=\r?\n## |\r?\n---|$)/);
   if (callsMatch) {
     const lines = callsMatch[1].split('\n');
     for (const line of lines) {
       // Match patterns like: - `scout` (L2): scan codebase
-      // Or: - scout (L2): scan codebase
-      const match = line.match(/^-\s*`?([a-z][\w-]*)`?\s*\(L\d\)/i);
+      // Or table rows like: | 1 | `scout` | L2 | scan codebase |
+      const match =
+        line.match(/^-\s*`?([a-z][\w-]*)`?\s*\((?:L[0-4]|ext)\)/i) ||
+        line.match(/^\|(?:[^|]*\|)*?\s*`?([a-z][\w-]*)`?\s*\|\s*(?:L[0-4]|ext)\s*\|/i);
       if (match) {
         const skillRef = match[1].toLowerCase();
         const reason = line
@@ -796,11 +798,15 @@ function parseSkillConnections(content, skillName) {
   }
 
   // Extract Called By section
-  const calledByMatch = content.match(/## Called By \(inbound\)\s*\n([\s\S]*?)(?=\n## |\n---|Z)/);
+  const calledByMatch = content.match(
+    /## Called By \(inbound(?: connections)?\)\s*\r?\n([\s\S]*?)(?=\r?\n## |\r?\n---|$)/,
+  );
   if (calledByMatch) {
     const lines = calledByMatch[1].split('\n');
     for (const line of lines) {
-      const match = line.match(/^-\s*`?([a-z][\w-]*)`?\s*\(L\d\)/i);
+      const match =
+        line.match(/^-\s*`?([a-z][\w-]*)`?\s*\((?:L[0-4]|ext)\)/i) ||
+        line.match(/^\|(?:[^|]*\|)*?\s*`?([a-z][\w-]*)`?\s*\|\s*(?:L[0-4]|ext)\s*\|/i);
       if (match) {
         const skillRef = match[1].toLowerCase();
         result.calledBy.push({ skill: skillRef });

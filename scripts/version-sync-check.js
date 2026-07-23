@@ -4,10 +4,11 @@
  * version-sync-check.js — Prevents version mismatch across distribution channels.
  *
  * Checks:
- * 1. package.json version === .claude-plugin/plugin.json version
+ * 1. package.json version === Claude and Codex plugin manifest versions
  * 2. npm registry version vs local (warns if local is ahead and unpublished)
  * 3. Extensions on disk match what npm would pack (no missing packs)
  * 4. Split skill files exist for packs that declare format: split
+ * 5. Public product facts match the live source inventory
  *
  * Usage: node scripts/version-sync-check.js
  * Hook: runs via doctor command or pre-publish
@@ -17,6 +18,8 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { listPlatforms } from '../compiler/adapters/index.js';
+import { collectStats } from '../compiler/status.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
@@ -35,16 +38,30 @@ function pass(msg) {
   console.log(`  ✓ ${msg}`);
 }
 
+function walkFiles(root) {
+  if (!existsSync(root)) return [];
+  const files = [];
+  for (const entry of readdirSync(root, { withFileTypes: true })) {
+    const fullPath = join(root, entry.name);
+    if (entry.isDirectory()) files.push(...walkFiles(fullPath));
+    else files.push(fullPath);
+  }
+  return files;
+}
+
 console.log('\n  Version Sync Check\n  ──────────────────\n');
 
 // 1. Version consistency: package.json vs plugin.json
 const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
 const plugin = JSON.parse(readFileSync(join(ROOT, '.claude-plugin/plugin.json'), 'utf8'));
+const codexPlugin = JSON.parse(readFileSync(join(ROOT, '.codex-plugin/plugin.json'), 'utf8'));
 
-if (pkg.version === plugin.version) {
-  pass(`Version consistent: ${pkg.version} (package.json = plugin.json)`);
+if (pkg.version === plugin.version && pkg.version === codexPlugin.version) {
+  pass(`Version consistent: ${pkg.version} (package.json = Claude plugin = Codex plugin)`);
 } else {
-  fail(`Version mismatch: package.json=${pkg.version} vs plugin.json=${plugin.version}`);
+  fail(
+    `Version mismatch: package.json=${pkg.version}, Claude plugin=${plugin.version}, Codex plugin=${codexPlugin.version}`,
+  );
 }
 
 // 1b. Version in docs/content files
@@ -139,6 +156,101 @@ if (existsSync(skillsDir2)) {
   }
 }
 
+// 1e. Public product facts: derive counts from the same compiler/status sources
+// used by the CLI so landing-page and package claims cannot drift independently.
+const liveStats = await collectStats(ROOT);
+const platformCount = listPlatforms().length;
+const publicFacts = [
+  { path: 'README.md', value: `${liveStats.skillCount} skills`, label: 'core skill count' },
+  { path: 'README.md', value: `${liveStats.totalConnections} connections`, label: 'mesh connection count' },
+  { path: 'README.md', value: `${liveStats.signalCount} signals`, label: 'mesh signal count' },
+  { path: 'README.md', value: `${platformCount} platforms`, label: 'platform count' },
+  { path: 'docs/index.html', value: `$149`, label: 'Business price' },
+  { path: 'docs/script.js', value: `baseIntl: 149`, label: 'Business checkout price' },
+  { path: 'docs/index.html', value: `${platformCount} platforms`, label: 'landing platform count' },
+  { path: 'package.json', value: `${liveStats.skillCount}-skill mesh`, label: 'package skill count' },
+  { path: 'package.json', value: `${liveStats.totalConnections} connections`, label: 'package connection count' },
+  { path: '.codex-plugin/plugin.json', value: `${liveStats.skillCount}-skill`, label: 'Codex plugin skill count' },
+  { path: '.claude-plugin/plugin.json', value: `${liveStats.skillCount}-skill`, label: 'Claude plugin skill count' },
+  {
+    path: '.claude-plugin/marketplace.json',
+    value: `${liveStats.totalConnections} connections`,
+    label: 'marketplace connection count',
+  },
+];
+
+for (const fact of publicFacts) {
+  const content = readFileSync(join(ROOT, fact.path), 'utf8');
+  if (content.includes(fact.value)) pass(`${fact.path}: ${fact.label} = ${fact.value}`);
+  else fail(`${fact.path}: missing ${fact.label} "${fact.value}"`);
+}
+
+const forbiddenClaims = [
+  { path: 'README.md', value: '209 connections' },
+  { path: 'README.md', value: '205 connections' },
+  { path: 'README.md', value: 'Platforms:         8' },
+  { path: 'docs/index.html', value: '$169' },
+  { path: 'docs/SKILLS.md', value: '@rune-business/' },
+];
+for (const claim of forbiddenClaims) {
+  const content = readFileSync(join(ROOT, claim.path), 'utf8');
+  if (content.includes(claim.value)) fail(`${claim.path}: stale public claim "${claim.value}"`);
+  else pass(`${claim.path}: no stale "${claim.value}" claim`);
+}
+
+const schemaPath = join(ROOT, 'docs', 'config-schema.json');
+if (!existsSync(schemaPath)) {
+  fail('docs/config-schema.json: missing although public docs link to it');
+} else {
+  try {
+    JSON.parse(readFileSync(schemaPath, 'utf8'));
+    pass('docs/config-schema.json: valid JSON');
+  } catch (error) {
+    fail(`docs/config-schema.json: invalid JSON (${error.message})`);
+  }
+}
+
+const hooksSchemaPath = join(ROOT, 'docs', 'schemas', 'hooks-manifest.v1.json');
+if (!existsSync(hooksSchemaPath)) {
+  fail('docs/schemas/hooks-manifest.v1.json: missing paid-tier manifest schema');
+} else {
+  try {
+    JSON.parse(readFileSync(hooksSchemaPath, 'utf8'));
+    pass('docs/schemas/hooks-manifest.v1.json: valid JSON');
+  } catch (error) {
+    fail(`docs/schemas/hooks-manifest.v1.json: invalid JSON (${error.message})`);
+  }
+}
+
+const businessRoot = join(ROOT, '..', 'Business');
+if (existsSync(businessRoot)) {
+  const businessFiles = walkFiles(join(businessRoot, 'extensions'));
+  const businessPackSkills = businessFiles.filter(
+    (file) => /[\\/]skills[\\/][^\\/]+\.md$/i.test(file) && !file.endsWith('-evals.md'),
+  ).length;
+  const businessReferences = businessFiles.filter((file) => /[\\/]references[\\/].+\.md$/i.test(file)).length;
+  const businessScripts = businessFiles.filter((file) => /[\\/]scripts[\\/].+\.py$/i.test(file)).length;
+  const businessOrchestrators = readdirSync(join(businessRoot, 'skills'), { withFileTypes: true }).filter(
+    (entry) => entry.isDirectory() && existsSync(join(businessRoot, 'skills', entry.name, 'SKILL.md')),
+  ).length;
+  const expectedBusiness = {
+    packSkills: 28,
+    references: 124,
+    scripts: 12,
+    orchestrators: 4,
+  };
+  const actualBusiness = {
+    packSkills: businessPackSkills,
+    references: businessReferences,
+    scripts: businessScripts,
+    orchestrators: businessOrchestrators,
+  };
+  for (const [key, expected] of Object.entries(expectedBusiness)) {
+    if (actualBusiness[key] === expected) pass(`Business ${key}: ${expected}`);
+    else fail(`Business ${key}: expected ${expected}, found ${actualBusiness[key]}`);
+  }
+}
+
 // 2. npm registry check (non-blocking, just warn)
 try {
   const npmVersion = execFileSync('npm', ['view', pkg.name, 'version'], {
@@ -161,6 +273,18 @@ if (existsSync(extDir)) {
     .filter((d) => d.isDirectory())
     .map((d) => d.name)
     .sort();
+  const marketplace = JSON.parse(readFileSync(marketplacePath, 'utf8'));
+  const marketplacePacks = marketplace.plugins
+    .filter((entry) => typeof entry.source === 'string' && entry.source.startsWith('./extensions/'))
+    .map((entry) => entry.source.replace('./extensions/', ''))
+    .sort();
+
+  const unpublishedPacks = diskPacks.filter((name) => !marketplacePacks.includes(name));
+  if (unpublishedPacks.length > 0) {
+    fail(`Extension packs missing from marketplace.json: ${unpublishedPacks.join(', ')}`);
+  } else {
+    pass(`marketplace.json exposes all ${diskPacks.length} Free extension packs`);
+  }
 
   const missingPack = diskPacks.filter((name) => {
     const packFile = join(extDir, name, 'PACK.md');

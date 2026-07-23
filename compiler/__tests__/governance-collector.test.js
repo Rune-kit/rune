@@ -319,6 +319,7 @@ metadata:
       (c) => c.obligation.startsWith('MUST') || c.obligation.startsWith('NEVER'),
     );
     assert.ok(mustItems.length >= 2, 'should extract MUST/NEVER constraints');
+    assert.ok(result.compliance.every((item) => item.pack === '@rune-pro/test-pack'));
 
     for (const item of result.compliance) {
       assert.ok(typeof item.pack === 'string');

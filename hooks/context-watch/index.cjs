@@ -13,6 +13,9 @@
 
 const fs = require('fs');
 const { stateFile } = require('../lib/context-key.cjs');
+const { captureConsole } = require('../lib/hook-output.cjs');
+
+captureConsole('PreToolUse');
 
 // The counter file is keyed by Claude Code session_id (parsed from stdin in the
 // handler below) so it resets per session and never bleeds across sessions or
@@ -53,7 +56,9 @@ process.stdin.on('end', () => {
     // Ensure fields exist (upgrade from old format)
     if (!state.toolCounts) state.toolCounts = {};
     if (!state.sessionStart) state.sessionStart = new Date().toISOString();
-    if (!state.sessionId) {
+    if (sessionId) {
+      state.sessionId = sessionId;
+    } else if (!state.sessionId) {
       const s = state.sessionStart;
       state.sessionId = `s-${s.slice(0, 10).replace(/-/g, '')}-${s.slice(11, 19).replace(/:/g, '')}`;
     }
@@ -61,7 +66,8 @@ process.stdin.on('end', () => {
     // First run or corrupted — start fresh
     const now = new Date().toISOString();
     state.sessionStart = now;
-    state.sessionId = `s-${now.slice(0, 10).replace(/-/g, '')}-${now.slice(11, 19).replace(/:/g, '')}`;
+    state.sessionId = sessionId
+      || `s-${now.slice(0, 10).replace(/-/g, '')}-${now.slice(11, 19).replace(/:/g, '')}`;
   }
 
   // Increment total (drives context-pressure warnings) and per-tool distribution.
@@ -87,9 +93,6 @@ process.stdin.on('end', () => {
     console.log('  Or run /compact manually if at a good stopping point.\n');
     state.lastWarning = count;
   }
-
-  // Pass through stdin to stdout (required for PreToolUse hooks)
-  if (stdinData) process.stdout.write(stdinData);
 
   // Persist
   try {

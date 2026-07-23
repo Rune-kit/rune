@@ -41,7 +41,7 @@ None — pure L3 utility. Receives content, produces formatted output.
 
 | Format | Generate | Parse | Node.js Library | Python Library |
 |--------|----------|-------|-----------------|----------------|
-| PDF | Yes | Yes (via Read tool) | jsPDF, Puppeteer (HTML→PDF) | reportlab, weasyprint |
+| PDF | Yes | Yes (via the runtime's document/PDF reader) | jsPDF, Puppeteer (HTML→PDF) | reportlab, weasyprint |
 | DOCX | Yes | Yes | docx (officegen) | python-docx |
 | XLSX | Yes | Yes | ExcelJS | openpyxl |
 | PPTX | Yes | Yes | pptxgenjs | python-pptx |
@@ -157,7 +157,7 @@ Identify file format from extension and MIME type.
 
 | Format | Extraction Strategy |
 |--------|-------------------|
-| PDF | Use Read tool (Claude can read PDFs natively) |
+| PDF | Use the runtime's native document/PDF reader when available; otherwise use a supported PDF parsing library |
 | DOCX | docx library → extract text, tables, images |
 | XLSX | ExcelJS → extract sheets, rows, formulas |
 | PPTX | pptxgenjs → extract slides, text, notes |

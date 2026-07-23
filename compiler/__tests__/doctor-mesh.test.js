@@ -7,10 +7,64 @@ import { mkdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { checkMeshIntegrity, formatMeshResults } from '../doctor.js';
+import { checkMeshIntegrity, formatMeshResults, parseSkillConnections } from '../doctor.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const TEST_ROOT = path.join(__dirname, '.test-mesh-skills');
+
+test('parseSkillConnections supports table-form mesh declarations', () => {
+  const parsed = parseSkillConnections(
+    `## Calls (outbound)
+
+| Phase | Sub-skill | Layer | Purpose |
+|---|---|---|---|
+| 1 | \`scout\` | L2 | scan |
+| 2 | \`neural-memory\` | ext | recall |
+
+## Called By (inbound)
+
+| Caller | Layer | Purpose |
+|---|---|---|
+| \`team\` | L1 | orchestrate |
+`,
+    'cook',
+  );
+
+  assert.deepStrictEqual(
+    parsed.calls.map((entry) => entry.skill),
+    ['scout', 'neural-memory'],
+  );
+  assert.deepStrictEqual(
+    parsed.calledBy.map((entry) => entry.skill),
+    ['team'],
+  );
+});
+
+test('parseSkillConnections supports legacy connection-qualified headings and CRLF', () => {
+  const parsed = parseSkillConnections(
+    [
+      '## Calls (outbound connections)',
+      '',
+      '- `scout` (L2): inspect project',
+      '',
+      '## Called By (inbound connections)',
+      '',
+      '- `cook` (L1): orchestrates',
+      '',
+      '## Returns',
+    ].join('\r\n'),
+    'example',
+  );
+
+  assert.deepStrictEqual(
+    parsed.calls.map((entry) => entry.skill),
+    ['scout'],
+  );
+  assert.deepStrictEqual(
+    parsed.calledBy.map((entry) => entry.skill),
+    ['cook'],
+  );
+});
 
 describe('checkMeshIntegrity', () => {
   beforeEach(async () => {

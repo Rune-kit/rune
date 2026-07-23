@@ -110,15 +110,16 @@ SKILL.md frontmatter uses Anthropic-native tier names (`opus`/`sonnet`/`haiku`) 
 |------|---------------------------|-------|-------------|---------------------------------------|------|--------|------------------|
 | opus | claude-opus-4-8 (no-op) | gpt-5.6-sol | gemini-3-pro | tier:heavy | qwen3-coder-plus | gemini-2.5-pro | tier-hint inline |
 | sonnet | claude-sonnet-5 (no-op) | gpt-5.6-terra | gemini-3-flash | tier:mid | qwen3-coder | gemini-2.5-flash | tier-hint inline |
-| haiku | claude-haiku-4-5 (no-op) | gpt-5.6-luna | gemini-3-flash-lite | tier:light | qwen3-coder-flash | gemini-2.0-flash-lite | tier-hint inline |
+| haiku | claude-haiku-4-5 (no-op) | gpt-5.6-terra | gemini-3-flash-lite | tier:light | qwen3-coder-flash | gemini-2.0-flash-lite | tier-hint inline |
 
 > **Verified at source (2026-07): Claude** (Opus 4.8 / Sonnet 5 / Haiku 4.5,
-> Anthropic catalog) and **Codex** (GPT-5.6 sol/terra/luna, developers.openai.com/codex/models).
+> Anthropic catalog) and **Codex** (GPT-5.6 sol/terra, developers.openai.com/codex/models).
 > Codex also gained a per-config reasoning control — `model_reasoning_effort =
 > minimal|low|medium|high|xhigh` (and `plan_mode_reasoning_effort`). The codex
-> adapter now surfaces a suggested tier→effort mapping (opus→high, sonnet→medium,
-> haiku→low) in the generated `AGENTS.md` — not as per-skill frontmatter, since
-> `model_reasoning_effort` is a global `config.toml` key. **Still pending verification:**
+> adapter now emits project-scoped `.codex/agents/*.toml` roles for the
+> tier→effort mapping (opus→high, sonnet→medium, haiku→low) and documents it in
+> generated `AGENTS.md`; per-skill model frontmatter is intentionally omitted.
+> **Still pending verification:**
 > gemini and qwen provider IDs. Note: **Gemini CLI retired 2026-06-18 → Antigravity
 > CLI** (free/individual tier); the `gemini` adapter target is legacy for that
 > audience. **Windsurf is now Devin Desktop (2026-06-02)** — rules moved to
@@ -142,7 +143,7 @@ Rune compiles core skills + extension packs into 13 platform-native formats. Eac
 | **cursor** | `.cursor/skills/rune-<n>/SKILL.md` | dir-per-skill Agent Skills (Cursor 2.4+) | — | cursor.com/docs/skills |
 | **windsurf** | `.windsurf/skills/rune-<n>/SKILL.md` | dir-per-skill Cascade Skills | — | docs.devin.ai (Windsurf → Devin Desktop 2026-06-02; `.devin/skills` preferred, `.windsurf/` still read as fallback — emission kept for max compat) |
 | **antigravity** | `.agents/skills/rune-<n>/SKILL.md` | dir-per-skill, Gemini model map | — | antigravity.google/docs/skills |
-| **codex** | `.agents/skills/rune-<n>/SKILL.md` | dir-per-skill, OpenAI tier | `AGENTS.md` | developers.openai.com/codex/skills |
+| **codex** | `.agents/skills/rune-<n>/SKILL.md` | dir-per-skill, OpenAI tier | `AGENTS.md`, `.codex/agents/*.toml`, `.codex/hooks.json` | developers.openai.com/codex/skills |
 | **opencode** | `.opencode/skills/rune-<n>/SKILL.md` | dir-per-skill, tier hints | — | opencode.ai/docs |
 | **openclaw** | `.openclaw/.../SKILL.md` | bundled with manifest + TS entry | `openclaw.plugin.json`, `src/index.ts` | OpenClaw |
 | **generic** | `.ai/rules/rune-<n>.md` | portable markdown | — | (fallback) |
@@ -219,12 +220,12 @@ The mesh ships as a **library** (invoke via slash commands) and as a **runtime**
 
 ### Hook adapter registry
 
-`compiler/adapters/hooks/{claude,cursor,windsurf,antigravity}.js` — one adapter per platform. Each accepts:
+`compiler/adapters/hooks/{claude,codex,cursor,windsurf,antigravity}.js` — one adapter per runtime target. Each accepts:
 
 - `preset` — `strict` | `gentle` | `off`
 - `tierManifests` — loaded declarative hook specs from Pro/Business
 
-The adapter translates the preset + tier manifests into the platform's native hook format (Claude `.claude/settings.json`, Cursor `.cursor/rules`, Windsurf workflow+rule, Antigravity rule-inject). Free-core adapters are tier-agnostic — they receive already-parsed manifests and do not hardcode Pro/Business awareness.
+The adapter translates the preset + tier manifests into the runtime's supported format: Claude `.claude/settings.json`, Codex `.codex/hooks.json`, Cursor `.cursor/rules`, Windsurf workflow+rule, or Antigravity rule-inject. Claude and Codex auto-fire lifecycle handlers; the other adapters emit their documented best-effort rule/workflow equivalents. Free-core adapters are tier-agnostic — they receive already-parsed manifests and do not hardcode Pro/Business awareness.
 
 ### Tier-tagged manifest
 

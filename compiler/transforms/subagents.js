@@ -1,8 +1,8 @@
 /**
  * Subagent Transform
  *
- * Converts parallel agent/subagent execution instructions to sequential workflow.
- * On non-Claude platforms, there is no multi-agent support.
+ * Converts parallel agent/subagent execution instructions to sequential workflow
+ * only on platforms without native multi-agent support.
  */
 
 const PARALLEL_PATTERNS = [
@@ -23,7 +23,7 @@ const PARALLEL_PATTERNS = [
  * @returns {string} transformed body
  */
 export function transformSubagents(body, adapter) {
-  if (adapter.name === 'claude') return body;
+  if (adapter.name === 'claude' || adapter.name === 'codex') return body;
 
   let result = body;
   for (const { pattern, replace } of PARALLEL_PATTERNS) {

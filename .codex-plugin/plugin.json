@@ -1,0 +1,14 @@
+{
+  "name": "rune",
+  "version": "2.29.0",
+  "description": "66-skill engineering mesh with Codex-native skills, subagents, synchronous lifecycle hooks, security gates, MCP-aware workflows, and project memory.",
+  "author": {
+    "name": "Rune Contributors"
+  },
+  "repository": "https://github.com/rune-kit/rune",
+  "homepage": "https://rune-kit.github.io/rune",
+  "license": "MIT",
+  "keywords": ["skills", "hooks", "subagents", "security", "coding-agent"],
+  "skills": "./skills/",
+  "hooks": "./hooks/codex-hooks.json"
+}

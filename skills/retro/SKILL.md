@@ -316,8 +316,8 @@ Pull from all installed domain packs:
 - **Engineering**: git history (commits, velocity, test ratio, fix ratio, hotspots)
 - **Revenue** (@rune-pro/sales): pipeline metrics, deal velocity, churn risk
 - **Support** (@rune-pro/support): ticket volume, SLA compliance, CSAT
-- **Finance** (@rune-business/finance): burn rate, runway, budget variance
-- **Compliance** (@rune-business/legal): framework status, audit dates, open items
+- **Finance** (@rune-pro/finance): burn rate, runway, budget variance
+- **Compliance** (@rune-pro/legal): framework status, audit dates, open items
 
 ### Business Execution Steps
 

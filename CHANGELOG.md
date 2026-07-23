@@ -5,6 +5,31 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.29.0] - 2026-07-23
+
+"Codex Native" — Codex stops being a compile target that happens to work and becomes a first-class runtime. The adapter now emits everything current Codex actually supports natively — skills, custom agents, lifecycle hooks, MCP config — instead of flattening Rune into rules files. Alongside it, the mesh validator was fixed at the root, which moved the canonical connection count from 209 to 248: edges that always existed, now counted in one authoritative direction.
+
+### Added — Codex as a native runtime
+- **`compiler/adapters/codex.js`** emits project-scoped agent TOML (`.codex/agents/rune-{heavy,standard,fast}.toml`), preserves Rune's delegation instructions through compilation, and compiles tier-aware (Free/Pro/Business stacks resolve exactly as they do on Claude Code).
+- **`compiler/adapters/hooks/codex.js`** (new) — dedicated Codex hook adapter targeting `.codex/hooks.json`. All emitted hook definitions are **synchronous** — Codex silently skips async handlers, so the adapter never emits one.
+- **`hooks/codex-hooks.json`** (new) — canonical Codex hook set consumed by `rune hooks install` on Codex projects.
+- **`.codex-plugin/plugin.json`** (new) — Codex-optimized lifecycle hook manifest with matchers naming Codex tool names (`apply_patch`, `view_image`, …).
+- Setup wizard (`compiler/commands/setup.js`) detects Codex projects and wires skills + agents + hooks + MCP in one pass.
+
+### Fixed — mesh validator counts edges in one direction
+- `Calls (outbound)` is now the single authoritative connection inventory; every outbound edge must be acknowledged by the target's `Called By`. Extra inbound declarations (conditional/runtime-discovered routes) no longer produce false reverse-edge failures. Canonical inventory: **66 skills · 248 connections · 45 signals** — same mesh, honest count.
+- Doctor now gates against the stale claims directly: any `209 connections` / `205 connections` / 8-platform string in README, docs, or plugin manifests fails CI.
+
+### Changed — doctor grows a cross-tier audit
+- `version-sync-check.js` + `doctor.js` verify Business tier metadata (28 pack skills, 124 references, 12 scripts, 4 orchestrators), $149 pricing across landing/checkout, the 13-platform count, and JSON-schema validity of `docs/config-schema.json` + `docs/schemas/hooks-manifest.v1.json` (both new).
+- Docs refresh across ARCHITECTURE / GETTING_STARTED / HOOKS / MULTI-PLATFORM / SKILLS / VISION / CLI guide / landing: 12 compiling adapters produce 72 tier-aware skills + 26 packs each; Claude Code remains native passthrough — 13 platforms total.
+
+### Security
+- All XLabs remote-MCP references now use `XLABS_MCP_TOKEN` env-var indirection; plaintext bearer values are forbidden and the non-test workspace scan is clean. (Operator action: rotate the previously exposed token.)
+
+### Tests
+- 1,615 tests pass (up from 1,598; 1 Windows symlink test skipped). New coverage: Codex hook adapter, setup wizard Codex path, tier-override resolution, doctor mesh gates.
+
 ## [2.28.0] - 2026-07-22
 
 "Reasoner's Blind Spots" — completes the reasoning wave started in v2.27.0. Every addition here targets the same class of failure: a check that *feels* done because the model re-read its own work and agreed with itself. Advisory throughout — no new skills, no new HARD-GATEs except where a claim is asserted without the act behind it.

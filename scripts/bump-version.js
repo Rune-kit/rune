@@ -3,7 +3,7 @@
 /**
  * bump-version.js — Atomically bump the Rune version across all distribution touchpoints.
  *
- * Replaces the manual sweep of: package.json, plugin.json, marketplace.json,
+ * Replaces the manual sweep of: package.json, Claude/Codex plugin manifests, marketplace.json,
  * docs/index.html (hero badge), ROADMAP.md (header + Current State title),
  * CHANGELOG.md (heading promotion).
  *
@@ -62,6 +62,11 @@ const targets = [
   },
   {
     file: '.claude-plugin/plugin.json',
+    find: new RegExp(`"version":\\s*"${oldEsc}"`),
+    replace: () => `"version": "${newVersion}"`,
+  },
+  {
+    file: '.codex-plugin/plugin.json',
     find: new RegExp(`"version":\\s*"${oldEsc}"`),
     replace: () => `"version": "${newVersion}"`,
   },

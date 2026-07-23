@@ -13,7 +13,6 @@
  */
 
 import assert from 'node:assert';
-import { existsSync } from 'node:fs';
 import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -54,7 +53,7 @@ const PRO_MANIFEST_FIXTURE = {
       skill: 'context-inject',
       event: 'UserPromptSubmit',
       matcher: '.*',
-      command: 'node "${RUNE_PRO_ROOT}/hooks/run-hook.cjs" context-inject',
+      command: `node "\${RUNE_PRO_ROOT}/hooks/run-hook.cjs" context-inject`,
       description: 'Inject rolling context summary',
       platforms: { claude: 'hook', cursor: 'rule-alwaysApply', windsurf: 'workflow+rule', antigravity: 'rule' },
     },
@@ -63,7 +62,7 @@ const PRO_MANIFEST_FIXTURE = {
       skill: 'context-sense',
       event: 'PreToolUse',
       matcher: 'Edit|Write',
-      command: 'node "${RUNE_PRO_ROOT}/hooks/run-hook.cjs" context-sense',
+      command: `node "\${RUNE_PRO_ROOT}/hooks/run-hook.cjs" context-sense`,
       description: 'Detect context pressure',
       globs: ['**/*.ts', '**/*.js'],
       platforms: { claude: 'hook', cursor: 'rule-glob', windsurf: 'workflow+rule', antigravity: 'rule' },
@@ -72,7 +71,7 @@ const PRO_MANIFEST_FIXTURE = {
       id: 'rune-pulse',
       skill: 'rune-pulse',
       event: 'statusLine',
-      command: 'node "${RUNE_PRO_ROOT}/hooks/rune-pulse/index.cjs"',
+      command: `node "\${RUNE_PRO_ROOT}/hooks/rune-pulse/index.cjs"`,
       padding: 0,
       claudeOnly: true,
       description: 'Context pressure indicator',

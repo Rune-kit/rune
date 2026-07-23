@@ -4,7 +4,8 @@
  * Anthropic-backed adapters (claude/cursor/windsurf) remain no-op.
  *
  * Validates:
- *   - codex/antigravity emit concrete provider model names
+ *   - Codex keeps SKILL.md frontmatter portable and emits model choices via custom agents
+ *   - antigravity emits concrete provider model names
  *   - opencode/openclaw/generic emit semantic tier hints (provider-agnostic)
  *   - claude/cursor/windsurf do NOT translate (no-op)
  *   - Skills without `model:` produce no model line
@@ -25,29 +26,26 @@ const baseSkill = {
 describe('codex adapter model mapping', () => {
   const codex = getAdapter('codex');
 
-  test('opus translates to gpt-5.6-sol', () => {
-    const header = codex.generateHeader({ ...baseSkill, model: 'opus' });
-    assert.match(header, /model: gpt-5\.6-sol/);
+  test('SKILL.md frontmatter omits unsupported per-skill model fields', () => {
+    for (const model of ['opus', 'sonnet', 'haiku', 'custom-fine-tune', undefined]) {
+      const header = codex.generateHeader({ ...baseSkill, model });
+      assert.doesNotMatch(header, /^model:/m);
+    }
   });
 
-  test('sonnet translates to gpt-5.6-terra', () => {
-    const header = codex.generateHeader({ ...baseSkill, model: 'sonnet' });
-    assert.match(header, /model: gpt-5\.6-terra/);
-  });
-
-  test('haiku translates to gpt-5.6-luna', () => {
-    const header = codex.generateHeader({ ...baseSkill, model: 'haiku' });
-    assert.match(header, /model: gpt-5\.6-luna/);
-  });
-
-  test('omitted model produces no model line', () => {
-    const header = codex.generateHeader({ ...baseSkill });
-    assert.doesNotMatch(header, /model:/);
-  });
-
-  test('unknown tier passes through unchanged', () => {
-    const header = codex.generateHeader({ ...baseSkill, model: 'custom-fine-tune' });
-    assert.match(header, /model: custom-fine-tune/);
+  test('project-scoped custom agents carry provider model and effort settings', async () => {
+    const extras = await codex.generateExtraFiles({
+      stats: { skillCount: 65, crossRefsResolved: 204, packCount: 14, files: [] },
+    });
+    const heavy = extras.find((entry) => entry.path === '.codex/agents/rune-heavy.toml');
+    const standard = extras.find((entry) => entry.path === '.codex/agents/rune-standard.toml');
+    const fast = extras.find((entry) => entry.path === '.codex/agents/rune-fast.toml');
+    assert.match(heavy.content, /model = "gpt-5\.6-sol"/);
+    assert.match(heavy.content, /model_reasoning_effort = "high"/);
+    assert.match(standard.content, /model = "gpt-5\.6-terra"/);
+    assert.match(standard.content, /model_reasoning_effort = "medium"/);
+    assert.match(fast.content, /model = "gpt-5\.6-terra"/);
+    assert.match(fast.content, /model_reasoning_effort = "low"/);
   });
 });
 
@@ -212,8 +210,8 @@ describe('gemini adapter model mapping (Gemini family)', () => {
 });
 
 describe('cross-adapter consistency', () => {
-  test('all 5 non-Anthropic adapters emit a model line for opus skills', () => {
-    const adapterNames = ['codex', 'antigravity', 'opencode', 'openclaw', 'generic'];
+  test('model-aware non-Anthropic adapters emit a model line for opus skills', () => {
+    const adapterNames = ['antigravity', 'opencode', 'openclaw', 'generic'];
     for (const name of adapterNames) {
       const adapter = getAdapter(name);
       const header = adapter.generateHeader({ ...baseSkill, model: 'opus' });

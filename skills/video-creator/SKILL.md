@@ -265,7 +265,7 @@ Known failure modes for this skill. Check these before declaring done.
 - Storyboard created scene-by-scene with transitions
 - Shot list categorized by type (screen recording, terminal, code, diagram)
 - Assets needed checklist generated
-- video-plan.md written to output_path via Write tool
+- `video-plan.md` written to `output_path` with the runtime's file-edit capability
 - Video Plan Created report emitted with scene count, shot count, and asset count
 
 ## Cost Profile

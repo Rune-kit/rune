@@ -39,6 +39,7 @@ Post-generation validation that verifies AI-generated code references actually e
 - `review-intake` (L2): verify imports in code submitted for review
 - `skill-forge` (L2): verify imports in newly generated skill code
 - `adversary` (L2): verify APIs/packages in plan actually exist
+- `logic-guardian` (L2): verify referenced functions and imports after guarded logic edits
 
 ## Execution
 

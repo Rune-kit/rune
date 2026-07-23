@@ -19,6 +19,7 @@ import { resolveScriptsPath } from './transforms/scripts-path.js';
  * @returns {Promise<string[]>} array of SKILL.md file paths
  */
 async function discoverSkills(skillsDir) {
+  if (!existsSync(skillsDir)) return [];
   const entries = await readdir(skillsDir, { withFileTypes: true });
   const paths = [];
 
@@ -31,6 +32,38 @@ async function discoverSkills(skillsDir) {
   }
 
   return paths.sort();
+}
+
+/**
+ * Discover standalone skills across Free and paid tiers.
+ * Business > Pro > Free when the same skill directory name exists.
+ *
+ * Tier sources point at `<tier>/extensions`; standalone tier skills live in
+ * the sibling `<tier>/skills` directory.
+ *
+ * @param {string} freeSkillsDir
+ * @param {Object<string, string>} [tierSources]
+ * @returns {Promise<Array<{path: string, tier: string, name: string}>>}
+ */
+export async function discoverTieredSkills(freeSkillsDir, tierSources = {}) {
+  const skillMap = new Map();
+
+  async function scanDir(skillsDir, tier) {
+    for (const skillPath of await discoverSkills(skillsDir)) {
+      const name = path.basename(path.dirname(skillPath));
+      const priority = TIER_PRIORITY[tier] ?? 0;
+      const existing = skillMap.get(name);
+      if (!existing || priority > existing.priority) {
+        skillMap.set(name, { path: skillPath, tier, name, priority });
+      }
+    }
+  }
+
+  await scanDir(freeSkillsDir, 'free');
+  if (tierSources.pro) await scanDir(path.join(path.dirname(tierSources.pro), 'skills'), 'pro');
+  if (tierSources.business) await scanDir(path.join(path.dirname(tierSources.business), 'skills'), 'business');
+
+  return [...skillMap.values()].sort((a, b) => a.name.localeCompare(b.name));
 }
 
 /**
@@ -435,10 +468,15 @@ export async function buildAll({
   // Ensure output directory exists
   await mkdir(outputDir, { recursive: true });
 
-  const skillPaths = await discoverSkills(skillsDir);
-
   // Tier-aware pack discovery: if tierSources provided, resolve overrides
   const hasTiers = tierSources && (tierSources.pro || tierSources.business);
+  const skillEntries = hasTiers
+    ? await discoverTieredSkills(skillsDir, tierSources)
+    : (await discoverSkills(skillsDir)).map((skillPath) => ({
+        path: skillPath,
+        tier: 'free',
+        name: path.basename(path.dirname(skillPath)),
+      }));
   const packEntries = hasTiers
     ? await discoverTieredPacks(extensionsDir, tierSources, enabledPacks)
     : (await discoverPacks(extensionsDir, enabledPacks)).map((p) => ({
@@ -450,6 +488,8 @@ export async function buildAll({
   const stats = {
     platform: adapter.name,
     skillCount: 0,
+    coreSkillCount: 0,
+    tierSkillCount: 0,
     packCount: 0,
     crossRefsResolved: 0,
     toolRefsResolved: 0,
@@ -471,7 +511,8 @@ export async function buildAll({
   // Build skills — collect parsed data for skill-index + openclaw reuse
   const parsedSkills = [];
 
-  for (const skillPath of skillPaths) {
+  for (const skillEntry of skillEntries) {
+    const skillPath = skillEntry.path;
     try {
       const content = await readFile(skillPath, 'utf-8');
       const parsed = parseSkill(content, skillPath);
@@ -553,6 +594,8 @@ export async function buildAll({
 
       parsedSkills.push(parsed);
       stats.skillCount++;
+      if (skillEntry.tier === 'free') stats.coreSkillCount++;
+      else stats.tierSkillCount++;
       stats.crossRefsResolved += parsed.crossRefs.length;
       stats.toolRefsResolved += parsed.toolRefs.length;
       stats.files.push(displayName);

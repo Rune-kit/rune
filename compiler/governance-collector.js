@@ -312,8 +312,9 @@ async function assembleCompliance(runeRoot) {
       continue; // skip unreadable pack
     }
 
-    // Derive a human-readable pack name from the directory name.
-    const packName = packDir.replace(/^pro-/, '@rune-business/');
+    // Business is the entitlement tier; paid pack manifests retain the
+    // canonical @rune-pro/* namespace for mesh compatibility.
+    const packName = packDir.replace(/^pro-/, '@rune-pro/');
 
     // Extract obligations from ## Constraints. Real Business PACK.md files use
     // numbered ("1. MUST …") OR bulleted ("- MUST …") lists, so accept both.

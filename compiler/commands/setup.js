@@ -21,10 +21,14 @@
  */
 
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { cp, readdir, readFile, rm } from 'node:fs/promises';
+import { cp, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { createInterface } from 'node:readline';
+import { getAdapter as getCompilerAdapter } from '../adapters/index.js';
+import { parseSkill } from '../parser.js';
+import { transformSkill } from '../transformer.js';
+import { resolveScriptsPath } from '../transforms/scripts-path.js';
 import { installHooks } from './hooks/install.js';
 import { resolveTier, TIER_ENV_VARS } from './hooks/tiers.js';
 
@@ -103,9 +107,10 @@ export async function runSetup({ projectRoot, runeRoot, args = {}, skillTarget: 
   // Determine target root
   const targetRoot = scope === 'global' ? os.homedir() : projectRoot;
 
-  // For global scope, claude is the only meaningful platform (cursor/windsurf
-  // configs typically live per-project). Force claude.
-  const platform = scope === 'global' ? 'claude' : args.platform;
+  // Global defaults to Claude for backward compatibility, but an explicit
+  // Codex target installs user-wide hooks under ~/.codex and skills under
+  // ~/.agents/skills.
+  const platform = args.platform || (scope === 'global' ? 'claude' : undefined);
 
   // Set tier env vars from detection so installer can resolve
   for (const tier of tiers) {
@@ -130,23 +135,44 @@ export async function runSetup({ projectRoot, runeRoot, args = {}, skillTarget: 
   // Claude Code plugin cache when present, runeRoot otherwise. Without this
   // step, paid tiers ship hooks only — `rune:autopilot` returns "Unknown skill"
   // because Pro/skills/autopilot/ is invisible to the plugin runtime.
-  const skillTarget =
-    typeof skillTargetOverride === 'string'
-      ? { root: skillTargetOverride, source: 'override' }
-      : (skillTargetOverride ?? resolveSkillInstallRoot(runeRoot));
+  const skillPlatforms = result.platforms || [];
+  const skillTargets = skillPlatforms.map((skillPlatform) => {
+    if (skillPlatform === 'claude') {
+      if (typeof skillTargetOverride === 'string') {
+        return { platform: skillPlatform, root: skillTargetOverride, source: 'override' };
+      }
+      if (skillTargetOverride) return { platform: skillPlatform, ...skillTargetOverride };
+      return { platform: skillPlatform, ...resolveSkillInstallRoot(runeRoot) };
+    }
+    return {
+      platform: skillPlatform,
+      root: targetRoot,
+      source: scope === 'global' ? `${skillPlatform}-user` : `${skillPlatform}-project`,
+    };
+  });
+  const skillTarget = skillTargets[0] || null;
   const skillResults = [];
-  for (const tier of tiers) {
-    try {
-      const tierManifest = await resolveTier(tier, projectRoot);
-      const skillResult = await installTierSkills({
-        tier,
-        tierManifest,
-        runeRoot: skillTarget.root,
-        dry: args.dry,
-      });
-      skillResults.push(skillResult);
-    } catch (err) {
-      skillResults.push({ tier, installed: [], skipped: [], reason: err.message });
+  for (const skillTargetEntry of skillTargets) {
+    for (const tier of tiers) {
+      try {
+        const tierManifest = await resolveTier(tier, projectRoot);
+        const skillResult = await installTierSkills({
+          tier,
+          tierManifest,
+          runeRoot: skillTargetEntry.root,
+          platform: skillTargetEntry.platform,
+          dry: args.dry,
+        });
+        skillResults.push({ platform: skillTargetEntry.platform, ...skillResult });
+      } catch (err) {
+        skillResults.push({
+          platform: skillTargetEntry.platform,
+          tier,
+          installed: [],
+          skipped: [],
+          reason: err.message,
+        });
+      }
     }
   }
 
@@ -158,6 +184,7 @@ export async function runSetup({ projectRoot, runeRoot, args = {}, skillTarget: 
     detected,
     skillResults,
     skillTarget,
+    skillTargets,
     ...result,
   };
 }
@@ -177,11 +204,12 @@ export async function runSetup({ projectRoot, runeRoot, args = {}, skillTarget: 
  * @param {object} opts
  * @param {string} opts.tier
  * @param {import('./hooks/tiers.js').TierManifest} opts.tierManifest
- * @param {string} opts.runeRoot — target is `<runeRoot>/skills/`
+ * @param {string} opts.runeRoot — Claude plugin root, or project/user root for other platforms
+ * @param {string} [opts.platform='claude']
  * @param {boolean} [opts.dry]
  * @returns {Promise<{tier: string, installed: string[], skipped: Array<{skill: string, reason: string}>, reason: string|null}>}
  */
-export async function installTierSkills({ tier, tierManifest, runeRoot, dry }) {
+export async function installTierSkills({ tier, tierManifest, runeRoot, platform = 'claude', dry }) {
   if (!tierManifest?.source) {
     return { tier, installed: [], skipped: [], reason: 'tier manifest source missing' };
   }
@@ -203,9 +231,24 @@ export async function installTierSkills({ tier, tierManifest, runeRoot, dry }) {
   if (!runeRoot) {
     return { tier, installed: [], skipped: [], reason: 'runeRoot not provided' };
   }
-  const targetDir = path.join(runeRoot, 'skills');
+  const adapter = platform === 'claude' ? null : getCompilerAdapter(platform);
+  if (adapter && !adapter.useSkillDirectories) {
+    return {
+      tier,
+      installed: [],
+      skipped: [],
+      reason: `platform '${platform}' does not use directory-based Agent Skills`,
+    };
+  }
+  const targetDir = adapter ? path.join(runeRoot, adapter.outputDir) : path.join(runeRoot, 'skills');
   if (!existsSync(targetDir)) {
-    return { tier, installed: [], skipped: [], reason: `target skills/ missing at ${targetDir}` };
+    if (dry) {
+      // Dry-run should describe what would be installed even on a fresh target.
+    } else if (adapter) {
+      await mkdir(targetDir, { recursive: true });
+    } else {
+      return { tier, installed: [], skipped: [], reason: `target skills/ missing at ${targetDir}` };
+    }
   }
   const installed = [];
   const skipped = [];
@@ -230,7 +273,33 @@ export async function installTierSkills({ tier, tierManifest, runeRoot, dry }) {
       continue;
     }
     const src = path.join(sourceDir, skillName);
-    const dst = path.join(targetDir, skillName);
+    let parsed = null;
+    let compiledOutput = null;
+    let targetSkillName = skillName;
+    if (adapter) {
+      try {
+        const skillPath = path.join(src, 'SKILL.md');
+        const content = await readFile(skillPath, 'utf-8');
+        parsed = parseSkill(content, skillPath);
+        targetSkillName = `${adapter.skillPrefix || ''}${parsed.name}${adapter.skillSuffix || ''}`;
+        if (path.basename(targetSkillName) !== targetSkillName) {
+          skipped.push({ skill: skillName, reason: 'rejected: compiled skill name is unsafe' });
+          continue;
+        }
+        const { header, body: rawBody, footer } = transformSkill(parsed, adapter);
+        const scriptsSource = path.join(src, 'scripts');
+        const scriptsPath =
+          existsSync(scriptsSource) && typeof adapter.scriptsDir === 'function'
+            ? path.join(adapter.outputDir, adapter.scriptsDir(parsed.name)).replaceAll('\\', '/')
+            : null;
+        const body = scriptsPath ? resolveScriptsPath(rawBody, scriptsPath) : rawBody;
+        compiledOutput = [header, body, footer].filter(Boolean).join('\n');
+      } catch (err) {
+        skipped.push({ skill: skillName, reason: `compile failed for ${platform}: ${err.message}` });
+        continue;
+      }
+    }
+    const dst = path.join(targetDir, targetSkillName);
     if (existsSync(dst)) {
       const drift = await detectVersionDrift(src, dst);
       skipped.push({ skill: skillName, reason: drift || 'already present' });
@@ -242,6 +311,9 @@ export async function installTierSkills({ tier, tierManifest, runeRoot, dry }) {
         // symlinks at dst. Belt-and-suspenders alongside the isSymbolicLink reject above
         // (nested symlinks inside a skill dir would otherwise still recreate).
         await cp(src, dst, { recursive: true, dereference: true });
+        if (compiledOutput !== null) {
+          await writeFile(path.join(dst, adapter.skillFileName || 'SKILL.md'), compiledOutput, 'utf-8');
+        }
       } catch (err) {
         // Clean partial-copy residue so next run isn't silently locked-out by
         // existsSync(dst) on a corrupt half-written directory.
@@ -436,10 +508,11 @@ export function formatSetupResult(result) {
   lines.push(`  Preset:    ${result.preset}`);
   lines.push(`  Platforms: ${(result.platforms || []).join(', ') || '—'}`);
   for (const sr of result.skillResults || []) {
+    const platformLabel = sr.platform ? `/${sr.platform}` : '';
     if (sr.installed.length > 0) {
       const preview = sr.installed.slice(0, 3).join(', ');
       const more = sr.installed.length > 3 ? `, +${sr.installed.length - 3}` : '';
-      lines.push(`  Skills:    ${sr.tier}: ${sr.installed.length} installed (${preview}${more})`);
+      lines.push(`  Skills:    ${sr.tier}${platformLabel}: ${sr.installed.length} installed (${preview}${more})`);
     }
     if (sr.skipped.length > 0) {
       const rejected = sr.skipped.filter((s) => s.reason.startsWith('rejected:'));
@@ -447,14 +520,14 @@ export function formatSetupResult(result) {
       const parts = [];
       if (benign > 0) parts.push(`${benign} already present`);
       if (rejected.length > 0) parts.push(`${rejected.length} rejected`);
-      lines.push(`  Skipped:   ${sr.tier}: ${parts.join(', ')}`);
+      lines.push(`  Skipped:   ${sr.tier}${platformLabel}: ${parts.join(', ')}`);
       // Surface rejection details so the operator can investigate a compromised tier repo.
       for (const r of rejected) {
         lines.push(`    ⚠ ${r.skill}: ${r.reason}`);
       }
     }
     if (sr.reason) {
-      lines.push(`  Skill warn:${sr.tier}: ${sr.reason}`);
+      lines.push(`  Skill warn:${sr.tier}${platformLabel}: ${sr.reason}`);
     }
   }
   if (result.notes?.length) {

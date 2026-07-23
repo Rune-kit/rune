@@ -7,20 +7,26 @@
 
 const fs = require('fs');
 const path = require('path');
-const os = require('os');
+const { stateFile } = require('../lib/context-key.cjs');
 
 const { captureConsole } = require('../lib/hook-output.cjs');
 // Hook stdout is a JSON contract, not free text (Codex rejects bare lines and
 // discards the output). Capture the prints below and emit one envelope on exit.
-captureConsole('PreCompact');
+captureConsole('PreCompact', { captureError: true });
 
 
 const cwd = process.cwd();
 const runeDir = path.join(cwd, '.rune');
 
+let sessionId;
+try {
+  sessionId = JSON.parse(fs.readFileSync(0, 'utf-8')).session_id;
+} catch {
+  // Older runtimes may not provide hook input.
+}
+
 // Read context-watch state (tool counts, session timing)
-const hash = Buffer.from(cwd).toString('base64url').slice(0, 16);
-const counterFile = path.join(os.tmpdir(), `rune-context-watch-${hash}.json`);
+const counterFile = stateFile('rune-context-watch', sessionId, cwd);
 
 let watchState = null;
 try {

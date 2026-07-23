@@ -9,6 +9,9 @@
 
 const fs = require('fs');
 const path = require('path');
+const { captureConsole } = require('../lib/hook-output.cjs');
+
+captureConsole('UserPromptSubmit');
 
 // Read user prompt from Claude Code hook stdin
 let input = '';

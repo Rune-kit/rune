@@ -2,6 +2,7 @@ import assert from 'node:assert';
 import path from 'node:path';
 import { describe, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { checkMeshIntegrity } from '../doctor.js';
 import { collectStats, renderStatus, renderStatusJson } from '../status.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -40,6 +41,11 @@ describe('collectStats', () => {
     const stats = await collectStats(RUNE_ROOT);
     assert.ok(stats.totalConnections > 100);
     assert.ok(parseFloat(stats.avgConnections) > 1);
+  });
+
+  test('uses the same canonical outbound connection count as doctor', async () => {
+    const [stats, mesh] = await Promise.all([collectStats(RUNE_ROOT), checkMeshIntegrity(RUNE_ROOT)]);
+    assert.strictEqual(stats.totalConnections, mesh.stats.connections);
   });
 
   test('discovers free packs', async () => {
@@ -203,7 +209,7 @@ describe('renderStatus', () => {
     if (stats.bizPacks.length > 0) {
       const output = renderStatus(stats);
       assert.ok(output.includes('Business Packs'));
-      assert.ok(output.includes('@rune-biz/'));
+      assert.ok(output.includes('@rune-pro/'));
     }
   });
 
