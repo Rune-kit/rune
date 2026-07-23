@@ -407,6 +407,43 @@ This compiles all 66 skills into your IDE's rules format. Same knowledge, same w
 lifecycle hooks; the remaining adapters preserve the workflows and constraints in the best
 format each runtime supports.
 
+## Updating
+
+New releases are announced on [Telegram](https://t.me/xlabs_updates) and [GitHub Releases](https://github.com/rune-kit/rune/releases); see [`CHANGELOG.md`](CHANGELOG.md) for what changed.
+
+### Claude Code (plugin)
+
+```bash
+claude plugin update rune
+```
+
+Restart Claude Code to load the new version, then re-run the wizard once so hooks and tier skills match the new release:
+
+```bash
+npx @rune-kit/rune@latest setup
+```
+
+### Codex / Cursor / Windsurf / other compiled platforms
+
+Re-running setup with `@latest` fetches the newest compiler and rewrites everything Rune manages **in place** — it is idempotent, and never touches your own config or the human-authored parts of `AGENTS.md`:
+
+```bash
+# same flags you installed with, e.g.:
+npx @rune-kit/rune@latest setup --here
+npx @rune-kit/rune@latest setup --here --platform codex --tier pro
+```
+
+If you use the build pipeline (`rune init` route) instead of the wizard: `npx @rune-kit/rune@latest init --force` regenerates platform files without touching your `.rune/` state.
+
+### Verify after updating
+
+```bash
+npx @rune-kit/rune@latest doctor          # compiled output + mesh integrity
+npx @rune-kit/rune@latest doctor --hooks  # hook drift vs the canonical preset
+```
+
+On Codex, review and re-trust changed hooks with `/hooks`.
+
 ## Quick Start
 
 ```bash
