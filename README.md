@@ -411,6 +411,8 @@ format each runtime supports.
 
 New releases are announced on [Telegram](https://t.me/xlabs_updates) and [GitHub Releases](https://github.com/rune-kit/rune/releases); see [`CHANGELOG.md`](CHANGELOG.md) for what changed.
 
+> **One-liner alternative**: `npx @rune-kit/rune@latest update` runs the whole flow below for an already-configured project — git-pulls detected Pro/Business repos, re-runs the managed setup rewrite in place (reusing your installed platforms/preset/tiers), and verifies with doctor. The platform-specific commands below remain the canonical path.
+
 ### Claude Code (plugin)
 
 ```bash

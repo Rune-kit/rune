@@ -25,6 +25,7 @@ import { installHooks } from '../commands/hooks/install.js';
 import { hookStatus } from '../commands/hooks/status.js';
 import { uninstallHooks } from '../commands/hooks/uninstall.js';
 import { formatSetupResult, runSetup } from '../commands/setup.js';
+import { formatUpdateResult, runUpdate } from '../commands/update.js';
 import { generateComprehensionHTML } from '../comprehension.js';
 import { generateDashboardHTML } from '../dashboard.js';
 import { checkMeshIntegrity, formatDoctorResults, formatMeshResults, runDoctor } from '../doctor.js';
@@ -334,6 +335,18 @@ async function cmdSetup(projectRoot, args) {
   } catch (err) {
     log('');
     log(`  ✗ Setup failed: ${err.message}`);
+    process.exit(1);
+  }
+}
+
+async function cmdUpdate(projectRoot, args) {
+  try {
+    const result = await runUpdate({ projectRoot, runeRoot: RUNE_ROOT, args });
+    log(formatUpdateResult(result));
+    if (!result.ok) process.exit(1);
+  } catch (err) {
+    log('');
+    log(`  ✗ Update failed: ${err.message}`);
     process.exit(1);
   }
 }
@@ -852,6 +865,9 @@ async function main() {
     case 'setup':
       await cmdSetup(projectRoot, args);
       break;
+    case 'update':
+      await cmdUpdate(projectRoot, args);
+      break;
     case 'status':
       await cmdStatus(projectRoot, args);
       break;
@@ -887,6 +903,9 @@ async function main() {
         '    setup    Interactive wizard — auto-detect tiers, pick scope, install hooks (recommended for first-time)',
       );
       log('             [--here|--global] [--tier pro,business] [--preset gentle|strict] [--dry]');
+      log('    update   Update an existing install — git-pull detected tier repos, re-run the managed');
+      log('             setup rewrite in place (reuses installed platforms/preset/tiers), verify with doctor');
+      log('             [--no-pull] [--preset gentle|strict] [--tier pro,business] [--dry]');
       log('    init     Interactive setup for build pipeline (auto-detects platform)');
       log('    build    Compile skills for configured platform');
       log('    doctor   Validate compiled output + mesh integrity');

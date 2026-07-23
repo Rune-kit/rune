@@ -5,6 +5,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- **`rune update`** — one-shot updater for an already-configured project: `git pull --ff-only` detected Pro/Business tier repos (env var → sibling dir, same detection as setup; absent tiers and non-git checkouts skip with a note, failed pulls abort loudly), re-run the managed setup rewrite in place non-interactively (reuses installed platforms/preset/tiers detected from the project's hook config), then verify with compiled-output doctor + hook drift and remind Codex users to re-trust `/hooks` when `.codex/hooks.json` changed. Flags: `--no-pull`, `--preset`, `--tier`, `--dry`.
+
 ## [2.29.0] - 2026-07-23
 
 "Codex Native" — Codex stops being a compile target that happens to work and becomes a first-class runtime. The adapter now emits everything current Codex actually supports natively — skills, custom agents, lifecycle hooks, MCP config — instead of flattening Rune into rules files. Alongside it, the mesh validator was fixed at the root, which moved the canonical connection count from 209 to 248: edges that always existed, now counted in one authoritative direction.

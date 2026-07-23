@@ -118,6 +118,44 @@ Exits with code 0 if healthy, code 1 if issues found. Useful in CI pipelines.
 
 ---
 
+### `rune update`
+
+Update an existing install in one command. Mirrors the manual "Updating" flow from the README:
+
+1. **Pull paid tier repos** -- any detected Pro/Business checkout gets `git pull --ff-only`. Detection matches `rune setup`: `$RUNE_PRO_ROOT` / `$RUNE_BUSINESS_ROOT` env vars first, then sibling dirs (`../Pro`, `../Business`). Absent tiers and non-git checkouts are skipped with a note; a **failed** pull (dirty tree, auth, diverged branch) aborts the update with a non-zero exit -- nothing is silently half-updated.
+2. **Re-run the managed setup rewrite in place** -- non-interactive. The installed platforms, preset, and tiers are detected from your project's existing hook config, so there are no prompts and nothing you didn't install gets added.
+3. **Verify** -- compiled-output doctor (build-pipeline projects) + hook drift report, then a short summary of what was updated.
+
+```bash
+npx @rune-kit/rune@latest update
+```
+
+```
+  Rune Update
+  ────────────
+  Tier repos:
+    ✓ pro — pulled: Already up to date.
+    · business — not detected — skipping
+  Setup rewrite:
+    Platforms: claude | Preset: gentle | Tiers: Free + pro
+  Verify:
+    Doctor: skipped — no rune.config.json — compiled-output check skipped
+    Hook drift: 0 drifted, 0 missing, 0 error(s)
+```
+
+**Flags**:
+
+| Flag | Description | Example |
+|------|-------------|---------|
+| `--no-pull` | Skip the tier `git pull` step | `rune update --no-pull` |
+| `--preset <p>` | Override the detected preset | `rune update --preset strict` |
+| `--tier <list>` | Override the detected tier list | `rune update --tier pro,business` |
+| `--dry` | Preview -- no pulls, no writes | `rune update --dry` |
+
+On Codex, if `.codex/hooks.json` changed, the summary reminds you to open `/hooks` and re-trust the definitions.
+
+---
+
 ### `rune help`
 
 Show available commands and flags.
@@ -398,11 +436,10 @@ npx @rune-kit/rune build --output packages/backend --platform generic
 npx @rune-kit/rune init --disable video-creator,asset-creator,trend-scout
 ```
 
-**Keep Updated** -- Pull latest skills and recompile:
+**Keep Updated** -- One command pulls tier repos, re-runs the managed rewrite, and verifies:
 
 ```bash
-cd /path/to/rune && git pull
-cd /your/project && npx @rune-kit/rune build
+npx @rune-kit/rune@latest update
 ```
 
 ---
