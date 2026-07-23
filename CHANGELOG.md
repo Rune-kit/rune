@@ -5,8 +5,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.29.1] - 2026-07-24
+
+"One-Command Update" — v2.29.0 documented the update flow; this release automates it. Docs-and-CLI patch, no skill or mesh changes.
+
 ### Added
 - **`rune update`** — one-shot updater for an already-configured project: `git pull --ff-only` detected Pro/Business tier repos (env var → sibling dir, same detection as setup; absent tiers and non-git checkouts skip with a note, failed pulls abort loudly), re-run the managed setup rewrite in place non-interactively (reuses installed platforms/preset/tiers detected from the project's hook config), then verify with compiled-output doctor + hook drift and remind Codex users to re-trust `/hooks` when `.codex/hooks.json` changed. Flags: `--no-pull`, `--preset`, `--tier`, `--dry`.
+- **README "Updating" sections** across Free/Pro/Business — the per-platform update paths (`claude plugin update rune`, idempotent `npx @rune-kit/rune@latest setup` re-run, `init --force`, doctor verification) were previously undocumented.
+
+### Tests
+- 23 new tests (1,638 total pass): update command detection, pull statuses, abort-on-failed-pull, preset/tier reuse, Codex re-trust reminder, dry-run.
 
 ## [2.29.0] - 2026-07-23
 

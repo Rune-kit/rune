@@ -1,6 +1,6 @@
 {
   "name": "rune",
-  "version": "2.29.0",
+  "version": "2.29.1",
   "description": "66-skill mesh for Claude Code with runtime auto-discipline — native hooks (preflight/sentinel/completion-gate/quarantine) auto-fire at lifecycle boundaries. 248 mesh connections + 45 signals, adaptive routing, mesh analytics, MCP quarantine guidance, and project memory.",
   "author": {
     "name": "Rune Contributors"

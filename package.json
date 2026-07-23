@@ -1,6 +1,6 @@
 {
   "name": "@rune-kit/rune",
-  "version": "2.29.0",
+  "version": "2.29.1",
   "description": "66-skill mesh for AI coding assistants — native lifecycle hooks for Claude Code and Codex, 5-layer architecture, 248 connections + 45 signals, and a 13-platform compiler.",
   "type": "module",
   "bin": {

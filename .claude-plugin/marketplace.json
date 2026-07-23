@@ -10,7 +10,7 @@
       "name": "rune",
       "source": "./",
       "description": "66 skills wired into a 5-layer mesh — 248 connections + 45 signals, adaptive routing, mesh analytics, logic preservation, and native lifecycle hooks. The compiler targets 13 runtimes including Claude Code and OpenAI Codex.",
-      "version": "2.29.0",
+      "version": "2.29.1",
       "author": {
         "name": "Rune Contributors"
       },

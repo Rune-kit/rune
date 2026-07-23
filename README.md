@@ -103,11 +103,15 @@ Plus **9 domain packs** (product, sales, data-science, support, growth, media, p
 
 ---
 
-## What's New (v2.29.0 — Codex Native)
+## What's New (v2.29.1 — One-Command Update)
+
+> **v2.29.1 (2026-07-24):** v2.29.0 documented the update flow; this release automates it. New **`rune update`** command — one-shot updater for an already-configured project: `git pull --ff-only` any detected Pro/Business tier repos (env var → sibling dir, same detection as setup; a failed pull **aborts loudly**, never a silent half-update), re-runs the managed setup rewrite in place non-interactively (your installed platforms, preset, and tiers are detected from the existing hook config — no prompts), then verifies with doctor + hook drift and reminds Codex users to re-trust `/hooks` only when `.codex/hooks.json` actually changed. Flags: `--no-pull`, `--preset`, `--tier`, `--dry`. Plus: "Updating" sections in all three tier READMEs. Docs-and-CLI patch — no skill or mesh changes. 1,638 tests.
+
+### Previous (v2.29.0 — Codex Native)
 
 > **v2.29.0 (2026-07-23):** Codex stops being a compile target that happens to work and becomes a **first-class native runtime**. The Codex adapter now emits everything current Codex supports natively — `.agents/skills/`, project-scoped agent TOML (`.codex/agents/rune-{heavy,standard,fast}.toml`), a dedicated synchronous hook adapter targeting `.codex/hooks.json` (Codex silently skips async handlers), MCP config, and tier-aware compilation so Free/Pro/Business stacks resolve exactly as on Claude Code. The mesh validator was fixed at the root — `Calls (outbound)` is now the single authoritative edge inventory, acknowledged by the target's `Called By` — moving the canonical count from 209 to **248 connections** (same mesh, honest count; doctor now fails CI on any stale claim). Doctor also grew a cross-tier audit: Business metadata (28 pack skills, 4 orchestrators), $149 pricing, 13-platform count, and JSON-schema validation of the new `docs/config-schema.json` + hooks manifest schema. All XLabs remote-MCP references now go through `XLABS_MCP_TOKEN` — plaintext bearer values are forbidden. 1,615 tests pass.
 
-### Previous (v2.28.0 — Reasoner's Blind Spots)
+#### Earlier (v2.28.0 — Reasoner's Blind Spots)
 
 > **v2.28.0 (2026-07-22):** Completes the reasoning wave. Every addition targets one failure class: **a check that feels done because the model re-read its own work and agreed with itself.** `problem-solver` (v0.6.0) gains a **model failure-mode table** beside its human-bias table — pattern-match satisfaction, template hijack, fluent≠true, prior-as-fact, completion pressure, surface blindness — plus three tells that you are inside one right now (instant confident answer; a stated detail your draft never used; two failed attempts in the same framing). `verification` (v0.8.0) gains the **Constraint Loop** for deliverables carrying a mechanically checkable constraint on their own surface form (banned characters, exact counts, strict formats) — a class Rune had no coverage for: expand the constraint before drafting, verify with a tool, re-scan the whole artifact, ship byte-for-byte. `design` (v0.9.0) gains **render blindness** — a checklist item ticked from source is a prediction, and the imagined render is always flattering; visual items are marked 👁 and are ticked from a render or marked ASSUMED. Advisory throughout, no new skills.
 
