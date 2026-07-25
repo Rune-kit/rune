@@ -4,7 +4,7 @@ The Analysis Paralysis Guard (5-read counter in SKILL.md) catches obvious paraly
 This catches **same-input-same-output loops** — where the agent keeps calling the same tool
 with the same arguments and getting the same result, making zero progress.
 
-Source: goclaw (832★) — SHA256-based loop detection distinguishes true stuck loops from productive retries.
+Hash-based detection distinguishes true stuck loops from productive retries.
 
 ## Detection Logic
 

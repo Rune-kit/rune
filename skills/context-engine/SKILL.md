@@ -321,7 +321,7 @@ When ORANGE or RED is reached, use this table to determine whether compaction is
 
 ### Mid-Loop Compaction (Phase 4 Emergency)
 
-> From goclaw (nextlevelbuilder/goclaw, 832★): "Compact during run, not just at session boundary."
+Compact during the run, not just at the session boundary.
 
 When context hits RED during Phase 4 (implementation), compaction IS possible at **clean split points**:
 

@@ -171,8 +171,7 @@ Report which level failed for each file in the Verification Report.
 
 ### Artifact Output Verification
 
-> Inspired by CLI-Anything (HKUDS/CLI-Anything, 14.5k★): "Never trust exit 0."
-> Many tools exit 0 even when they fail silently. Always verify ACTUAL output.
+**Never trust exit 0.** Many tools exit 0 even when they fail silently. Always verify ACTUAL output.
 
 After each phase command, verify that the expected artifact or indicator is present:
 
@@ -311,7 +310,7 @@ Overall:   [PASS/FAIL]
 
 ## Output Completion Enforcement
 
-> From taste-skill (Leonxlnx/taste-skill, 3.4k★): Truncated code is worse than no code — it passes reviews but breaks at runtime.
+Truncated code is worse than no code — it passes reviews but breaks at runtime.
 
 When verifying code files (Level 2 SUBSTANTIVE check), also scan for **truncation patterns** — signs that the agent generated partial output and stopped:
 

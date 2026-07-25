@@ -78,7 +78,7 @@ If export not found → mark as **WARN** (symbol may not be exported).
 
 ### Step 3 — Verify external packages (Dependency Check Before Import)
 
-> From taste-skill (Leonxlnx/taste-skill, 3.4k★): "Before importing ANY 3rd party lib, check package.json."
+Before importing ANY third-party library, check the dependency manifest.
 
 Use `Read` on the project's dependency manifest to confirm each external package is listed:
 

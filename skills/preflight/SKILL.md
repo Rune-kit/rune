@@ -337,7 +337,17 @@ Score is appended to the Preflight Report footer. Useful for tracking quality tr
 Invoke `rune:sentinel` on the changed files. Attach sentinel's output verbatim under the "Security" section of the preflight report. If sentinel returns BLOCK, preflight verdict is also BLOCK.
 
 ### Step 6 — Generate Verdict
-Aggregate all findings:
+
+**Falsification Pass first.** Before aggregating, filter findings by disproof, not by confidence — the same rule `review` applies (`../review/SKILL.md` → Step 6):
+
+- **DROP** a finding only when the code you read contains **direct counter-evidence** against its key claim (the null check exists, the `await` is present, the caller validates the input).
+- **KEEP** a finding that depends on context outside the diff which you did read via tools — that context is evidence.
+- **KEEP** a finding you can neither verify nor disprove. "Unsure" is not grounds to drop; only counter-evidence is.
+- Dropped findings are discarded silently, never listed as considered-and-dismissed.
+
+Type each surviving finding `OBSERVED | DERIVED | ASSUMED` per `../completion-gate/references/claim-discipline.md`. An `ASSUMED` finding — one resting on a premise you could not check — names that premise and **never escalates the verdict to BLOCK on its own**. It reports as WARN with the premise stated.
+
+Then aggregate all surviving findings:
 - Any BLOCK from sentinel OR a logic issue that would cause data corruption or security bypass OR a dead interactive element (Step 4 cross-layer pairing / Step 4.5 dead-interactive check) OR a BLOCK from any domain hook → overall **BLOCK**
 - Any missing error handling, regression risk with no tests, or incomplete feature (other than the BLOCK cases above) → **WARN**
 - Only style or best-practice suggestions → **PASS**
@@ -353,8 +363,8 @@ Report PASS, WARN, or BLOCK. For WARN, list each item the developer must acknowl
 - **Changes**: +[added] -[removed] lines across [files] files
 
 ### Logic Issues
-- `path/to/file.ts:42` — null-deref: `user.name` accessed without null check
-- `path/to/api.ts:85` — missing-await: async database call not awaited
+- `path/to/file.ts:42` — [OBSERVED] null-deref: `user.name` accessed without null check
+- `path/to/api.ts:85` — [ASSUMED: caller in job.ts not read] missing-await: async database call not awaited
 
 ### Error Handling
 - `path/to/handler.ts:20` — bare-catch: error swallowed silently

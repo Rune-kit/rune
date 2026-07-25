@@ -640,7 +640,7 @@ Escalation chain: debug-fix (3x) → re-plan (1x) → brainstorm rescue (1x) →
 
 ### Structured Escalation Report
 
-> From agency-agents (msitarzewski/agency-agents, 50.8k★): "After 3 retry failures, structured escalation prevents cargo-cult retrying."
+After 3 retry failures, structured escalation prevents cargo-cult retrying.
 
 When escalation chain exhausts (all retries hit) or cook returns `BLOCKED`, produce a Structured Escalation Report instead of a vague "I can't do this":
 
@@ -678,7 +678,7 @@ When escalation chain exhausts (all retries hit) or cook returns `BLOCKED`, prod
 
 ### Subagent Question Gate
 
-> From superpowers (obra/superpowers, 84k★): "Subagents that start work without asking questions produce the wrong thing 40% of the time."
+Subagents that start work without asking questions frequently produce the wrong thing.
 
 Before dispatching a sub-skill (fix, test, review) for a non-trivial task (3+ files OR ambiguous scope):
 

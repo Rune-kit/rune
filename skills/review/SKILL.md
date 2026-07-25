@@ -68,6 +68,16 @@ Every review MUST cite at least one specific concern, suggestion, or explicit ap
 
 ## Execution
 
+### Review Policy
+
+Three rules govern every step below. When a later step seems to conflict with one of these, the policy wins.
+
+**1. Precision over recall.** A false alarm costs more reviewer trust than a missed LOW finding. One wrong CRITICAL teaches the developer to skim the next report; a missed style nit costs nothing. Optimise for a report where every line is worth reading — not for coverage.
+
+**2. Blocking split.** Correctness and security findings are blocking. Style and idiom findings are non-blocking and never gate a merge on their own. Report both; only the first kind may produce REQUEST CHANGES.
+
+**3. Never guess at missing context.** When the surrounding code, caller, or convention needed to judge a line is not in front of you, either go read it (`Read`, `Grep`, `rune:scout`) or stay silent. A finding invented to fill a gap in your own reading is the single most expensive kind of false alarm.
+
 ### Step 1: Scope
 
 Determine what to review.
@@ -76,6 +86,14 @@ Determine what to review.
 - If triggered by a specific file or feature: use `Read` on each named file
 - If context is unclear: use `rune:scout` to identify all files touched by the change
 - List every file in scope before proceeding — do not review files outside the stated scope
+
+**Strict Focus Rule** — the scope list you just wrote is the only set of files this review may produce findings about.
+
+- Reads outside that list are for **understanding only**. Open any file you need to judge the diff correctly (callers, types, config, conventions) — that is encouraged, not scope creep.
+- A finding whose subject is a file outside scope is **dropped, not reported** — not downgraded to LOW, not filed under "while I was in there". Dropped.
+- If you spot a genuine issue elsewhere while gathering context, record it as a **one-line follow-up in the report footer**, never as a review finding. It carries no severity and does not affect the verdict.
+
+The reason is trust, not bureaucracy: a review that wanders produces findings the author cannot act on in this change, and trains them to skim the ones they can.
 
 ### Step 1.5: Blast Radius Assessment
 
@@ -134,6 +152,8 @@ Read each changed file. Prioritize bugs that **pass CI but break production** �
 - **Edge cases**: empty input, null/undefined, zero, negative numbers, empty arrays, Unicode, timezone boundaries
 - Check for: logic errors, off-by-one errors, incorrect conditionals, broken async/await patterns
 - Flag each finding with file path, line number, and severity
+
+**Strict Focus applies here** (restated from Step 1, because this is the step that breaks it): reading a caller or a helper outside the diff to decide whether a changed line is correct is *expected*. Reporting a bug you noticed in that caller is not — that finding is dropped, or goes to the report footer as a one-line follow-up. The question this step answers is only ever "is the **changed** code correct?"
 
 **Common patterns to flag:**
 
@@ -345,8 +365,31 @@ End with the only metric that matters: `net: -<N> lines, -<M> deps possible.` No
 
 Produce a structured severity-ranked report.
 
-**Before reporting, apply confidence filter:**
-- Only report findings with >80% confidence it is a real issue
+#### Falsification Pass (run before writing the report)
+
+**Falsify, not verify.** Do not ask "am I confident enough to report this?" — a model cannot calibrate its own confidence to a number, so that question filters nothing and quietly drops true findings. Ask the answerable question instead: **"did I read something that disproves this?"**
+
+| | Condition | Action |
+|---|---|---|
+| **DROP** | The code you read contains **direct counter-evidence** against the finding's key claim — the null check exists three lines up, the `await` is there, the input is validated by the caller you opened | Discard it |
+| **KEEP** | The finding depends on context **outside the diff** that you did read via tools — that context is evidence, not a disqualification | Report it |
+| **KEEP** | You can neither verify nor disprove it | Report it, typed honestly (below) |
+
+**"Unsure" is not grounds to drop.** Only counter-evidence is. A finding you could not confirm is still a finding — it is reported at the severity its claim type allows, not deleted to keep the report tidy.
+
+Dropped findings are **discarded silently** — never listed as "considered and dismissed". A disproven finding is noise whether or not you label it as such.
+
+**Type every surviving finding** with a claim type from `../completion-gate/references/claim-discipline.md`:
+
+| Type | Means | Ceiling |
+|------|-------|---------|
+| `OBSERVED` | You read the code path this session and saw the defect | Any severity |
+| `DERIVED` | Follows from what you read through a mechanism you can state in the finding | Any severity |
+| `ASSUMED` | Requires an unverified premise (a caller you did not open, a runtime condition you cannot see) | **Never CRITICAL** — state the premise in the finding |
+
+An `ASSUMED` finding capped below CRITICAL is the honest form of "this looks wrong but I could not confirm the call path". Promotion happens by reading the code, never by rephrasing the finding more confidently.
+
+**Then, before reporting:**
 - Consolidate similar issues: "8 functions missing error handling in src/services/" — not 8 separate findings
 - Skip stylistic preferences unless they violate conventions found in `.eslintrc`, `CLAUDE.md`, or `CONTRIBUTING.md`
 - Adapt to project type: a `console.log` in a CLI tool is fine; in a production API handler it is not
@@ -358,7 +401,7 @@ Produce a structured severity-ranked report.
 
 ### Step 6.5: Fix-First Triage
 
-> From gstack (garrytan/gstack, 50.9k★): "Reviews that produce 20 findings and delegate all to the user waste everyone's time."
+A review that produces 20 findings and delegates every one of them back to the user has moved work, not done it.
 
 Classify each finding as **AUTO-FIX** or **ASK** before reporting:
 
@@ -376,11 +419,13 @@ Classify each finding as **AUTO-FIX** or **ASK** before reporting:
 - Collect ASK findings into ONE `AskUserQuestion` — not 5 separate questions
 - Report both: "Auto-fixed 4 issues. 2 findings need your input: [...]"
 
-**Rationalization prevention**: "This looks fine" is NOT acceptable without evidence. If you can't cite a specific file:line or convention that justifies the code, flag it as UNVERIFIED — don't rationalize away uncertainty.
+**Rationalization prevention**: "This looks fine" is NOT acceptable without evidence. If you cannot cite a specific file:line or convention that justifies the code, do not wave it through — report it as an `ASSUMED` finding naming the premise you could not check.
+
+This is the same asymmetry as the Falsification Pass, applied in the other direction: uncertainty never justifies **dropping** a finding, and it never justifies **clearing** code either. Both resolve by reading, or by saying plainly what was not read.
 
 ### Step 6.6: Scope Drift Detection
 
-> From gstack (garrytan/gstack, 50.9k★): "Intent vs diff catches scope creep that plan-based guards miss."
+Comparing stated intent against the actual diff catches scope creep that plan-based guards miss — the plan was right, the diff simply grew past it.
 
 After reviewing code, compare **stated intent** vs **actual diff**:
 
@@ -634,13 +679,13 @@ LOW       — style inconsistency, naming suggestion, minor refactor opportunity
 - [PASS/FAIL]: [acceptance criteria coverage]
 
 ### CRITICAL
-- `path/to/file.ts:42` — [description of critical issue]
+- `path/to/file.ts:42` — [OBSERVED] [description of critical issue]
 
 ### HIGH
-- `path/to/file.ts:85` — [description of high-severity issue]
+- `path/to/file.ts:85` — [DERIVED] [description of high-severity issue, incl. the mechanism]
 
 ### MEDIUM
-- `path/to/file.ts:120` — [description of medium issue]
+- `path/to/file.ts:120` — [ASSUMED: caller in worker.ts not read] [description of medium issue]
 
 ### Blast Radius
 - [High-impact symbols with caller counts]
@@ -650,7 +695,12 @@ LOW       — style inconsistency, naming suggestion, minor refactor opportunity
 
 ### Verdict
 [Summary and recommendation]
+
+### Follow-ups (outside this scope)
+- `other/file.ts` — [one line, no severity, does not affect the verdict; omit section if none]
 ```
+
+Every finding carries its claim type from the Falsification Pass. `ASSUMED` findings name the premise that was not checked and never appear under CRITICAL. The Follow-ups section is the only place an out-of-scope observation may appear.
 
 ### Review Staleness Detection
 
@@ -697,7 +747,7 @@ chain_metadata:
   exports:
     findings_count: { critical: [N], high: [N], medium: [N], low: [N] }
     findings:
-      - { severity: "[level]", file: "[path]", line: [N], message: "[issue]" }
+      - { severity: "[level]", file: "[path]", line: [N], message: "[issue]", claim_type: "[OBSERVED | DERIVED | ASSUMED]" }
     verdict: "[APPROVE | REQUEST_CHANGES | NEEDS_DISCUSSION]"
     quality_score: [0-100]  # when mode: "scored"
   suggested_next:
@@ -710,9 +760,10 @@ chain_metadata:
 
 | Failure Mode | Severity | Mitigation |
 |---|---|---|
-| Finding flood — 20+ findings overwhelm developer | MEDIUM | Confidence filter: only >80% confidence, consolidate similar issues per file |
+| Finding flood — 20+ findings overwhelm developer | MEDIUM | Falsification Pass drops disproven findings; consolidate similar issues per file |
 | "LGTM" without file:line evidence | HIGH | HARD-GATE blocks this — cite at least one specific item per changed file |
-| Expanding review scope beyond the diff | MEDIUM | Limit to `git diff` scope — do not creep into adjacent unchanged files |
+| Expanding review scope beyond the diff | MEDIUM | Strict Focus Rule (Step 1) — read anything for context, but findings about out-of-scope files are dropped or become footer follow-ups |
+| Dropping a true finding because it could not be confirmed | HIGH | Falsification Pass — only counter-evidence drops a finding; "unsure" reports it as `ASSUMED` |
 | Security finding without sentinel escalation | HIGH | Any auth/crypto/payment code touched → MUST call rune:sentinel |
 | Skipping UI anti-pattern checks for frontend changes | MEDIUM | Any .tsx/.jsx/.svelte/.vue in diff → MUST run UI/UX Anti-Pattern Checks section |
 | Skipping spec compliance check (Step 5.5 Stage 1) | HIGH | Code quality without spec check ships clean code that does the wrong thing — always load the plan/ticket before reviewing quality |

@@ -197,7 +197,7 @@ Contract format in NEXUS Handoff:
 
 **1d. Question Gate (non-trivial tasks only).**
 
-> From superpowers (obra/superpowers, 84k★): "Subagents that start work without asking questions produce the wrong thing 40% of the time."
+Subagents that start work without asking questions frequently produce the wrong thing.
 
 Before dispatching streams, include in each NEXUS Handoff: "Before starting, ask up to 3 clarifying questions if anything is unclear about scope, conventions, or expected output."
 
@@ -217,7 +217,7 @@ Mark todo[1] `in_progress`.
 
 Launch independent streams (depends_on: []) in parallel using Task tool with worktree isolation.
 
-> From agency-agents (msitarzewski/agency-agents, 50.8k★): "Structured handoff docs prevent the #1 multi-agent failure: context loss between agents."
+Structured handoff docs prevent the most common multi-agent failure: context loss between agents.
 
 Each stream receives a **NEXUS Handoff Template** — not a bare prompt:
 

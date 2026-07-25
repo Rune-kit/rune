@@ -585,7 +585,7 @@ LOW      — Nice to have. Style inconsistencies, minor refactors, doc gaps.
 INFO     — Observation only. Architecture notes, tech debt acknowledgment.
 ```
 
-Apply confidence filtering: only report findings with >80% confidence. Consolidate similar issues (e.g., "12 functions missing error handling in src/services/" — not 12 separate findings). Adapt judgment to project type (a `console.log` in a CLI tool is fine; in a production API handler, it's not).
+Apply the Falsification Pass (`../review/SKILL.md` → Step 6): drop a finding only when what you read contains direct counter-evidence against its key claim — never merely because you are unsure. A finding you cannot disprove is reported and typed `ASSUMED` with the unchecked premise named. Consolidate similar issues (e.g., "12 functions missing error handling in src/services/" — not 12 separate findings). Adapt judgment to project type (a `console.log` in a CLI tool is fine; in a production API handler, it's not).
 
 ## Output Format
 
@@ -644,7 +644,7 @@ Report saved to: AUDIT-REPORT.md
 
 1. MUST complete all 8 phases (Phase 8 may report "no data" if .rune/metrics/ doesn't exist yet) — if any phase is skipped, state explicitly which phase and why
 2. MUST delegate Phase 1 to dependency-doctor and Phase 2 to sentinel — no manual replacements
-3. MUST apply confidence filter — only report findings with >80% confidence; consolidate similar issues
+3. MUST apply the Falsification Pass — drop findings only on direct counter-evidence, never on uncertainty; consolidate similar issues
 4. MUST include at least 3 positive findings — an audit with no positives is incomplete
 5. MUST produce quantified health scores (1-10 per dimension) — not vague "needs work"
 6. MUST NOT fabricate findings — every finding requires a specific file:line citation

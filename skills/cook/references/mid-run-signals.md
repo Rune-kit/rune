@@ -1,7 +1,7 @@
 # Mid-Run Signal Detection — Two-Stage Intent Classification
 
 When user sends a message DURING cook execution (mid-phase), classify intent before acting.
-Source: goclaw (832★) — two-stage intent classification prevents expensive LLM calls for simple signals.
+Two-stage intent classification prevents expensive LLM calls for simple signals.
 
 ## Stage 1 — Keyword Fast-Path
 

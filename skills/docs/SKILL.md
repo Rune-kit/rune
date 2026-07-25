@@ -177,7 +177,7 @@ Delegate to `rune:git changelog` to produce a changelog entry from commits since
 
 #### Step 4 — Cross-Doc Consistency Pass
 
-> From gstack (garrytan/gstack, 50.9k★): "Cross-document consistency prevents the #2 docs problem: docs that exist but contradict each other."
+Cross-document consistency prevents the second-most-common docs problem: docs that exist but contradict each other.
 
 After updating any doc, verify consistency across all project documentation:
 
