@@ -151,7 +151,31 @@ Read each changed file. Prioritize bugs that **pass CI but break production** �
 - **Data loss paths**: write operations without confirmation, delete without soft-delete, truncation without backup
 - **Edge cases**: empty input, null/undefined, zero, negative numbers, empty arrays, Unicode, timezone boundaries
 - Check for: logic errors, off-by-one errors, incorrect conditionals, broken async/await patterns
-- Flag each finding with file path, line number, and severity
+- Flag each finding using the **Evidence Contract** below — a snippet you copied, not a line number you remembered
+
+#### Evidence Contract
+
+Every finding carries these five fields. The line number is the one field you do **not** produce yourself.
+
+| Field | Required | Source |
+|-------|----------|--------|
+| `path` | yes | the Step 1 scope list |
+| `evidence` | yes | verbatim snippet copied out of the file |
+| `line` | resolved | `Grep` on `evidence` at report time — never model recall |
+| `severity` | yes | your judgement |
+| `claim` | yes | `OBSERVED` / `DERIVED` / `ASSUMED` (Step 6) |
+
+A line number recalled from a long context drifts, and a correct finding pointing at the wrong line is unactionable — the reader looks, sees nothing, and stops trusting the report. A snippet can be checked against the file; a remembered number cannot. So produce what you can copy, and let a tool resolve the rest (Step 6, Anchor Pass).
+
+**Evidence rules:**
+
+- Copy the lines **verbatim** — no rewriting, reformatting, re-indenting, or tidying
+- Strip diff markers (`+`, `-`, and the leading space on context lines) before recording
+- Include only the lines directly involved — no surrounding context padding
+- Cap at **5 lines**. A finding that needs more than 5 lines to show is a design comment, not a defect — report it without evidence at MEDIUM or below
+- Multiple disjoint locations → pick the single most relevant one and file the rest as separate findings
+
+Evidence blocks are **substance, not shape**. Under `context-engine`'s `caveman` output mode the prose around a finding compresses; the evidence block does not (`../context-engine/references/output-modes.md` — "shape is negotiable, substance is not").
 
 **Strict Focus applies here** (restated from Step 1, because this is the step that breaks it): reading a caller or a helper outside the diff to decide whether a changed line is correct is *expected*. Reporting a bug you noticed in that caller is not — that finding is dropped, or goes to the report footer as a one-line follow-up. The question this step answers is only ever "is the **changed** code correct?"
 
@@ -389,13 +413,29 @@ Dropped findings are **discarded silently** — never listed as "considered and 
 
 An `ASSUMED` finding capped below CRITICAL is the honest form of "this looks wrong but I could not confirm the call path". Promotion happens by reading the code, never by rephrasing the finding more confidently.
 
+#### Anchor Pass (run per surviving finding)
+
+Resolve every line number now, with a tool. Climb the ladder and stop at the first rung that hits:
+
+1. `Grep` the exact `evidence` string in `path`. A hit → the finding is **anchored**; use the line number `Grep` returned.
+2. No hit → retry once with whitespace normalised (collapse runs of spaces) and the first and last lines of the snippet dropped. A hit → anchored on the remaining core.
+3. Still no hit → the finding is **`UNANCHORED`**.
+
+**`UNANCHORED` handling** — advisory, never blocking:
+
+- Downgrade severity by one level: CRITICAL → HIGH → MEDIUM → LOW. LOW stays LOW.
+- Report as `path (unanchored)` in place of `path:line`, with the evidence snippet shown inline
+- **Never silently drop it.** A failed anchor means the snippet does not match the file as you recorded it — usually a transcription slip, occasionally a file that moved while you read. Both deserve the reader's attention; neither is counter-evidence, so neither disproves the finding.
+
+Anchoring resolves a finding; it does not filter one. Only the Falsification Pass drops findings — a survivor of that pass always reaches the report, anchored or not.
+
 **Then, before reporting:**
 - Consolidate similar issues: "8 functions missing error handling in src/services/" — not 8 separate findings
 - Skip stylistic preferences unless they violate conventions found in `.eslintrc`, `CLAUDE.md`, or `CONTRIBUTING.md`
 - Adapt to project type: a `console.log` in a CLI tool is fine; in a production API handler it is not
 
 - Group findings by severity: CRITICAL → HIGH → MEDIUM → LOW
-- Include file path and line number for every finding
+- Give every finding its `path:line` from the Anchor Pass — or `path (unanchored)` — plus the evidence block underneath
 - Include a Positive Notes section (good patterns observed)
 - Include a Verdict: APPROVE | REQUEST CHANGES | NEEDS DISCUSSION
 
@@ -667,25 +707,36 @@ LOW       — style inconsistency, naming suggestion, minor refactor opportunity
 
 ## Output Format
 
-```
+````
 ## Code Review Report
 - **Files Reviewed**: [count]
 - **Findings**: [count by severity]
 - **Review Commit**: [git hash at time of review]
 - **Council**: [not invoked | MULTI_FAMILY (N families) | NO_DECORRELATION — same-family subagents only]
+- **Unanchored**: [count — findings whose evidence did not resolve to a line]
 - **Overall**: APPROVE | REQUEST CHANGES | NEEDS DISCUSSION
 
 ### Spec Compliance
 - [PASS/FAIL]: [acceptance criteria coverage]
 
 ### CRITICAL
-- `path/to/file.ts:42` — [OBSERVED] [description of critical issue]
+- `src/auth/session.ts:42` — [OBSERVED] loose equality on the session token: a request with no token and a session with no token are both `undefined`, and `undefined == undefined` is true, so an anonymous caller is granted that session's user
+  ```ts
+  if (req.token == session.token) return grant(session.user);
+  ```
 
 ### HIGH
-- `path/to/file.ts:85` — [DERIVED] [description of high-severity issue, incl. the mechanism]
+- `src/db/users.ts:85` — [DERIVED] create is not awaited, so the handler returns success before the write lands; a failed insert is reported to the client as 201
+  ```ts
+  db.users.create(data);
+  return { success: true };
+  ```
 
 ### MEDIUM
-- `path/to/file.ts:120` — [ASSUMED: caller in worker.ts not read] [description of medium issue]
+- `src/cache/store.ts (unanchored)` — [ASSUMED: caller in worker.ts not read] cache write has no TTL; if the worker path also writes this key the entry never expires
+  ```ts
+  cache.set(key, value)
+  ```
 
 ### Blast Radius
 - [High-impact symbols with caller counts]
@@ -698,9 +749,11 @@ LOW       — style inconsistency, naming suggestion, minor refactor opportunity
 
 ### Follow-ups (outside this scope)
 - `other/file.ts` — [one line, no severity, does not affect the verdict; omit section if none]
-```
+````
 
-Every finding carries its claim type from the Falsification Pass. `ASSUMED` findings name the premise that was not checked and never appear under CRITICAL. The Follow-ups section is the only place an out-of-scope observation may appear.
+Read the MEDIUM entry above as the shape of an honest weak finding: unanchored (so `path (unanchored)`, already downgraded one level), `ASSUMED` with its unchecked premise named, and still reported — because none of that is counter-evidence.
+
+Every finding carries its claim type from the Falsification Pass and its evidence block from the Evidence Contract. `ASSUMED` findings name the premise that was not checked and never appear under CRITICAL. A finding over the 5-line evidence cap is a design comment — it ships without a block, at MEDIUM or below. The Follow-ups section is the only place an out-of-scope observation may appear.
 
 ### Review Staleness Detection
 
@@ -716,7 +769,7 @@ When `cook` or `ship` checks review status: compare review commit hash with curr
 ## Constraints
 
 1. MUST read the full diff — not just the files the user pointed at
-2. MUST reference specific file:line for every finding
+2. MUST give every finding a verbatim evidence snippet, and resolve its line via the Anchor Pass rather than recall — an unresolved finding is reported `(unanchored)` and downgraded, never renumbered by guess
 3. MUST NOT rubber-stamp with generic praise ("well-structured", "clean code") without evidence
 4. MUST check: correctness, security, performance, conventions, test coverage
 5. MUST categorize findings: CRITICAL (blocks commit) / HIGH / MEDIUM / LOW
@@ -747,7 +800,7 @@ chain_metadata:
   exports:
     findings_count: { critical: [N], high: [N], medium: [N], low: [N] }
     findings:
-      - { severity: "[level]", file: "[path]", line: [N], message: "[issue]", claim_type: "[OBSERVED | DERIVED | ASSUMED]" }
+      - { severity: "[level]", file: "[path]", line: [N or null when unanchored], anchored: [true | false], evidence: "[verbatim snippet, ≤5 lines]", message: "[issue]", claim_type: "[OBSERVED | DERIVED | ASSUMED]" }
     verdict: "[APPROVE | REQUEST_CHANGES | NEEDS_DISCUSSION]"
     quality_score: [0-100]  # when mode: "scored"
   suggested_next:
@@ -764,6 +817,8 @@ chain_metadata:
 | "LGTM" without file:line evidence | HIGH | HARD-GATE blocks this — cite at least one specific item per changed file |
 | Expanding review scope beyond the diff | MEDIUM | Strict Focus Rule (Step 1) — read anything for context, but findings about out-of-scope files are dropped or become footer follow-ups |
 | Dropping a true finding because it could not be confirmed | HIGH | Falsification Pass — only counter-evidence drops a finding; "unsure" reports it as `ASSUMED` |
+| Line number recalled from context instead of resolved — points at the wrong line, reader finds nothing, stops trusting the report | HIGH | Evidence Contract (Step 2) produces a copyable snippet; the Anchor Pass (Step 6) resolves the number with `Grep`. Never write a line number you did not get back from a tool |
+| Dropping a finding because its evidence would not anchor | MEDIUM | Anchoring resolves, it never filters — `UNANCHORED` downgrades one level and reports with the snippet inline. A failed `Grep` is not counter-evidence |
 | Security finding without sentinel escalation | HIGH | Any auth/crypto/payment code touched → MUST call rune:sentinel |
 | Skipping UI anti-pattern checks for frontend changes | MEDIUM | Any .tsx/.jsx/.svelte/.vue in diff → MUST run UI/UX Anti-Pattern Checks section |
 | Skipping spec compliance check (Step 5.5 Stage 1) | HIGH | Code quality without spec check ships clean code that does the wrong thing — always load the plan/ticket before reviewing quality |
@@ -780,7 +835,7 @@ chain_metadata:
 ## Done When
 
 - All changed files in the diff read and analyzed
-- Every finding references specific file:line with severity label
+- Every finding carries a verbatim evidence snippet and a severity label, with its line resolved by the Anchor Pass or marked `(unanchored)` and downgraded
 - Security-critical code escalated to sentinel (or confirmed not present)
 - Test coverage gaps identified and documented
 - UI anti-pattern checks ran for any frontend files in diff (or confirmed not applicable)

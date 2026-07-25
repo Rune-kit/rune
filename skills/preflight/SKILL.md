@@ -103,7 +103,7 @@ const permissions = await fetchPermissions(id); // waits unnecessarily
 const [user, permissions] = await Promise.all([fetchUser(id), fetchPermissions(id)]);
 ```
 
-Flag each issue with: file path, line number, category (null-deref | missing-await | off-by-one | type-coerce), and a one-line description.
+Flag each issue with: file path, a **verbatim evidence snippet** copied from the file, category (null-deref | missing-await | off-by-one | type-coerce), and a one-line description. Record the snippet, not a line number — Step 6's Anchor Pass resolves the line with `Grep`.
 
 ### Step 2 — Error Handling
 For every changed file, verify:
@@ -132,7 +132,7 @@ app.use((err, req, res, next) => {
 });
 ```
 
-Flag each violation with: file path, line number, category (bare-catch | missing-status-check | raw-error-exposure), and description.
+Flag each violation with: file path, a **verbatim evidence snippet**, category (bare-catch | missing-status-check | raw-error-exposure), and description. Same rule as Step 1 — the snippet is what you produce; the line number comes from Step 6's Anchor Pass.
 
 ### Step 3 — Regression Check
 Use `rune:scout` to identify all files that import or depend on the changed files/functions.
@@ -347,6 +347,10 @@ Invoke `rune:sentinel` on the changed files. Attach sentinel's output verbatim u
 
 Type each surviving finding `OBSERVED | DERIVED | ASSUMED` per `../completion-gate/references/claim-discipline.md`. An `ASSUMED` finding — one resting on a premise you could not check — names that premise and **never escalates the verdict to BLOCK on its own**. It reports as WARN with the premise stated.
 
+**Anchor Pass second.** Every finding you collected in Steps 1-4 carries an evidence snippet, not a line number. Resolve each one now via the Anchor Ladder defined in `../review/SKILL.md` → Step 6: `Grep` the exact snippet, retry once whitespace-normalised with the outer lines dropped, and on a second miss mark the finding `UNANCHORED`.
+
+`UNANCHORED` behaves here exactly as it does in `review` — downgrade one level (BLOCK → WARN → INFO), report as `path (unanchored)` with the snippet inline, never drop. A finding that will not anchor **cannot carry the BLOCK verdict on its own**, for the same reason an `ASSUMED` one cannot: halting a pipeline on a claim nobody can locate spends the developer's trust faster than the bug would have.
+
 Then aggregate all surviving findings:
 - Any BLOCK from sentinel OR a logic issue that would cause data corruption or security bypass OR a dead interactive element (Step 4 cross-layer pairing / Step 4.5 dead-interactive check) OR a BLOCK from any domain hook → overall **BLOCK**
 - Any missing error handling, regression risk with no tests, or incomplete feature (other than the BLOCK cases above) → **WARN**
@@ -356,18 +360,28 @@ Report PASS, WARN, or BLOCK. For WARN, list each item the developer must acknowl
 
 ## Output Format
 
-```
+````
 ## Preflight Report
 - **Status**: PASS | WARN | BLOCK
 - **Files Checked**: [count]
 - **Changes**: +[added] -[removed] lines across [files] files
+- **Unanchored**: [count — findings whose evidence did not resolve to a line]
 
 ### Logic Issues
 - `path/to/file.ts:42` — [OBSERVED] null-deref: `user.name` accessed without null check
-- `path/to/api.ts:85` — [ASSUMED: caller in job.ts not read] missing-await: async database call not awaited
+  ```ts
+  return user.name.trim();
+  ```
+- `path/to/api.ts (unanchored)` — [ASSUMED: caller in job.ts not read] missing-await: async database call not awaited
+  ```ts
+  db.orders.insert(row);
+  ```
 
 ### Error Handling
 - `path/to/handler.ts:20` — bare-catch: error swallowed silently
+  ```ts
+  } catch (e) {}
+  ```
 
 ### Regression Risk
 - `utils/format.ts` — changed function used by 5 modules, 2 have tests, 3 untested (WARN)
@@ -389,12 +403,14 @@ Report PASS, WARN, or BLOCK. For WARN, list each item the developer must acknowl
 
 ### Verdict
 WARN — 3 issues found (0 blocking, 3 must-acknowledge). Resolve before commit or explicitly acknowledge each WARN.
-```
+````
+
+Findings under Logic Issues and Error Handling show their evidence block; the Regression, Completeness, and Coherence sections describe file-level or structural gaps that have no single line to anchor, so they carry a path only.
 
 ## Constraints
 
 1. MUST check: logic errors, error handling, edge cases, type safety, naming conventions
-2. MUST reference specific file:line for every finding
+2. MUST anchor every line-level finding to a verbatim evidence snippet, resolving the line via the Anchor Pass rather than recall — unresolved findings report `(unanchored)`, downgraded one level, and cannot carry BLOCK alone
 3. MUST NOT skip edge case analysis — "happy path works" is insufficient
 4. MUST verify error messages are user-friendly and don't leak internal details
 5. MUST check that async operations have proper error handling and cleanup
@@ -434,7 +450,7 @@ WARN — 3 issues found (0 blocking, 3 must-acknowledge). Resolve before commit 
 - Cross-layer pairing checked (Step 4): every new interactive component's handler chain reaches a real endpoint/service or has an explicit UI-only scope
 - Dead-interactive scan done (Step 4.5 UI hook) on all UI files in the diff
 - Sentinel invoked and its output attached in Security section
-- Structured report emitted with PASS / WARN / BLOCK verdict and file:line for every finding
+- Structured report emitted with PASS / WARN / BLOCK verdict, and every line-level finding anchored to a verbatim snippet (or reported `(unanchored)` and downgraded)
 
 ## Cost Profile
 
