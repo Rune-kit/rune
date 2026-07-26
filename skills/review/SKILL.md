@@ -95,6 +95,15 @@ Determine what to review.
 
 The reason is trust, not bureaucracy: a review that wanders produces findings the author cannot act on in this change, and trains them to skim the ones they can.
 
+**Rule Loading** — pick the checklists this diff actually needs, then stop.
+
+1. Collect the distinct file extensions across the scope list you just wrote.
+2. `Read` `references/rules/index.md` and follow its mapping to the matching rule files — at most one per language present in the diff.
+3. Always read `references/rules/default.md`. It carries the five dimensions every file is judged on.
+4. Read nothing further. **Never read all rule files** — a Go rule cannot produce a true finding about a diff with no Go in it, only a plausible-looking one, and that is the noise this split exists to remove.
+
+Every rule in those files ends with a `Do not report when…` clause. That clause is as binding as the rule above it: a rule that only says when to fire will fire on everything. Rules do not restate the Review Policy, the Evidence Contract, or the claim types — they inherit all three from this file, and a rule never invents a severity or a gate of its own.
+
 ### Step 1.5: Blast Radius Assessment
 
 For each modified function/class, estimate its blast radius before reviewing.
@@ -179,31 +188,7 @@ Evidence blocks are **substance, not shape**. Under `context-engine`'s `caveman`
 
 **Strict Focus applies here** (restated from Step 1, because this is the step that breaks it): reading a caller or a helper outside the diff to decide whether a changed line is correct is *expected*. Reporting a bug you noticed in that caller is not — that finding is dropped, or goes to the report footer as a one-line follow-up. The question this step answers is only ever "is the **changed** code correct?"
 
-**Common patterns to flag:**
-
-```typescript
-// BAD — missing await causes race condition
-async function saveUser(data) {
-  db.users.create(data); // caller proceeds before save completes
-  return { success: true };
-}
-// GOOD
-async function saveUser(data) {
-  await db.users.create(data);
-  return { success: true };
-}
-```
-
-```typescript
-// BAD — null deref crash
-function getUsername(user) {
-  return user.profile.name.toUpperCase(); // crashes if profile or name is null
-}
-// GOOD — safe access
-function getUsername(user) {
-  return user?.profile?.name?.toUpperCase() ?? 'Anonymous';
-}
-```
+**Language-specific patterns** for the files in scope come from the rule files loaded in Step 1 — each carries the concrete triggers *and* the conditions under which they must not be reported.
 
 ### Step 3: Pattern Check
 
@@ -216,30 +201,7 @@ Check consistency with project conventions.
 - Check TypeScript: no `any`, full type coverage, no non-null assertions without justification
 - Flag inconsistencies as MEDIUM or LOW depending on impact
 
-**Common patterns to flag:**
-
-```typescript
-// BAD — mutation
-function addItem(cart, item) {
-  cart.items.push(item); // mutates in place
-  return cart;
-}
-// GOOD — immutable
-function addItem(cart, item) {
-  return { ...cart, items: [...cart.items, item] };
-}
-```
-
-```typescript
-// BAD — any defeats TypeScript's purpose
-function process(data: any): any {
-  return data.items.map((i: any) => i.value);
-}
-// GOOD — typed
-function process(data: { items: Array<{ value: string }> }): string[] {
-  return data.items.map(i => i.value);
-}
-```
+Mutation, type-escape, and idiom triggers are language-specific — take them from the Step 1 rule files rather than applying one language's conventions to another's.
 
 ### Step 4: Security Check
 
@@ -487,26 +449,6 @@ After reporting:
 - If any HIGH findings: call `rune:fix` with the finding details
 - If untested code: call `rune:test` with specific coverage gaps identified
 - Call `neural-memory` (Capture Mode) to save any novel code quality patterns or recurring issues found.
-
-## Framework-Specific Checks
-
-Apply **only** if the framework is detected in the changed files. Skip if not relevant.
-
-**React / Next.js** (detect: `import React` or `.tsx` files)
-- `useEffect` with missing dependencies (stale closure) → flag HIGH
-- List items using index as key on reorderable lists: `key={i}` → flag MEDIUM
-- Props drilled through 3+ levels without Context or composition → flag MEDIUM
-- Client-side hooks (`useState`, `useEffect`) in Server Components (Next.js App Router) → flag HIGH
-
-**Node.js / Express** (detect: `import express` or `require('express')`)
-- Missing rate limiting on public endpoints → flag MEDIUM
-- `req.body` passed directly to DB without validation schema → flag HIGH
-- Synchronous operations blocking the event loop inside async handlers → flag HIGH
-
-**Python** (detect: `.py` files with `django`, `flask`, or `fastapi` imports)
-- `except:` bare catch without specific exception type → flag MEDIUM
-- Mutable default arguments: `def func(items=[])` → flag HIGH
-- Missing type hints on public functions (if project uses mypy/pyright) → flag LOW
 
 ## UI/UX Anti-Pattern Checks
 
@@ -819,6 +761,8 @@ chain_metadata:
 | Dropping a true finding because it could not be confirmed | HIGH | Falsification Pass — only counter-evidence drops a finding; "unsure" reports it as `ASSUMED` |
 | Line number recalled from context instead of resolved — points at the wrong line, reader finds nothing, stops trusting the report | HIGH | Evidence Contract (Step 2) produces a copyable snippet; the Anchor Pass (Step 6) resolves the number with `Grep`. Never write a line number you did not get back from a tool |
 | Dropping a finding because its evidence would not anchor | MEDIUM | Anchoring resolves, it never filters — `UNANCHORED` downgrades one level and reports with the snippet inline. A failed `Grep` is not counter-evidence |
+| Reading every rule file regardless of the diff's languages | MEDIUM | Step 1 Rule Loading — load only the files matching extensions in scope, plus `default.md`. A rule for a language absent from the diff can only produce a plausible-looking false finding |
+| Applying a rule's trigger while ignoring its `Do not report when…` clause | HIGH | The negative clause is part of the rule, not commentary on it. A rule cited without checking its exclusion is the single most common source of confident false alarms |
 | Security finding without sentinel escalation | HIGH | Any auth/crypto/payment code touched → MUST call rune:sentinel |
 | Skipping UI anti-pattern checks for frontend changes | MEDIUM | Any .tsx/.jsx/.svelte/.vue in diff → MUST run UI/UX Anti-Pattern Checks section |
 | Skipping spec compliance check (Step 5.5 Stage 1) | HIGH | Code quality without spec check ships clean code that does the wrong thing — always load the plan/ticket before reviewing quality |
@@ -835,6 +779,7 @@ chain_metadata:
 ## Done When
 
 - All changed files in the diff read and analyzed
+- Rule files matching the diff's extensions loaded (plus `default.md`), and no others
 - Every finding carries a verbatim evidence snippet and a severity label, with its line resolved by the Anchor Pass or marked `(unanchored)` and downgraded
 - Security-critical code escalated to sentinel (or confirmed not present)
 - Test coverage gaps identified and documented
