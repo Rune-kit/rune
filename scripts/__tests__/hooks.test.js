@@ -744,6 +744,46 @@ process.exit(0);`;
     assert.strictEqual(JSON.parse(out).hookSpecificOutput.additionalContext, 'late-write');
   });
 
+  // Claude Code shows the model ONLY stderr for an exit-2 block. A hook that
+  // explains itself on stdout produces "hook error: […]: No stderr output" —
+  // the model learns it was blocked but never why.
+  test('emitBlock writes the reason to stderr and exits 2', () => {
+    const libPath = path.join(__dirname, '..', '..', 'hooks', 'lib', 'hook-output.cjs');
+    const script = `const { emitBlock } = require(${JSON.stringify(libPath)});
+emitBlock('PreToolUse', 'BLOCKED: reason-text');`;
+
+    let status = 0;
+    let stderr = '';
+    let stdout = '';
+    try {
+      execFileSync(process.execPath, ['-e', script], { encoding: 'utf-8', stdio: 'pipe' });
+    } catch (e) {
+      status = e.status;
+      stderr = e.stderr;
+      stdout = e.stdout;
+    }
+
+    assert.strictEqual(status, 2, 'block must exit 2');
+    assert.match(stderr, /BLOCKED: reason-text/, 'reason must be on stderr — Claude Code reads nothing else');
+    // Codex reads the stdout envelope, so both channels carry it.
+    assert.match(JSON.parse(stdout).systemMessage, /BLOCKED: reason-text/);
+  });
+
+  // Every emit must go through the helper, which uses fs.writeSync. A direct
+  // process.stdout.write before process.exit() is silently dropped on a pipe.
+  test('no hook writes to stdout directly', () => {
+    const hooksDir = path.join(__dirname, '..', '..', 'hooks');
+    const offenders = fs
+      .readdirSync(hooksDir, { withFileTypes: true })
+      .filter((d) => d.isDirectory() && d.name !== 'lib')
+      .map((d) => path.join(hooksDir, d.name, 'index.cjs'))
+      .filter((p) => fs.existsSync(p))
+      .filter((p) => /process\.stdout\.write\s*\(/.test(fs.readFileSync(p, 'utf-8')))
+      .map((p) => path.relative(hooksDir, p));
+
+    assert.deepStrictEqual(offenders, [], 'use the envelope helper or fs.writeSync(1, …)');
+  });
+
   // Claude Code discards a hook's stdout when the hook collected stdin with an
   // async listener. Every hook must read it synchronously instead.
   test('no hook reads stdin with an async listener', () => {

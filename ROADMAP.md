@@ -1,6 +1,6 @@
 # Rune Roadmap
 
-> Last updated: July 2026 | Version: 2.30.1
+> Last updated: July 2026 | Version: 2.30.2
 
 ---
 
@@ -18,7 +18,7 @@ These principles guide every roadmap decision:
 
 ---
 
-## Current State (v2.30.1 — "Hooks That Land")
+## Current State (v2.30.2 — "Blocked, With a Reason")
 
 | Layer | Count | Status |
 |-------|-------|--------|

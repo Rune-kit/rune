@@ -96,7 +96,9 @@ function main(raw) {
       additionalContext: notice,
     },
   };
-  process.stdout.write(`${JSON.stringify(output)}\n`);
+  // fs.writeSync, not process.stdout.write — process.exit() follows immediately
+  // below, and a piped stdout is not guaranteed to flush before the process ends.
+  fs.writeSync(1, `${JSON.stringify(output)}\n`);
 
   writeTelemetry({ tool: toolName, decision: 'emit', source: decision.source, session_id: sessionId });
   clearTimeout(timeoutHandle);

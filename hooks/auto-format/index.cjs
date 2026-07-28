@@ -5,7 +5,10 @@
 // Silent pass-through if not applicable.
 
 const { execSync } = require('child_process');
+const { captureConsole } = require('../lib/hook-output.cjs');
 const path = require('path');
+
+captureConsole('PostToolUse');
 
 const input = JSON.parse(process.env.CLAUDE_TOOL_INPUT || '{}');
 const filePath = input.file_path || input.filePath || '';

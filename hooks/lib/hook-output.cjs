@@ -113,4 +113,25 @@ function captureConsole(hookEventName, options = {}) {
   return { buffer, restore };
 }
 
-module.exports = { outputBuffer, emit, captureConsole, CONTEXT_EVENTS };
+/**
+ * Emit a BLOCK reason, then exit 2.
+ *
+ * A blocking hook has to speak on two channels, because the runtimes read
+ * different ones. Claude Code takes the reason for an exit-2 block from STDERR —
+ * a hook that explains itself on stdout gets `hook error: […]: No stderr output`
+ * shown to the model, which learns that it was blocked but never why. Codex reads
+ * the stdout envelope. Write both; neither runtime is confused by the other's.
+ *
+ * @param {string} hookEventName
+ * @param {string} text  human-readable reason
+ */
+function emitBlock(hookEventName, text) {
+  const reason = text.trim();
+  if (!reason) process.exit(2);
+
+  fs.writeSync(2, `${reason}\n`);
+  fs.writeSync(1, `${JSON.stringify({ systemMessage: reason, hookSpecificOutput: { hookEventName } })}\n`);
+  process.exit(2);
+}
+
+module.exports = { outputBuffer, emit, emitBlock, captureConsole, CONTEXT_EVENTS };

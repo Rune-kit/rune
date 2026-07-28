@@ -5,6 +5,27 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.30.2] - 2026-07-29
+
+"Blocked, With a Reason" — finishing the hook I/O sweep v2.30.1 started, plus the fault that sweep uncovered: the privacy gate was blocking correctly and telling the model nothing.
+
+### Fixed — a blocked call now says why
+
+Claude Code shows the model **only stderr** for an exit-2 block. `pre-tool-guard` explained itself on stdout, so a blocked read surfaced as:
+
+```
+PreToolUse:Read hook error: […pre-tool-guard]: No stderr output
+```
+
+The block worked — the model just never learned the reason, and could only guess whether to stop or find another route. New `emitBlock()` writes the reason to stderr (Claude Code) and the envelope to stdout (Codex), then exits 2. Verified end-to-end: the model now quotes the block reason back verbatim.
+
+### Fixed — three hooks v2.30.1 missed
+- **`quarantine`** built its envelope by hand and shipped it with `process.stdout.write` immediately before `process.exit(0)` — the exact pattern v2.30.1 fixed everywhere else. It was converted to sync stdin but its write path was left behind.
+- **`auto-format`** and **`typecheck`** printed with bare `console.log` and no envelope helper at all: unflushed on Claude Code, and rejected outright by Codex, which discards non-JSON hook stdout.
+
+### Tests
+- 2 new tests (1,651 total): `emitBlock` puts the reason on stderr and exits 2, and a repo-wide check that no hook writes to stdout directly — the companion to v2.30.1's async-stdin check. Both scan every hook, so a new hook cannot reintroduce either fault.
+
 ## [2.30.1] - 2026-07-29
 
 "Hooks That Land" — five hooks had been running, exiting 0, and reaching nobody. Nothing logged an error, so the hook layer looked healthy while contributing nothing to the model's context.

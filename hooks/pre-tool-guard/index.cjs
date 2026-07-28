@@ -15,7 +15,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const { captureConsole } = require('../lib/hook-output.cjs');
+const { captureConsole, emitBlock } = require('../lib/hook-output.cjs');
 const { readStdinSync } = require('../lib/hook-stdin.cjs');
 // Hook stdout is a JSON contract, not free text (Codex rejects bare lines and
 // discards the output). Capture the prints below and emit one envelope on exit.
@@ -158,10 +158,16 @@ const input = readStdinSync();
       // at this layer and intentionally remain uncaptured (see GAP-1 in governance-collector.js).
       appendGateOutcome('privacy-mesh', 'blocked', `file matched BLOCK-tier pattern: ${basename}`);
 
-      console.log(`\n🚫 [Rune privacy-mesh] BLOCKED: ${filePath}`);
-      console.log('  This file matches a BLOCK-tier pattern (private keys, certificates).');
-      console.log('  Override: add path to .rune/privacy.json "allow" list if intentional.\n');
-      process.exit(2); // Exit code 2 = BLOCK
+      // Exit code 2 = BLOCK. The reason must go to stderr — that is the only
+      // channel Claude Code shows the model for a blocked call.
+      emitBlock(
+        'PreToolUse',
+        [
+          `🚫 [Rune privacy-mesh] BLOCKED: ${filePath}`,
+          '  This file matches a BLOCK-tier pattern (private keys, certificates).',
+          '  Override: add path to .rune/privacy.json "allow" list if intentional.',
+        ].join('\n'),
+      );
     }
 
     const isWarned = warnPatterns.some((p) => p.test(basename) || p.test(normalized));
