@@ -5,7 +5,7 @@ metadata:
   author: runedev
   version: "0.2.0"
   layer: L3
-  model: sonnet
+  model: haiku
   group: monitoring
   tools: "Read, Bash, Glob, Grep"
   emit: incident.detected

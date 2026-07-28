@@ -36,6 +36,21 @@ export function parseFrontmatter(content) {
   return match[1];
 }
 
+// A SKILL.md can carry `model` twice, and the two are read by different consumers:
+//   metadata.model  → the compiler (parser.js), which maps it per platform
+//   top-level model → Claude Code itself, but ONLY for `context: fork` skills
+// They must agree, or the tier a user sees depends on which runtime they are on.
+export function parseModelFields(frontmatter) {
+  const top = frontmatter.match(/^model:\s*(\S+)\s*$/m);
+  const nested = frontmatter.match(/^\s+model:\s*(\S+)\s*$/m);
+  const strip = (m) => (m ? m[1].replace(/["']/g, '') : null);
+  return { topLevel: strip(top), metadata: strip(nested) };
+}
+
+export function isForkSkill(frontmatter) {
+  return /^context:\s*fork\s*$/m.test(frontmatter);
+}
+
 export function checkHardGateFormat(content, skillName) {
   const issues = [];
   // HARD-GATE should use XML tags, not markdown code blocks
@@ -74,13 +89,22 @@ export function validateSkill(skillPath, skillName) {
       issues.push(`${skillName}: Invalid layer "${layerMatch[1]}" — must be L1, L2, or L3`);
     }
 
-    // Check model value is valid
-    const modelMatch = frontmatter.match(/model:\s*(\S+)/);
-    if (modelMatch) {
-      const model = modelMatch[1].replace(/"/g, '');
-      if (!VALID_MODELS.includes(model)) {
+    // Check model values are valid — both the compiler's and Claude Code's copy
+    const { topLevel, metadata } = parseModelFields(frontmatter);
+    for (const model of [topLevel, metadata]) {
+      if (model && !VALID_MODELS.includes(model)) {
         issues.push(`${skillName}: Invalid model "${model}" — must be haiku, sonnet, or opus`);
       }
+    }
+
+    // The two copies must agree — a silent split means the tier differs per runtime
+    if (topLevel && metadata && topLevel !== metadata) {
+      issues.push(`${skillName}: model split — top-level "${topLevel}" vs metadata "${metadata}". They must match.`);
+    }
+
+    // Claude Code only honours top-level model when the skill forks into a subagent
+    if (topLevel && !isForkSkill(frontmatter)) {
+      issues.push(`${skillName}: WARN — top-level model has no effect without "context: fork"`);
     }
   }
 
@@ -127,7 +151,40 @@ export function validateSkill(skillPath, skillName) {
   return issues;
 }
 
-export function validateAllSkills(skillsDir) {
+// agents/*.md is a hand-written parallel copy of the tier table. Nothing generates
+// it from skills/, so the two drift silently — 23 of 66 had split apart before this
+// check existed. SKILL.md is the source of truth; agents/ must follow it.
+export function validateAgentSync(skillsDir, agentsDir) {
+  const issues = [];
+  if (!existsSync(agentsDir)) return issues;
+
+  const dirs = readdirSync(skillsDir, { withFileTypes: true })
+    .filter((d) => d.isDirectory())
+    .map((d) => d.name)
+    .sort();
+
+  for (const name of dirs) {
+    const skillPath = join(skillsDir, name, 'SKILL.md');
+    const agentPath = join(agentsDir, `${name}.md`);
+    if (!existsSync(skillPath) || !existsSync(agentPath)) continue;
+
+    const skillFm = parseFrontmatter(readFileSync(skillPath, 'utf-8').replace(/\r\n/g, '\n'));
+    const agentFm = parseFrontmatter(readFileSync(agentPath, 'utf-8').replace(/\r\n/g, '\n'));
+    if (!skillFm || !agentFm) continue;
+
+    const skillModel = parseModelFields(skillFm).metadata;
+    const agentModel = parseModelFields(agentFm).topLevel;
+    if (skillModel && agentModel && skillModel !== agentModel) {
+      issues.push(
+        `${name}: tier drift — skills/${name}/SKILL.md says "${skillModel}", agents/${name}.md says "${agentModel}"`,
+      );
+    }
+  }
+
+  return issues;
+}
+
+export function validateAllSkills(skillsDir, agentsDir = join(skillsDir, '..', 'agents')) {
   const dirs = readdirSync(skillsDir, { withFileTypes: true })
     .filter((d) => d.isDirectory())
     .map((d) => d.name)
@@ -152,6 +209,8 @@ export function validateAllSkills(skillsDir) {
     warnings.push(...softIssues);
     scanned++;
   }
+
+  allIssues.push(...validateAgentSync(skillsDir, agentsDir));
 
   return { scanned, allIssues, warnings };
 }

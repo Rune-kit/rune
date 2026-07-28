@@ -1,7 +1,7 @@
 ---
 name: skill-router
 description: "Meta-enforcement layer — routes EVERY agent action through the correct skill before any code is written. Always active. Prevents 'just this once' bypasses."
-model: opus
+model: sonnet
 subagent_type: general-purpose
 ---
 

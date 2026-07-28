@@ -5,6 +5,32 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.30.0] - 2026-07-29
+
+"Tier Restored" — Rune's model tier table had quietly stopped applying on Claude Code, and it had been wrong in 23 of 66 places for longer than that. Both are fixed, and a gate now stands where neither had one.
+
+### Fixed — the tier table disagreed with itself
+
+`agents/*.md` is a hand-written parallel copy of the tier each skill runs at. Nothing generated it from `skills/`, and no check compared the two, so they drifted: **23 of 66 skills carried a different model in `agents/` than in `skills/`** — `cook` said opus in one file and sonnet in the other, `verification` said sonnet and haiku, `skill-router` said opus and haiku. Which tier you actually got depended on which file the runtime happened to read.
+
+`skills/*/SKILL.md` is now the single source of truth and every pair agrees. Where the two disagreed, the tier was decided by role rather than by picking a side — with one rule that overrode the old values in both files: **a gate never runs below sonnet.** `completion-gate`, `constraint-check`, `integrity-check`, `hallucination-guard`, and `verification` exist to catch an agent's unverified claims; running them cheaper than the agent they audit defeats the point.
+
+### Fixed — tier routing on Opus 5
+
+Model tiering only ever took effect when a skill was reached through a spawned subagent. On Opus 5, Claude Code's harness instructs the model not to spawn subagents unless the user asks for it — so every tier assignment silently became a no-op, and `cook` ran the whole pipeline at the session model.
+
+`scout` and `docs-seeker` now declare `context: fork` + top-level `model: haiku`, which routes them through the Skill tool instead. Verified end-to-end on Opus 5: the run's per-model billing shows `claude-haiku-4-5` alongside `claude-opus-5`. Both are self-contained readers, so forking costs them no conversational context.
+
+`cook` deliberately does **not** declare a model — an orchestrator inherits the session model. Choosing Opus for a session is a deliberate act; a skill silently downgrading it is a bug, not a saving.
+
+### Added — a gate so this cannot drift again
+- **`validateAgentSync`** compares every `skills/<name>/SKILL.md` tier against `agents/<name>.md` and fails on mismatch.
+- **Model split check** — a SKILL.md carrying both a top-level and a `metadata` model must have them agree, since the two are read by different consumers (Claude Code vs the compiler).
+- **Fork warning** — a top-level `model` without `context: fork` is inert on Claude Code and is now flagged as such.
+
+### Tests
+- 6 new tests (1,647 total): field parsing, fork detection, split detection, drift detection, and the real-skills integration check upgraded from a report into an assertion.
+
 ## [2.29.1] - 2026-07-24
 
 "One-Command Update" — v2.29.0 documented the update flow; this release automates it. Docs-and-CLI patch, no skill or mesh changes.

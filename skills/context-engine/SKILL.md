@@ -6,7 +6,7 @@ metadata:
   author: runedev
   version: "1.3.0"
   layer: L3
-  model: haiku
+  model: sonnet
   group: state
   tools: "Read, Glob, Grep"
   emit: context.preview, output.density.set

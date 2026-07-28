@@ -1,6 +1,6 @@
 # Rune Roadmap
 
-> Last updated: July 2026 | Version: 2.29.1
+> Last updated: July 2026 | Version: 2.30.0
 
 ---
 
@@ -18,7 +18,7 @@ These principles guide every roadmap decision:
 
 ---
 
-## Current State (v2.29.1 — "One-Command Update")
+## Current State (v2.30.0 — "Tier Restored")
 
 | Layer | Count | Status |
 |-------|-------|--------|

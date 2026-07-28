@@ -5,7 +5,7 @@ metadata:
   author: runedev
   version: "0.5.0"
   layer: L2
-  model: sonnet
+  model: opus
   group: quality
   tools: "Read, Bash, Glob, Grep"
   emit: audit.complete

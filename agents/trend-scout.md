@@ -1,7 +1,7 @@
 ---
 name: trend-scout
 description: "Market intelligence — competitor analysis, technology trends, community sentiment. Scans Product Hunt, GitHub Trending, HN, Reddit. Use for positioning, not API docs."
-model: sonnet
+model: haiku
 subagent_type: general-purpose
 ---
 

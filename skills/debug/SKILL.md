@@ -5,7 +5,7 @@ metadata:
   author: runedev
   version: "1.4.0"
   layer: L2
-  model: sonnet
+  model: opus
   group: development
   tools: "Read, Bash, Glob, Grep"
   emit: bug.diagnosed, agent.stuck

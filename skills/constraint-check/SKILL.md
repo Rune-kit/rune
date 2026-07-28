@@ -6,7 +6,7 @@ metadata:
   author: runedev
   version: "1.1.0"
   layer: L3
-  model: haiku
+  model: sonnet
   group: validation
   tools: "Read, Glob, Grep"
 ---

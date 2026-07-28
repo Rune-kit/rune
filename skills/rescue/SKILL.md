@@ -7,7 +7,7 @@ metadata:
   author: runedev
   version: "0.4.0"
   layer: L1
-  model: sonnet
+  model: opus
   group: orchestrator
   tools: "Read, Write, Edit, Bash, Glob, Grep"
 ---

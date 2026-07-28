@@ -6,7 +6,7 @@ metadata:
   author: runedev
   version: "0.2.0"
   layer: L3
-  model: haiku
+  model: sonnet
   group: validation
   tools: "Read, Glob, Grep"
   listen: quarantine.notice.emitted

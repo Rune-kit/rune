@@ -4,7 +4,15 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { afterEach, beforeEach, describe, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { checkHardGateFormat, parseFrontmatter, validateAllSkills, validateSkill } from '../validate-skills.js';
+import {
+  checkHardGateFormat,
+  isForkSkill,
+  parseFrontmatter,
+  parseModelFields,
+  validateAgentSync,
+  validateAllSkills,
+  validateSkill,
+} from '../validate-skills.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -233,10 +241,71 @@ describe('validate-skills', () => {
     });
   });
 
+  describe('model tier', () => {
+    const FORK_SKILL = VALID_SKILL.replace(
+      'layer: L2\nmodel: sonnet',
+      'context: fork\nagent: general-purpose\nmodel: haiku\nmetadata:\n  layer: L2\n  model: haiku',
+    );
+
+    test('parseModelFields separates top-level from metadata', () => {
+      const fm = parseFrontmatter(FORK_SKILL);
+      assert.deepStrictEqual(parseModelFields(fm), { topLevel: 'haiku', metadata: 'haiku' });
+    });
+
+    test('isForkSkill detects context: fork', () => {
+      assert.strictEqual(isForkSkill(parseFrontmatter(FORK_SKILL)), true);
+      assert.strictEqual(isForkSkill(parseFrontmatter(VALID_SKILL)), false);
+    });
+
+    test('flags a split between top-level and metadata model', () => {
+      const skillPath = join(tempDir, 'SKILL.md');
+      writeFileSync(skillPath, FORK_SKILL.replace('  model: haiku', '  model: opus'));
+
+      const issues = validateSkill(skillPath, 'split-skill');
+      assert.ok(
+        issues.some((i) => i.includes('model split')),
+        'a top-level/metadata disagreement must be an error, not a warning',
+      );
+    });
+
+    test('warns when top-level model cannot take effect', () => {
+      const skillPath = join(tempDir, 'SKILL.md');
+      writeFileSync(skillPath, VALID_SKILL); // top-level model, no context: fork
+
+      const issues = validateSkill(skillPath, 'inline-skill');
+      assert.ok(issues.some((i) => i.includes('WARN') && i.includes('context: fork')));
+    });
+
+    test('validateAgentSync catches drift between SKILL.md and agents/', () => {
+      const skillsDir = join(tempDir, 'skills');
+      const agentsDir = join(tempDir, 'agents');
+      mkdirSync(join(skillsDir, 'drifty'), { recursive: true });
+      mkdirSync(agentsDir, { recursive: true });
+      writeFileSync(join(skillsDir, 'drifty', 'SKILL.md'), FORK_SKILL); // metadata: haiku
+      writeFileSync(join(agentsDir, 'drifty.md'), '---\nname: drifty\nmodel: opus\n---\n\nbody\n');
+
+      const issues = validateAgentSync(skillsDir, agentsDir);
+      assert.strictEqual(issues.length, 1);
+      assert.ok(issues[0].includes('tier drift'));
+    });
+
+    test('validateAgentSync passes when the tiers agree', () => {
+      const skillsDir = join(tempDir, 'skills');
+      const agentsDir = join(tempDir, 'agents');
+      mkdirSync(join(skillsDir, 'agreed'), { recursive: true });
+      mkdirSync(agentsDir, { recursive: true });
+      writeFileSync(join(skillsDir, 'agreed', 'SKILL.md'), FORK_SKILL); // metadata: haiku
+      writeFileSync(join(agentsDir, 'agreed.md'), '---\nname: agreed\nmodel: haiku\n---\n\nbody\n');
+
+      assert.deepStrictEqual(validateAgentSync(skillsDir, agentsDir), []);
+    });
+  });
+
   describe('integration: real skills', () => {
     test('validates actual Rune skills directory', () => {
       const { scanned, allIssues, warnings } = validateAllSkills(join(__dirname, '../../skills'));
       assert.ok(scanned >= 50, `Expected 50+ skills, got ${scanned}`);
+      assert.deepStrictEqual(allIssues, [], 'real skills must have zero structural issues');
       console.log(`  Scanned ${scanned} skills: ${allIssues.length} issues, ${warnings.length} warnings`);
     });
   });

@@ -6,7 +6,7 @@ metadata:
   author: runedev
   version: "1.4.0"
   layer: L0
-  model: haiku
+  model: sonnet
   group: orchestrator
   tools: "Read, Glob, Grep"
 ---

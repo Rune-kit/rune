@@ -1,6 +1,9 @@
 ---
 name: scout
 description: "Fast codebase scanner. Use when any skill needs codebase context. Finds files, patterns, dependencies, project structure. Pure read-only — never modifies files."
+context: fork
+agent: general-purpose
+model: haiku
 metadata:
   author: runedev
   version: "0.4.0"

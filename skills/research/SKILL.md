@@ -5,7 +5,7 @@ metadata:
   author: runedev
   version: "0.4.0"
   layer: L3
-  model: haiku
+  model: sonnet
   group: knowledge
   tools: "Read, Glob, Grep, WebFetch, WebSearch"
 ---

@@ -6,7 +6,7 @@ metadata:
   author: runedev
   version: "0.2.0"
   layer: L2
-  model: sonnet
+  model: opus
   group: delivery
   tools: "Read, Write, Edit, Bash, Glob, Grep"
   listen: incident.detected
