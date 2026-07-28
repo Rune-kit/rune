@@ -10,14 +10,14 @@
 const fs = require('fs');
 const path = require('path');
 const { captureConsole } = require('../lib/hook-output.cjs');
+const { readStdinSync } = require('../lib/hook-stdin.cjs');
 
 captureConsole('UserPromptSubmit');
 
-// Read user prompt from Claude Code hook stdin
-let input = '';
-process.stdin.setEncoding('utf-8');
-process.stdin.on('data', (chunk) => { input += chunk; });
-process.stdin.on('end', () => {
+// Read user prompt from the hook payload. Must be synchronous — see hook-stdin.cjs.
+const input = readStdinSync();
+
+(() => {
   let userPrompt = '';
   try {
     const parsed = JSON.parse(input);
@@ -34,6 +34,9 @@ process.stdin.on('end', () => {
   // Find skill-index.json — check multiple locations
   const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT || path.resolve(__dirname, '../..');
   const candidates = [
+    // Uncompiled plugin root (Claude Code serves the repo directly — nothing to
+    // compile, so this is the only index that exists on that runtime).
+    path.join(pluginRoot, 'skill-index.json'),
     path.join(pluginRoot, '.cursor', 'rules', 'skill-index.json'),
     path.join(pluginRoot, '.windsurf', 'rules', 'skill-index.json'),
     path.join(pluginRoot, 'dist', 'cursor', 'skill-index.json'),
@@ -108,4 +111,4 @@ process.stdin.on('end', () => {
   console.log('');
 
   process.exit(0);
-});
+})();

@@ -16,6 +16,7 @@ const fs = require('fs');
 const path = require('path');
 
 const { captureConsole } = require('../lib/hook-output.cjs');
+const { readStdinSync } = require('../lib/hook-stdin.cjs');
 // Hook stdout is a JSON contract, not free text (Codex rejects bare lines and
 // discards the output). Capture the prints below and emit one envelope on exit.
 captureConsole('PreToolUse');
@@ -76,11 +77,10 @@ function patchTargetPaths(toolName, toolInput) {
   return Array.from(patch.matchAll(/^\*\*\* (?:Update|Add|Delete) File:\s*(.+)$/gm), (match) => match[1].trim());
 }
 
-// Read tool_input from Claude Code hook stdin
-let input = '';
-process.stdin.setEncoding('utf-8');
-process.stdin.on('data', (chunk) => { input += chunk; });
-process.stdin.on('end', () => {
+// Read tool_input from the hook payload. Must be synchronous — see hook-stdin.cjs.
+const input = readStdinSync();
+
+(() => {
   let toolInput = {};
   let toolName = '';
   try {
@@ -179,7 +179,7 @@ process.stdin.on('end', () => {
   }
 
   process.exit(0);
-});
+})();
 
 /**
  * Load .rune/privacy.json from project root

@@ -5,6 +5,29 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.30.1] - 2026-07-29
+
+"Hooks That Land" — five hooks had been running, exiting 0, and reaching nobody. Nothing logged an error, so the hook layer looked healthy while contributing nothing to the model's context.
+
+### Fixed — hook output was being discarded
+
+Two independent faults, each sufficient on its own to silence a hook:
+
+- **`process.stdout.write` from an exit handler is not guaranteed to reach a piped stdout.** Most Rune hooks emit through `captureConsole`, which flushes on process exit — so the envelope was built correctly, written "successfully", and lost. `hooks/lib/hook-output.cjs` now writes with `fs.writeSync(1, …)`.
+- **A hook that collects stdin with `process.stdin.on('data'/'end')` has its stdout discarded by Claude Code**, even when the write itself is synchronous. New `hooks/lib/hook-stdin.cjs` reads the payload with `readFileSync(0)`; `intent-router`, `context-watch`, `metrics-collector`, `pre-tool-guard`, and `quarantine` were converted.
+
+Both were isolated by differential test against Claude Code 2.1.220 — identical hooks, identical envelopes, one variable changed at a time — and the fix was confirmed end-to-end by the model quoting hook-injected context back.
+
+### Fixed — intent-router had no index to read
+
+`skill-index.json` is emitted into each platform's output dir at build time. Claude Code does not compile — the plugin is served straight from the repo — so none of the hook's five candidate paths existed, and it exited silently on every prompt since it shipped. New `scripts/build-skill-index.js` generates the artifact at the plugin root, `--check` fails CI when it goes stale, and the hook now looks there first.
+
+### Fixed — the hook was registered async
+`UserPromptSubmit` hooks declared `"async": true` have their `additionalContext` dropped, verified directly. `intent-router` is now synchronous, so its routing suggestion actually reaches the model.
+
+### Tests
+- 3 new tests (1,649 total): envelope written to real fd 1 via child process rather than a stubbed `process.stdout.write` (a stub passes even when the write reaches nowhere), output surviving `process.exit()`, and a repo-wide check that no hook reads stdin with an async listener.
+
 ## [2.30.0] - 2026-07-29
 
 "Tier Restored" — Rune's model tier table had quietly stopped applying on Claude Code, and it had been wrong in 23 of 66 places for longer than that. Both are fixed, and a gate now stands where neither had one.

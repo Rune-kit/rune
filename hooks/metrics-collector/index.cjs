@@ -10,6 +10,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const { resolveStateKey, stateFile } = require('../lib/context-key.cjs');
+const { readStdinSync } = require('../lib/hook-stdin.cjs');
 
 // metricsFile + watchFile are keyed by the Claude Code session_id (parsed from
 // stdin in the handler) so they reset per session and match the session-keyed
@@ -17,9 +18,9 @@ const { resolveStateKey, stateFile } = require('../lib/context-key.cjs');
 
 // Read stdin JSON to get tool input (Claude Code passes hook data via stdin)
 let stdinData = '';
-process.stdin.setEncoding('utf-8');
-process.stdin.on('data', chunk => { stdinData += chunk; });
-process.stdin.on('end', () => {
+stdinData = readStdinSync();
+
+(() => {
   let skillName = 'unknown';
   let claudeSessionId; // raw Claude Code session_id — used to key temp files
 
@@ -108,8 +109,4 @@ process.stdin.on('end', () => {
   }
 
   process.exit(0);
-});
-
-// Handle empty stdin (pipe closed immediately)
-process.stdin.on('error', () => process.exit(0));
-process.stdin.resume();
+})();

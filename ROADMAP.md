@@ -1,6 +1,6 @@
 # Rune Roadmap
 
-> Last updated: July 2026 | Version: 2.30.0
+> Last updated: July 2026 | Version: 2.30.1
 
 ---
 
@@ -18,7 +18,7 @@ These principles guide every roadmap decision:
 
 ---
 
-## Current State (v2.30.0 — "Tier Restored")
+## Current State (v2.30.1 — "Hooks That Land")
 
 | Layer | Count | Status |
 |-------|-------|--------|

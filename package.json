@@ -1,6 +1,6 @@
 {
   "name": "@rune-kit/rune",
-  "version": "2.30.0",
+  "version": "2.30.1",
   "description": "66-skill mesh for AI coding assistants — native lifecycle hooks for Claude Code and Codex, 5-layer architecture, 248 connections + 45 signals, and a 13-platform compiler.",
   "type": "module",
   "bin": {
@@ -8,7 +8,7 @@
   },
   "scripts": {
     "build": "node compiler/bin/rune.js build",
-    "doctor": "node compiler/bin/rune.js doctor && node scripts/version-sync-check.js",
+    "doctor": "node compiler/bin/rune.js doctor && node scripts/version-sync-check.js && node scripts/build-skill-index.js --check",
     "test": "node --test compiler/__tests__/*.test.js scripts/__tests__/*.test.js",
     "test:coverage": "c8 --reporter=text --reporter=lcov node --test compiler/__tests__/*.test.js scripts/__tests__/*.test.js",
     "lint": "biome check .",
@@ -53,7 +53,8 @@
     "agents/",
     "hooks/",
     ".codex-plugin/",
-    "references/"
+    "references/",
+    "skill-index.json"
   ],
   "homepage": "https://rune-kit.github.io/rune",
   "bugs": {

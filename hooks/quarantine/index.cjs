@@ -22,6 +22,7 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const { readStdinSync } = require('../lib/hook-stdin.cjs');
 
 const HOOK_TIMEOUT_MS = 5000;
 
@@ -49,28 +50,18 @@ if (process.env.QUARANTINE_DISABLE === '1') {
   process.exit(0);
 }
 
-let stdinBuf = '';
-process.stdin.setEncoding('utf-8');
-process.stdin.on('data', (chunk) => {
-  stdinBuf += chunk;
-  // Cap stdin at 1MB — Claude Code never sends payloads this large
-  if (stdinBuf.length > 1_000_000) {
-    process.stdin.destroy();
-    process.exit(0);
-  }
-});
-process.stdin.on('end', () => {
-  try {
-    main(stdinBuf);
-  } catch {
-    // Any unexpected error → silent advisory exit (never block tool dispatch)
-    process.exit(0);
-  }
-});
-process.stdin.on('error', () => process.exit(0));
+// Read synchronously — see hook-stdin.cjs for why an async listener loses output.
+const stdinBuf = readStdinSync();
 
-// If stdin is a TTY (no input), exit clean
-if (process.stdin.isTTY) {
+// Cap stdin at 1MB — Claude Code never sends payloads this large
+if (stdinBuf.length > 1_000_000) {
+  process.exit(0);
+}
+
+try {
+  main(stdinBuf);
+} catch {
+  // Any unexpected error → silent advisory exit (never block tool dispatch)
   process.exit(0);
 }
 

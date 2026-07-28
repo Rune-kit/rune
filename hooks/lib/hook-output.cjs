@@ -22,6 +22,8 @@
 // Buffer-then-emit, because the envelope is ONE JSON object: a hook that prints
 // three lines must accumulate them and emit once at exit, not three times.
 
+const fs = require('node:fs');
+
 /** Events where the model-facing payload is `additionalContext`. */
 const CONTEXT_EVENTS = new Set(['SessionStart', 'UserPromptSubmit']);
 
@@ -50,7 +52,11 @@ function outputBuffer(hookEventName) {
       const payload = CONTEXT_EVENTS.has(hookEventName)
         ? { hookSpecificOutput: { hookEventName, additionalContext: text } }
         : { systemMessage: text };
-      process.stdout.write(`${JSON.stringify(payload)}\n`);
+      // fs.writeSync, not process.stdout.write: most of these emits happen from a
+      // `process.on('exit')` handler, where a piped stdout is not guaranteed to
+      // flush before the process is gone. The write reports success either way, so
+      // the loss is silent — every hook using console.log was landing nowhere.
+      fs.writeSync(1, `${JSON.stringify(payload)}\n`);
     },
   };
 }

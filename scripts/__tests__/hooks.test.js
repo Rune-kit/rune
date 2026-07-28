@@ -714,25 +714,49 @@ describe('hook stdout is a valid JSON envelope', () => {
 describe('hook-output envelope helper', () => {
   const { outputBuffer } = require('../../hooks/lib/hook-output.cjs');
 
-  test('SessionStart and UserPromptSubmit carry additionalContext', () => {
+  // Run in a child process and read real fd 1. Stubbing process.stdout.write would
+  // pass even if emit() wrote nowhere the runtime can see — which is exactly the
+  // failure this helper exists to prevent.
+  test('SessionStart and UserPromptSubmit carry additionalContext on real stdout', () => {
+    const libPath = path.join(__dirname, '..', '..', 'hooks', 'lib', 'hook-output.cjs');
     for (const event of ['SessionStart', 'UserPromptSubmit']) {
-      const buf = outputBuffer(event);
-      buf.line('hello');
-      const written = [];
-      const orig = process.stdout.write;
-      process.stdout.write = (s) => {
-        written.push(s);
-        return true;
-      };
-      try {
-        buf.emit();
-      } finally {
-        process.stdout.write = orig;
-      }
-      const parsed = JSON.parse(written.join(''));
+      const script = `const { outputBuffer } = require(${JSON.stringify(libPath)});
+const b = outputBuffer(${JSON.stringify(event)});
+b.line('hello');
+b.emit();`;
+      const out = execFileSync(process.execPath, ['-e', script], { encoding: 'utf-8' });
+      const parsed = JSON.parse(out);
       assert.strictEqual(parsed.hookSpecificOutput.hookEventName, event);
       assert.strictEqual(parsed.hookSpecificOutput.additionalContext, 'hello');
     }
+  });
+
+  // Output written from an exit handler is the common case — most hooks emit via
+  // captureConsole, which flushes on process exit. A piped stdout is not guaranteed
+  // to flush there, so this must survive process.exit().
+  test('output survives being emitted from a process exit handler', () => {
+    const libPath = path.join(__dirname, '..', '..', 'hooks', 'lib', 'hook-output.cjs');
+    const script = `const { captureConsole } = require(${JSON.stringify(libPath)});
+captureConsole('UserPromptSubmit');
+console.log('late-write');
+process.exit(0);`;
+    const out = execFileSync(process.execPath, ['-e', script], { encoding: 'utf-8' });
+    assert.strictEqual(JSON.parse(out).hookSpecificOutput.additionalContext, 'late-write');
+  });
+
+  // Claude Code discards a hook's stdout when the hook collected stdin with an
+  // async listener. Every hook must read it synchronously instead.
+  test('no hook reads stdin with an async listener', () => {
+    const hooksDir = path.join(__dirname, '..', '..', 'hooks');
+    const offenders = fs
+      .readdirSync(hooksDir, { withFileTypes: true })
+      .filter((d) => d.isDirectory())
+      .map((d) => path.join(hooksDir, d.name, 'index.cjs'))
+      .filter((p) => fs.existsSync(p))
+      .filter((p) => /process\.stdin\.on\s*\(/.test(fs.readFileSync(p, 'utf-8')))
+      .map((p) => path.relative(hooksDir, p));
+
+    assert.deepStrictEqual(offenders, [], 'these hooks would have their output discarded');
   });
 
   test('blank lines never produce an envelope', () => {

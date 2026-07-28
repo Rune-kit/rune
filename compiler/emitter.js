@@ -897,7 +897,7 @@ const INTENT_KEYWORDS = {
  * @param {Array} parsedSkills - array of parsed skill objects
  * @returns {object} skill index with graph + intents
  */
-function generateSkillIndex(parsedSkills) {
+export function generateSkillIndex(parsedSkills) {
   // Build adjacency graph from cross-references
   const graph = {};
   const skills = {};
