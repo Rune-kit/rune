@@ -3,6 +3,7 @@ name: docs-seeker
 description: "Find documentation for APIs, libraries, and error messages. Looks up official docs, changelog entries, and migration guides."
 context: fork
 agent: general-purpose
+background: false
 model: haiku
 metadata:
   author: runedev

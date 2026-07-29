@@ -268,6 +268,25 @@ describe('validate-skills', () => {
       );
     });
 
+    test('a fork skill must declare background explicitly', () => {
+      const skillPath = join(tempDir, 'SKILL.md');
+      writeFileSync(skillPath, FORK_SKILL); // context: fork, no background:
+
+      const issues = validateSkill(skillPath, 'implicit-fork');
+      assert.ok(
+        issues.some((i) => i.includes('must declare "background:"') && !i.includes('WARN')),
+        'an undeclared background is an error — the runtime default changed under us',
+      );
+    });
+
+    test('an explicit background satisfies the fork rule', () => {
+      const skillPath = join(tempDir, 'SKILL.md');
+      writeFileSync(skillPath, FORK_SKILL.replace('context: fork', 'context: fork\nbackground: false'));
+
+      const issues = validateSkill(skillPath, 'explicit-fork');
+      assert.ok(!issues.some((i) => i.includes('must declare "background:"')));
+    });
+
     test('warns when top-level model cannot take effect', () => {
       const skillPath = join(tempDir, 'SKILL.md');
       writeFileSync(skillPath, VALID_SKILL); // top-level model, no context: fork

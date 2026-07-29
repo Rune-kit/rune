@@ -106,6 +106,14 @@ export function validateSkill(skillPath, skillName) {
     if (topLevel && !isForkSkill(frontmatter)) {
       issues.push(`${skillName}: WARN — top-level model has no effect without "context: fork"`);
     }
+
+    // Claude Code 2.1.218 changed `context: fork` to run in the background by
+    // default. A background fork reports back as a task notification instead of
+    // returning in-line, which silently breaks any caller that needs the result
+    // — cook waiting on scout, for one. Whichever way a skill wants it, say so.
+    if (isForkSkill(frontmatter) && !/^background:\s*\S+/m.test(frontmatter)) {
+      issues.push(`${skillName}: "context: fork" must declare "background:" explicitly — the default changed`);
+    }
   }
 
   // Check required sections

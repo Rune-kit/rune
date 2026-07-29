@@ -1,6 +1,6 @@
 # Rune Roadmap
 
-> Last updated: July 2026 | Version: 2.30.2
+> Last updated: July 2026 | Version: 2.30.3
 
 ---
 
@@ -18,7 +18,7 @@ These principles guide every roadmap decision:
 
 ---
 
-## Current State (v2.30.2 — "Blocked, With a Reason")
+## Current State (v2.30.3 — "Say What You Mean")
 
 | Layer | Count | Status |
 |-------|-------|--------|

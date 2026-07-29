@@ -2,6 +2,7 @@
 name: cook
 description: "Feature implementation orchestrator. ALWAYS use this skill for ANY code change — implement, build, add feature, create, fix bug, or any task that modifies source code. This is the default route for 70% of all requests. Runs full TDD cycle: understand → plan → test → implement → quality → verify → commit."
 context: fork
+background: false
 agent: general-purpose
 metadata:
   author: runedev

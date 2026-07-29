@@ -2,6 +2,7 @@
 name: launch
 description: "Deploy + marketing orchestrator. Use when user says 'launch', 'ship to production', 'deploy and announce', or 'go live'. Runs the full pipeline — pre-flight tests, deployment, live verification, marketing asset creation, and announcement."
 context: fork
+background: false
 agent: general-purpose
 disable-model-invocation: true
 metadata:

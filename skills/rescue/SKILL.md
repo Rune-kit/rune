@@ -2,6 +2,7 @@
 name: rescue
 description: "Legacy refactoring orchestrator. Use when user says 'refactor', 'modernize', 'clean up this mess', 'rescue', or when dealing with old/messy/legacy code. Multi-session workflow — autopsy, safety net, incremental surgery, progress tracking."
 context: fork
+background: false
 agent: general-purpose
 metadata:
   author: runedev

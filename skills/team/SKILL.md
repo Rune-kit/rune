@@ -2,6 +2,7 @@
 name: team
 description: "Multi-agent meta-orchestrator. Use when task spans 5+ files or 3+ modules, or when user says 'parallel', 'split this up', 'do all of these'. Decomposes large tasks into parallel workstreams, assigns to isolated cook instances, coordinates merging."
 context: fork
+background: false
 agent: general-purpose
 metadata:
   author: runedev

@@ -5,6 +5,24 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.30.3] - 2026-07-29
+
+"Say What You Mean" — Claude Code 2.1.218 changed what `context: fork` does by default, and six Rune skills were relying on the old default without saying so.
+
+### Fixed — every fork skill now declares `background:`
+
+From the 2.1.218 changelog: *"Changed skills with `context: fork` to run in the background by default; opt out per skill with `background: false`."* A background fork reports back as a task notification instead of returning in-line — which silently breaks any caller that needs the result. `cook` waiting on `scout` is exactly that shape.
+
+Six skills declared `context: fork` and left `background` unstated: **`cook`, `team`, `launch`, `rescue`** (every L1 orchestrator) plus **`scout`** and **`docs-seeker`**. All now declare `background: false`.
+
+Measured honestly: on 2.1.220 in headless mode, a 12-second fork skill returned in-line whether `background` was declared or not — the observed behaviour matched the *old* default in both cases. So this is not a fix for a reproduced break; it is removing a dependency on an unstated runtime default that the vendor has already announced changing. An orchestrator that cannot see its own sub-step's result fails in a way that looks like the sub-step did nothing.
+
+### Added — a gate that found four of the six
+- `validate-skills.js` now fails when a skill declares `context: fork` without an explicit `background:`. Writing the rule surfaced `cook`, `launch`, `rescue`, and `team` — none of which were on the list when the work started.
+
+### Tests
+- 2 new tests (1,653 total): an undeclared `background` on a fork skill is an error, and an explicit one satisfies the rule.
+
 ## [2.30.2] - 2026-07-29
 
 "Blocked, With a Reason" — finishing the hook I/O sweep v2.30.1 started, plus the fault that sweep uncovered: the privacy gate was blocking correctly and telling the model nothing.
