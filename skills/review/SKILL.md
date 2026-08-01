@@ -593,7 +593,7 @@ Apply **only** when the diff touches motion. Strong signals: `@keyframes`, `moti
 These are **advisory** — default severity MEDIUM. Escalate to HIGH only for *feel-breaking* regressions (the first five triggers below). Motion is a taste call: when feel can't be judged from source, say so and recommend a slow-motion / frame-by-frame check rather than asserting a defect. **For every finding, cite the exact remediation value from `skills/design/MOTION-CRAFT.md`** — do not restate its tables here.
 
 **Escalation triggers — flag on sight (first five = HIGH, feel-breaking):**
-- `ease-in` on any UI interaction (delays the moment the user watches most)
+- `ease-in` on an entrance or arrival (delays the moment the user watches most) — **not** a finding on something departing the frame or falling, where `ease-in` is correct (MOTION-CRAFT §3). Also catches `ease-in` hiding inside a composed curve (`smootherstep` starts at zero velocity)
 - `scale(0)` or pure-fade entrances with no initial transform (nothing appears from nothing → initial scale + opacity per MOTION-CRAFT §5)
 - Animation on a keyboard shortcut / command-palette toggle / 100+/day action (should have none)
 - Animating layout properties (`width`/`height`/`margin`/`padding`/`top`/`left`) instead of `transform`/`opacity` (off-GPU, drops frames)
@@ -604,6 +604,19 @@ These are **advisory** — default severity MEDIUM. Escalate to HIGH only for *f
 - Framer Motion `x`/`y`/`scale` shorthands on motion that runs while the page is busy (not hardware-accelerated → full `transform` string) (MEDIUM)
 - Driving a child transform via a CSS variable on the parent (style-recalc storm) (MEDIUM)
 - Missing `prefers-reduced-motion` handling on movement, or ungated `:hover` motion (missing `@media (hover: hover) and (pointer: fine)`) (MEDIUM)
+- **A reduced-motion branch that is present but cannot work** — the guard existing is not the finding; these are (MOTION-CRAFT §10). Do not close this check on a grep hit: **touches ≠ reachable ≠ correct** (HIGH):
+  - **Dead branch** — an outer `if (reduced) return` / `if (!shouldAnimate) return` that runs *before* the helper applying the end state. Reduced users get the raw default DOM. Greps clean
+  - **One-shot `matchMedia(...).matches`** read at mount with no `change` listener — preference toggled mid-session leaves the page on the old path
+  - **`duration: 0` on sequence-as-content** — every key pose applied in one frame, stacking mid-poses instead of landing on the destination
+  - **`0s` while something awaits `transitionend` / `animationend` / `onComplete`** — engines may drop completion events for true zero-length transitions and the state machine hangs; `~0.01ms` is the fix
+  - **JS motion ungated** — CSS has the media query, GSAP/Motion/Lenis/canvas keep running. A media query cannot stop a JS timeline
+  - **Blanket `* { animation-duration: 0 !important }` as the only handling** — over-removes focus-ring and loading cues that should survive reduce
+- Curve chosen by name for a large rotation or long translate, with no peak-speed check — `peak = maxSlope × travel / duration` against a ~30°/frame ceiling (a third of the pitch for a rotationally symmetric part). `--ease-out-strong` on a spinner is the common instance (MOTION-CRAFT §3) (MEDIUM)
+- Both segments of a two-segment keyframe move eased — the element dead-stops at the join (MOTION-CRAFT §3, velocity continuity) (MEDIUM)
+- Animated SVG passing through SVGO without `cleanupIds` / `mergePaths` / `removeHiddenElems` / `removeViewBox` / `inlineStyles` disabled — source correct, build output broken (MOTION-CRAFT §14) (HIGH)
+- Transform on a root `<svg>` or HTML wrapper with a literal px value not derived from the rendered size — breaks at every size but the authored one (MOTION-CRAFT §14) (MEDIUM)
+- Animated SVG with an element resting state declared only in the `0%` keyframe — snaps to a broken pose the moment `animation: none` applies under reduce (MOTION-CRAFT §14) (MEDIUM)
+- Reusable animated SVG with hardcoded `url(#id)` mask/clipPath references and no per-instance id rewrite — every copy on the page renders the first one's mask (MOTION-CRAFT §14) (MEDIUM)
 - Symmetric enter/exit timing on a press-and-release or hold interaction (deliberate phase should be slower, response snappier) (LOW–MEDIUM)
 - Everything-at-once entrance where a stagger belongs (stagger interval per MOTION-CRAFT §11) (LOW)
 

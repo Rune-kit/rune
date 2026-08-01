@@ -5,6 +5,45 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.31.0] - 2026-08-01
+
+"Measured, Not Grepped" — three checks that passed without measuring anything, and two motion rules that were confidently wrong.
+
+### Fixed — MOTION-CRAFT gave bad advice in two places
+
+**`"Never ease-in on UI"` was over-general.** It is correct on an arrival, where a slow start delays the moment the user is watching most closely. It is wrong on a departure: a thing that leaves does not leave at its slowest, and gravity accelerates. Both cases now carry curves (`cubic-bezier(0.45, 0, 0.9, 0.35)` departing, `(0.55, 0, 0.9, 0.45)` falling), and `review`'s escalation trigger no longer flags them. Also named the trap: `smootherstep` starts at zero velocity, which is `ease-in` wearing a different name.
+
+**Easing was chosen by name, which says nothing about whether the motion strobes.** For a large rotation or long translate what decides that is `peak = maxSlope × travel / duration` against a ~30°/frame aliasing ceiling. Measured max slopes now sit in §3: sine-ish `(0.45,0,0.55,1)` is **1.82**, ease-out-expo `(0.19,1,0.22,1)` is **5.26**. A 360° turn therefore needs ~1050ms on the expo curve and ~365ms on the sine-ish one — 2.9× apart, with nothing in the source revealing it. `--ease-out-strong` (slope ≈4.3) was being recommended as the punchy default and is a bad fit for exactly this case; that is now stated. A rotationally symmetric part aliases at a third of its own repeat pitch, not at 30°/frame.
+
+### Added — MOTION-CRAFT §10 is now role-first, and §14 covers SVG
+
+`§10` said "fewer and gentler, not zero", which is strategy-blind advice. It now asks the one question that decides everything — *is the motion sequence the content, or is it decorating a result that exists either way?* — then picks one of four strategies (bail / snap to end state / collapse transition / reduce complexity), each with a "under reduce it **looks like**" column, plus the hard rule separating snap from collapse. Live preference reads (`change` listener, never one-shot `.matches` at mount) are infrastructure on top of all four.
+
+New **`§14 SVG motion mechanics`**, previously absent entirely: user units vs screen pixels and why one keyframe set serves every size; the rule that rest must live in a base rule (which is what makes a flat `animation: none` reduce gate safe instead of a per-icon audit); `pathLength="1"`, the `0.001` dash, `1.02` on closed paths; per-instance id rewriting; the six SVGO plugins that silently destroy an animated SVG at build time; viewBox framing and why `getBBox()` lies about optical size; clearance measured off ink rather than centrelines.
+
+`§3` also gains velocity continuity across keyframe joins — ease both segments of a two-part move and the element dead-stops at the seam, invisible in source and obvious at 4×. `§11` puts numbers on anticipation (~40–50ms), impact (~30% of the clock, origin at the base), and decay (0.6–0.7 per swing).
+
+### Added — reduced-motion checks now test reachability, not presence
+
+`review` and `preflight` both checked that `prefers-reduced-motion` **appeared** in a file. A guard existing is not the finding; these are, and every one of them greps clean:
+
+- an outer `if (reduced) return` that runs **before** the helper applying the end state — reduced users get the raw default DOM
+- one-shot `matchMedia(...).matches` with no `change` listener, stale the moment the preference is toggled mid-session
+- `duration: 0` on sequence-as-content, which applies every key pose in a single frame
+- `0s` while something awaits `transitionend` / `onComplete` — engines may drop the completion event and the state machine hangs
+- JS timelines (GSAP / Motion / Lenis / canvas) left ungated, because a CSS media query cannot stop them
+
+`design`'s motion-safety scan and visual checklist follow the same shift. Four SVG-motion triggers were added to `review` alongside them (SVGO stripping, root-`<svg>` px transforms, rest-only-in-`0%`, unrewritten mask ids).
+
+### Added — a clean result is not evidence until the instrument is shown live
+
+`completion-gate` claim discipline gains **rule 6**: *a tool that measured nothing promotes nothing*. Rule 1 already said promotion happens by tool — but "no difference found" and "no measurement taken" produce the same output, and a silent instrument yields the cleanest possible pass. A null result may promote a claim to OBSERVED only once the instrument has been shown capable of returning something else. Three documented ways a check goes quietly dead: it examined an empty set, the target moved, or the harness itself is the bug.
+
+`verification` enforces the same at the protocol level — every clean result must carry the size of what it examined (tests **collected**, files **matched**, rules **applied**), because `0 failed` out of `0 collected` is not a pass. Three new Red Flags rows cover zero-collection test runs, empty-target scans, and no-diff probes never shown non-zero.
+
+### Tests
+- No new tests. `MOTION-CRAFT.md` and `claim-discipline.md` are reference documents that no test covers — verified by grep, and stated here rather than left implied. The four `SKILL.md` edits are covered by the existing structure validator. 1,653 tests, 0 fail.
+
 ## [2.30.3] - 2026-07-29
 
 "Say What You Mean" — Claude Code 2.1.218 changed what `context: fork` does by default, and six Rune skills were relying on the old default without saying so.

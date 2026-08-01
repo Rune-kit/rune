@@ -33,6 +33,28 @@ the rest; typing everything uniformly wastes the budget on trivia.
 5. **A claim about your own output is not OBSERVED until it is checked against the exact
    delivered text.** Re-reading your own work and agreeing with yourself is the weakest
    possible evidence: it always passes.
+6. **A tool that measured nothing promotes nothing.** Rule 1 says promotion happens by tool —
+   but "no difference found" and "no measurement taken" are the same result, and a silent
+   instrument produces the cleanest possible pass. Before a null result is allowed to promote
+   a claim to OBSERVED, **show the instrument capable of returning something else**: break the
+   thing on purpose, run it against a known-bad input, or assert the count of what it examined
+   is non-zero. A check that has never been seen to fail is not evidence that nothing failed.
+
+   Three ways an instrument goes quietly dead, each of which has reported a pass:
+
+   - **It examined an empty set.** Zero tests matched the filter, zero files matched the glob,
+     zero rows came back. Assert the population size, not just the failure count.
+   - **The target moved.** The file was renamed, the selector no longer matches, the fixture
+     was reverted. Re-resolve the target each run by something stable and fail loudly when it
+     is missing — never trust a remembered index or a cached handle.
+   - **The harness is the bug.** When a result is surprising in *either* direction — impossibly
+     clean or catastrophically bad — suspect the measurement before the subject. Establish what
+     a known-good run reads (the noise floor) so you know which differences are real, and settle
+     an unresolvable question in isolation rather than on the live system.
+
+   This applies to green test runs, empty security scans, clean diffs, zero-finding audits, and
+   any "no issues found" conclusion. The correct output of an instrument that cannot be shown
+   live is DECLARED, not OBSERVED.
 
 ## How this pairs with the gate
 

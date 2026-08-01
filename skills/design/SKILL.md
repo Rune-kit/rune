@@ -58,7 +58,7 @@ Load the design knowledge base before reasoning:
 2. If no user override → `Read` the baseline: `skills/design/DESIGN-REFERENCE.md` (shipped with Rune)
 3. The loaded reference provides: font pairings, chart selection, component architecture, color principles, UX checklist, interaction patterns, anti-pattern signatures
 4. Apply reference knowledge throughout Steps 3-5 (domain reasoning, token generation, checklist)
-5. **When the domain involves any UI motion** (transitions, animations, gestures, springs, micro-interactions) → also `Read` `skills/design/MOTION-CRAFT.md`. It is the canonical motion authority: the should-it-animate frequency gate, easing/duration budgets, physicality (never `scale(0)`, origin-aware popovers), spring physics, gesture handoff, motion performance, reduced-motion, and a reverse-lookup vocabulary. Cite its exact values in the design-system motion section; never approximate curves or durations. **When MOTION-CRAFT.md and DESIGN-REFERENCE.md disagree on a motion detail (easing, duration, interaction timing), MOTION-CRAFT.md wins** — it is the deeper, motion-specific source; DESIGN-REFERENCE.md's Animation Timing / Interaction Patterns tables are the general baseline.
+5. **When the domain involves any UI motion** (transitions, animations, gestures, springs, micro-interactions) → also `Read` `skills/design/MOTION-CRAFT.md`. It is the canonical motion authority: the should-it-animate frequency gate, easing/duration budgets (including peak-slope curve selection for large travel, and velocity continuity across keyframe joins), physicality (never `scale(0)`, origin-aware popovers), spring physics, gesture handoff, motion performance, the role→strategy reduced-motion framework, SVG-specific mechanics (user units, `pathLength`, SVGO), and a reverse-lookup vocabulary. Cite its exact values in the design-system motion section; never approximate curves or durations. **When MOTION-CRAFT.md and DESIGN-REFERENCE.md disagree on a motion detail (easing, duration, interaction timing), MOTION-CRAFT.md wins** — it is the deeper, motion-specific source; DESIGN-REFERENCE.md's Animation Timing / Interaction Patterns tables are the general baseline.
 
 > **Advisory motion-audit mode**: When asked to "improve the animations" / "make this feel better" / "what could be animated here", operate read-only — survey the motion surface against MOTION-CRAFT.md, report frequency-gated findings (and deliberately rejected candidates), and hand precise recipes to `cook`/`fix`. Suggesting motion everywhere is worse than useless; expect to reject most candidates.
 
@@ -486,7 +486,9 @@ sm: 6px | md: 8px | lg: 12px | xl: 16px | full: 9999px
 - [ ] All inputs have associated <label> or aria-label
 - [ ] 👁 Empty state, error state, loading state for all async data
 - [ ] cursor-pointer on all clickable non-button elements
-- [ ] prefers-reduced-motion respected for all animations
+- [ ] Every animation has a named role (communicative / decorative) and one of the four reduce strategies — bail, snap to end state, collapse, reduce complexity (MOTION-CRAFT §10)
+- [ ] Motion preference is read live (`change` listener or library equivalent), not once at mount
+- [ ] 👁 Reduce path exercised, not grepped — meaning survives with the preference on
 - [ ] Dark mode support (or explicit reasoning why not)
 - [ ] 👁 Responsive tested at 375px / 768px / 1024px / 1440px
 - [ ] No pure #000 or #fff in semantic tokens (use oklch neutrals)
@@ -567,7 +569,7 @@ Run a focused accessibility audit on the design system and any existing UI code.
 3. **Touch targets**: Search for buttons/links with explicit small sizing (`w-6 h-6`, `p-1` on interactive elements). Flag anything < 24x24px.
 4. **Missing labels**: Search for `<input` without adjacent `<label` or `aria-label`. Search for icon-only buttons without `aria-label`.
 5. **Semantic HTML**: Flag `<div onClick`, `<span onClick` (should be `<button>`). Flag missing `<nav>`, `<main>`, `<header>` landmarks.
-6. **Motion safety**: Check for animations/transitions without `prefers-reduced-motion` media query or Tailwind `motion-reduce:` variant.
+6. **Motion safety**: Check for animations/transitions without `prefers-reduced-motion` media query or Tailwind `motion-reduce:` variant. Where the guard *is* present, the check is not done — confirm the branch is reachable (no outer `if (reduced) return` before the end-state applicator) and that JS timelines (GSAP/Motion/Lenis) are gated too, since a CSS media query cannot stop them. **Touches ≠ reachable ≠ correct.**
 
 **Output**: Accessibility audit section in Design Report with pass/fail per check and specific file:line violations.
 
