@@ -403,6 +403,8 @@ Secret values are masked in the evidence block, never reprinted. Dependency find
 - Every line-level finding anchored to a verbatim snippet (or reported `(unanchored)` and downgraded), with secret values masked
 - Structured report emitted with PASS / WARN / BLOCK verdict and all files scanned listed
 
+> When the report surfaces trust boundaries or a paved-road topology (what may reach a protected runtime, and where blocked paths stop), a designed figure helps the reader — `suggested_next: diagram` (type `architecture`, Secure paved road pattern).
+
 ## Cost Profile
 
 ~1000-3000 tokens input, ~500-1000 tokens output. Sonnet default, opus for deep audit on critical findings.
