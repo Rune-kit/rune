@@ -87,7 +87,7 @@ export function buildPreset(preset) {
             {
               type: 'command',
               command: `${DISPATCH_CMD} quarantine${flag}`,
-              async: true,
+              async: false,
             },
           ],
         },
