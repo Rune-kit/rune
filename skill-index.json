@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "generated": "2026-07-28T20:50:06.927Z",
-  "skillCount": 66,
+  "generated": "2026-08-15T15:08:15.063Z",
+  "skillCount": 67,
   "skills": {
     "adversary": {
       "layer": "L2",
@@ -312,6 +312,19 @@
       "connections": [
         "review"
       ]
+    },
+    "diagram": {
+      "layer": "L3",
+      "model": "sonnet",
+      "group": "media",
+      "description": "Use when a reader needs an editorial architecture, flowchart, sequence, state, ER, swimlane, loop, layer-stack, data-flow, or process diagram as self-contained HTML/SVG. Symptoms: 'draw the system', '",
+      "connections": [],
+      "signals": {
+        "emit": [
+          "media.diagram.composed"
+        ],
+        "listen": []
+      }
     },
     "doc-processor": {
       "layer": "L3",
@@ -1095,6 +1108,7 @@
     "design": [
       "review"
     ],
+    "diagram": [],
     "doc-processor": [],
     "docs": [
       "scout",
@@ -1548,6 +1562,12 @@
       "listeners": [
         "deploy"
       ]
+    },
+    "media.diagram.composed": {
+      "emitters": [
+        "diagram"
+      ],
+      "listeners": []
     },
     "code.changed": {
       "emitters": [
