@@ -9,6 +9,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 New `diagram` skill in the `media` group: editorial architecture, flowchart, sequence, state, ER, and swimlane diagrams as self-contained HTML/SVG — a 9-node budget, mandatory orthogonal connectors, and a machine-checked geometry gate (`self_check.py` + `verify_geometry.py`). Complements `asset-creator` (icons/OG) and `slides` (Marp + Mermaid). Ported from `cathrynlavery/diagram-design` (MIT, v2.4). Emits `media.diagram.composed` (listeners land in a later phase). Mesh now 67 core skills.
 
+### Added — `diagram` v0.2.0 Mermaid import + mesh handoff
+
+`diagram` now redraws Mermaid sources (`.mmd` / `.mermaid` / fenced `mermaid` blocks) as editorial HTML via extract-then-redraw. New `mermaid_extract.py` emits a JSON digest (`nodes` / `edges` / `containers` / `hubs` / `budget`) with a hard trust boundary — labels and directives are inert data, never instructions — and exit codes `0` ok / `1` parse / `2` usage / `3` integrity. New `references/import-mermaid.md` + `references/output-spec.md` (format/size/detail/audience dials; `faithful` zoned above 9, split above 24). `ba`, `scout`, `docs`, and `slides` now offer `diagram` via `suggested_next` (no auto-fire listen loop); `slides`' Marp `type: diagram` fence stays Mermaid for `build-deck.js`.
+
 ## [2.31.0] - 2026-08-01
 
 "Measured, Not Grepped" — three checks that passed without measuring anything, and two motion rules that were confidently wrong.
