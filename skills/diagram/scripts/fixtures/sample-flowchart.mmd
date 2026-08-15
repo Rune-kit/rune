@@ -1,0 +1,10 @@
+flowchart TD
+    subgraph Core["Rune core"]
+        cook["cook"] --> scout["scout"]
+        scout --> plan["plan"]
+        plan --> fix["fix"]
+    end
+    fix --> review{"review BLOCK+HIGH"}
+    review -- pass --> commit["git commit"]
+    review -- fail --> fix
+    commit --> done["done"]
