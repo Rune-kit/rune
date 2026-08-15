@@ -1,7 +1,7 @@
 {
   "name": "rune",
   "version": "2.31.0",
-  "description": "66-skill engineering mesh with Codex-native skills, subagents, synchronous lifecycle hooks, security gates, MCP-aware workflows, and project memory.",
+  "description": "67-skill engineering mesh with Codex-native skills, subagents, synchronous lifecycle hooks, security gates, MCP-aware workflows, and project memory.",
   "author": {
     "name": "Rune Contributors"
   },

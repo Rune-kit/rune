@@ -5,7 +5,7 @@
 <p align="center">
   <strong>Less skills. Deeper connections.</strong><br>
   A lean, interconnected skill ecosystem for AI coding assistants.<br>
-  67 skills · 248 connections · 45 signals · 13 platforms · MIT
+  67 skills · 248 connections · 46 signals · 13 platforms · MIT
 </p>
 
 <p align="center">
@@ -23,7 +23,7 @@
 
 Most skill ecosystems are either **too many isolated skills** (540+ that don't talk to each other) or **rigid pipelines** (A → B → C, if B fails everything stops).
 
-Rune is a **mesh** — 67 skills with 248 connections + 45 signals across a 5-layer architecture. Every declared outbound call is acknowledged by its target, forming resilient workflows that adapt when things go wrong.
+Rune is a **mesh** — 67 skills with 248 connections + 46 signals across a 5-layer architecture. Every declared outbound call is acknowledged by its target, forming resilient workflows that adapt when things go wrong.
 
 ```
 Pipeline:  A → B → C → D         (B fails = stuck)
@@ -419,7 +419,7 @@ This compiles all 67 skills into your IDE's rules format. Same knowledge, same w
 | Feature | Claude Code | OpenAI Codex | Other compiled targets |
 |---------|-------------|--------------|------------------------|
 | Skills available | 67/67 | 67/67 | 67/67 |
-| Mesh connections | 248 + 45 signals | 248 + 45 signals | 248 + 45 signals as native rules/skills |
+| Mesh connections | 248 + 46 signals | 248 + 46 signals | 248 + 46 signals as native rules/skills |
 | Workflows & HARD-GATEs | Full | Full | Full knowledge, runtime-dependent enforcement |
 | Extension packs | 14 | 14 | 14 |
 | Subagent parallelism | Native Task/Agent | Native `spawn_agent` | Sequential fallback unless supported |
@@ -835,7 +835,7 @@ See [docs/MULTI-PLATFORM.md](docs/MULTI-PLATFORM.md) for the full architecture.
 Core Skills:       67 (L0: 1 │ L1: 5 │ L2: 30 │ L3: 31)
 Extension Packs:   14 free + 9 pro + 4 business
 Mesh Connections:  248 sync calls (rune status --json)
-Mesh Signals:      45 signals · 55 emit/listen edges (rune doctor)
+Mesh Signals:      46 signals · 55 emit/listen edges (rune doctor)
 Connections/Skill: 3.2 avg
 Platforms:         13 (Claude, Cursor, Windsurf, Antigravity, Generic, OpenClaw, Codex, OpenCode, Aider, Copilot, Gemini, Qoder, Qwen)
 Compiler:          13 adapters plus parser, transforms, hooks, and CLI
