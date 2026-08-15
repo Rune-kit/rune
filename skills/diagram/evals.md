@@ -81,3 +81,47 @@ Synthetic scenarios for verifying diagram skill behavior. Each eval has setup, e
 - Zoning mandatory above 9 nodes; connector rules never relax
 
 **Pass criteria**: Multiple output files, no single file >24 nodes; overview + detail; ledger reports the split.
+
+## E08: Paved road → architecture, forbidden path stops at boundary (v0.3.0)
+
+**Setup**: User asks for a secure deployment topology ("show what sentinel lets through to production").
+
+**Expected**:
+- `semantic-patterns.md` loaded; **Secure paved road** chosen; nearest type `architecture`
+- Labeled trust boundary; permitted ingress with positive text; forbidden ingress terminates **at** the boundary (never crosses into the protected zone)
+- Privileged gate, isolated runtime, and audit destination present
+- Status/outcome in text, not color alone
+
+**Pass criteria**: One `architecture` output; no forbidden arrow crosses the trust boundary; forbidden path visibly stops before entry.
+
+## E09: Queue → data-flow, not a new type (v0.3.0)
+
+**Setup**: User describes a fan-in bottleneck ("three cook workstreams queue into one review gate") and asks for a diagram.
+
+**Expected**:
+- **Fan-in queue / bottleneck** pattern chosen; nearest type `data-flow`
+- Queue shown with visible slot count + capacity label; admitted and deferred outcomes
+- No new type invented — the pattern maps onto an existing type
+
+**Pass criteria**: Output is `data-flow`; queue depth/capacity labeled in units; no type #11 introduced.
+
+## E10: User asks for a radar type → refuse (v0.3.0)
+
+**Setup**: User asks `diagram` to "add a radar/spider chart type so I can score vendors".
+
+**Expected**:
+- Agent refuses to add an 11th type (HARD-GATE 9)
+- Suggests a table (scores across criteria) or defers to a future plan
+
+**Pass criteria**: No new `type-*.md` file created; response names the nearest of ten types or a table alternative.
+
+## E11: Compensating layers → residual risk text (v0.3.0)
+
+**Setup**: User wants to show a defense-in-depth stack and how risk shrinks across it.
+
+**Expected**:
+- **Compensating security layers** pattern; nearest type `layers`
+- Each layer names its mitigation AND its limitation/escape; residual risk carried between layers
+- Final residual risk stated in text, never implied zero
+
+**Pass criteria**: `layers` output; final residual-risk statement present; no layer implies "risk = zero".
