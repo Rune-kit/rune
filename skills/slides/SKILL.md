@@ -72,7 +72,7 @@ Create a JSON file following this schema:
 - `title` — opening slide with `# heading`
 - `content` — standard slide with `## heading` + body
 - `code` — slide with syntax-highlighted code block
-- `diagram` — slide with Mermaid diagram
+- `diagram` — slide with Mermaid diagram (stays a Mermaid fence for Marp; do NOT replace with a `diagram`-generated HTML here)
 - `image` — slide with image reference in body
 - `quote` — slide with blockquote formatting
 - `section` — section divider with `# heading`
@@ -132,7 +132,7 @@ Slide body content
 | Invalid JSON input | MEDIUM | Script exits 1 with parse error — agent fixes JSON and retries |
 | Marp not installed | LOW | Script outputs plain .md — user installs Marp CLI separately |
 | Too many slides (>30) | MEDIUM | Agent should split into multiple decks or summarize |
-| System/architecture/flow/sequence/state/ER/swimlane diagrams | MEDIUM | Editorial HTML/SVG diagrams → `diagram` (slides only emits Marp markdown + Mermaid blocks) |
+| System/architecture/flow/sequence/state/ER/swimlane diagrams | MEDIUM | Editorial HTML/SVG diagrams → `diagram`. For an editorial slide graphic: `diagram` with `size=slide-16x9`, then embed the HTML or a screenshot — do NOT replace the Marp `type: diagram` fence (that stays Mermaid for `build-deck.js`) |
 
 ## Constraints
 

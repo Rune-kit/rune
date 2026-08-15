@@ -661,6 +661,8 @@ stateDiagram-v2
 
 Skip state machine if feature is stateless (simple CRUD with no lifecycle). Sequence is always produced.
 
+> For a polished editorial visual, `diagram` can redraw `requirements.mermaid` (sequence → type `sequence`; state machine → type `state`) as self-contained HTML. Offer it when the reader would learn more from a designed figure than from raw Mermaid — `suggested_next: diagram`.
+
 #### Artifact 3: tasks.md
 
 Pre-broken implementation tasks **grouped by user story** (vertical slices), NOT by layer. Plan refines this backbone, does not create from scratch. Save to `.rune/features/<feature-name>/tasks.md`:

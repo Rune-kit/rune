@@ -152,6 +152,8 @@ graph LR
 
 After emitting the map, scout returns to its normal Phase 6 (Generate Report) with the zoom-out section as the primary output.
 
+> The Mermaid map is a working artifact for a stuck agent. When a polished visual is needed for docs or a handoff, `diagram` can redraw the same graph as editorial HTML — `suggested_next: diagram`.
+
 ### Phase 5: Codebase Map (Optional)
 
 When called by `cook`, `team`, `onboard`, or `autopsy` (skills that need full project understanding), generate a structured codebase map:

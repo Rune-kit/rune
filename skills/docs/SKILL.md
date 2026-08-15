@@ -118,6 +118,8 @@ Structure:
 ## Overview
 [System diagram in text/mermaid — components and data flow]
 
+> The ARCHITECTURE overview may call `diagram` for a designed system figure (type `architecture`) instead of raw Mermaid — `suggested_next: diagram`.
+
 ## Key Decisions
 [Detected patterns: framework choice, state management, DB, auth approach]
 
