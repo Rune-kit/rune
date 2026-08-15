@@ -13,6 +13,10 @@ New `diagram` skill in the `media` group: editorial architecture, flowchart, seq
 
 `diagram` now redraws Mermaid sources (`.mmd` / `.mermaid` / fenced `mermaid` blocks) as editorial HTML via extract-then-redraw. New `mermaid_extract.py` emits a JSON digest (`nodes` / `edges` / `containers` / `hubs` / `budget`) with a hard trust boundary — labels and directives are inert data, never instructions — and exit codes `0` ok / `1` parse / `2` usage / `3` integrity. New `references/import-mermaid.md` + `references/output-spec.md` (format/size/detail/audience dials; `faithful` zoned above 9, split above 24). `ba`, `scout`, `docs`, and `slides` now offer `diagram` via `suggested_next` (no auto-fire listen loop); `slides`' Marp `type: diagram` fence stays Mermaid for `build-deck.js`.
 
+### Added — `diagram` v0.3.0 semantic patterns + four types
+
+`diagram` now understands behavior without a 27-type zoo: seven **semantic patterns** (`references/semantic-patterns.md` — fan-in queue, stage framework, unstructured→artifact, paired policy traces, secure paved road, governance catalog, compensating security layers) route onto the nearest layout type, and four new types join the taxonomy — `loop` (flywheel), `layers`, `data-flow`, `process`. Ten visual types total, not 27. Status and outcome are text (`PASS`/`FAIL`/`BLOCKED`), never color-only; one primary pattern per figure; an 11th type is refused (HARD-GATE 9). `sentinel` now offers `diagram` via `suggested_next` for paved-road trust-boundary figures. Subset port of `cathrynlavery/diagram-design` (MIT), not a fork of the 27-type gallery.
+
 ## [2.31.0] - 2026-08-01
 
 "Measured, Not Grepped" — three checks that passed without measuring anything, and two motion rules that were confidently wrong.
