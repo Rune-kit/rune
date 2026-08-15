@@ -1,9 +1,9 @@
-# Skill Index — All 66 Core Skills
+# Skill Index — All 67 Core Skills
 
 > **Need a skill?** Invoke via `/rune <skill-name>` in Claude Code, or `@rune:<skill-name>` in Cursor/Windsurf.
 > Every skill has a `SKILL.md` at `skills/<name>/SKILL.md` — read that for the full spec.
 
-**Total:** 66 skills across 5 layers · 248 mesh connections
+**Total:** 67 skills across 5 layers · 248 mesh connections
 **Quick find:** use Ctrl+F on this page
 
 ---
@@ -188,7 +188,7 @@ Find architectural friction and score deepening opportunities by leverage, local
 
 ---
 
-## L3 — Utilities (30)
+## L3 — Utilities (31)
 
 | Skill | Purpose |
 |-------|---------|
@@ -217,6 +217,7 @@ Find architectural friction and score deepening opportunities by leverage, local
 | **asset-creator** | Code-based visual assets — SVG icons, OG images, banners |
 | **video-creator** | Video content planning — narration, storyboards, shot lists |
 | **slides** | Marp-compatible slide decks from structured JSON |
+| **diagram** | Editorial HTML/SVG diagrams — architecture, flowchart, sequence, state, ER, swimlane |
 | **dependency-doctor** | Dependency health — outdated packages, CVEs, breaking change risk |
 | **git** | Semantic commits, PR descriptions, branch naming, changelog generation |
 | **doc-processor** | Generate/parse office documents — PDF, DOCX, XLSX, PPTX, CSV |

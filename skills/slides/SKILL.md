@@ -132,6 +132,7 @@ Slide body content
 | Invalid JSON input | MEDIUM | Script exits 1 with parse error — agent fixes JSON and retries |
 | Marp not installed | LOW | Script outputs plain .md — user installs Marp CLI separately |
 | Too many slides (>30) | MEDIUM | Agent should split into multiple decks or summarize |
+| System/architecture/flow/sequence/state/ER/swimlane diagrams | MEDIUM | Editorial HTML/SVG diagrams → `diagram` (slides only emits Marp markdown + Mermaid blocks) |
 
 ## Constraints
 

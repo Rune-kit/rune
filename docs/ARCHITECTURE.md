@@ -207,7 +207,7 @@ Adapters with `generateExtraFiles()` emit additional context files alongside per
 | VALIDATION | verification, hallucination-guard, integrity-check, completion-gate, constraint-check, sast, converge |
 | STATE | context-engine, context-pack, journal, session-bridge, neural-memory |
 | MONITORING | watchdog, scope-guard |
-| MEDIA | browser-pilot, asset-creator, video-creator, slides |
+| MEDIA | browser-pilot, asset-creator, video-creator, slides, diagram |
 | DEPS | dependency-doctor |
 | WORKSPACE | worktree |
 | GIT | git |

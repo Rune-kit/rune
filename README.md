@@ -5,7 +5,7 @@
 <p align="center">
   <strong>Less skills. Deeper connections.</strong><br>
   A lean, interconnected skill ecosystem for AI coding assistants.<br>
-  66 skills · 248 connections · 45 signals · 13 platforms · MIT
+  67 skills · 248 connections · 45 signals · 13 platforms · MIT
 </p>
 
 <p align="center">
@@ -23,7 +23,7 @@
 
 Most skill ecosystems are either **too many isolated skills** (540+ that don't talk to each other) or **rigid pipelines** (A → B → C, if B fails everything stops).
 
-Rune is a **mesh** — 66 skills with 248 connections + 45 signals across a 5-layer architecture. Every declared outbound call is acknowledged by its target, forming resilient workflows that adapt when things go wrong.
+Rune is a **mesh** — 67 skills with 248 connections + 45 signals across a 5-layer architecture. Every declared outbound call is acknowledged by its target, forming resilient workflows that adapt when things go wrong.
 
 ```
 Pipeline:  A → B → C → D         (B fails = stuck)
@@ -301,7 +301,7 @@ cook ───emit:phase.complete────→ session-bridge
 
 ## What Rune Is (and Isn't)
 
-Rune started as a **Claude Code plugin** and now compiles to **every major AI IDE**. Same 66 skills, same mesh connections, same workflows — zero knowledge loss across platforms.
+Rune started as a **Claude Code plugin** and now compiles to **every major AI IDE**. Same 67 skills, same mesh connections, same workflows — zero knowledge loss across platforms.
 
 OpenAI Codex is now a first-class native runtime too: Rune ships
 `.codex-plugin/plugin.json`, synchronous Codex lifecycle hooks, project-scoped
@@ -330,7 +330,7 @@ still explicit; review newly installed definitions with `/hooks`.
 | CI quality gates | `verification` skill: lint + typecheck + tests + build (actual commands, not LLM review) |
 | Memory / state | `session-bridge` + `journal`: cross-session decisions, conventions, ADRs, module health |
 | Multi-model strategy | Every skill has assigned model: haiku (scan), sonnet (code), opus (architecture) |
-| Agent specialization | 66 specialized skills plus native role definitions; Claude uses Task/Agent and Codex uses `spawn_agent` collaboration primitives |
+| Agent specialization | 67 specialized skills plus native role definitions; Claude uses Task/Agent and Codex uses `spawn_agent` collaboration primitives |
 | Security scanning | `sentinel`: OWASP patterns, secret scanning, dependency audit. `sast`: static analysis |
 
 ## Install
@@ -412,13 +412,13 @@ npx @rune-kit/rune init --platform windsurf
 npx @rune-kit/rune init --platform antigravity
 ```
 
-This compiles all 66 skills into your IDE's rules format. Same knowledge, same workflows.
+This compiles all 67 skills into your IDE's rules format. Same knowledge, same workflows.
 
 ### Platform Comparison
 
 | Feature | Claude Code | OpenAI Codex | Other compiled targets |
 |---------|-------------|--------------|------------------------|
-| Skills available | 66/66 | 66/66 | 66/66 |
+| Skills available | 67/67 | 67/67 | 67/67 |
 | Mesh connections | 248 + 45 signals | 248 + 45 signals | 248 + 45 signals as native rules/skills |
 | Workflows & HARD-GATEs | Full | Full | Full knowledge, runtime-dependent enforcement |
 | Extension packs | 14 | 14 | 14 |
@@ -819,7 +819,7 @@ See [docs/MULTI-PLATFORM.md](docs/MULTI-PLATFORM.md) for the full architecture.
 | Doc | What's inside |
 |-----|---------------|
 | [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md) | Your first 5 minutes with Rune — install to first `/rune cook` |
-| [`docs/SKILLS.md`](docs/SKILLS.md) | All 66 skills, searchable by intent and layer |
+| [`docs/SKILLS.md`](docs/SKILLS.md) | All 67 skills, searchable by intent and layer |
 | [`docs/SIGNALS.md`](docs/SIGNALS.md) | Canonical signal inventory — 25 events, emit/listen graph |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | 5-layer mesh architecture reference |
 | [`docs/VISION.md`](docs/VISION.md) | Philosophy — what Rune is and isn't |
@@ -832,7 +832,7 @@ See [docs/MULTI-PLATFORM.md](docs/MULTI-PLATFORM.md) for the full architecture.
 ## Numbers
 
 ```
-Core Skills:       66 (L0: 1 │ L1: 5 │ L2: 30 │ L3: 30)
+Core Skills:       67 (L0: 1 │ L1: 5 │ L2: 30 │ L3: 31)
 Extension Packs:   14 free + 9 pro + 4 business
 Mesh Connections:  248 sync calls (rune status --json)
 Mesh Signals:      45 signals · 55 emit/listen edges (rune doctor)

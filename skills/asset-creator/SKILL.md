@@ -143,6 +143,7 @@ Known failure modes for this skill. Check these before declaring done.
 | Saving to random location instead of assets/ | MEDIUM | Constraint 3: output_dir defaults to assets/ — always save there |
 | Missing light/dark variants for OG/banner assets | MEDIUM | Step 4: dark mode variant required for any OG/banner asset |
 | Generating raster images (PNG/JPG) directly | MEDIUM | This skill creates SVG/HTML CODE only — raster requires browser-pilot screenshot of generated HTML |
+| Drawing system/architecture/flow/sequence/state/ER/swimlane diagrams | MEDIUM | These are editorial diagrams, not icons/OG assets — route to `diagram` |
 
 ## Done When
 

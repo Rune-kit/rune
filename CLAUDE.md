@@ -3,7 +3,7 @@
 ## Overview
 
 Rune is an interconnected skill ecosystem for AI coding assistants.
-66 core skills | 5-layer mesh architecture | 209 connections + 45 signals | Multi-platform.
+67 core skills | 5-layer mesh architecture | 209 connections + 45 signals | Multi-platform.
 Philosophy: "Less skills. Deeper connections."
 
 Works on: Claude Code (native plugin) · Cursor · Windsurf · Google Antigravity · OpenAI Codex · OpenCode · Aider · GitHub Copilot CLI · Gemini CLI · Qoder · Qwen Coder · any AI IDE.
@@ -103,7 +103,7 @@ When the user's intent matches a skill, invoke it BEFORE writing any code or ana
 
 ## Current Wave
 
-66 core skills built. Current release **v2.28.0 "Reasoner's Blind Spots"** — see `CHANGELOG.md` for the full history; the sections below describe the layers that are live.
+67 core skills built. Current release **v2.28.0 "Reasoner's Blind Spots"** — see `CHANGELOG.md` for the full history; the sections below describe the layers that are live.
 
 **Reasoning + output layer (v2.27.0–v2.28.0)**: `context-engine` owns an output-mode layer (`references/output-modes.md`) — a mode registry, one shared activation contract, and a precedence rule for when two modes conflict: **shape is negotiable, substance is not** (calibration > evidence > a skill's `## Output Format` > safety > actionability > economy). Modes: `caveman` (token economy) and `actionable` (distance-to-doing). `completion-gate` owns claim discipline (`references/claim-discipline.md`) — every load-bearing claim is typed OBSERVED / DERIVED / PRIOR / ASSUMED, because hallucination is an unverified claim wearing the grammar of an observation; an honest hedge is a `DECLARED` open item, never a failure. `problem-solver` checks the model's own failure modes alongside human bias, `verification` runs the Constraint Loop for surface-form constraints, and `design` marks visual checklist items 👁 (ticked from a render, or marked ASSUMED).
 
@@ -127,11 +127,11 @@ sentinel, preflight, onboard, deploy, marketing, perf,
 autopsy, safeguard, surgeon, audit, incident, review-intake, logic-guardian,
 ba, docs, mcp-builder, adversary, retro, graft, improve-architecture
 
-### L3 Utilities (30)
+### L3 Utilities (31)
 research, docs-seeker, trend-scout, problem-solver, sequential-thinking,
 verification, hallucination-guard, completion-gate, constraint-check, sast, integrity-check,
 context-engine, context-pack, journal, session-bridge, neural-memory, worktree,
-watchdog, scope-guard, browser-pilot, asset-creator, video-creator, slides,
+watchdog, scope-guard, browser-pilot, asset-creator, video-creator, slides, diagram,
 dependency-doctor, git, doc-processor, sentinel-env, quarantine, converge, council
 
 ### L4 Extension Packs (14)

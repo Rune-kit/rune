@@ -5,6 +5,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added — `diagram` L3 skill (v0.1.0)
+
+New `diagram` skill in the `media` group: editorial architecture, flowchart, sequence, state, ER, and swimlane diagrams as self-contained HTML/SVG — a 9-node budget, mandatory orthogonal connectors, and a machine-checked geometry gate (`self_check.py` + `verify_geometry.py`). Complements `asset-creator` (icons/OG) and `slides` (Marp + Mermaid). Ported from `cathrynlavery/diagram-design` (MIT, v2.4). Emits `media.diagram.composed` (listeners land in a later phase). Mesh now 67 core skills.
+
 ## [2.31.0] - 2026-08-01
 
 "Measured, Not Grepped" — three checks that passed without measuring anything, and two motion rules that were confidently wrong.
