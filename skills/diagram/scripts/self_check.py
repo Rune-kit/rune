@@ -64,6 +64,7 @@ MASK_MIN_H = 8.0
 MASK_MAX_H = 14.0
 LABEL_GAP = 6.0
 EPSILON = 0.5
+DIAG_EPSILON = 0.1  # diagonal classification: grid=4 means axis-aligned coords differ by 0 or >=4
 
 
 class Rect:
@@ -195,6 +196,10 @@ def check_svgs(parser, errors):
         desc_id = desc.get("attrs", {}).get("id", "")
         if title_id in {"", "title"} or desc_id in {"", "desc"}:
             errors.append(f"svg {number} title/desc IDs must be diagram-prefixed, never bare")
+        if "[" in title_id or "]" in title_id or "[" in desc_id or "]" in desc_id:
+            errors.append(
+                f"svg {number} title/desc IDs still contain a `[diagram-slug]` placeholder — replace it before export"
+            )
         if labelled != [title_id, desc_id]:
             errors.append(f"svg {number} aria-labelledby must name title then desc")
 
@@ -307,14 +312,14 @@ def check_geometry(source, errors):
     for m in LINE_RE.finditer(source):
         x1, y1 = float(m["x1"]), float(m["y1"])
         x2, y2 = float(m["x2"]), float(m["y2"])
-        if abs(x2 - x1) > EPSILON and abs(y2 - y1) > EPSILON:
+        if abs(x2 - x1) > DIAG_EPSILON and abs(y2 - y1) > DIAG_EPSILON:
             errors.append("diagonal <line> connector (HARD-GATE 2): off-axis nodes must use orthogonal elbows")
             continue
         segments.append((x1, y1, x2, y2))
 
     for m in PATH_RE.finditer(source):
         for x1, y1, x2, y2 in path_straight_segments(m["d"]):
-            if abs(x2 - x1) > EPSILON and abs(y2 - y1) > EPSILON:
+            if abs(x2 - x1) > DIAG_EPSILON and abs(y2 - y1) > DIAG_EPSILON:
                 errors.append("diagonal straight segment in <path> (HARD-GATE 2): use orthogonal elbows")
             segments.append((x1, y1, x2, y2))
 

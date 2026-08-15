@@ -58,7 +58,7 @@ Any `rgba(45,49,66, X)` in light becomes `rgba(245,245,245, X)` in dark. Same op
 
 Three families, not more: serif + sans + mono. Mono is for **technical** content (ports, commands, URLs, field types); human-readable names go in sans; the page title is serif.
 
-**Override:** if the project's `.rune/design-system.md` or `.rune/conventions.md` names a display/body/mono family, use those instead of the defaults above. The *role split* (serif title / sans names / mono technical) stays even when the specific families change.
+**Override:** if the project's `.rune/design-system.md` or `.rune/conventions.md` names a display/body/mono family, use those instead of the defaults above. The *role split* (serif title / sans names / mono technical) stays even when the specific families change. The three-family cap still wins when a project names more than three families — pick the display, body, and mono candidates and ignore the rest; a fourth family adds noise, not meaning.
 
 ## Stroke, radius, spacing
 

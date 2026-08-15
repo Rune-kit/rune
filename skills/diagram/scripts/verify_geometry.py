@@ -122,7 +122,7 @@ def check(path: Path) -> list[str]:
             if node.offset <= mask.offset:
                 continue  # painted before the label; the label stays on top
             dx, dy = overlap(mask, node)
-            if dx <= 1.0 or dy <= 1.0 or contained(mask, node):
+            if dx <= EPSILON or dy <= EPSILON or contained(mask, node):
                 continue
             findings.append(
                 f"{path.name}:{mask.line}: label mask {mask} is clipped by node "

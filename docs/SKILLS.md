@@ -217,7 +217,7 @@ Find architectural friction and score deepening opportunities by leverage, local
 | **asset-creator** | Code-based visual assets — SVG icons, OG images, banners |
 | **video-creator** | Video content planning — narration, storyboards, shot lists |
 | **slides** | Marp-compatible slide decks from structured JSON |
-| **diagram** | Editorial HTML/SVG diagrams — architecture, flowchart, sequence, state, ER, swimlane |
+| **diagram** | Editorial HTML/SVG diagrams — architecture, flowchart, sequence, state, ER, swimlane, loop, layers, data-flow, process |
 | **dependency-doctor** | Dependency health — outdated packages, CVEs, breaking change risk |
 | **git** | Semantic commits, PR descriptions, branch naming, changelog generation |
 | **doc-processor** | Generate/parse office documents — PDF, DOCX, XLSX, PPTX, CSV |
