@@ -1,6 +1,6 @@
 # Rune Roadmap
 
-> Last updated: July 2026 | Version: 2.31.0
+> Last updated: July 2026 | Version: 2.32.0
 
 ---
 
@@ -18,7 +18,7 @@ These principles guide every roadmap decision:
 
 ---
 
-## Current State (v2.31.0 — "Measured, Not Grepped")
+## Current State (v2.32.0 — "Drawing the Mesh")
 
 | Layer | Count | Status |
 |-------|-------|--------|

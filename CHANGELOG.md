@@ -3,7 +3,9 @@
 All notable changes to Rune are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [2.32.0] - 2026-08-16
+
+"Drawing the Mesh" — the mesh finally knows what its pieces look like: a new `diagram` skill draws editorial figures, five partner skills hand off to it, and the `quarantine` hook stops being mute.
 
 ### Added — `diagram` L3 skill (v0.1.0)
 
@@ -16,6 +18,14 @@ New `diagram` skill in the `media` group: editorial architecture, flowchart, seq
 ### Added — `diagram` v0.3.0 semantic patterns + four types
 
 `diagram` now understands behavior without a 27-type zoo: seven **semantic patterns** (`references/semantic-patterns.md` — fan-in queue, stage framework, unstructured→artifact, paired policy traces, secure paved road, governance catalog, compensating security layers) route onto the nearest layout type, and four new types join the taxonomy — `loop` (flywheel), `layers`, `data-flow`, `process`. Ten visual types total, not 27. Status and outcome are text (`PASS`/`FAIL`/`BLOCKED`), never color-only; one primary pattern per figure; an 11th type is refused (HARD-GATE 9). `sentinel` now offers `diagram` via `suggested_next` for paved-road trust-boundary figures. Subset port of `cathrynlavery/diagram-design` (MIT), not a fork of the 27-type gallery.
+
+### Fixed — `quarantine` hook was async, so Claude Code never injected its block reasons
+
+`quarantine` was registered `async: true`. Claude Code drops `additionalContext` from async hooks — the hook ran, exited 0, and reached nobody, so a quarantined tool result showed up as a silent unblocked read. Now synchronous (`async: false` in both the preset and `hooks/hooks.json`).
+
+### Fixed — mesh integrity gate caught `diagram` as an orphan (now referenced)
+
+The `no true orphan skills` gate flunked the day `diagram` landed: partner skills referenced it as prose (`suggested_next`) but never via a `rune:diagram` token. `docs` now hands off with `rune:diagram` and `skill-index.json` regenerated, so the orphan gate holds and the mesh cross-ref map stays complete.
 
 ## [2.31.0] - 2026-08-01
 
