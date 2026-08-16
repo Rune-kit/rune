@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "generated": "2026-08-15T15:08:15.063Z",
+  "generated": "2026-08-16T05:11:32.529Z",
   "skillCount": 67,
   "skills": {
     "adversary": {
@@ -340,6 +340,7 @@
       "description": "Auto-generate and maintain project documentation. Creates README, API docs, architecture docs, changelogs, and keeps them in sync with code changes. The \"docs are never outdated\" skill.",
       "connections": [
         "scout",
+        "diagram",
         "git"
       ],
       "signals": {
@@ -1112,6 +1113,7 @@
     "doc-processor": [],
     "docs": [
       "scout",
+      "diagram",
       "git"
     ],
     "docs-seeker": [],
@@ -2053,6 +2055,7 @@
       "chain": [
         "docs",
         "scout",
+        "diagram",
         "git"
       ]
     },
