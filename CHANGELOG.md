@@ -18,15 +18,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **A shorter README.** 73 KB → ~20 KB: pitch, per-agent install, platform support table, tiers. Every old "What's New" section (v2.6 – v2.32) moved verbatim to the bottom of this file.
 - **`AGENTS.md` and `llms.txt`** (also served at `rune-kit.github.io/rune/llms.txt`).
 - **A Pro tip you can switch off.** The first red context warning of a session (120 tool calls) adds one line about Pro's real-% statusline. Once per session, never when a paid tier is wired, no network; `RUNE_PRO_HINT=0` hides it.
+- **Skills that other agents actually pick.** 23 skill descriptions (brainstorm, debug, fix, plan, review, test, sentinel, research, perf …) said what they do but not when to use them, which makes them harder for Codex, Cursor, Gemini and Grok to select on their own. Every description now has a "Use when …" trigger, and a test keeps it that way.
+- **Current model names.** Examples in skills and packs moved off retired or legacy ids (gpt-4, gpt-4o, claude-haiku-4-5, gemini-2.x) to the November 2026 lines; the Gemini model hint follows suit.
+- **Cleaner output on non-Claude agents.** `WebSearch`, `WebFetch` and `AskUserQuestion` compile to neutral wording outside Claude Code, and `onboard` writes `AGENTS.md` (or `GEMINI.md`) instead of `CLAUDE.md` when it runs elsewhere.
 
 ### Added
 - `plugin.json` (Agent Plugins 1.0; validated against `agent-plugins.org/schemas/1.0.0`), `.cursor-plugin/plugin.json` (+ empty `hooks.json` override so Cursor doesn't parse the Claude-format hooks), `gemini-extension.json`, `.grok-plugin/marketplace.json`, `assets/logo.svg`.
 - `compiler/adapters/agent-skills-base.js` — shared factory for directory-per-skill runtimes; `grok`, `cline`, `agents` adapters built on it.
-- Tests: Agent Skills compliance for every source skill, per-runtime manifest contracts, README install commands, Claude plugin-id rules, llms.txt structure and links, Pro-hint behaviour (1,529 tests).
+- Tests: Agent Skills compliance for every source skill, per-runtime manifest contracts, README install commands, Claude plugin-id rules, llms.txt structure and links, Pro-hint behaviour, when-to-use triggers, skill size and references/ paths, catalog page completeness (1,537 tests).
 
 ### Changed
 - `agents/*.md`: dropped the unused `subagent_type` key — Gemini CLI rejected all 66 subagents because of it.
 - `bump-version.js` stamps the four new manifests; `version-sync-check` requires all manifest versions to match.
+- `docs/skills/index.html` gained the missing `diagram` card; VNPay sandbox link in the ecommerce pack fixed.
 - ROADMAP rewritten: Polar + SePay (not LemonSqueezy), shipped milestones closed, v2.33 and Q1 2027 plans.
 
 ### Known limitations
