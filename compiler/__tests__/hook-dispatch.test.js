@@ -82,6 +82,21 @@ describe('dispatchHook', () => {
     });
   }
 
+  // A permission hook blocks on `{}`, so an event the dispatcher can't identify
+  // (no hook_event_name, cut-off or non-JSON stdin) must get the allow form.
+  for (const [label, stdinData] of [
+    ['missing hook_event_name', JSON.stringify({ tool_name: 'Shell' })],
+    ['non-JSON stdin', '{"hook_event_name": "beforeShellExec'],
+    ['empty stdin', ''],
+  ]) {
+    test(`--format cursor: ${label} falls back to {"permission":"allow"}`, async () => {
+      const io = makeIO({ stdinData });
+      const code = await dispatchHook(['sentinel', '--gentle', '--format', 'cursor'], io);
+      assert.strictEqual(code, 0);
+      assert.deepStrictEqual(JSON.parse(io.getOut()), { permission: 'allow' });
+    });
+  }
+
   test('--format gemini: stdout is exactly one JSON object', async () => {
     const io = makeIO({ stdinData: JSON.stringify({ hook_event_name: 'BeforeTool', tool_name: 'write_file' }) });
     const code = await dispatchHook(['preflight', '--format', 'gemini', '--gentle'], io);

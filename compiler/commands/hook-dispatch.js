@@ -17,7 +17,8 @@
  *     in Cursor; empty stdout is a no-op in Claude Code and Grok.
  *   - cursor: stdout is one JSON object — `{"permission":"allow"}` for
  *     Cursor's permission hooks (preToolUse, beforeShellExecution,
- *     beforeMCPExecution, beforeReadFile, subagentStart), `{}` otherwise.
+ *     beforeMCPExecution, beforeReadFile, subagentStart — and any event it
+ *     can't identify), `{}` for known non-permission events.
  *     (cursor.com/docs/hooks: invalid JSON from a permission hook blocks.)
  *   - gemini: stdout is `{}` — Gemini CLI parses stdout as JSON and shows any
  *     plain text as a system message (geminicli docs/hooks "Golden Rule").
@@ -32,12 +33,26 @@ import { WIRED_SKILLS } from './hooks/presets.js';
 
 const ALLOWLIST = new Set(WIRED_SKILLS);
 export const FORMATS = Object.freeze(['claude', 'cursor', 'gemini']);
-const CURSOR_PERMISSION_EVENTS = new Set([
-  'preToolUse',
-  'beforeShellExecution',
-  'beforeMCPExecution',
-  'beforeReadFile',
-  'subagentStart',
+// Cursor events whose output is NOT a permission decision. Anything else —
+// including a missing/unparsed hook_event_name (stdin cut off by the 500 ms
+// safety timeout, malformed payload) — gets the permission form, because a
+// permission hook blocks on `{}` while the other events ignore extra fields.
+const CURSOR_NON_PERMISSION_EVENTS = new Set([
+  'postToolUse',
+  'postToolUseFailure',
+  'afterShellExecution',
+  'afterMCPExecution',
+  'afterFileEdit',
+  'afterAgentResponse',
+  'afterAgentThought',
+  'stop',
+  'subagentStop',
+  'sessionStart',
+  'sessionEnd',
+  'preCompact',
+  'beforeSubmitPrompt',
+  'afterTabFileEdit',
+  'workspaceOpen',
 ]);
 
 function readFormat(argv) {
@@ -49,7 +64,7 @@ function readFormat(argv) {
 
 /** JSON (or nothing) a runtime expects on stdout for a non-blocking result. */
 export function passThroughOutput(format, eventName) {
-  if (format === 'cursor') return CURSOR_PERMISSION_EVENTS.has(eventName) ? '{"permission":"allow"}\n' : '{}\n';
+  if (format === 'cursor') return CURSOR_NON_PERMISSION_EVENTS.has(eventName) ? '{}\n' : '{"permission":"allow"}\n';
   if (format === 'gemini') return '{}\n';
   return '';
 }

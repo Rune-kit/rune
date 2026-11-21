@@ -236,7 +236,7 @@ Native hooks (cursor.com/docs/hooks): `{ "version": 1, "hooks": { "<event>": [{ 
 | quarantine | `postToolUse` | `MCP:.*\|Read` |
 | completion-gate | `stop` | — |
 
-Each command is `npx --yes @rune-kit/rune hook-dispatch <skill> --format cursor [--gentle]` with `timeout: 30` (seconds). `--format cursor` matters: Cursor blocks the action when a permission hook (`preToolUse`, `beforeShellExecution`, …) prints anything that is not valid JSON, so the dispatcher prints `{"permission":"allow"}` there and `{}` elsewhere, with its advisory line on stderr. Strict BLOCK exits 2, which Cursor treats as deny.
+Each command is `npx --yes @rune-kit/rune hook-dispatch <skill> --format cursor [--gentle]` with `timeout: 30` (seconds). `--format cursor` matters: Cursor blocks the action when a permission hook (`preToolUse`, `beforeShellExecution`, …) prints anything that is not valid JSON, so the dispatcher prints `{"permission":"allow"}` there and `{}` only for events it knows are not permission hooks (`afterFileEdit`, `postToolUse`, `stop`, …). If it cannot tell which event fired (no `hook_event_name`, cut-off stdin) it still prints `{"permission":"allow"}`, since `{}` would block a permission hook. The advisory line goes to stderr. Strict BLOCK exits 2, which Cursor treats as deny.
 
 - Project hooks run from the project root and only in a trusted workspace; check Settings → Hooks.
 - Cursor also imports Claude hooks from `.claude/settings.json` (Settings → Agents → Third-Party Imports, on by default). With Rune hooks in both files they fire twice; the installer warns. Keep one.
