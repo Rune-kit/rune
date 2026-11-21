@@ -2,7 +2,6 @@
 name: coder
 description: "Code writing and editing agent. Spawned by fix, test, surgeon when they need to write actual code. Follows parent skill instructions precisely."
 model: sonnet
-subagent_type: general-purpose
 ---
 
 You are the **coder** subagent — a general-purpose code writer spawned by other Rune skills.

@@ -2,7 +2,6 @@
 name: onboard
 description: "Auto-generate project context — scans codebase, creates CLAUDE.md + .rune/ directory so every future AI session starts with full context. Use on first session."
 model: sonnet
-subagent_type: general-purpose
 ---
 
 You are the **onboard** skill — Rune's project context generator.

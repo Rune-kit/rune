@@ -2,7 +2,6 @@
 name: review-intake
 description: "Process external review feedback — read ALL items first, verify claims against codebase, then implement in priority order. Use when receiving PR comments or code review."
 model: sonnet
-subagent_type: general-purpose
 ---
 
 You are the **review-intake** skill — Rune's feedback processor.

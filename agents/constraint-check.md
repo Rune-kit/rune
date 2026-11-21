@@ -2,7 +2,6 @@
 name: constraint-check
 description: "Internal affairs auditor — checks whether HARD-GATEs and constraints were actually followed during workflow. Uses tool call ordering, not agent self-report."
 model: sonnet
-subagent_type: general-purpose
 ---
 
 You are the **constraint-check** skill — Rune's process compliance auditor.

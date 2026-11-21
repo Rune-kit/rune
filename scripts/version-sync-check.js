@@ -64,6 +64,26 @@ if (pkg.version === plugin.version && pkg.version === codexPlugin.version) {
   );
 }
 
+// 1a. Cross-runtime manifests (v2.33 "Everywhere"): every manifest a runtime reads
+// must advertise the same version, or marketplaces show stale builds.
+const crossRuntimeManifests = [
+  { path: 'plugin.json', label: 'Agent Plugins manifest', read: (j) => j.version },
+  { path: '.cursor-plugin/plugin.json', label: 'Cursor plugin', read: (j) => j.version },
+  { path: 'gemini-extension.json', label: 'Gemini CLI extension', read: (j) => j.version },
+  {
+    path: '.grok-plugin/marketplace.json',
+    label: 'Grok marketplace',
+    read: (j) => j.plugins?.find((p) => p.name === 'rune')?.version,
+  },
+];
+for (const { path, label, read } of crossRuntimeManifests) {
+  const filePath = join(ROOT, path);
+  if (!existsSync(filePath)) continue;
+  const found = read(JSON.parse(readFileSync(filePath, 'utf8')));
+  if (found === pkg.version) pass(`${path}: v${found} (${label})`);
+  else fail(`${path}: shows v${found}, expected v${pkg.version} (${label})`);
+}
+
 // 1b. Version in docs/content files
 const versionFiles = [
   { path: 'docs/index.html', pattern: /v(\d+\.\d+\.\d+)\s*&mdash;/ },
@@ -177,6 +197,24 @@ const publicFacts = [
     value: `${liveStats.totalConnections} connections`,
     label: 'marketplace connection count',
   },
+  {
+    path: '.claude-plugin/marketplace.json',
+    value: `${liveStats.skillCount} skills`,
+    label: 'marketplace skill count',
+  },
+  {
+    path: '.claude-plugin/marketplace.json',
+    value: `${liveStats.signalCount} signals`,
+    label: 'marketplace signal count',
+  },
+  {
+    path: '.claude-plugin/plugin.json',
+    value: `${liveStats.signalCount} signals`,
+    label: 'Claude plugin signal count',
+  },
+  { path: 'plugin.json', value: `${liveStats.skillCount}-skill`, label: 'Agent Plugins skill count' },
+  { path: '.cursor-plugin/plugin.json', value: `${liveStats.skillCount}-skill`, label: 'Cursor plugin skill count' },
+  { path: 'gemini-extension.json', value: `${liveStats.skillCount}-skill`, label: 'Gemini extension skill count' },
 ];
 
 for (const fact of publicFacts) {

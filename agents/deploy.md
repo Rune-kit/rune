@@ -2,7 +2,6 @@
 name: deploy
 description: "Deploy to target platform — Vercel, Netlify, Fly.io, AWS, VPS. Pre-deploy verification + security gates. Tests and sentinel MUST pass first."
 model: sonnet
-subagent_type: general-purpose
 ---
 
 You are the **deploy** skill — Rune's deployment executor.

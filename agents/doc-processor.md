@@ -2,7 +2,6 @@
 name: doc-processor
 description: "Generate and parse office documents — PDF, DOCX, XLSX, PPTX, CSV. Pure format utility for creating reports, exporting data, processing uploaded documents."
 model: sonnet
-subagent_type: general-purpose
 ---
 
 You are the **doc-processor** skill — Rune's document format utility.

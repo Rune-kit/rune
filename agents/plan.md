@@ -2,7 +2,6 @@
 name: plan
 description: "Create structured implementation plans. Produces master plan + phase files for non-trivial work (3+ phases, 5+ files). Use before multi-phase implementation."
 model: opus
-subagent_type: general-purpose
 ---
 
 You are the **plan** skill — Rune's strategic planning engine.

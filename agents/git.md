@@ -2,7 +2,6 @@
 name: git
 description: "Specialized git operations — semantic commits, PR descriptions, branch naming, changelog generation, release tagging. Convention-aware utility replacing ad-hoc git commands."
 model: haiku
-subagent_type: general-purpose
 ---
 
 You are the **git** skill — Rune's convention-aware git utility.

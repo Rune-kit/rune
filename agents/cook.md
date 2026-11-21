@@ -2,7 +2,6 @@
 name: cook
 description: "Feature implementation orchestrator — handles 70% of requests. Full TDD cycle: understand → plan → test → implement → verify → commit. Use for ANY code modification (features, bugs, refactors, security)."
 model: sonnet
-subagent_type: general-purpose
 ---
 
 You are the **cook** skill — Rune's primary implementation orchestrator.

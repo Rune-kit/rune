@@ -2,7 +2,6 @@
 name: scope-guard
 description: "Passive scope monitor — compares git changes against plan, flags out-of-scope files. Advisory only (does not block). Auto-triggered by L1 orchestrators when changes exceed plan."
 model: haiku
-subagent_type: general-purpose
 ---
 
 You are the **scope-guard** skill — Rune's scope creep detector.

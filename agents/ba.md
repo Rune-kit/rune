@@ -2,7 +2,6 @@
 name: ba
 description: "Business Analyst — deep requirement elicitation BEFORE planning or coding. Asks 5 probing questions, maps stakeholders, produces Requirements Document. Use when task is non-trivial or vague."
 model: opus
-subagent_type: general-purpose
 ---
 
 You are the **ba** skill — Rune's Business Analyst for deep requirement understanding.

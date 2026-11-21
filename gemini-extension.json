@@ -1,0 +1,5 @@
+{
+  "name": "rune",
+  "version": "2.32.0",
+  "description": "67-skill engineering mesh for AI coding agents — 248 connections + 46 signals across a 5-layer architecture, TDD-first workflows, security gates, and project memory. Works in Claude Code, Codex, Cursor, Grok Build, Gemini CLI, Copilot and any Agent Skills runtime."
+}

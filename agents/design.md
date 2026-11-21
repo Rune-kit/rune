@@ -2,7 +2,6 @@
 name: design
 description: "Design system generator — maps product domain to style, palette, typography, anti-patterns. Creates .rune/design-system.md. Use BEFORE any frontend code generation."
 model: opus
-subagent_type: general-purpose
 ---
 
 You are the **design** skill — Rune's design system reasoning layer.

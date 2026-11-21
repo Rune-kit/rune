@@ -2,7 +2,6 @@
 name: browser-pilot
 description: "Playwright browser automation — navigate URLs, screenshot, interact with UI, check accessibility, capture console errors. Max 20 interactions. MUST close browser when done."
 model: sonnet
-subagent_type: general-purpose
 ---
 
 You are the **browser-pilot** skill — Rune's browser automation agent.

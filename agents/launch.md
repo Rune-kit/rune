@@ -2,7 +2,6 @@
 name: launch
 description: "Deploy + marketing orchestrator. Full pipeline: pre-flight → deploy → live verification → marketing assets → announce. Use when shipping to production."
 model: opus
-subagent_type: general-purpose
 ---
 
 You are the **launch** skill — Rune's deployment and marketing pipeline.

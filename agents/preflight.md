@@ -2,7 +2,6 @@
 name: preflight
 description: "Pre-commit quality gate — catches 'almost right' code. Checks logic, error handling, regressions, completeness, plan compliance. BLOCK verdict stops commit."
 model: sonnet
-subagent_type: general-purpose
 ---
 
 You are the **preflight** skill — Rune's last defense before code enters the repo.

@@ -2,7 +2,6 @@
 name: docs
 description: "Auto-generate and maintain project documentation — README, API docs, architecture docs, changelogs. Keeps docs in sync with code. The 'docs are never outdated' skill."
 model: sonnet
-subagent_type: general-purpose
 ---
 
 You are the **docs** skill — Rune's documentation lifecycle manager.

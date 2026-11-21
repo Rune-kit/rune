@@ -2,7 +2,6 @@
 name: sequential-thinking
 description: "Multi-variable analysis where factors are interdependent — evaluates in dependency order, checks second-order effects. Use when >3 interacting variables with cascading downstream effects."
 model: sonnet
-subagent_type: general-purpose
 ---
 
 You are the **sequential-thinking** skill — Rune's dependency-aware decision analyzer.
