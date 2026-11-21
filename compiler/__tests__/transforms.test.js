@@ -74,6 +74,25 @@ describe('transformToolNames', () => {
     // Should not touch bare "Read" without backticks in tool pattern
     assert.ok(result.includes('Read'));
   });
+
+  test('Claude-only web/ask tools become neutral wording on other platforms', () => {
+    const input = 'Call `WebSearch` per query, then `WebFetch` the top 3. Batch into ONE `AskUserQuestion`.';
+    const result = transformToolNames(input, { name: 'codex', transformToolName: (t) => t });
+    assert.strictEqual(
+      result,
+      'Call the web search tool per query, then the web fetch tool the top 3. Batch into ONE user question.',
+    );
+  });
+
+  test('an adapter mapping for a web tool wins over the neutral wording', () => {
+    const adapter = { name: 'x', transformToolName: (t) => (t === 'WebSearch' ? 'google_web_search' : t) };
+    assert.strictEqual(transformToolNames('Use `WebSearch` now', adapter), 'Use google_web_search now');
+  });
+
+  test('Claude output keeps the native tool names', () => {
+    const input = 'Call `WebSearch` then `WebFetch`.';
+    assert.strictEqual(transformToolNames(input, { name: 'claude', transformToolName: (t) => t }), input);
+  });
 });
 
 describe('transformSubagents', () => {

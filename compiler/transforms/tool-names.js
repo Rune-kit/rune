@@ -13,6 +13,17 @@ const TOOL_INSTRUCTION_DIRECT_PATTERN = /Use `(Read|Write|Edit|Glob|Grep|Bash|To
 // Standalone `Tool` reference in any context
 const TOOL_REF_PATTERN = /`(Read|Write|Edit|Glob|Grep|Bash|TodoWrite|Skill|Agent)`/g;
 
+// Claude Code tools that adapters don't map individually. Every runtime has an
+// equivalent under a different name (Codex `web_search`, Gemini
+// `google_web_search` / `web_fetch`, Grok `web_search` …), so non-Claude output
+// gets a neutral description instead of a tool name the agent doesn't have.
+const GENERIC_TOOL_PATTERN = /`(WebFetch|WebSearch|AskUserQuestion)`/g;
+const GENERIC_TOOL_WORDING = {
+  WebFetch: 'the web fetch tool',
+  WebSearch: 'the web search tool',
+  AskUserQuestion: 'user question',
+};
+
 // Action verbs for direct patterns (no "to" suffix)
 const DIRECT_ACTION = {
   Read: 'Read the relevant files',
@@ -54,6 +65,12 @@ export function transformToolNames(body, adapter) {
     const mapped = adapter.transformToolName(toolName);
     if (mapped === toolName) return match;
     return mapped;
+  });
+
+  // Fourth: Claude-only tools without a per-adapter mapping
+  result = result.replace(GENERIC_TOOL_PATTERN, (match, toolName) => {
+    const mapped = adapter.transformToolName?.(toolName) ?? toolName;
+    return mapped !== toolName ? mapped : GENERIC_TOOL_WORDING[toolName];
   });
 
   return result;

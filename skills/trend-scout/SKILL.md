@@ -18,7 +18,7 @@ Market intelligence and technology trend analysis utility. Receives a topic or m
 
 ## Calls (outbound)
 
-None — pure L3 utility using `WebSearch` tools directly.
+None — pure L3 utility using `WebSearch` directly.
 
 ## Called By (inbound)
 

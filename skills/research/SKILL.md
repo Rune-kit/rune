@@ -18,7 +18,7 @@ Web research utility. Receives a research question, executes targeted searches, 
 
 ## Calls (outbound)
 
-None — pure L3 utility using `WebSearch` and `WebFetch` tools directly.
+None — pure L3 utility using `WebSearch` and `WebFetch` directly.
 
 ## Called By (inbound)
 
