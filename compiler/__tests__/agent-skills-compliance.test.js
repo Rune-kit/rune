@@ -64,6 +64,44 @@ describe('source skills conform to the Agent Skills spec', () => {
   }
 });
 
+describe('progressive disclosure', () => {
+  // Agent Skills guidance: keep SKILL.md lean and push detail into references/.
+  // Several mature skills are already above the ~500-line target (tracked in
+  // ROADMAP); this ceiling stops further growth until they are split.
+  const CEILING = 1000;
+
+  test(`no SKILL.md exceeds ${CEILING} lines`, () => {
+    const over = [];
+    for (const dir of readdirSync(SKILLS_DIR)) {
+      const file = path.join(SKILLS_DIR, dir, 'SKILL.md');
+      if (!existsSync(file)) continue;
+      const lines = readFileSync(file, 'utf-8').split('\n').length;
+      if (lines > CEILING) over.push(`${dir} (${lines})`);
+    }
+    assert.deepStrictEqual(over, [], `split into references/: ${over.join(', ')}`);
+  });
+
+  test('every local references/ path a skill mentions exists', () => {
+    const missing = [];
+    for (const dir of readdirSync(SKILLS_DIR)) {
+      const file = path.join(SKILLS_DIR, dir, 'SKILL.md');
+      if (!existsSync(file)) continue;
+      const text = readFileSync(file, 'utf-8');
+      // only refs that point into this skill: start-of-token `references/…`,
+      // not `../other/references/…` or `@rune-pro/…/references/…`
+      for (const m of text.matchAll(/(^|[\s(`'"])(references\/[\w./-]+\.(?:md|json|ya?ml|py|js|sh))/g)) {
+        const ref = m[2];
+        const local = path.join(SKILLS_DIR, dir, ref);
+        if (existsSync(local)) continue;
+        // cross-skill prose form: "`completion-gate` → `references/x.md`"
+        const crossSkill = readdirSync(SKILLS_DIR).some((d) => existsSync(path.join(SKILLS_DIR, d, ref)));
+        if (!crossSkill) missing.push(`${dir}: ${ref}`);
+      }
+    }
+    assert.deepStrictEqual(missing, []);
+  });
+});
+
 describe('compiled dir-per-skill output', () => {
   for (const platform of ['grok', 'cline', 'agents']) {
     test(`${platform}: build → doctor runs clean (no EISDIR, all skills found)`, async () => {

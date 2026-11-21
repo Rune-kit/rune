@@ -99,6 +99,11 @@ Full detail: [`CHANGELOG.md`](CHANGELOG.md).
 - ⬚ Community pack registry (rune-kit/community-packs) with the same depth review as core
 - ⬚ Skill authoring tutorial (build a pack for your domain)
 
+### Skills
+- ⬚ Split the 8 SKILL.md files above ~650 lines into `references/` (cook, ba, review, design, skill-forge, audit, session-bridge, test) — first make the flat adapters (`claude` build, generic, openclaw, aider) ship `references/` too
+- ⬚ Codex model map → GPT-6.x line; Antigravity model ids re-verified
+- ⬚ Platform-neutral worktree path (today `.claude/worktrees/`)
+
 ### Intelligence
 - ⬚ Web mesh-analytics dashboard (skill heatmap, chain frequency) — opt-in telemetry only
 - ⬚ Cost recommendations after `cook` ("these 3 skills ran on the heavy tier, could be mid")

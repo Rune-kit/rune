@@ -100,6 +100,8 @@ Use `Write` to create `CLAUDE.md` at the project root. Populate every section us
 
 If a `CLAUDE.md` already exists, use `Read` to load it first, then merge — preserve any human-written sections (comments starting with `<!-- manual -->`) and update auto-detected sections only.
 
+**Other runtimes read a different file.** `CLAUDE.md` is what Claude Code loads. Codex, Cursor, Grok Build, GitHub Copilot, OpenCode, Antigravity and Amp read `AGENTS.md`; Gemini CLI reads `GEMINI.md`. When running outside Claude Code, write the same content to `AGENTS.md` (or `GEMINI.md` on Gemini CLI) instead, with the same merge rules. If the project already has more than one of these files, update each so they stay in sync. Everything below that says `CLAUDE.md` means "the project-config file for this runtime".
+
 ### Step 5 — Initialize .rune/ Directory
 Use `Bash` to create the directory: `mkdir -p .rune`
 

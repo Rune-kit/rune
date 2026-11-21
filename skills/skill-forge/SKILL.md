@@ -380,9 +380,9 @@ Specifically:
 - `@rune-pro/media/scripts/image_optimizer.py` — Python contract implementation
 
 **Reference docs**:
-- `references/image-generator/script-contract.md` (pack-level contract)
-- `references/image-generator/exit-codes.md` (exit-code vocabulary)
-- `references/image-generator/binary-detection.md` (9-tier lookup)
+- `@rune-pro/media/references/image-generator/script-contract.md` (pack-level contract)
+- `@rune-pro/media/references/image-generator/exit-codes.md` (exit-code vocabulary)
+- `@rune-pro/media/references/image-generator/binary-detection.md` (9-tier lookup)
 
 ### Phase 5.5 — SECURITY MODEL
 
