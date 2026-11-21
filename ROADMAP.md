@@ -31,7 +31,7 @@ Rune is a **mesh**, not a plugin store. Every addition must deepen connections, 
 | Tests | 1,680+ | ✅ CI (lint + tests + doctor + version/number sync) |
 | Compiler targets | 16 | ✅ claude, codex, cursor, windsurf, antigravity, opencode, openclaw, generic, aider, copilot, gemini, qoder, qwen, grok, cline, agents |
 | Native plugins | Claude Code · Codex · Cursor · Grok Build · Gemini CLI · Agent Plugins 1.0 | ✅ Manifests in repo; marketplace listings in progress |
-| Runtime hooks | Claude Code + Codex + Grok Build (native) · Cursor / Windsurf / Antigravity (rules) | ✅ |
+| Runtime hooks | Claude Code + Codex + Grok Build + Cursor + Gemini CLI (native) · Windsurf / Antigravity (rules) | ✅ |
 | Payments | Polar (card / PayPal) · SePay (VN bank transfer) | ✅ Live on the landing page |
 
 ---
@@ -79,19 +79,20 @@ Full detail: [`CHANGELOG.md`](CHANGELOG.md).
 - ✅ `AGENTS.md` + `llms.txt`
 - ✅ `rune doctor` works on directory-per-skill output (was crashing with EISDIR)
 - ✅ Every platform ships `references/` (single-file targets and packs included); cross-skill reference links resolve after compile
-- ✅ The 8 largest SKILL.md files split into SKILL.md + `references/` (all ≤ 650 lines; nothing dropped, guarded by a test)
+- ✅ The 13 largest SKILL.md files split into SKILL.md + `references/` in two passes (every skill ≤ 500 lines; nothing dropped, guarded by a test)
 - ✅ Look-alike skills sharpened instead of merged (research / docs-seeker / trend-scout, problem-solver / sequential-thinking, hallucination-guard / completion-gate / constraint-check)
 - ✅ Codex roles on GPT-6.x (gpt-6.2-astra / gpt-6.2-sol / gpt-6-luna); Antigravity no longer gets an invented `model` field
 - ✅ Platform-neutral worktree path (`.claude/worktrees/` for Claude Code, `.rune/worktrees/` elsewhere)
 - ✅ `onboard --runtimes`: one canonical `AGENTS.md`, per-runtime pointers and hooks; native Grok hooks (`rune hooks install --platform grok`)
+- ✅ Native Cursor hooks (`.cursor/hooks.json`) and Gemini CLI hooks (`.gemini/settings.json`) via `rune hooks install --platform cursor|gemini`
 
 ---
 
 ## Next — v2.34+ · Q1 2027
 
 ### Hooks everywhere
-- ⬚ Native Cursor hooks (Cursor now runs Claude-format hooks; replace the rules-only adapter)
-- ⬚ Gemini CLI hooks (map SessionStart / BeforeTool / AfterTool; move Claude hooks out of `hooks/hooks.json` so Gemini stops logging skipped events)
+- ⬚ Gemini extension: ship Gemini-format lifecycle hooks and move the Claude ones out of `hooks/hooks.json`, so Gemini stops logging skipped events
+- ⬚ Pro/Business tier hook entries on Cursor (native events) and Gemini CLI
 - ⬚ Copilot and Kiro hook adapters
 - ⬚ CI job that installs Rune into each runtime that has a headless validator (`claude plugin validate`, `gemini extensions validate`, `grok plugin validate`)
 
@@ -104,9 +105,6 @@ Full detail: [`CHANGELOG.md`](CHANGELOG.md).
 - ⬚ GitHub Discussions + Discord; `good first issue` labels
 - ⬚ Community pack registry (rune-kit/community-packs) with the same depth review as core
 - ⬚ Skill authoring tutorial (build a pack for your domain)
-
-### Skills
-- ⬚ Second split pass for skills between 500 and 650 lines (cook, team, ba, context-engine, autopsy)
 
 ### Intelligence
 - ⬚ Web mesh-analytics dashboard (skill heatmap, chain frequency) — opt-in telemetry only

@@ -22,11 +22,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Current model names.** Examples in skills and packs moved off retired or legacy ids (gpt-4, gpt-4o, claude-haiku-4-5, gemini-2.x) to the November 2026 lines; the Gemini model hint follows suit.
 - **Cleaner output on non-Claude agents.** `WebSearch`, `WebFetch` and `AskUserQuestion` compile to neutral wording outside Claude Code, and `onboard` writes `AGENTS.md` (or `GEMINI.md`) instead of `CLAUDE.md` when it runs elsewhere.
 - **No content lost on any platform.** Single-file targets (generic, openclaw, aider) silently dropped every skill's `references/` folder, packs never shipped theirs (e.g. `zalo/references/`), and cross-skill reference links broke once compiled folders became `rune-<skill>/`. All three fixed: every reference file ships, and a test checks every link resolves on all 15 compiled platforms.
-- **Leaner core skills.** cook (975 → 630 lines), ba, review, design, skill-forge, audit, session-bridge and test were split into a lean SKILL.md plus 42 `references/` files. HARD-GATEs, frontmatter, mesh sections, Sharp Edges and always-run phases stay inline; a test proves every original line, connection (248) and gate survived.
+- **Leaner core skills — every SKILL.md now fits 500 lines.** Two passes split the 13 largest skills into a lean SKILL.md plus `references/` files: cook (975 → 479 lines), ba, review, design, skill-forge, audit, session-bridge, test, team, context-engine, autopsy, brainstorm and plan. HARD-GATEs, frontmatter, mesh sections, Sharp Edges and Done When stay inline; a test proves every original line, connection (248) and gate survived, and the size guard is now 500 lines. Links between reference files resolve from the file itself, so they click through on GitHub too.
 - **Look-alike skills now say where they stop.** Instead of merging, research / docs-seeker / trend-scout, problem-solver / sequential-thinking and hallucination-guard / completion-gate / constraint-check each name the sibling to use for the overlapping case (reasons in `docs/ARCHITECTURE.md` → "Overlap Review").
 - **Codex subagents on GPT-6.x.** `.codex/agents` roles: rune_heavy → `gpt-6.2-astra` (high), rune_standard → `gpt-6.2-sol` (medium), rune_fast → `gpt-6-luna` (high), per the Codex docs; verified offline with codex-cli 0.171.0. Antigravity skills no longer carry a `model:` field it doesn't support — a one-line model suggestion replaces it.
 - **Worktrees outside Claude Code.** Compiled skills for Codex, Cursor, Gemini, Grok and the rest create worktrees in `.rune/worktrees/` (Claude Code keeps `.claude/worktrees/`), and the worktree skill git-ignores the folder first.
 - **Set up every agent in a repo at once.** `/rune onboard --runtimes` keeps one canonical `AGENTS.md`, points `CLAUDE.md` (`@AGENTS.md`) and Gemini CLI (`context.fileName`) at it, and proposes the right `rune hooks install` per runtime. New `rune hooks install --platform grok` writes native `.grok/hooks/rune.json` (Grok 1.0.92 `grok inspect` loads all five hooks).
+- **Native hooks in Cursor and Gemini CLI.** `rune hooks install --platform cursor` now writes Cursor's own `.cursor/hooks.json` (preToolUse, beforeShellExecution, afterFileEdit, postToolUse, stop), so completion-gate auto-fires in Cursor too. Your hooks in that file are kept, and the old preset `.mdc` rules are removed. New `--platform gemini` merges BeforeTool / AfterTool / AfterAgent hooks into `.gemini/settings.json` and leaves your other settings alone. Gemini's own `gemini hooks migrate --from-claude` produces the same event and tool mapping. Seven hook platforms now, up from six.
+- **Rune hooks no longer stall edits in Cursor.** Cursor imports `.claude/settings.json` hooks and blocks a permission hook whose stdout isn't JSON; `hook-dispatch` printed a plain-text line there. Its advisory now goes to stderr, and `--format cursor|gemini` prints exactly the JSON each runtime parses.
 - **A fine-tuning example you can still run.** OpenAI is winding down self-serve fine-tuning (closed to new orgs; jobs end Jan 6, 2027; `gpt-4o-mini` isn't trainable), so the ai-ml example now defaults to open-weight LoRA with Hugging Face TRL + PEFT and keeps the OpenAI path for existing customers on `gpt-4.1-mini-2025-04-14`.
 
 ### Added
@@ -34,7 +36,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `compiler/adapters/agent-skills-base.js` — shared factory for directory-per-skill runtimes; `grok`, `cline`, `agents` adapters built on it.
 - Tests: Agent Skills compliance for every source skill, per-runtime manifest contracts, README install commands, Claude plugin-id rules, llms.txt structure and links, Pro-hint behaviour, when-to-use triggers, skill size and references/ paths, catalog page completeness, references shipped + resolving on every platform, split preservation, overlap boundaries, worktree paths, Codex role schema, Grok hooks, onboard runtime table (1,682 tests).
 - `scripts/check-split-preservation.js` — compares a git ref's SKILL.md with SKILL.md + references/ (lines, cross-refs, HARD-GATEs, frontmatter).
-- `compiler/transforms/reference-paths.js`, `compiler/transforms/runtime-paths.js`, `compiler/adapters/hooks/grok.js`.
+- `compiler/transforms/reference-paths.js`, `compiler/transforms/runtime-paths.js`, `compiler/adapters/hooks/grok.js`, `compiler/adapters/hooks/gemini.js`.
+- `hook-dispatch --format claude|cursor|gemini`; tests for Cursor/Gemini documented-schema keys, JSON-only stdout, merge/uninstall of user hooks, and ref-to-ref link resolution (1,747 tests).
 
 ### Changed
 - `agents/*.md`: dropped the unused `subagent_type` key — Gemini CLI rejected all 66 subagents because of it.
@@ -43,9 +46,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - ROADMAP rewritten: Polar + SePay (not LemonSqueezy), shipped milestones closed, v2.33 and Q1 2027 plans.
 
 ### Known limitations
-- Gemini CLI logs "Invalid hook event name … Skipping" for Rune's Claude-format hooks at startup; skills, commands and subagents load. Native Gemini hooks are on the roadmap.
+- Gemini CLI logs "Invalid hook event name … Skipping" for the extension's bundled Claude-format `hooks/hooks.json` at startup; skills, commands and subagents load. Project hooks from `rune hooks install --platform gemini` are Gemini-native. Pro/Business tier entries are not mapped to Gemini yet.
 - Cursor and Grok Build plugin installs are validated against their published specs, not yet by a live marketplace install. Codex roles and Grok hooks were checked with the real CLIs offline (`codex debug prompt-input`, `grok inspect`); no model call was made.
-- `rune hooks install --platform cursor` still writes `.mdc` rules, not Cursor's newer native `.cursor/hooks.json` (roadmap).
+- Native Cursor and Gemini hooks are checked against the published docs and offline tests, not a live Cursor or Gemini session. They call `npx @rune-kit/rune hook-dispatch --format …`, which needs 2.33.0 on npm. The 2.32.0 dispatcher prints plain text, which Cursor treats as a block.
+- The Cursor plugin's `.cursor-plugin/hooks.json` stays empty on purpose. Plugin hooks would run `npx` on every tool call for every plugin user, so Cursor hooks stay opt-in per project.
 
 ## [2.32.0] - 2026-08-16
 
