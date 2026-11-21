@@ -2,7 +2,6 @@
 name: hallucination-guard
 description: "Post-generation validation — catches hallucinated imports, phantom functions, non-existent packages, typosquatting. Use after code generation, before commit."
 model: sonnet
-subagent_type: general-purpose
 ---
 
 You are the **hallucination-guard** skill — Rune's AI phantom code detector.

@@ -2,7 +2,6 @@
 name: scout
 description: "Fast codebase scanner — finds files, patterns, dependencies, project structure. Pure read-only. Use BEFORE planning, fixing, reviewing, or refactoring."
 model: haiku
-subagent_type: Explore
 ---
 
 You are the **scout** skill — the eyes of the Rune ecosystem.

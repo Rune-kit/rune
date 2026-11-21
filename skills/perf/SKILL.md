@@ -1,6 +1,6 @@
 ---
 name: perf
-description: "Performance regression gate. Detects N+1 queries, sync-in-async, missing indexes, memory leaks, and bundle bloat before they reach production. Ranks findings by Cost Impact Hierarchy (architecture > data transfer > compute > DB > caching) so fix priority maps to actual unit-cost reduction."
+description: "Performance regression gate. Use before committing or deploying performance-sensitive code, or when something is slow, memory grows, or the bundle is large. Detects N+1 queries, sync-in-async, missing indexes, memory leaks, and bundle bloat, and ranks findings by Cost Impact Hierarchy (architecture > data transfer > compute > DB > caching)."
 metadata:
   author: runedev
   version: "0.6.0"
@@ -290,7 +290,7 @@ For projects that call AI APIs (detected via imports of `anthropic`, `openai`, `
 |---------|---------|--------|
 | AI call inside a loop without batching | `TOKEN_LOOP — [file:line] — AI call in loop over [collection] — batch or parallelize` | Cost scales linearly with collection size |
 | No token usage tracking | `NO_TOKEN_TRACKING — [file:line] — AI response usage not captured — add cost logging` | Invisible spend, no budget control |
-| Expensive model for simple tasks | `MODEL_MISMATCH — [file:line] — using [opus/gpt-4] for [classification/extraction] — use [haiku/gpt-4.1-mini]` | 10-30x cost difference for same result |
+| Expensive model for simple tasks | `MODEL_MISMATCH — [file:line] — using [a flagship model, e.g. opus / gpt-6.2-astra] for [classification/extraction] — use [a small model, e.g. haiku / gpt-6-luna]` | 10-30x cost difference for same result |
 | Missing max_tokens on open-ended prompts | `UNBOUNDED_TOKENS — [file:line] — no max_tokens on [call] — add limit to prevent runaway cost` | Single call can consume entire budget |
 | Duplicate AI calls for same input | `DUPLICATE_AI_CALL — [file:line] — same prompt sent to [provider] without caching — add response cache` | Wasted tokens on redundant calls |
 

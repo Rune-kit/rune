@@ -2,12 +2,13 @@
  * Transform Pipeline
  *
  * Applies all transforms in order to convert a parsed skill into platform-specific output.
- * Pipeline: frontmatter → cross-refs → tool-names → subagents → compliance → hooks → branding
+ * Pipeline: frontmatter → cross-refs → tool-names → runtime-paths → subagents → compliance → hooks → branding
  */
 
 import { transformCompliance } from './transforms/compliance.js';
 import { transformCrossReferences } from './transforms/cross-references.js';
 import { generateHookConstraints } from './transforms/hooks.js';
+import { transformRuntimePaths } from './transforms/runtime-paths.js';
 import { transformSubagents } from './transforms/subagents.js';
 import { transformToolNames } from './transforms/tool-names.js';
 
@@ -35,6 +36,9 @@ export function transformSkill(parsedSkill, adapter) {
 
   // 2. Rewrite tool names (Read, Edit, Bash → generic)
   body = transformToolNames(body, adapter);
+
+  // 2b. Claude-only working dirs (.claude/worktrees) → neutral .rune/ paths
+  body = transformRuntimePaths(body, adapter);
 
   // 3. Convert subagent/parallel instructions to sequential
   body = transformSubagents(body, adapter);

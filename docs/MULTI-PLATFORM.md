@@ -5,7 +5,8 @@
 > **Note (2026-07):** Output paths in this document reflect the original design.
 > Skill emission has since migrated to each platform's native Agent Skills dirs
 > (`.cursor/skills/`, `.windsurf/skills/`, `.agents/skills/` for Codex/Antigravity,
-> `.github/skills/`, `.gemini/skills/`, `.qwen/skills/`, `.qoder/skills/` — all
+> `.github/skills/`, `.gemini/skills/`, `.qwen/skills/`, `.qoder/skills/`, `.grok/skills/`,
+> `.cline/skills/` — all
 > dir-per-skill SKILL.md). See `docs/ARCHITECTURE.md` → Cross-Platform Adapter
 > Coverage for the current table.
 

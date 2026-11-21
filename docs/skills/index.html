@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rune Skills Catalog — 66 skills · 5 layers · 248 connections</title>
+  <title>Rune Skills Catalog — 67 skills · 5 layers · 248 connections</title>
   <meta name="description" content="Visual reference of all 66 Rune skills organized by layer. Filter by layer, search by name, sort by model.">
   <meta property="og:title" content="Rune Skills Catalog">
-  <meta property="og:description" content="66 skills · 5 layers · 248 connections. The complete Rune skill reference.">
+  <meta property="og:description" content="67 skills · 5 layers · 248 connections. The complete Rune skill reference.">
   <meta property="og:type" content="website">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -472,7 +472,7 @@
   <div class="page-header">
     <p class="page-header-badge">v2.28.0 — Skills Reference</p>
     <h1>Rune <span>Skills</span> Catalog</h1>
-    <p>66 skills &middot; 5 layers &middot; 248 mesh connections. Every skill has a clear responsibility and knows exactly which skills to call.</p>
+    <p>67 skills &middot; 5 layers &middot; 248 mesh connections. Every skill has a clear responsibility and knows exactly which skills to call.</p>
   </div>
 
   <!-- STATS BAR -->
@@ -529,7 +529,7 @@
           <option value="tools">By tools count</option>
         </select>
       </div>
-      <span class="results-count" id="results-count">66 skills</span>
+      <span class="results-count" id="results-count">67 skills</span>
     </div>
   </div>
 
@@ -608,7 +608,7 @@
       { name: 'logic-guardian', layer: 'L2', model: 'sonnet', tools: 5, desc: 'Protects complex business logic from accidental deletion or overwrite during refactoring.' },
       { name: 'marketing', layer: 'L2', model: 'sonnet', tools: 7, desc: 'Create marketing assets and execute launch strategy — copy, social posts, landing pages, and SEO audits.' },
       { name: 'mcp-builder', layer: 'L2', model: 'sonnet', tools: 6, desc: 'Build Model Context Protocol servers from specifications in TypeScript or Python with tests and docs.' },
-      { name: 'onboard', layer: 'L2', model: 'sonnet', tools: 5, desc: 'Auto-generate project context for AI sessions — scans codebase, creates CLAUDE.md and architecture summaries.' },
+      { name: 'onboard', layer: 'L2', model: 'sonnet', tools: 5, desc: 'Generates project context (CLAUDE.md / AGENTS.md + .rune/) and, in multi-runtime repos, per-runtime config and Rune hooks for Claude, Codex, Grok, Gemini and Cursor.' },
       { name: 'perf', layer: 'L2', model: 'sonnet', tools: 4, desc: 'Performance regression gate. Detects N+1 queries, sync-in-async patterns, missing indexes, and memory leaks.' },
       { name: 'plan', layer: 'L2', model: 'opus', tools: 5, desc: 'Create structured implementation plans from requirements. Supports Feature Spec Mode and Roadmap Mode with ICE scoring.' },
       { name: 'preflight', layer: 'L2', model: 'sonnet', tools: 4, desc: 'Pre-commit quality gate. Catches "almost right" code — type errors, missing tests, lint failures, and broken imports.' },
@@ -625,29 +625,30 @@
       // L3
       { name: 'asset-creator', layer: 'L3', model: 'sonnet', tools: 5, desc: 'Creates code-based visual assets — SVG icons, OG image HTML templates, social banners, and icon sets.' },
       { name: 'browser-pilot', layer: 'L3', model: 'sonnet', tools: 4, desc: 'Playwright browser automation. Navigates URLs, takes screenshots, checks accessibility, and interacts with web UIs.' },
-      { name: 'completion-gate', layer: 'L3', model: 'haiku', tools: 4, desc: 'Validates agent claims against evidence trail. Catches "done" without proof and "tests pass" without output.' },
-      { name: 'constraint-check', layer: 'L3', model: 'haiku', tools: 3, desc: 'Meta-validator for HARD-GATEs. Verifies that skills\' mandatory constraints were followed during a workflow step.' },
+      { name: 'completion-gate', layer: 'L3', model: 'haiku', tools: 4, desc: 'Checks claims: "done", "tests pass", "fixed" must come with evidence. Code is hallucination-guard; process rules are constraint-check.' },
+      { name: 'constraint-check', layer: 'L3', model: 'haiku', tools: 3, desc: 'Checks process: were HARD-GATEs actually followed, not just claimed. Claims are completion-gate; phantom imports are hallucination-guard.' },
       { name: 'converge', layer: 'L3', model: 'sonnet', tools: 3, desc: 'Spec-to-code convergence scan that detects missing backends, dead buttons, partial wiring, contradictions, and scope creep.' },
       { name: 'context-engine', layer: 'L3', model: 'haiku', tools: 3, desc: 'Context window management. Auto-triggered when context is filling up — summarizes and compacts without losing state.' },
       { name: 'context-pack', layer: 'L3', model: 'haiku', tools: 3, desc: 'Compact structured handoff briefings that preserve task context, constraints, decisions, and progress across agent delegation.' },
       { name: 'council', layer: 'L3', model: 'sonnet', tools: 6, desc: 'Gathers decorrelated perspectives across model families and arbitrates them without claiming false consensus.' },
       { name: 'dependency-doctor', layer: 'L3', model: 'haiku', tools: 4, desc: 'Dependency health management. Detects outdated packages and vulnerabilities across npm, pip, cargo, and go modules.' },
       { name: 'doc-processor', layer: 'L3', model: 'sonnet', tools: 6, desc: 'Generate and parse office documents — PDF, DOCX, XLSX, PPTX, and CSV files.' },
-      { name: 'docs-seeker', layer: 'L3', model: 'haiku', tools: 5, desc: 'Find documentation for APIs, libraries, and error messages via web search and curated sources.' },
+      { name: 'docs-seeker', layer: 'L3', model: 'haiku', tools: 5, desc: 'Version-correct API docs, error messages, and migration guides from official sources and llms.txt. Not for open-ended comparisons (research).' },
       { name: 'git', layer: 'L3', model: 'haiku', tools: 4, desc: 'Specialized git operations — semantic commits, PR descriptions, branch management, and conflict resolution.' },
-      { name: 'hallucination-guard', layer: 'L3', model: 'haiku', tools: 4, desc: 'Verify AI-generated imports, API calls, and packages actually exist before code is written.' },
+      { name: 'hallucination-guard', layer: 'L3', model: 'haiku', tools: 4, desc: 'Checks the code: AI-generated imports, API calls, and packages actually exist. Claims are completion-gate; process rules are constraint-check.' },
       { name: 'integrity-check', layer: 'L3', model: 'haiku', tools: 3, desc: 'Verify integrity of persisted state, skill outputs, and context bus data across workflow steps.' },
       { name: 'journal', layer: 'L3', model: 'haiku', tools: 5, desc: 'Persistent state tracking and Architecture Decision Records. Maintains project history across sessions.' },
       { name: 'neural-memory', layer: 'L3', model: 'haiku', tools: 1, desc: 'Cross-session cognitive persistence via Neural Memory MCP. Stores and recalls decisions, patterns, and context.' },
-      { name: 'problem-solver', layer: 'L3', model: 'sonnet', tools: 3, desc: 'Structured reasoning frameworks for complex multi-variable problems. Applies first-principles and systems thinking.' },
+      { name: 'problem-solver', layer: 'L3', model: 'sonnet', tools: 3, desc: 'Pick how to think about an ambiguous or strategic problem — 19 frameworks, bias detectors, Cynefin. Not for ordering known decisions (sequential-thinking).' },
       { name: 'quarantine', layer: 'L3', model: 'opus', tools: 3, desc: 'Marks untrusted MCP, fetched, and uploaded content as data rather than instructions before the next reasoning turn.' },
-      { name: 'research', layer: 'L3', model: 'haiku', tools: 5, desc: 'Web search and external knowledge lookup. Gathers data on technologies, libraries, and best practices.' },
+      { name: 'research', layer: 'L3', model: 'haiku', tools: 5, desc: 'Multi-source web research with citations — comparisons, best practices, how others solved it. Not for one library\'s API (docs-seeker).' },
       { name: 'sast', layer: 'L3', model: 'haiku', tools: 4, desc: 'Static analysis tool runner. Wraps ESLint, Semgrep, Bandit, Clippy, and language-specific analyzers.' },
       { name: 'scope-guard', layer: 'L3', model: 'haiku', tools: 3, desc: 'Detects scope creep. Auto-triggered by L1 orchestrators when files exceed the original plan.' },
-      { name: 'sequential-thinking', layer: 'L3', model: 'sonnet', tools: 3, desc: 'Step-by-step complex reasoning for multi-variable problems with explicit dependency tracking.' },
+      { name: 'sequential-thinking', layer: 'L3', model: 'sonnet', tools: 3, desc: 'Order known, interdependent decisions step by step, with reversibility and second-order effects. Not for choosing a framework (problem-solver).' },
       { name: 'session-bridge', layer: 'L3', model: 'haiku', tools: 5, desc: 'Universal context persistence across sessions. Auto-saves decisions, conventions, and progress to project files.' },
       { name: 'slides', layer: 'L3', model: 'sonnet', tools: 3, desc: 'Generates Marp-compatible presentation decks from a structured slide schema for demos, tutorials, and tech talks.' },
-      { name: 'trend-scout', layer: 'L3', model: 'haiku', tools: 5, desc: 'Scan market trends, competitor activity, and emerging technology patterns.' },
+      { name: 'diagram', layer: 'L3', model: 'sonnet', tools: 6, desc: 'Draws editorial architecture, flowchart, sequence, state, ER, and swimlane diagrams as self-contained HTML/SVG, and redraws Mermaid sources — with a 9-node budget and a machine-checked geometry gate.' },
+      { name: 'trend-scout', layer: 'L3', model: 'haiku', tools: 5, desc: 'Market, competitor, and launch-trend scans (Product Hunt, GitHub Trending, HN). Not for technical questions (research).' },
       { name: 'verification', layer: 'L3', model: 'haiku', tools: 4, desc: 'Universal verification runner. Runs lint, type-check, tests, and build in one coordinated pass.' },
       { name: 'video-creator', layer: 'L3', model: 'sonnet', tools: 5, desc: 'Video content planning. Writes narration scripts, storyboards, shot lists, and asset checklists.' },
       { name: 'watchdog', layer: 'L3', model: 'sonnet', tools: 4, desc: 'Post-deploy monitoring. Checks HTTP status, response times, error rates, and service health after deployment.' },

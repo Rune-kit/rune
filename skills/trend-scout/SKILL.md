@@ -1,6 +1,6 @@
 ---
 name: trend-scout
-description: "Scan market trends, competitor activity, and emerging patterns. Monitors Product Hunt, GitHub Trending, HackerNews, and social platforms."
+description: "Scan market trends, competitor activity, and emerging patterns. Use when evaluating a product idea, positioning against competitors, or picking what to build next. Monitors Product Hunt, GitHub Trending, Hacker News, and social platforms. Not for technical questions or library comparisons (research)."
 metadata:
   author: runedev
   version: "0.2.0"
@@ -18,7 +18,7 @@ Market intelligence and technology trend analysis utility. Receives a topic or m
 
 ## Calls (outbound)
 
-None — pure L3 utility using `WebSearch` tools directly.
+None — pure L3 utility using `WebSearch` directly.
 
 ## Called By (inbound)
 

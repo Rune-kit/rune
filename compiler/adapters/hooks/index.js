@@ -17,6 +17,8 @@ import * as antigravity from './antigravity.js';
 import * as claude from './claude.js';
 import * as codex from './codex.js';
 import * as cursor from './cursor.js';
+import * as gemini from './gemini.js';
+import * as grok from './grok.js';
 import * as windsurf from './windsurf.js';
 
 export const ADAPTERS = Object.freeze({
@@ -25,6 +27,8 @@ export const ADAPTERS = Object.freeze({
   cursor,
   windsurf,
   antigravity,
+  grok,
+  gemini,
 });
 
 export const PLATFORM_KEYS = Object.freeze(Object.keys(ADAPTERS));
@@ -67,11 +71,12 @@ export const CAPABILITIES = Object.freeze({
   },
   cursor: {
     maturity: 'beta',
-    preToolEdit: 'rule-injection',
-    preToolBash: false,
-    postToolEdit: false,
-    stop: false,
-    notes: 'No tool-level hooks. Uses auto-attach `.mdc` rules as best-effort pre-edit guidance.',
+    preToolEdit: true,
+    preToolBash: true,
+    postToolEdit: true,
+    stop: true,
+    notes:
+      'Native hooks via `.cursor/hooks.json` (preToolUse / beforeShellExecution / afterFileEdit / postToolUse / stop); trusted workspace required. Tier context rules stay `.mdc`.',
   },
   windsurf: {
     maturity: 'beta',
@@ -88,5 +93,23 @@ export const CAPABILITIES = Object.freeze({
     postToolEdit: false,
     stop: false,
     notes: 'Early platform; uses rule-injection fallback only.',
+  },
+  grok: {
+    maturity: 'beta',
+    preToolEdit: true,
+    preToolBash: true,
+    postToolEdit: true,
+    stop: true,
+    notes:
+      'Native hooks via `.grok/hooks/rune.json` (Claude-shaped schema); folder trust required; fail-open on errors.',
+  },
+  gemini: {
+    maturity: 'beta',
+    preToolEdit: true,
+    preToolBash: true,
+    postToolEdit: true,
+    stop: true,
+    notes:
+      'Native hooks merged into `.gemini/settings.json` (BeforeTool / AfterTool / AfterAgent); Gemini asks to trust new project hooks. Tier entries not mapped yet.',
   },
 });

@@ -27,11 +27,11 @@ Based on requirements, recommend model tier:
 
 | Requirement | Recommended | Fallback |
 |------------|-------------|----------|
-| Fast + cheap (classification, routing) | Haiku / GPT-4o-mini | Local (Llama 3) |
-| Balanced (code, summaries, RAG) | Sonnet / GPT-4o | Haiku with retry |
+| Fast + cheap (classification, routing) | Haiku / GPT-6 Luna / Gemini 3.5 Flash-Lite | Local (Llama 3) |
+| Balanced (code, summaries, RAG) | Sonnet / GPT-6.1 Terra / Gemini 4 Hydrogen | Haiku with retry |
 | Deep reasoning (architecture, math) | Opus / o1 | Sonnet with chain-of-thought |
 | On-premise required | Llama 3 / Mistral | Ollama local deployment |
-| Multimodal (vision + text) | Sonnet / GPT-4o | Local LLaVA |
+| Multimodal (vision + text) | Sonnet / GPT-6.1 Terra / Gemini 4 Hydrogen | Local LLaVA |
 
 Emit: primary model, fallback model, estimated cost per 1K calls, and latency p50/p99.
 
@@ -64,21 +64,21 @@ interface ModelConfig {
 
 const MODELS: Record<string, ModelConfig> = {
   fast: {
-    id: 'claude-haiku-4-5',
+    id: 'claude-haiku-5-5',
     provider: 'anthropic',
     costPer1kTokens: 0.001,
     maxTokens: 4096,
     latencyP50Ms: 200,
   },
   balanced: {
-    id: 'claude-sonnet-5',
+    id: 'claude-sonnet-5-5',
     provider: 'anthropic',
     costPer1kTokens: 0.01,
     maxTokens: 8192,
     latencyP50Ms: 800,
   },
   deep: {
-    id: 'claude-opus-4-8',
+    id: 'claude-opus-5-5',
     provider: 'anthropic',
     costPer1kTokens: 0.05,
     maxTokens: 16384,

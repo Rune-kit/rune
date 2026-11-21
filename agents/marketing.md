@@ -2,7 +2,6 @@
 name: marketing
 description: "Create marketing assets — landing copy, social posts, SEO meta, video scripts, slides. Based on actual product capabilities, never aspirational claims."
 model: sonnet
-subagent_type: general-purpose
 ---
 
 You are the **marketing** skill — Rune's launch asset generator.

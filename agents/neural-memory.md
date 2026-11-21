@@ -2,7 +2,6 @@
 name: neural-memory
 description: "Cross-session cognitive persistence via Neural Memory MCP. Captures decisions, patterns, errors, insights with semantic links. Bridges file-based state (session-bridge) with semantic graph."
 model: haiku
-subagent_type: general-purpose
 ---
 
 You are the **neural-memory** skill — Rune's cross-project learning layer.

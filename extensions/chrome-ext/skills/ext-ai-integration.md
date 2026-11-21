@@ -146,7 +146,7 @@ async function summarizeWithExternalApi(text: string): Promise<string> {
         Authorization: `Bearer ${settings.externalApiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-6-luna',
         messages: [
           { role: 'system', content: 'Summarize the provided text in 3-5 sentences.' },
           { role: 'user', content: text.slice(0, 8000) },

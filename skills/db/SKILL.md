@@ -1,6 +1,6 @@
 ---
 name: db
-description: "Database workflow specialist. Generates migration files with rollback scripts, detects breaking schema changes, and validates query parameterization."
+description: "Database workflow specialist. Use when a change touches the schema, migrations, or raw queries, and before deploying migrations. Generates migration files with rollback scripts, detects breaking schema changes, and validates query parameterization."
 metadata:
   author: runedev
   version: "0.2.0"

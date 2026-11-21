@@ -1,6 +1,6 @@
 ---
 name: plan
-description: "Create structured implementation plans from requirements. Produces master plan + phase files for enterprise-scale project management. Master plan = overview (<80 lines). Phase files = execution detail (<200 lines each). Each session handles 1 phase. Uses opus for deep reasoning."
+description: "Create structured implementation plans from requirements. Use when a task touches more than one file, needs architecture decisions, or the user asks to 'plan', 'design', or 'break this down'. Produces a master plan (<80 lines) plus phase files (<200 lines each), one phase per session. Runs on the heavy reasoning tier."
 metadata:
   author: runedev
   version: "1.7.1"
@@ -23,7 +23,7 @@ Strategic planning engine for the Rune ecosystem. Produces a **master plan + pha
 This is enterprise-grade project management: BA produces WHAT → Plan produces HOW (structured into phases) → ANY coder executes each phase with full context.
 
 > **Goal-first — leverage native goal/outcome commands (advisory, 2026).** Current
-> agent models (Opus 4.8, Sonnet 5, Fable 5) perform best when handed
+> agent models (Claude Opus / Sonnet / Fable 5.x, GPT-6.x, Gemini 4) perform best when handed
 > the full goal + constraints up front, then left to execute at high effort. Some
 > platforms now expose this natively: Claude Code `/goal` sets a run's north-star;
 > Managed Agents **Outcomes** (`user.define_outcome` + rubric) grade-and-iterate to a
@@ -320,20 +320,11 @@ When cook encounters unexpected conditions during execution:
 
 ## Feature Spec Mode
 
-**Step 1** — Problem Statement: what problem, who has it, current workaround?
-**Step 2** — User Stories: primary + 2-3 secondary + edge cases. Format: `As a [persona], I want to [action] so that [benefit]`
-**Step 3** — Acceptance Criteria: `GIVEN [context] WHEN [action] THEN [result]` — happy path + errors + performance
-**Step 4** — Scope Definition: In scope / Out of scope / Dependencies / Open questions
-**Step 5** — Write Spec File: save to `.rune/features/<feature-name>/spec.md`
-
-After spec approved → transition to Implementation Mode.
+> Full detail moved to [`references/modes.md`](references/modes.md) (progressive disclosure). **Read that file before executing this section.**
 
 ## Roadmap Mode
 
-**Step 1** — Inventory: scan for open issues, TODO/FIXME, planned features.
-**Step 2** — Prioritize (ICE Scoring): Impact × Confidence × Ease (each 1-10), sort descending.
-**Step 3** — Group into Milestones: M1 = top 3-5 by ICE, M2 = next 3-5, Backlog = remaining.
-**Step 4** — Write to `.rune/roadmap.md`.
+> Full detail moved to [`references/modes.md`](references/modes.md) (progressive disclosure). **Read that file before executing this section.**
 
 ## Output Format
 
@@ -350,27 +341,7 @@ Every plan output — master plan, phase file, or inline plan — MUST end with 
 
 ## Change Stacking (Overlap Detection)
 
-When producing phase files with wave-based task grouping, every task MUST declare dependency metadata:
-
-```markdown
-### Task: Implement auth middleware
-- **File**: `src/middleware/auth.ts` — new
-- **touches**: [src/middleware/auth.ts, src/types/auth.d.ts]
-- **provides**: [AuthMiddleware, verifyToken()]
-- **requires**: [UserModel from Wave 1]
-- **depends_on**: [task-1a]
-```
-
-**Pre-dispatch validation** (run after all tasks written, before presenting plan):
-
-| Check | Detection | Action |
-|-------|-----------|--------|
-| **File overlap** | Same file in `touches[]` of 2+ tasks in same wave | BLOCK — move to sequential waves or merge tasks |
-| **Missing dependency** | Task A's `requires[]` not in any prior task's `provides[]` | BLOCK — add missing task or fix dependency chain |
-| **Cycle detection** | Task A `depends_on` B, B `depends_on` A | BLOCK — decompose into smaller tasks to break cycle |
-| **Orphaned provides** | Task declares `provides[]` but no future task `requires[]` it | WARN — may indicate dead code or missing consumer task |
-
-**Skip if**: Inline plan (trivial task), single-phase plan, or all tasks are strictly sequential.
+> Full detail moved to [`references/change-stacking.md`](references/change-stacking.md) (progressive disclosure). **Read that file before executing this section.**
 
 ## Constraints
 

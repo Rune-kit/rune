@@ -2,7 +2,6 @@
 name: fix
 description: "Apply code changes from diagnosis or review findings. Locate → change → verify → report. Does NOT investigate — that's debug's job. Use after debug diagnosis or review findings."
 model: sonnet
-subagent_type: general-purpose
 ---
 
 You are the **fix** skill — Rune's code change executor.

@@ -43,27 +43,7 @@ ELSE:
 
 ### Lite Mode
 
-For small parallel tasks that don't warrant full worktree isolation:
-
-```
-Lite Mode Rules:
-  - Max 2 parallel agents (haiku coordination, sonnet workers)
-  - NO worktree creation — agents work on same branch
-  - File ownership still enforced (disjoint file sets)
-  - Simplified merge: sequential git add (no merge conflicts possible with disjoint files)
-  - Skip Phase 3 (COORDINATE) — no conflicts with disjoint files
-  - Skip integrity-check — small scope, direct output review
-  - Coordinator model: haiku (not opus) — saves cost
-
-Lite Mode Phases:
-  Phase 1: DECOMPOSE (haiku) — identify 2 streams with disjoint files
-  Phase 2: ASSIGN — launch 2 parallel Task agents (sonnet, no worktree)
-  Phase 4: MERGE — sequential git add (no merge needed)
-  Phase 5: VERIFY — integration tests on result
-```
-
-**Announce mode**: "Team lite mode: 2 streams, ≤5 files, no worktrees needed."
-**Override**: User can say "full mode" to force worktree isolation.
+> Full detail moved to [`references/lite-mode.md`](references/lite-mode.md) (progressive disclosure). **Read that file before executing this section.**
 
 ### Full Mode
 
@@ -456,101 +436,31 @@ Mark todo[4] `completed`.
 
 ## Mesh Gates
 
-| Gate | Requires | If Missing |
-|------|----------|------------|
-| Scope Gate | Each agent has explicit file ownership list | Define boundaries before dispatch |
-| Conflict Gate | Zero merge conflicts after integration | Resolve all conflicts, re-verify |
-| Verification Gate | All tests pass after merge | Fix regressions before completion |
+> Full detail moved to [`references/contracts.md`](references/contracts.md) (progressive disclosure). **Read that file before executing this section.**
 
 ## Output Format
 
-```
-## Team Report: [Task Name]
-- **Streams**: [count]
-- **Status**: complete | partial | blocked
-- **Duration**: [time across streams]
-
-### Streams
-| Stream | Task | Status | Deliverables | Concerns |
-|--------|------|--------|-------------|----------|
-| A | [task] | DONE | 3/3 delivered | None |
-| B | [task] | DONE_WITH_CONCERNS | 2/2 delivered | Perf regression on large input |
-| C | [task] | DONE | 2/2 delivered | None |
-
-### Acceptance Criteria
-| # | Criterion | Stream | Evidence | Verdict |
-|---|-----------|--------|----------|---------|
-| 1 | Auth endpoints return JWT | A | Test stdout: "3 passed" | PASS |
-| 2 | No SQL injection | A | Sentinel: PASS | PASS |
-| 3 | Dashboard loads < 2s | B | No perf test run | UNVERIFIED |
-
-### Integration
-- Merge conflicts: [count]
-- Integration tests: [passed]/[total]
-- Coverage: [%]
-- Unresolved concerns: [count — from DONE_WITH_CONCERNS streams]
-```
-
----
+> Full detail moved to [`references/contracts.md`](references/contracts.md) (progressive disclosure). **Read that file before executing this section.**
 
 ## Parallel Execution Rules
 
-```
-Independent streams  → PARALLEL (max 3 sonnet agents)
-Dependent streams    → SEQUENTIAL (respecting dependency order)
-All streams done     → MERGE sequentially (avoid conflicts)
-```
+> Full detail moved to [`references/contracts.md`](references/contracts.md) (progressive disclosure). **Read that file before executing this section.**
 
 ## Returns
 
-| Artifact | Format | Location |
-|----------|--------|----------|
-| Workstream assignments | Markdown (inline) | NEXUS Handoff Templates emitted per stream |
-| Cook Reports (per stream) | Markdown (inline) | Collected from each parallel cook instance |
-| Merged implementation | Source files | `main` branch after Phase 4 merge |
-| Integration test results | Inline stdout | Captured in Phase 5 verify |
-| Team Report | Markdown (inline) | Emitted at end of session |
+> Full detail moved to [`references/contracts.md`](references/contracts.md) (progressive disclosure). **Read that file before executing this section.**
 
 ## Document Ownership
 
-| Scope | Access | Files |
-|-------|--------|-------|
-| **Owns** (read + write) | `.rune/team-report-*.md`, worktree branches, merge commits |
-| **Reads** (never writes) | `.rune/plan-*.md`, `.rune/contract.md`, `CLAUDE.md`, cook reports from sub-agents |
-| **Never modifies** | Source files directly (delegates to cook instances), `SKILL.md` files, `compiler/**` |
-
-Each cook instance owns its declared file set (disjoint). Team owns coordination artifacts only — never touches source code directly.
+> Full detail moved to [`references/contracts.md`](references/contracts.md) (progressive disclosure). **Read that file before executing this section.**
 
 ## Monorepo Awareness
 
-When the project is a monorepo (signals: `pnpm-workspace.yaml`, `turbo.json`, `nx.json`, or `packages/` directory with multiple `package.json`):
-
-**Stream assignment rules for monorepos:**
-- Assign streams by **package boundary**, not by file type — one stream per package (e.g., Stream A = `packages/api`, Stream B = `packages/web`)
-- Cross-package changes (e.g., shared types in `packages/core` consumed by both api + web) must be in a **dependency stream** that completes before consumer streams start
-- Use `turbo run test --filter=...[HEAD^1]` in Phase 5 (VERIFY) to test only affected packages — do NOT run the full test suite when only 1 package changed
-
-**Dependency stream pattern for cross-package changes:**
-
-```
-Stream A (depends_on: []): packages/core — shared types + utilities
-Stream B (depends_on: ["A"]): packages/api — consumes updated core types
-Stream C (depends_on: ["A"]): packages/web — consumes updated core types
-B and C run in parallel after A completes.
-```
+> Full detail moved to [`references/monorepo.md`](references/monorepo.md) (progressive disclosure). **Read that file before executing this section.**
 
 ## Anti-Patterns
 
-Common multi-agent orchestration failures. These cause the most expensive rework in team workflows.
-
-| Anti-Pattern | Why It Fails | Correct Approach |
-|---|---|---|
-| **Overlapping file ownership** — two agents write to the same file | Merge conflicts, lost work, non-deterministic output | Enforce disjoint `touches[]` per stream. Move shared files to a single owner |
-| **Blind merge** — merging cook reports without reviewing them | Poisoned output propagates. One bad stream corrupts the whole feature | `integrity-check` + `completion-gate` on every cook report before merge |
-| **Over-parallelization** — launching 5+ agents for a 3-file task | Context fragmentation, coordination overhead > implementation time | Auto-detect: ≤5 files → lite mode (max 2 agents). Full mode caps at 3 |
-| **Cross-domain implementation** — one agent implements both frontend and backend | Domain expertise diluted. Agent makes shallow choices in unfamiliar territory | Split by domain. Frontend agent ≠ backend agent. Each gets domain context |
-| **Missing handoff context** — bare prompt to cook instance without scope/conventions | Agent guesses project conventions, uses wrong patterns, produces inconsistent code | NEXUS Handoff Template: always include metadata, deliverables, conventions, quality expectations |
-| **Sequential when parallel is safe** — running independent streams one by one | Wastes time. 3 independent streams × 5min = 15min sequential vs 5min parallel | Check dependency graph. Independent streams → parallel. Dependent → sequential |
+> Full detail moved to [`references/contracts.md`](references/contracts.md) (progressive disclosure). **Read that file before executing this section.**
 
 ## Sharp Edges
 

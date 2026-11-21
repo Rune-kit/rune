@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "rune-kit",
-  "description": "Less skills. Deeper connections. A lean, interconnected skill ecosystem for Claude Code — 66 skills, 248 connections, 45 signals, and runtime auto-discipline.",
+  "description": "Less skills. Deeper connections. A lean, interconnected skill ecosystem for AI coding agents — 67 skills, 248 connections, 46 signals, and runtime auto-discipline.",
   "owner": {
     "name": "Rune Contributors"
   },
@@ -9,8 +9,8 @@
     {
       "name": "rune",
       "source": "./",
-      "description": "66 skills wired into a 5-layer mesh — 248 connections + 45 signals, adaptive routing, mesh analytics, logic preservation, and native lifecycle hooks. The compiler targets 13 runtimes including Claude Code and OpenAI Codex.",
-      "version": "2.32.0",
+      "description": "67 skills wired into a 5-layer mesh — 248 connections + 46 signals, adaptive routing, mesh analytics, logic preservation, and native lifecycle hooks. The compiler targets 16 runtimes including Claude Code and OpenAI Codex.",
+      "version": "2.33.0",
       "author": {
         "name": "Rune Contributors"
       },
@@ -20,85 +20,85 @@
       "category": "workflow"
     },
     {
-      "name": "@rune/ui",
+      "name": "rune-ui",
       "source": "./extensions/ui",
       "description": "Frontend UI patterns — design systems, accessibility, animation",
       "category": "frontend"
     },
     {
-      "name": "@rune/backend",
+      "name": "rune-backend",
       "source": "./extensions/backend",
       "description": "Backend patterns — API, auth, database, middleware",
       "category": "backend"
     },
     {
-      "name": "@rune/devops",
+      "name": "rune-devops",
       "source": "./extensions/devops",
       "description": "DevOps — Docker, CI/CD, monitoring, server setup",
       "category": "devops"
     },
     {
-      "name": "@rune/mobile",
+      "name": "rune-mobile",
       "source": "./extensions/mobile",
       "description": "Mobile — React Native, Flutter, app store, native bridge",
       "category": "mobile"
     },
     {
-      "name": "@rune/security",
+      "name": "rune-security",
       "source": "./extensions/security",
       "description": "Deep security — OWASP audit, pentest, compliance",
       "category": "security"
     },
     {
-      "name": "@rune/trading",
+      "name": "rune-trading",
       "source": "./extensions/trading",
       "description": "Fintech — real-time data, charts, indicators, trade logic preservation",
       "category": "domain"
     },
     {
-      "name": "@rune/saas",
+      "name": "rune-saas",
       "source": "./extensions/saas",
       "description": "SaaS — multi-tenant, billing, subscription, onboarding",
       "category": "domain"
     },
     {
-      "name": "@rune/ecommerce",
+      "name": "rune-ecommerce",
       "source": "./extensions/ecommerce",
       "description": "E-commerce — Shopify, payments, cart, inventory",
       "category": "domain"
     },
     {
-      "name": "@rune/ai-ml",
+      "name": "rune-ai-ml",
       "source": "./extensions/ai-ml",
       "description": "AI/ML — LLM integration, RAG, embeddings, fine-tuning",
       "category": "domain"
     },
     {
-      "name": "@rune/gamedev",
+      "name": "rune-gamedev",
       "source": "./extensions/gamedev",
       "description": "Game dev — Three.js, WebGL, game loops, physics",
       "category": "domain"
     },
     {
-      "name": "@rune/content",
+      "name": "rune-content",
       "source": "./extensions/content",
       "description": "Content — blog, CMS, MDX, i18n, SEO",
       "category": "domain"
     },
     {
-      "name": "@rune/analytics",
+      "name": "rune-analytics",
       "source": "./extensions/analytics",
       "description": "Analytics — tracking, A/B testing, funnels, dashboards",
       "category": "domain"
     },
     {
-      "name": "@rune/chrome-ext",
+      "name": "rune-chrome-ext",
       "source": "./extensions/chrome-ext",
       "description": "Chrome Extension — manifest v3, service workers, content scripts, popup UI",
       "category": "domain"
     },
     {
-      "name": "@rune/zalo",
+      "name": "rune-zalo",
       "source": "./extensions/zalo",
       "description": "Zalo platform integration — Official Account API, webhooks, MCP, and risk-gated personal automation",
       "category": "domain"

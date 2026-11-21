@@ -66,7 +66,18 @@ export async function runDoctor({ outputRoot, adapter, config, runeRoot }) {
 
   // Check 3: Count skill files
   const files = await readdir(outputDir);
-  const skillFiles = files.filter((f) => f.startsWith('rune-') && f !== `rune-index${adapter.fileExtension}`);
+  // Directory-per-skill adapters (Agent Skills: codex, cursor, grok, cline, …)
+  // emit `rune-<name>/SKILL.md`; flat adapters emit `rune-<name>.<ext>`. Count
+  // only real skill entries so doctor no longer reads a directory as a file.
+  const skillFiles = adapter.useSkillDirectories
+    ? files.filter(
+        (f) => f.startsWith('rune-') && existsSync(path.join(outputDir, f, adapter.skillFileName || 'SKILL.md')),
+      )
+    : // single-file platforms: only `rune-<name>.<ext>` files are skills; sibling
+      // `rune-<name>/` (references) and `rune-<name>-scripts/` folders are assets
+      files.filter(
+        (f) => f.startsWith('rune-') && f.endsWith(adapter.fileExtension) && f !== `rune-index${adapter.fileExtension}`,
+      );
 
   // Dynamic expected count: scan source skills/ directory
   const sourceSkillsDir = path.join(runeRoot, 'skills');
@@ -303,20 +314,29 @@ export async function checkTierCoverage({ projectRoot }) {
 /**
  * Check that all cross-references in compiled files point to existing files
  */
+// `rune-<x>` tokens that are product/brand names, not skill references
+// (e.g. the branding footer links rune-kit, rune-pro, rune-business).
+const NON_SKILL_REFS = new Set(['index', 'kit', 'pro', 'business']);
+
 async function checkCrossRefs(outputDir, files, adapter) {
   const errors = [];
   const fileSet = new Set(files);
 
+  const dirMode = Boolean(adapter.useSkillDirectories);
+
   for (const file of files) {
-    const content = await readFile(path.join(outputDir, file), 'utf-8');
+    const filePath = dirMode
+      ? path.join(outputDir, file, adapter.skillFileName || 'SKILL.md')
+      : path.join(outputDir, file);
+    const content = await readFile(filePath, 'utf-8');
 
     // Look for references to other rune skills
     const refPattern = /rune-([a-z][\w-]*)/g;
     let match;
     while ((match = refPattern.exec(content)) !== null) {
       const refName = match[1];
-      const expectedFile = `rune-${refName}${adapter.fileExtension}`;
-      if (!fileSet.has(expectedFile) && refName !== 'index' && refName !== 'kit') {
+      const expectedFile = dirMode ? `rune-${refName}` : `rune-${refName}${adapter.fileExtension}`;
+      if (!fileSet.has(expectedFile) && !NON_SKILL_REFS.has(refName)) {
         errors.push(`${file}: references rune-${refName} but ${expectedFile} not found`);
       }
     }

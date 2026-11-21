@@ -115,25 +115,7 @@ Follow `docs/SKILL-TEMPLATE.md` format. Required sections:
 
 #### SKILL.md Anatomy — WHY vs HOW Split
 
-A skill file answers WHY and WHEN — not HOW. Code examples, syntax references, and implementation patterns belong in separate files:
-
-```
-skills/[name]/
-├── SKILL.md          ← WHY: purpose, triggers, constraints, sharp edges (~150-300 lines)
-├── references/       ← HOW: code patterns, syntax tables, API examples
-│   ├── patterns.md   ← Implementation patterns with code blocks
-│   └── gotchas.md    ← Language/framework-specific pitfalls
-└── scripts/          ← WHAT: deterministic operations (shell, node)
-```
-
-**Rules:**
-1. SKILL.md MUST NOT contain code blocks longer than 10 lines — move to `references/`
-2. One excellent inline example (≤10 lines) is OK for clarity — more than that is a smell
-3. Format templates (Output Format section) are NOT code — they stay in SKILL.md
-4. Pressure test scenarios (Phase 2) are NOT code — they stay in SKILL.md
-5. If a skill has >3 code blocks → create `references/` and extract them
-
-**Why this matters:** Code blocks in SKILL.md inflate context tokens on EVERY invocation. References are loaded only when needed. A 500-line SKILL.md with 200 lines of code examples should be a 300-line SKILL.md + a 200-line references file.
+> Full detail moved to [`references/skill-anatomy.md`](references/skill-anatomy.md) (progressive disclosure). **Read that file before executing this section.**
 
 <HARD-GATE>
 Code blocks in SKILL.md > 10 lines = review failure.
@@ -142,37 +124,7 @@ Extract to references/ or scripts/. No exceptions.
 
 #### Frontmatter Rules
 
-```yaml
----
-name: kebab-case-max-64-chars    # letters, numbers, hyphens only
-description: Use when [specific triggers]. [Symptoms that signal this skill applies].
-metadata:
-  layer: L1|L2|L3
-  model: haiku|sonnet|opus       # haiku=scan, sonnet=code, opus=architecture
-  group: [see template]
----
-```
-
-**Description rules (CSO Discipline):**
-- MUST start with "Use when..."
-- MUST describe triggering conditions, NOT workflow
-- MUST be third person
-- MUST NOT summarize what the skill does internally
-- AI reads description → decides whether to invoke → if description contains workflow summary, AI skips reading the full SKILL.md content (it thinks it already knows)
-- Test: if you can execute the skill from the description alone, the description leaks too much
-
-Bad: "Analyzes code quality through 6-step process: scan files, check patterns, run linters, compare metrics, generate report, suggest fixes"
-Good: "Use when code changes need quality review before commit. Symptoms: PR ready, refactor complete, pre-release check."
-
-```yaml
-# BAD: Summarizes workflow — agent reads description, skips full content
-description: TDD workflow that writes tests first, then code, then refactors
-
-# GOOD: Only triggers — agent must read full content to know workflow
-description: Use when implementing any feature or bugfix, before writing code
-```
-
-**Why this matters:** When description summarizes the workflow, agents take the shortcut — they follow the description and skip the full SKILL.md. Tested and confirmed.
+> Full detail moved to [`references/skill-anatomy.md`](references/skill-anatomy.md) (progressive disclosure). **Read that file before executing this section.**
 
 #### Writing Constraints
 
@@ -223,59 +175,23 @@ Repeat until no new failures emerge in 2 consecutive test runs.
 
 #### Pressure Types for Test Scenarios
 
-Best tests combine 3+ pressures simultaneously:
-
-| Pressure | Example Scenario |
-|----------|------------------|
-| Time | "Emergency deployment, deadline in 30 min" |
-| Sunk cost | "Already wrote 200 lines, can't restart" |
-| Authority | "Senior dev says skip testing" |
-| Economic | "Customer churning, ship now or lose $50k MRR" |
-| Exhaustion | "50 tool calls deep, context filling up" |
-| Social | "Looking dogmatic by insisting on process" |
-| Pragmatic | "Being practical vs being pedantic" |
+> Full detail moved to [`references/refactor-techniques.md`](references/refactor-techniques.md) (progressive disclosure). **Read that file before executing this section.**
 
 #### Scenario Quality Requirements
 
-1. **Concrete A/B/C options** — force explicit choice (no "I'd ask the user" escape hatch)
-2. **Real constraints** — specific times, actual consequences, named files
-3. **Real file paths** — `/tmp/payment-system` not "a project"
-4. **"Make agent ACT"** — "What do you do?" not "What should you do?"
-5. **No easy outs** — every option has a cost
+> Full detail moved to [`references/refactor-techniques.md`](references/refactor-techniques.md) (progressive disclosure). **Read that file before executing this section.**
 
 #### Meta-Testing (When GREEN Isn't Working)
 
-If the agent keeps failing even WITH the skill loaded, ask: "How could that skill have been written differently to make the correct option crystal clear?"
-
-Three possible responses:
-1. "Skill was clear, I chose to ignore it" → foundational principle needed (stronger HARD-GATE)
-2. "Skill should have said X explicitly" → add that exact phrasing verbatim
-3. "I didn't see section Y" → reorganize for discoverability (move up, add header)
+> Full detail moved to [`references/refactor-techniques.md`](references/refactor-techniques.md) (progressive disclosure). **Read that file before executing this section.**
 
 #### Bulletproof Criteria
 
-A skill is bulletproof when:
-- Agent chooses correct option under maximum pressure (3+ pressures combined)
-- Agent CITES skill sections as justification for its choice
-- Agent ACKNOWLEDGES the temptation but follows the rule anyway
+> Full detail moved to [`references/refactor-techniques.md`](references/refactor-techniques.md) (progressive disclosure). **Read that file before executing this section.**
 
 #### Persuasion Principles for Skill Language
 
-Research (Meincke et al., 2025, 28,000 conversations) shows 33% → 72% compliance with these techniques:
-
-| Principle | Application | Use For |
-|-----------|-------------|---------|
-| Authority | "YOU MUST", imperative language | Eliminates decision fatigue, safety-critical rules |
-| Commitment | Explicit announcements + tracked choices | Creates accountability trail |
-| Scarcity | Time-bound requirements, "before proceeding" | Triggers immediate action |
-| Social Proof | "Every time", universal statements | Documents what prevents failures |
-| Unity | "We're building quality" language | Shared identity, quality goals |
-
-**Prohibited in skills:**
-- **Liking** ("Great job following the process!") → creates sycophancy
-- **Reciprocity** ("I helped you, now follow the rules") → feels manipulative
-
-**Ethical test**: Would this serve the user's genuine interests if they fully understood the technique?
+> Full detail moved to [`references/refactor-techniques.md`](references/refactor-techniques.md) (progressive disclosure). **Read that file before executing this section.**
 
 ### Phase 5.25 — SCRIPT CONTRACT (skills with helper scripts only)
 
@@ -283,87 +199,27 @@ If the skill bundles executable scripts in its `scripts/` directory, those scrip
 
 #### The Three-Mode Contract
 
-Every helper script supports three output modes:
-
-| Mode | Stdout | Stderr | File Artifacts |
-|------|--------|--------|----------------|
-| default | One artifact path per line | Diagnostics + warnings | Artifacts in declared out-dir |
-| `--json` | Structured JSON summary | Diagnostics (unchanged) | Artifacts (unchanged) |
-| `--debug` | Default stdout (paths) | Verbose trace + diagnostics | Default + JSONL redacted trace at `<out-dir>/<slug>.jsonl` |
-
-**Why**: default-mode stdout-as-paths is the Unix way. Downstream skills pipe directly without log-parsing. `--json` is opt-in for callers that need metadata.
+> Full detail moved to [`references/script-contract.md`](references/script-contract.md) (progressive disclosure). **Read that file before executing this section.**
 
 #### Required Flags
 
-Every helper script MUST accept at least these flags:
-
-```
---help              Print usage + exit 0
---version           Print version + exit 0
---json              Structured JSON on stdout
---debug             Write JSONL redacted trace
---dry-run           Report plan, make no changes, exit 0
---smoke             Pre-flight check (validate deps, exit 0 if healthy)
---out-dir <path>    Override default artifact directory
-```
-
-And SHOULD accept when applicable:
-```
---prompt-file <path>  Read long text input from file (avoids shell-quoting hell on Windows)
---confirm             Skip confirmation gate for expensive/destructive ops
---timeout-ms <n>      Operation timeout (with semantic exit codes below)
-```
+> Full detail moved to [`references/script-contract.md`](references/script-contract.md) (progressive disclosure). **Read that file before executing this section.**
 
 #### Semantic Exit Codes
 
-Adopt the standard Rune exit-code vocabulary:
-
-| Code | Meaning | Orchestrator Response |
-|------|---------|-----------------------|
-| `0` | Success | Accept + chain to next |
-| `1` | Execution failed (retryable) | Log + retry with alternate config |
-| `2` | Usage error (bug) | Abort — don't retry |
-| `3` | Data-integrity error | Halt — don't retry |
-| `4` | Timeout with partial results | **Accept partial + continue** |
-| `124` | Timeout with zero results | Retry with longer timeout or alternate provider |
-
-Codes `5-63` are skill-specific. Document every code used in `references/<skill>/exit-codes.md`.
-
-**Why `4` vs `124` matters**: Standard Unix collapses "timeout-with-2-of-3-images" and "timeout-with-0-images" into `124`. They are fundamentally different outcomes. Split them.
+> Full detail moved to [`references/script-contract.md`](references/script-contract.md) (progressive disclosure). **Read that file before executing this section.**
 
 #### Default Artifact Directory Resolution
 
-Resolve `--out-dir` in this fallback order:
-
-1. `--out-dir <path>` explicit flag
-2. `<SKILL>_OUT_DIR` env var (skill-specific)
-3. `OPENCLAW_OUTPUT_DIR` (OpenClaw platform convention)
-4. `OPENCLAW_AGENT_DIR/artifacts/<skill>` (OpenClaw default)
-5. `OPENCLAW_STATE_DIR/artifacts/<skill>` (OpenClaw state fallback)
-6. `./.rune/<skill>/` (project-local default)
-
-**Why**: OpenClaw is one of Rune's adapter targets. Scripts that honor this convention work across adapters without modification.
+> Full detail moved to [`references/script-contract.md`](references/script-contract.md) (progressive disclosure). **Read that file before executing this section.**
 
 #### Sensitive-Data Redaction
 
-`--debug` trace MUST redact sensitive fields before write:
-- Regex: `/authorization|bearer|token|api[_-]?key|secret|cookie|session[_-]?id|chatgpt[_-]?account/i` (key names)
-- Any value exceeding 500 chars truncates to `<first-500>...`
-- Never log env var VALUES — only presence check
+> Full detail moved to [`references/script-contract.md`](references/script-contract.md) (progressive disclosure). **Read that file before executing this section.**
 
 #### Contract Test
 
-Before shipping a helper script, verify:
-
-```bash
-# Contract smoke test:
-node scripts/<script>.mjs --help          # exit 0
-node scripts/<script>.mjs --version       # exit 0, prints version only
-node scripts/<script>.mjs --smoke         # exit 0 or 1, human-readable stderr
-node scripts/<script>.mjs --dry-run ...   # exit 0, no side effects
-node scripts/<script>.mjs ... --json      # stdout is parseable JSON
-node scripts/<script>.mjs ... | head -1   # stdout default mode = path
-```
+> Full detail moved to [`references/script-contract.md`](references/script-contract.md) (progressive disclosure). **Read that file before executing this section.**
 
 <HARD-GATE>
 Scripts that don't honor the contract cannot be shipped.
@@ -373,16 +229,6 @@ Specifically:
 - Logging credentials in trace = CRITICAL-BLOCK
 - Binary exit code (0/1 only) when timeout semantics apply = BLOCK
 </HARD-GATE>
-
-**Reference implementations**:
-- `@rune-pro/media/scripts/codex_imagen_bridge.mjs` — full 9-tier binary detection + contract
-- `@rune-pro/media/scripts/provider_probe.mjs` — `--smoke` convention exemplar
-- `@rune-pro/media/scripts/image_optimizer.py` — Python contract implementation
-
-**Reference docs**:
-- `references/image-generator/script-contract.md` (pack-level contract)
-- `references/image-generator/exit-codes.md` (exit-code vocabulary)
-- `references/image-generator/binary-detection.md` (9-tier lookup)
 
 ### Phase 5.5 — SECURITY MODEL
 
@@ -438,43 +284,7 @@ Wire the skill into the mesh:
 
 ### Phase 6.25 — EXAMPLES (output-format skills only)
 
-Output-format skills (skills that produce visual or text artifacts a human will see) SHOULD ship a literal example of the output alongside SKILL.md. The example is a target the agent can copy from — not a description it must interpret.
-
-**Applies to:**
-- `design`, `asset-creator`, `slides`, `marketing`, `video-creator`, `doc-processor`
-- Any pack skill whose primary output is a rendered artifact (HTML page, slide deck, social card, video script, report PDF)
-
-**Does not apply to:**
-- Process / orchestration skills (`cook`, `plan`, `review`) — their output is structural, not rendered
-- Diagnostic skills (`debug`, `audit`, `perf`) — their output is findings, not artifacts
-
-**Convention:**
-
-```
-skills/<name>/
-├── SKILL.md
-├── references/
-│   └── ...
-└── examples/
-    ├── README.md           # short index: which example fits which scenario
-    ├── <scenario-1>.html   # or .md / .json / .svg per skill domain
-    ├── <scenario-2>.html
-    └── ...
-```
-
-**Why a literal example beats a description:**
-- An agent can copy structure, density, and rhythm from a real file. It cannot copy them from "make it modern."
-- A reviewer can diff agent output against the example to spot drift.
-- Examples are the test corpus for the skill — if a new style emerges, the example shows whether SKILL.md kept up.
-
-**Quality bar:**
-- Each example MUST render without error in the target environment (browser, Marp, Notion, etc.)
-- Each example MUST use real-looking data, not lorem ipsum (mirrors design Step 2.9 Rule 5)
-- Cover at least 2 scenarios per skill — minimum spread reveals which decisions are baked in vs which are scenario-driven
-
-**Soft, not HARD-GATE:** Per Rune's no-discipline-heavy-grafts policy, don't enforce as a ship blocker. A new skill without examples ships fine; reviewers may suggest adding them. Existing output-format skills are encouraged (not required) to backfill examples on the next material edit.
-
-**Inspiration:** Pattern adapted from `nexu-io/html-anything` (Apache-2.0), where every "surface skill" ships a hand-authored `example.html` so the agent has a copy target. They make it a ship blocker; we make it a strong recommendation.
+> Full detail moved to [`references/examples-phase.md`](references/examples-phase.md) (progressive disclosure). **Read that file before executing this section.**
 
 ### Phase 6.5 — EXTENSION AUTHORING (if building an extension, not a skill)
 
@@ -482,62 +292,23 @@ Extensions augment existing skills with optional capabilities. Unlike skills (st
 
 #### Extension vs Skill vs Pack
 
-| Concept | Purpose | Modifies Core? | Self-contained? |
-|---------|---------|----------------|-----------------|
-| **Skill** | Standalone workflow unit (SKILL.md) | N/A — IS core | Yes |
-| **Pack** | Domain bundle of skills (PACK.md) | No — bundles existing | Yes |
-| **Extension** | Augments existing skill with new capability | No — additive only | Yes — own dir with install/uninstall |
+> Full detail moved to [`references/extension-authoring.md`](references/extension-authoring.md) (progressive disclosure). **Read that file before executing this section.**
 
 #### Extension Directory Structure
 
-```
-extensions/<extension-name>/
-├── EXTENSION.md           # Manifest: what it extends, how, dependencies
-├── install.sh             # Unix installer (non-destructive MCP merge)
-├── install.ps1            # Windows installer
-├── uninstall.sh           # Clean removal
-├── uninstall.ps1          # Clean removal (Windows)
-├── skills/
-│   └── <skill-name>/
-│       └── SKILL.md       # New skill added by extension
-├── agents/                # Optional subagent definitions
-│   └── <agent-name>.md
-├── references/            # Domain knowledge loaded by extension skills
-│   └── <topic>.md
-├── scripts/               # Executable utilities
-│   └── <script>.py|.sh
-└── docs/
-    └── SETUP.md           # Extension-specific configuration guide
-```
+> Full detail moved to [`references/extension-authoring.md`](references/extension-authoring.md) (progressive disclosure). **Read that file before executing this section.**
 
 #### EXTENSION.md Manifest
 
-```yaml
----
-name: "<extension-name>"
-extends: "<target-skill-or-pack>"
-description: "What capability this extension adds"
-requires:
-  - mcp: "<mcp-server-name>"        # Optional: MCP server dependency
-  - skill: "<required-skill-name>"   # Required core skill
-install_method: "non-destructive"    # MUST be non-destructive
----
-```
+> Full detail moved to [`references/extension-authoring.md`](references/extension-authoring.md) (progressive disclosure). **Read that file before executing this section.**
 
 #### Extension Rules
 
-1. **Non-destructive install** — extension MUST NOT modify existing skill files. It adds new files alongside.
-2. **Self-contained** — removing the extension directory restores the system to its pre-install state.
-3. **MCP merge** — if the extension adds MCP tools, install script MUST merge into settings.json without overwriting existing entries.
-4. **Fallback graceful** — if the MCP server or external dependency is unavailable, the extension skill MUST degrade gracefully (report unavailability, don't crash).
-5. **Cost awareness** — if the extension calls paid APIs, the extension skill MUST warn before expensive operations and track usage.
-6. **Pre-flight check** — extension skill Step 1 MUST verify dependencies are available before executing.
+> Full detail moved to [`references/extension-authoring.md`](references/extension-authoring.md) (progressive disclosure). **Read that file before executing this section.**
 
 #### When to Build an Extension (vs a Skill or Pack)
 
-- Build an **extension** when: the capability requires an external API/MCP, is optional, and augments an existing skill
-- Build a **skill** when: the capability is self-contained and fits a layer in the mesh
-- Build a **pack** when: you're bundling multiple related skills for a domain
+> Full detail moved to [`references/extension-authoring.md`](references/extension-authoring.md) (progressive disclosure). **Read that file before executing this section.**
 
 ### Phase 7 — EVAL (Behavior Tests)
 
@@ -581,48 +352,11 @@ git commit -m "feat: add [skill-name] — [one-line purpose]"
 
 ## Skill Quality Checklist
 
-**Format:**
-- [ ] Name is kebab-case, max 64 chars, letters/numbers/hyphens only
-- [ ] Description starts with "Use when...", does NOT summarize workflow
-- [ ] All template sections present
-- [ ] Constraints are specific (not generic "write good code")
-- [ ] Sharp edges have severity + mitigation
-
-**Content:**
-- [ ] Baseline test run BEFORE skill was written
-- [ ] At least one observed failure documented
-- [ ] Anti-rationalization table from real test failures
-- [ ] Mesh connections bidirectional (calls AND called-by both updated)
-- [ ] Data flow mapped (Feeds Into / Fed By / Feedback Loops)
-- [ ] Self-Validation has 3-5 domain-specific checks (not generic)
-- [ ] Output format is structured and parseable by other skills
-- [ ] `evals.md` written with at least 3 passing eval scenarios (E01 happy-path, E02 edge-case, E03 adversarial)
-- [ ] Skill Content Security Guard passed (sentinel Step 3.5 — no destructive ops or injection patterns in SKILL.md)
-
-**Architecture:**
-- [ ] Layer assignment correct (L1=orchestrate, L2=workflow, L3=utility)
-- [ ] Model assignment correct (haiku=scan, sonnet=code, opus=architect)
-- [ ] No >70% overlap with existing skills
-- [ ] ARCHITECTURE.md updated
-- [ ] CLAUDE.md updated
-
-**Output-format skills only (recommended, not blocking):**
-- [ ] `examples/` directory present with ≥ 2 scenario examples
-- [ ] `examples/README.md` indexes which example fits which scenario
-- [ ] Each example renders without error in its target environment
-- [ ] No lorem ipsum in any example (use real-looking data)
-
-**Extension-specific (if building an extension):**
-- [ ] EXTENSION.md manifest present with extends, requires, install_method
-- [ ] install.sh + install.ps1 tested (non-destructive merge)
-- [ ] uninstall.sh + uninstall.ps1 tested (clean removal)
-- [ ] Extension skill has dependency pre-flight check (Step 1)
-- [ ] Fallback behavior documented when external dependency unavailable
-- [ ] Cost warning present if extension calls paid APIs
+> Full detail moved to [`references/quality-checklist.md`](references/quality-checklist.md) (progressive disclosure). **Read that file before executing this section.**
 
 ## Adapting Existing Skills
 
-When editing, not creating:
+> Full detail moved to [`references/quality-checklist.md`](references/quality-checklist.md) (progressive disclosure). **Read that file before executing this section.**
 
 <HARD-GATE>
 Same TDD cycle applies to edits.
@@ -632,24 +366,9 @@ Same TDD cycle applies to edits.
 4. Verify the edit fixes the gap WITHOUT breaking existing behavior
 </HARD-GATE>
 
-"Just adding a section" is not an excuse to skip testing.
-
 ## Token Efficiency Guidelines
 
-Skills are loaded into context when invoked. Every word costs tokens.
-
-| Skill Type | Target | Notes |
-|---|---|---|
-| L3 utility (haiku) | <300 words | Runs frequently, keep lean |
-| L2 workflow hub | <500 words | Moderate frequency |
-| L1 orchestrator | <800 words | Runs once per workflow |
-| Reference sections | Extract to separate file | >100 lines → own file |
-
-Techniques:
-- Reference `--help` instead of documenting all flags
-- Cross-reference other skills instead of repeating content
-- One excellent example > three mediocre ones
-- Inline code only if <50 lines, otherwise separate file
+> Full detail moved to [`references/quality-checklist.md`](references/quality-checklist.md) (progressive disclosure). **Read that file before executing this section.**
 
 ## Output Format
 

@@ -120,6 +120,23 @@ describe('Ambiguous-name skills include "Use when…" routing hint', () => {
   });
 });
 
+// Agent Skills runtimes (Claude Code, Codex, Cursor, Grok Build, Gemini CLI …)
+// choose a skill from its description alone, so every description must say
+// WHEN to use it, not only what it does (agentskills.io spec + Anthropic
+// skill-authoring guidance).
+const WHEN_TO_USE = /\bUse (when|after|before|on|for)\b|\bauto-?(fires|triggered)\b|\bALWAYS use\b/i;
+
+describe('Every skill description carries a when-to-use trigger', () => {
+  test('all core skills state when to use them', () => {
+    const violations = [];
+    for (const name of listSkills()) {
+      const val = extractDescriptionValue(readDescriptionLine(name));
+      if (!val || !WHEN_TO_USE.test(val)) violations.push(name);
+    }
+    assert.deepStrictEqual(violations, [], `Descriptions without a when-to-use trigger: ${violations.join(', ')}`);
+  });
+});
+
 describe('Description integrity', () => {
   test('YAML escape sequences are well-formed (no orphan \\")', () => {
     const skills = listSkills();
@@ -146,4 +163,26 @@ describe('Description integrity', () => {
     }
     assert.strictEqual(violations.length, 0, `Bare quotes:\n${violations.join('\n')}`);
   });
+});
+
+describe('Overlap boundaries (v2.33.0: sharpened instead of merged)', () => {
+  // See docs/ARCHITECTURE.md "Overlap Review". Each skill in a look-alike
+  // group must name at least one sibling so routers can tell them apart.
+  const GROUPS = [
+    ['research', 'docs-seeker', 'trend-scout'],
+    ['problem-solver', 'sequential-thinking'],
+    ['hallucination-guard', 'completion-gate', 'constraint-check'],
+  ];
+  for (const group of GROUPS) {
+    for (const name of group) {
+      test(`${name} description names a sibling from its group`, () => {
+        const line = readDescriptionLine(name);
+        const siblings = group.filter((s) => s !== name);
+        assert.ok(
+          siblings.some((s) => line.includes(s)),
+          `${name} must point to one of ${siblings.join(', ')} for the overlapping case`,
+        );
+      });
+    }
+  }
 });

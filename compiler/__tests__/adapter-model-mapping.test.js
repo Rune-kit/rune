@@ -40,31 +40,75 @@ describe('codex adapter model mapping', () => {
     const heavy = extras.find((entry) => entry.path === '.codex/agents/rune-heavy.toml');
     const standard = extras.find((entry) => entry.path === '.codex/agents/rune-standard.toml');
     const fast = extras.find((entry) => entry.path === '.codex/agents/rune-fast.toml');
-    assert.match(heavy.content, /model = "gpt-5\.6-sol"/);
+    assert.match(heavy.content, /model = "gpt-6\.2-astra"/);
     assert.match(heavy.content, /model_reasoning_effort = "high"/);
-    assert.match(standard.content, /model = "gpt-5\.6-terra"/);
+    assert.match(standard.content, /model = "gpt-6\.2-sol"/);
     assert.match(standard.content, /model_reasoning_effort = "medium"/);
-    assert.match(fast.content, /model = "gpt-5\.6-terra"/);
-    assert.match(fast.content, /model_reasoning_effort = "low"/);
+    assert.match(fast.content, /model = "gpt-6-luna"/);
+    assert.match(fast.content, /model_reasoning_effort = "high"/);
+  });
+
+  // Custom agent file schema (developers.openai.com/codex/subagents): name,
+  // description, developer_instructions required; model + model_reasoning_effort
+  // optional. Loading verified with codex-cli 0.171.0 (`codex debug
+  // prompt-input` lists rune_heavy/rune_standard/rune_fast with these models in
+  // a trusted project).
+  test('custom agent roles use only documented keys, with the required ones present', async () => {
+    const extras = await codex.generateExtraFiles({
+      stats: { skillCount: 65, crossRefsResolved: 204, packCount: 14, files: [] },
+    });
+    const ALLOWED = new Set(['name', 'description', 'developer_instructions', 'model', 'model_reasoning_effort']);
+    for (const role of extras.filter((e) => e.path.startsWith('.codex/agents/'))) {
+      const keys = [...role.content.matchAll(/^([a-z_]+) = /gm)].map((m) => m[1]);
+      for (const k of ['name', 'description', 'developer_instructions'])
+        assert.ok(keys.includes(k), `${role.path}: ${k}`);
+      for (const k of keys) assert.ok(ALLOWED.has(k), `${role.path}: undocumented key ${k}`);
+    }
   });
 });
 
 describe('antigravity adapter model mapping', () => {
   const antigravity = getAdapter('antigravity');
 
-  test('opus translates to gemini-3-pro', () => {
-    const header = antigravity.generateHeader({ ...baseSkill, model: 'opus' });
-    assert.match(header, /model: gemini-3-pro/);
+  // Antigravity SKILL.md frontmatter supports only name + description
+  // (antigravity.google/docs/skills), so no model field may be emitted.
+  test('never emits a model field in frontmatter', () => {
+    for (const model of ['opus', 'sonnet', 'haiku', 'custom-fine-tune', undefined]) {
+      const header = antigravity.generateHeader({ ...baseSkill, model });
+      const fm = header.split('---')[1];
+      assert.deepStrictEqual(
+        fm
+          .trim()
+          .split('\n')
+          .map((l) => l.split(':')[0]),
+        ['name', 'description'],
+      );
+    }
   });
 
-  test('sonnet translates to gemini-3-flash', () => {
-    const header = antigravity.generateHeader({ ...baseSkill, model: 'sonnet' });
-    assert.match(header, /model: gemini-3-flash(?!-)/);
+  test('opus hints Gemini 4 Neon (High) / Orchestrator', () => {
+    assert.match(
+      antigravity.generateHeader({ ...baseSkill, model: 'opus' }),
+      /Suggested Antigravity model: Gemini 4 Neon \(High\)/,
+    );
   });
 
-  test('haiku translates to gemini-3-flash-lite', () => {
-    const header = antigravity.generateHeader({ ...baseSkill, model: 'haiku' });
-    assert.match(header, /model: gemini-3-flash-lite/);
+  test('sonnet hints Gemini 4 Hydrogen', () => {
+    assert.match(
+      antigravity.generateHeader({ ...baseSkill, model: 'sonnet' }),
+      /Suggested Antigravity model: Gemini 4 Hydrogen/,
+    );
+  });
+
+  test('haiku hints Gemini 3.8 Flash', () => {
+    assert.match(
+      antigravity.generateHeader({ ...baseSkill, model: 'haiku' }),
+      /Suggested Antigravity model: Gemini 3\.8 Flash/,
+    );
+  });
+
+  test('unknown tier gives no hint', () => {
+    assert.doesNotMatch(antigravity.generateHeader({ ...baseSkill, model: 'custom' }), /Suggested/);
   });
 });
 
@@ -122,9 +166,9 @@ describe('Anthropic-native adapters are no-op for model field', () => {
     const windsurf = getAdapter('windsurf');
     const cursorHeader = cursor.generateHeader({ ...baseSkill, model: 'opus' });
     const windsurfHeader = windsurf.generateHeader({ ...baseSkill, model: 'opus' });
-    assert.doesNotMatch(cursorHeader, /gpt-5/);
+    assert.doesNotMatch(cursorHeader, /gpt-[56]/);
     assert.doesNotMatch(cursorHeader, /gemini/);
-    assert.doesNotMatch(windsurfHeader, /gpt-5/);
+    assert.doesNotMatch(windsurfHeader, /gpt-[56]/);
     assert.doesNotMatch(windsurfHeader, /gemini/);
   });
 });
@@ -193,19 +237,19 @@ describe('qwen adapter model mapping (Qwen family)', () => {
 describe('gemini adapter model mapping (Gemini family)', () => {
   const gemini = getAdapter('gemini');
 
-  test('opus translates to gemini-2.5-pro', () => {
+  test('opus translates to gemini-4-carbon', () => {
     const header = gemini.generateHeader({ ...baseSkill, model: 'opus' });
-    assert.match(header, /gemini-2\.5-pro/);
+    assert.match(header, /gemini-4-carbon/);
   });
 
-  test('sonnet translates to gemini-2.5-flash', () => {
+  test('sonnet translates to gemini-4-hydrogen', () => {
     const header = gemini.generateHeader({ ...baseSkill, model: 'sonnet' });
-    assert.match(header, /gemini-2\.5-flash/);
+    assert.match(header, /gemini-4-hydrogen/);
   });
 
-  test('haiku translates to gemini-2.0-flash-lite', () => {
+  test('haiku translates to gemini-3.5-flash-lite', () => {
     const header = gemini.generateHeader({ ...baseSkill, model: 'haiku' });
-    assert.match(header, /gemini-2\.0-flash-lite/);
+    assert.match(header, /gemini-3\.5-flash-lite/);
   });
 });
 

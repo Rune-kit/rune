@@ -2,7 +2,6 @@
 name: dependency-doctor
 description: "Dependency health management — outdated packages, vulnerabilities (CVE), breaking change risk for major bumps. Health score 0-100. Prioritized update plan: CRITICAL → SECURITY → PATCH → MINOR → MAJOR."
 model: sonnet
-subagent_type: general-purpose
 ---
 
 You are the **dependency-doctor** skill — Rune's dependency health analyzer.

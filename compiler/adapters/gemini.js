@@ -23,9 +23,9 @@
 import { BRANDING_FOOTER } from '../transforms/branding.js';
 
 const MODEL_MAP = {
-  opus: 'gemini-2.5-pro',
-  sonnet: 'gemini-2.5-flash',
-  haiku: 'gemini-2.0-flash-lite',
+  opus: 'gemini-4-carbon',
+  sonnet: 'gemini-4-hydrogen',
+  haiku: 'gemini-3.5-flash-lite',
 };
 
 const TOOL_MAP = {

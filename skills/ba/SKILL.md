@@ -80,23 +80,8 @@ If Refactor → light version (Step 1 + Step 4 only). Skip Steps 2, 2.5, 3, 5, 6
 If existing codebase → invoke `rune:scout` for context before proceeding.
 
 ### Step 1.4 — Synthesis Trigger Check
-<MUST-READ path="references/synthesis-mode.md" trigger="when prior conversation already contains rich requirement context (pasted spec, > 1000 words discussion, continuation session, filled issue template)"/>
 
-Before proceeding to elicitation, check whether the requirements are **already in context**. Re-asking what the user already told you is the second-most expensive bug.
-
-Activate **Synthesis Mode** instead of standard elicitation if ANY of:
-
-| Signal | Threshold |
-|--------|-----------|
-| User pasted a spec / PRD / brief | > 200 words describing the feature |
-| Conversation has > 1000 words on this feature | Sufficient context already gathered |
-| User said "synthesize" / "I already explained" / "just write the spec" | Explicit synthesis request |
-| Continuation — `.rune/features/<name>/requirements.md` exists with prior answers | Re-elicitation would duplicate |
-| Issue tracker has filled-in template (problem, story, acceptance criteria) | Source already structured |
-
-In Synthesis Mode: extract answers from existing context, draft the Requirements Document with **source citations** for every section, then **confirm** rather than re-interview. Ask follow-ups ONLY on the 1-2 dimensions with genuine gaps. Skip steps 2, 2.5 if all 5 dimensions are filled or partial-but-acceptable.
-
-Workflow detail + anti-patterns: [references/synthesis-mode.md](references/synthesis-mode.md).
+> Full detail moved to [`references/synthesis-trigger.md`](references/synthesis-trigger.md) (progressive disclosure). **Read that file before executing this section.**
 
 ### Step 1.5 — Out-of-Scope Match Check (READ)
 
@@ -126,47 +111,12 @@ Format reference: [references/out-of-scope-format.md](references/out-of-scope-fo
 
 ### Step 1.6 — Mid-Elicitation Reject WRITE Path
 
-If the user **explicitly rejects** the feature at any point during elicitation (Steps 2-3) — common phrases: "scrap it", "actually nah, don't build this", "we won't do this", "kill the feature", "drop it" — STOP elicitation and **write a `.out-of-scope/<slug>.md` record** before ending the session.
-
-Without this WRITE path, oral rejections vanish — the next session re-asks the same questions and the user has to re-reject. Step 1.5 (READ) only catches matches against existing files; Step 1.6 (WRITE) is what produces those files in the first place.
+> Full detail moved to [`references/reject-write-path.md`](references/reject-write-path.md) (progressive disclosure). **Read that file before executing this section.**
 
 <HARD-GATE>
 Mid-elicitation rejection MUST produce a `.out-of-scope/<slug>.md` file before session end.
 A rejection without a written record is a rejection that didn't happen.
 </HARD-GATE>
-
-**Procedure**:
-
-1. **Confirm rejection is durable, not deferral**. Ask one clarifier:
-   > "Just to record this correctly: is this **out of scope** (project doesn't want this), or **deferred** (not now but maybe later)? Out-of-scope gets recorded so we don't re-litigate; deferred goes to backlog instead."
-
-   - If **deferred** → route to backlog (no `.out-of-scope/` write), end session with a one-line note
-   - If **out-of-scope** → continue to step 2
-
-2. **Capture the durable reason**. Ask:
-   > "What's the reason this is out of scope? (project scope, technical constraint, strategic decision — not a temporary circumstance)"
-
-   If the user gives a temporary reason ("we're busy"), reframe: "That's a deferral — should I route to backlog instead?"
-
-3. **Generate slug** (kebab-case, ≤40 chars, recognizable without opening the file).
-
-4. **Lexical-similarity check**: `Glob` `.out-of-scope/*.md`, parse each frontmatter's `concept` + `aliases`, compute overlap. If any existing concept has ≥0.7 overlap → APPEND to that file's `prior_requests` list and mark `rejected_by: ba` for this round. Do NOT create a duplicate.
-
-5. **Write the file** using the format in [`references/out-of-scope-format.md`](references/out-of-scope-format.md):
-   - YAML frontmatter (`concept`, `aliases`, `decision: rejected`, `rejected_at`, `rejected_by: ba`, `prior_requests`, optional `revisit_if`)
-   - Markdown body: concept name, "Why out of scope" (substantive reasoning from step 2), "What would change our mind" (if user volunteered signals)
-
-6. **Emit `outofscope.recorded`** signal carrying `{slug, rejected_by: ba, prior_requests_count}` so downstream skills know a new rejection landed.
-
-7. **End BA session** with one-line summary:
-   > "Recorded as out of scope in `.out-of-scope/<slug>.md`. Future similar requests will surface this. Override anytime by editing the file."
-
-**When NOT to write**:
-
-- User merely defers ("not now") → backlog, not `.out-of-scope/`
-- User rejects a single requirement within a larger feature → adjust requirements doc Boundaries section, don't write a whole rejection file (the feature is still in scope)
-- Bug rejections (already fixed, not reproducible) → not BA's job; route to incident or close the issue
-- The match was already exact (≥0.8) and Step 1.5 surfaced it — user accepting the prior rejection just appends to `prior_requests` of the existing file (handled in Step 1.5 path)
 
 ### Step 2.0 — Explore-First Pre-Check (HARD-GATE)
 
@@ -230,28 +180,7 @@ Every Q should earn its slot: removing it must leave the Requirements Document m
 
 #### Structured Elicitation Frameworks
 
-Choose the framework that fits the requirement type. Use it to STRUCTURE the 5 Questions above, not replace them.
-
-| Framework | When to Use | Structure |
-|-----------|------------|-----------|
-| **PICO** | Clinical, research, data-driven, or A/B testing features | **P**opulation (who), **I**ntervention (what change), **C**omparison (vs what), **O**utcome (measurable result) |
-| **INVEST** | User stories for sprint-sized features | **I**ndependent, **N**egotiable, **V**aluable, **E**stimable, **S**mall, **T**estable |
-| **Jobs-to-be-Done** | Product features, user workflows | "When [situation], I want to [motivation] so I can [expected outcome]" |
-
-
-**PICO Example (data feature):**
-```
-P: Dashboard users monitoring real-time metrics
-I: Add anomaly detection alerts
-C: vs. current manual threshold setting
-O: 30% faster incident detection (measurable KPI)
-```
-
-**When to apply which:**
-- Feature Request → INVEST (ensures stories are sprint-ready)
-- Data/Analytics/Research feature → PICO (forces measurable outcome definition)
-- Product/UX feature → Jobs-to-be-Done (keeps focus on user motivation)
-- Integration → 5 Questions only (frameworks add noise for plumbing tasks)
+> Full detail moved to [`references/elicitation-frameworks.md`](references/elicitation-frameworks.md) (progressive disclosure). **Read that file before executing this section.**
 
 ### Step 2.5 — Ambiguity Scoring (Execution Gate)
 
@@ -259,24 +188,11 @@ After each question round, compute an **Ambiguity Score** to determine if requir
 
 #### Scoring Formula
 
-```
-Ambiguity = 1 - weighted_average(dimensions)
-
-Dimensions (weights vary by requirement type):
-  Greenfield:  Goal (40%) + Constraints (30%) + Success Criteria (30%)
-  Feature:     Goal (30%) + Constraints (30%) + Success Criteria (20%) + Integration (20%)
-  Integration: Goal (20%) + Constraints (25%) + Success Criteria (20%) + API Contract (35%)
-```
+> Full detail moved to [`references/ambiguity-scoring.md`](references/ambiguity-scoring.md) (progressive disclosure). **Read that file before executing this section.**
 
 #### Dimension Scoring (0.0 – 1.0)
 
-| Dimension | 0.0 (Unknown) | 0.5 (Partial) | 1.0 (Clear) |
-|-----------|---------------|----------------|--------------|
-| **Goal** | "Make it better" | "Improve dashboard performance" | "Dashboard loads in <2s with 10k rows" |
-| **Constraints** | No constraints mentioned | "Use existing DB" | "PostgreSQL 15, no new deps, GDPR compliant" |
-| **Success Criteria** | "It should work" | "Users can see their data" | "AC-1.1: GIVEN 10k rows WHEN page loads THEN render <2s" |
-| **Integration** | "Connect to the API" | "Use REST, need auth" | "POST /api/v2/orders, OAuth2, rate limit 100/min" |
-| **API Contract** | "It sends data somewhere" | "JSON payload to endpoint" | "OpenAPI spec provided, request/response schemas defined" |
+> Full detail moved to [`references/ambiguity-scoring.md`](references/ambiguity-scoring.md) (progressive disclosure). **Read that file before executing this section.**
 
 #### Threshold Gate
 
@@ -295,29 +211,11 @@ If user insists "just build it" at > 40%, respond:
 
 #### Scoring After Each Question
 
-After each of the 5 Questions (Step 2), update the score:
-
-```
-Round 1 (WHO):    Goal ≈ 0.3, others = 0.0 → Ambiguity ≈ 91%
-Round 2 (WHAT):   Goal ≈ 0.7, Success ≈ 0.3 → Ambiguity ≈ 72%
-Round 3 (WHY):    Goal ≈ 0.9, Success ≈ 0.5 → Ambiguity ≈ 47%
-Round 4 (BOUNDS): Constraints ≈ 0.6 → Ambiguity ≈ 30%
-Round 5 (CONSTR): Constraints ≈ 0.9 → Ambiguity ≈ 12% ✅
-```
-
-If Ambiguity drops below 15% before all 5 questions are asked (e.g., user provides a detailed PRD), skip remaining questions and proceed. The gate is about clarity, not ceremony.
+> Full detail moved to [`references/ambiguity-scoring.md`](references/ambiguity-scoring.md) (progressive disclosure). **Read that file before executing this section.**
 
 #### Display Format
 
-After completing Step 2, show the user:
-
-```
-Clarity Score: [100 - ambiguity]%
-  Goal:             [██████████] 0.9
-  Constraints:      [████████░░] 0.8
-  Success Criteria: [██████░░░░] 0.6  ← weakest
-  Status: ACCEPTABLE (ambiguity 23%) — proceeding with noted gaps
-```
+> Full detail moved to [`references/ambiguity-scoring.md`](references/ambiguity-scoring.md) (progressive disclosure). **Read that file before executing this section.**
 
 ### Step 2.6 — CONTEXT.md Cross-Reference Gate
 
@@ -361,27 +259,7 @@ Present discovered hidden requirements to user: "I found N additional requiremen
 
 ### Step 3.5 — Completeness Scoring (Options & Alternatives)
 
-When presenting options, alternatives, or scope decisions to the user, rate each with a **Completeness score (X/10)**:
-
-| Score | Meaning | Guidance |
-|-------|---------|----------|
-| 9-10 | Complete — all edge cases, full coverage, production-ready | Always recommend |
-| 7-8 | Covers happy path, skips some edges | Acceptable for MVP |
-| 4-6 | Shortcut — defers significant work to later | Flag trade-off explicitly |
-| 1-3 | Minimal viable, technical debt guaranteed | Only for time-critical emergencies |
-
-**Always recommend the higher-completeness option** unless the delta is truly expensive. With AI-assisted coding, the marginal cost of completeness is near-zero:
-
-| Task Type | Human Team | AI-Assisted | Compression |
-|-----------|-----------|-------------|-------------|
-| Boilerplate / scaffolding | 2 days | 15 min | ~100x |
-| Test writing | 1 day | 15 min | ~50x |
-| Feature implementation | 1 week | 30 min | ~30x |
-| Bug fix + regression test | 4 hours | 15 min | ~20x |
-
-**When showing effort estimates**, always show both scales: `(human: ~X / AI: ~Y)`. The compression ratio reframes "too expensive" into "15 minutes more."
-
-**Anti-pattern**: "Choose B — it covers 90% of the value with less code." → If A is only 70 lines more, choose A. The last 10% is where production bugs hide.
+> Full detail moved to [`references/completeness-scoring.md`](references/completeness-scoring.md) (progressive disclosure). **Read that file before executing this section.**
 
 
 ### Step 3.6 — Logic Consistency Check
@@ -406,19 +284,7 @@ Run each, label verdict 🟢 pass / 🟡 warn / 🔴 fail:
 
 #### Output Format
 
-```
-Logic Consistency Report:
-  1. AC → User Story:      🟢 all AC trace to US-1 or US-2
-  1b. EARS FR → story+AC:  🟢 FR-1..FR-5 each map to a story and an AC
-  2. Business rule → AC:   🟡 "no duplicate emails" cited — exception flow missing
-  3. Scope disjoint:       🟢
-  4. Terminal states:      🟢
-  5. Deps in constraints:  🔴 "PostgreSQL 15" missing from Q5 answer
-  6. NFR measurable:       🟢
-  7. Hidden reqs resolved: 🟢
-
-Verdict: 1 🔴, 1 🟡, 5 🟢 → BLOCK handoff until 🔴 fixed
-```
+> Full detail moved to [`references/completeness-scoring.md`](references/completeness-scoring.md) (progressive disclosure). **Read that file before executing this section.**
 
 #### Gate Rule
 
@@ -450,34 +316,8 @@ Based on all gathered information, produce:
 - [APIs, services, libraries, access, existing code]
 
 ### Step 4.5 — Functional Requirements (EARS)
-<MUST-READ path="references/ears-format.md" trigger="when writing the functional-requirements section for a Feature/Integration/Greenfield requirement"/>
 
-Translate each in-scope item (Step 4) into atomic, testable **functional requirements** using EARS (Easy Approach to Requirements Syntax). EARS sits between user stories (WHY) and acceptance criteria (HOW we prove it) — it names exactly WHAT the system shall do, with an explicit trigger or condition.
-
-Pick the simplest EARS template that fits each behavior; give each a stable ID (`FR-1`, `FR-2`, …):
-
-| Type | Template |
-|------|----------|
-| Ubiquitous | The `<system>` shall `<response>`. |
-| Event-driven | When `<trigger>`, the `<system>` shall `<response>`. |
-| State-driven | While `<state>`, the `<system>` shall `<response>`. |
-| Optional | Where `<feature is included>`, the `<system>` shall `<response>`. |
-| Unwanted | If `<unwanted condition>`, then the `<system>` shall `<response>`. |
-| Complex | While `<state>`, when `<trigger>`, the `<system>` shall `<response>`. |
-
-```
-FR-1  The API shall return responses in JSON.
-FR-2  When a request omits a valid auth token, the API shall respond with HTTP 401.
-FR-3  If the payment provider times out, then the system shall mark the order pending and queue a retry.
-```
-
-Rules (full guidance in [references/ears-format.md](references/ears-format.md)):
-- **One `shall` per requirement** — compound "shall do A and B" splits into two `FR-n`.
-- **Named subject, testable response** — never "it shall handle gracefully". Move measurable limits into the response; pure performance targets stay in NFRs (Step 6).
-- **Don't smuggle HOW** — observable behavior only; leave implementation to `plan`.
-- Every `FR-n` traces up to a User Story and down to an Acceptance Criterion (checked in Step 3.6).
-
-**Skip EARS** for Bug Fix and Refactor types (no new behavior to specify). For plumbing/integration, a few event-driven + unwanted-behavior lines suffice — don't pad with ubiquitous filler. EARS is a format recommendation, not a gate.
+> Full detail moved to [`references/ears-requirements.md`](references/ears-requirements.md) (progressive disclosure). **Read that file before executing this section.**
 
 ### Step 5 — User Stories & Acceptance Criteria
 
@@ -503,19 +343,7 @@ Rules:
 
 ### Step 5.5 — Key Entities (mandatory if feature involves data)
 
-If ANY user story creates, reads, updates, or deletes data, list the key entities — WHAT the data is, not HOW it's stored (no table names, no column types, no ORM detail):
-
-```
-## Key Entities
-- **Order**: what a customer submits — items, quantities, status (draft → submitted → fulfilled). One User has many Orders.
-- **User**: the person placing orders — identity, contact. Referenced by Order.
-```
-
-Rules:
-- One line per entity: name, what it represents, key attributes (plain language), relationships
-- State-bearing entities name their lifecycle states — these become the state machine in requirements.mermaid
-- This section SEEDS `plan`'s data-model.md — a story that touches data but has no entity here is a spec gap (plan will bounce it back)
-- Skip entirely for stateless features (pure computation, styling, config)
+> Full detail moved to [`references/key-entities.md`](references/key-entities.md) (progressive disclosure). **Read that file before executing this section.**
 
 ### Step 6 — Non-Functional Requirements (NFRs)
 
@@ -533,195 +361,15 @@ Only include NFRs relevant to this specific task. Don't generate a generic check
 
 ### Step 6.5 — Tiered Recommendations
 
-For product-oriented requirements (Feature Request, Integration, Greenfield), generate **tiered strategic recommendations**. This structures the path forward into actionable time horizons.
-
-**Three Tiers:**
-
-| Tier | Timeframe | Focus | Characteristics |
-|------|-----------|-------|-----------------|
-| **Quick Win** | 0-30 days | Immediate impact | Low effort, high visibility, builds momentum |
-| **Differentiation** | 1-3 months | Competitive edge | Medium effort, unique value, hard to copy |
-| **Long-term Moat** | 6-12 months | Sustainable advantage | High effort, defensible, compounds over time |
-
-**For each tier, specify:**
-
-```markdown
-### Quick Win (0-30 days)
-- **Action**: [Specific deliverable]
-- **Resources**: [Team size, tools, dependencies]
-- **Expected Impact**: [Measurable outcome]
-- **Risk if skipped**: [What happens without this]
-
-### Differentiation (1-3 months)
-- **Action**: [...]
-- **Resources**: [...]
-- **Expected Impact**: [...]
-- **Risk if skipped**: [...]
-
-### Long-term Moat (6-12 months)
-- **Action**: [...]
-- **Resources**: [...]
-- **Expected Impact**: [...]
-- **Risk if skipped**: [...]
-```
-
-**Rules:**
-- Quick Win MUST be achievable in first sprint — no dependencies on later tiers
-- Differentiation should create switching costs or unique capabilities
-- Long-term Moat should compound (network effects, data moats, ecosystem lock-in)
-- Every tier includes "Risk if skipped" — makes trade-offs explicit
-- Skip this step for Bug Fix and Refactor types (no strategic dimension)
+> Full detail moved to [`references/tiered-recommendations.md`](references/tiered-recommendations.md) (progressive disclosure). **Read that file before executing this section.**
 
 ### Step 7 — Artifact Triad
 
-Produce three structured artifacts — not one prose doc. Plan consumes all three; each answers a different question.
-
-| Artifact | Question Answered | Consumer |
-|----------|-------------------|----------|
-| `requirements.md` | WHAT to build and WHY | plan, cook |
-| `requirements.mermaid` | WHAT does the flow look like visually | plan, design, review |
-| `tasks.md` | WHAT work layers exist | plan (as task backbone, not from scratch) |
-
-#### Artifact 1: requirements.md
-
-Structured document combining Steps 1-6.5. Save to `.rune/features/<feature-name>/requirements.md`:
-
-```markdown
-# Requirements Document: [Feature Name]
-Created: [date] | BA Session: [summary]
-
-## Context
-[Problem statement — 2-3 sentences]
-
-## Stakeholders
-- Primary user: [who]
-- Affected systems: [what]
-
-## User Stories
-[from Step 5 — each with [P1|P2|P3] priority and Independent Test]
-
-## Functional Requirements
-[from Step 4.5 — EARS-format FR-n list; skip for Bug Fix/Refactor]
-
-## Key Entities
-[from Step 5.5 — mandatory if feature involves data; omit section for stateless features]
-
-## Scope
-### In Scope
-### Out of Scope
-### Assumptions
-
-## Non-Functional Requirements
-[from Step 6]
-
-## Dependencies
-[from Step 4]
-
-## Risks
-- [risk]: [mitigation]
-
-## Strategic Recommendations
-[from Step 6.5 — skip for Bug Fix/Refactor]
-
-## Logic Consistency Report
-[from Step 3.6 — verbatim, for audit trail]
-
-## Next Step
-→ Hand off to rune:plan (consumes all 3 artifacts)
-```
-
-#### Artifact 2: requirements.mermaid
-
-Auto-generate from User Stories. Save to `.rune/features/<feature-name>/requirements.mermaid`.
-
-**Sequence diagram** (primary happy path from US-1):
-
-```mermaid
-sequenceDiagram
-  actor User
-  participant System
-  participant Database
-  User->>System: [action from US-1]
-  System->>Database: [read/write from AC-1.1]
-  Database-->>System: [response]
-  System-->>User: [result from AC-1.1]
-```
-
-**State machine** (only if any User Story implies state):
-
-```mermaid
-stateDiagram-v2
-  [*] --> initial
-  initial --> processing: [trigger from AC]
-  processing --> success: [happy path AC]
-  processing --> failed: [error AC]
-  success --> [*]
-  failed --> initial: retry
-```
-
-Skip state machine if feature is stateless (simple CRUD with no lifecycle). Sequence is always produced.
-
-> For a polished editorial visual, `diagram` can redraw `requirements.mermaid` (sequence → type `sequence`; state machine → type `state`) as self-contained HTML. Offer it when the reader would learn more from a designed figure than from raw Mermaid — `suggested_next: diagram`.
-
-#### Artifact 3: tasks.md
-
-Pre-broken implementation tasks **grouped by user story** (vertical slices), NOT by layer. Plan refines this backbone, does not create from scratch. Save to `.rune/features/<feature-name>/tasks.md`:
-
-```markdown
-# Implementation Tasks: [Feature Name]
-
-## Foundational (blocking prerequisites)
-> Shared infrastructure NO story can start without. Keep minimal.
-- [ ] Schema/migrations for Key Entities shared by 2+ stories
-- [ ] Auth/routing/middleware skeleton (only if 2+ stories need it)
-
-## US-1 [P1]: [story title]
-> Layer order WITHIN the story: Data → Logic → Endpoint → UI → Test. UI never first.
-- [ ] Data: [entity/migration this story owns, if not Foundational]
-- [ ] Logic: [each Business Rule this story enforces → one task]
-- [ ] Endpoint: [handler/service/API this story calls — skip only if story is pure-UI]
-- [ ] UI: [component/surface — calls the Endpoint task above; a UI element and the
-      endpoint it calls are ONE story's tasks, never split across stories]
-- [ ] Test: [each AC of this story → one test; happy path + error]
-- **Checkpoint**: US-1 independently functional — run its Independent Test
-
-## US-2 [P2]: [story title]
-- [ ] ... (same internal structure)
-
-## NFR Verification
-- [ ] [each NFR from Step 6 → one measurement task]
-```
-
-Derivation rules:
-- 1 User Story → 1 `## US-n` section containing ALL its layers (data through test) — a story section with only UI/Endpoint tasks and no Logic/Data/Test is a broken slice; a UI task with no Endpoint task above it (and no pure-UI justification) is a dead button in waiting
-- 1 Business Rule → 1 Logic task + 1 test task, inside the story that enforces it
-- 1 AC → ≥1 Test task inside its story (happy path + error)
-- 1 NFR → 1 NFR Verification task
-- Foundational holds ONLY what 2+ stories share — story-specific work stays in the story
-- P1 sections first; completing all P1 sections + Foundational = viable MVP
-
-**Why story-grouped**: layer-grouped backbones ("all Data → all Logic → all Interface") invite the executor to finish the Interface layer and stop — shipping UI with no wiring. Story-grouped means every completed section is a demoable end-to-end slice.
-
-#### Handoff
-
-Emit signal to `plan` with paths to all three artifacts. Plan MUST read all three before producing phase files — the triad is the contract.
+> Full detail moved to [`references/artifact-triad.md`](references/artifact-triad.md) (progressive disclosure). **Read that file before executing this section.** Mesh links used there: `rune:plan`.
 
 ### Step 7.5 — Glossary Sharpen (CONTEXT.md update)
 
-After the artifact triad is saved, append/update the project glossary `CONTEXT.md` with any domain terms that were sharpened during this session.
-
-1. Determine glossary location:
-   - If `CONTEXT-MAP.md` exists at root → multi-context; pick the right per-context CONTEXT.md
-   - Else if root `CONTEXT.md` exists → use it
-   - Else if any term needs recording → create root `CONTEXT.md` lazily
-   - Else → skip silently (no-op when no terms emerged)
-2. For each new term, add a row to the **Language** table (term, definition, aliases-to-avoid, status).
-3. For each user-asserted relationship, add to the **Relationships** section.
-4. For each ambiguity surfaced during elicitation, add to **Flagged ambiguities**.
-
-**Conflict gate** — if a new term has ≥0.7 token overlap with an existing one, surface to user (merge / rename / keep distinct). NEVER silently re-define an existing term.
-
-Format reference: [references/context-md-format.md](references/context-md-format.md).
+> Full detail moved to [`references/artifact-triad.md`](references/artifact-triad.md) (progressive disclosure). **Read that file before executing this section.**
 
 ## Output Format
 

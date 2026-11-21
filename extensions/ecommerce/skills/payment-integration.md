@@ -247,7 +247,7 @@ app.post('/api/webhooks/sepay', async (req, res) => {
 
 ```typescript
 // VNPay: redirect-based payment with HMAC-SHA512 signature
-// Docs: https://sandbox.vnpayment.vn/apis/docs/huong-dan-tich-hop/
+// Docs: https://sandbox.vnpayment.vn/apis/docs/thanh-toan-pay/pay.html
 
 import crypto from 'crypto';
 import qs from 'qs';

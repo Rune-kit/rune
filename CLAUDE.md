@@ -3,15 +3,15 @@
 ## Overview
 
 Rune is an interconnected skill ecosystem for AI coding assistants.
-67 core skills | 5-layer mesh architecture | 209 connections + 45 signals | Multi-platform.
+67 core skills | 5-layer mesh architecture | 248 connections + 46 signals | Multi-platform.
 Philosophy: "Less skills. Deeper connections."
 
-Works on: Claude Code (native plugin) · Cursor · Windsurf · Google Antigravity · OpenAI Codex · OpenCode · Aider · GitHub Copilot CLI · Gemini CLI · Qoder · Qwen Coder · any AI IDE.
+Works on: Claude Code (native plugin) · OpenAI Codex (native plugin) · Cursor (plugin) · Grok Build (plugin) · Gemini CLI (extension) · Windsurf · Google Antigravity · OpenCode · Aider · GitHub Copilot · Cline · Qoder · Qwen Coder · any Agent Skills runtime (`.agents/skills`).
 
 ## Tech Stack
 
 - Claude Code Plugin System (native)
-- Multi-platform compiler (Node.js) — 13 adapters: Cursor, Windsurf, Antigravity, Codex, OpenCode, OpenClaw, Aider, GitHub Copilot CLI, Gemini CLI, Qoder, Qwen Coder, generic
+- Multi-platform compiler (Node.js) — 16 adapters: Claude, Codex, Cursor, Windsurf, Antigravity, OpenCode, OpenClaw, Aider, GitHub Copilot, Gemini CLI, Qoder, Qwen Coder, Grok Build, Cline, universal `.agents/skills`, generic
 - Agent Skills SKILL.md format
 - Git for version control
 - Markdown + JSON for configuration
@@ -24,6 +24,10 @@ rune/
 ├── .claude-plugin/     # Plugin manifest (Claude Code native)
 │   ├── plugin.json     # Plugin metadata
 │   └── marketplace.json # Marketplace catalog
+├── plugin.json         # Agent Plugins 1.0 manifest (any compliant client)
+├── .cursor-plugin/     # Cursor plugin manifest (+ empty hooks override)
+├── .grok-plugin/       # Grok Build marketplace index
+├── gemini-extension.json # Gemini CLI extension manifest
 ├── skills/             # Core skills — SINGLE SOURCE OF TRUTH
 ├── extensions/         # L4 extension packs (one dir per pack)
 ├── compiler/           # Multi-platform compiler
@@ -31,7 +35,7 @@ rune/
 │   ├── parser.js       # SKILL.md → IR
 │   ├── transformer.js  # Transform pipeline
 │   ├── emitter.js      # IR → platform files
-│   ├── adapters/       # Platform adapters (claude, cursor, windsurf, antigravity, codex, openclaw, opencode, generic, aider, copilot, gemini, qoder, qwen)
+│   ├── adapters/       # Platform adapters (claude, cursor, windsurf, antigravity, codex, openclaw, opencode, generic, aider, copilot, gemini, qoder, qwen, grok, cline, agents)
 │   └── transforms/     # Cross-refs, tool-names, frontmatter, subagents, hooks, branding
 ├── commands/           # Slash command definitions
 ├── agents/             # Subagent definitions
@@ -94,7 +98,7 @@ When the user's intent matches a skill, invoke it BEFORE writing any code or ana
 - Project dashboard: `node compiler/bin/rune.js status` (tiered neofetch)
 - Comprehension dashboard: `node compiler/bin/rune.js dashboard` (self-contained HTML — Verdict/Govern/Measure/Understand/Improve tabs; tier-aware: Pro = My Lens, Business = full Govern)
 - Mesh visualizer: `node compiler/bin/rune.js visualize` (interactive graph)
-- Run tests: `npm test` (1,641 tests — compiler + signals + hooks + tier-hooks + scripts + status + visualizer + setup wizard + update + dashboard)
+- Run tests: `npm test` (1,500+ tests — compiler + signals + hooks + tier-hooks + scripts + status + visualizer + setup wizard + update + dashboard)
 - Install runtime hooks (manual): `node compiler/bin/rune.js hooks install --preset gentle [--global]` (add `--tier pro` / `--tier business` to stack paid tiers)
 - Run tests with coverage: `npm run test:coverage` (c8 + lcov)
 - Lint: `npm run lint` (Biome)
@@ -103,7 +107,7 @@ When the user's intent matches a skill, invoke it BEFORE writing any code or ana
 
 ## Current Wave
 
-67 core skills built. Current release **v2.28.0 "Reasoner's Blind Spots"** — see `CHANGELOG.md` for the full history; the sections below describe the layers that are live.
+67 core skills built. Current release **v2.33.0 "Everywhere"** — see `CHANGELOG.md` for the full history; the sections below describe the layers that are live.
 
 **Reasoning + output layer (v2.27.0–v2.28.0)**: `context-engine` owns an output-mode layer (`references/output-modes.md`) — a mode registry, one shared activation contract, and a precedence rule for when two modes conflict: **shape is negotiable, substance is not** (calibration > evidence > a skill's `## Output Format` > safety > actionability > economy). Modes: `caveman` (token economy) and `actionable` (distance-to-doing). `completion-gate` owns claim discipline (`references/claim-discipline.md`) — every load-bearing claim is typed OBSERVED / DERIVED / PRIOR / ASSUMED, because hallucination is an unverified claim wearing the grammar of an observation; an honest hedge is a `DECLARED` open item, never a failure. `problem-solver` checks the model's own failure modes alongside human bias, `verification` runs the Constraint Loop for surface-form constraints, and `design` marks visual checklist items 👁 (ticked from a render, or marked ASSUMED).
 

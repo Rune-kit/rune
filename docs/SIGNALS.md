@@ -2,11 +2,11 @@
 
 > **Event-driven skill communication**. Skills emit signals when they finish work; other skills listen and auto-trigger. No central orchestrator required.
 
-**Status:** 43 signals in Free tier (55 emit/listen edges, `rune doctor`) · 0 orphans
+**Status:** 46 signals in Free tier (55 emit/listen edges, `rune doctor`) · 0 orphans
 **Enforced by:** `scripts/validate-signals.js` (run in CI)
 **Last updated:** v2.21.0 (2026-07-03)
 
-> This doc explains the mechanism and the core workflow signals. The **complete** emit/listen table (all 43 signals, including pack + observability signals) lives in [ARCHITECTURE.md → Signal Catalog](ARCHITECTURE.md#signal-catalog).
+> This doc explains the mechanism and the core workflow signals. The **complete** emit/listen table (all 46 signals, including pack + observability signals) lives in [ARCHITECTURE.md → Signal Catalog](ARCHITECTURE.md#signal-catalog).
 
 ## How Signals Work
 

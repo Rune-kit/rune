@@ -1,6 +1,6 @@
 ---
 name: problem-solver
-description: "Structured reasoning frameworks for complex problems. 19 analytical frameworks, 12 cognitive bias detectors, 10 decomposition methods, 10 mental models, Cynefin domain classification, ethical dimension check, and 6 communication patterns. McKinsey-grade problem solving for AI coding assistants."
+description: "Structured reasoning frameworks for complex, ambiguous problems. Use when the hard part is choosing how to think: many competing factors, a non-technical question (strategy, prioritization, trade-offs), or suspected bias. 19 frameworks, 12 bias detectors, mental models, Cynefin classification. Not for ordering a known chain of dependent decisions (sequential-thinking)."
 metadata:
   author: runedev
   version: "0.6.0"

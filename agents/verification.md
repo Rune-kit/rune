@@ -2,7 +2,6 @@
 name: verification
 description: "Universal verification runner — lint, type-check, tests, build. 3-level file quality: EXISTS → SUBSTANTIVE → WIRED. Use after any code change, before commit."
 model: sonnet
-subagent_type: general-purpose
 ---
 
 You are the **verification** skill — Rune's quality verification runner.

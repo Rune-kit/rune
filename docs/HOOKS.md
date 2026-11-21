@@ -16,7 +16,7 @@ The wizard handles 95% of cases. Use the explicit flags below only for CI / scri
 ## Manual flags
 
 ```bash
-# Auto-detect platforms (.claude/, .codex/, .cursor/, .windsurf/, .antigravity/)
+# Auto-detect platforms (.claude/, .codex/, .cursor/, .windsurf/, .antigravity/, .grok/, .gemini/)
 rune hooks install --preset gentle
 
 # Install GLOBALLY — every Claude Code session, regardless of project
@@ -137,9 +137,11 @@ Presets:
 |-------------|--------------|-----------|------------|-----------|------------------------|-------------------------------------|
 | Claude Code | **stable**   | auto-fire | auto-fire  | auto-fire | **auto-fire**          | `.claude/settings.json` (JSON)      |
 | OpenAI Codex | **stable**  | auto-fire | auto-fire  | auto-fire | **auto-fire**          | `.codex/hooks.json` (JSON)          |
-| Cursor      | beta         | rule-inject | —        | —         | —                      | `.cursor/rules/rune-*.mdc`          |
+| Cursor      | beta         | auto-fire | auto-fire  | auto-fire | **auto-fire**          | `.cursor/hooks.json` (JSON)         |
 | Windsurf    | beta         | workflow + cascade-rule | workflow | — | —                      | `.windsurf/workflows/` + `.windsurf/rules/` |
 | Antigravity | experimental | rule-inject | —        | —         | —                      | `.antigravity/rules/rune-*.md`      |
+| Grok Build  | beta         | auto-fire | auto-fire  | auto-fire | **auto-fire**          | `.grok/hooks/rune.json` (JSON)      |
+| Gemini CLI  | beta         | auto-fire | auto-fire  | auto-fire | **auto-fire**          | `.gemini/settings.json` (JSON)      |
 
 ### Pro tier (`--tier pro`)
 
@@ -222,15 +224,24 @@ Merges into the `hooks` object, preserving any user-authored entries. Rune entri
 }
 ```
 
-### Cursor (`.cursor/rules/rune-*.mdc`)
+### Cursor (`.cursor/hooks.json`)
 
-Three auto-attach rules:
+Native hooks (cursor.com/docs/hooks): `{ "version": 1, "hooks": { "<event>": [{ "command", "matcher", "timeout" }] } }`. Rune merges its entries into the file and leaves your own hooks alone:
 
-- `rune-preflight.mdc` — `alwaysApply: true`, fires before any source-file edit.
-- `rune-sentinel.mdc` — glob-scoped to `**/*.sh`, `Dockerfile`, `.github/workflows/*.yml`, `.env*`.
-- `rune-dependency-doctor.mdc` — scoped to manifest / lockfile edits.
+| Skill | Cursor event | Matcher |
+|---|---|---|
+| preflight | `preToolUse` | `Write` |
+| sentinel | `beforeShellExecution` | — |
+| dependency-doctor | `afterFileEdit` | — |
+| quarantine | `postToolUse` | `MCP:.*\|Read` |
+| completion-gate | `stop` | — |
 
-No `completion-gate` equivalent — Cursor has no Stop-hook primitive. Invoke manually via `/rune completion-gate` before wrapping up.
+Each command is `npx --yes @rune-kit/rune hook-dispatch <skill> --format cursor [--gentle]` with `timeout: 30` (seconds). `--format cursor` matters: Cursor blocks the action when a permission hook (`preToolUse`, `beforeShellExecution`, …) prints anything that is not valid JSON, so the dispatcher prints `{"permission":"allow"}` there and `{}` only for events it knows are not permission hooks (`afterFileEdit`, `postToolUse`, `stop`, …). If it cannot tell which event fired (no `hook_event_name`, cut-off stdin) it still prints `{"permission":"allow"}`, since `{}` would block a permission hook. The advisory line goes to stderr. Strict BLOCK exits 2, which Cursor treats as deny.
+
+- Project hooks run from the project root and only in a trusted workspace; check Settings → Hooks.
+- Cursor also imports Claude hooks from `.claude/settings.json` (Settings → Agents → Third-Party Imports, on by default). With Rune hooks in both files they fire twice; the installer warns. Keep one.
+- Earlier versions wrote `rune-preflight.mdc` / `rune-sentinel.mdc` / `rune-dependency-doctor.mdc`. Install now deletes those (the hooks replace them); tier rules that inject guidance text (`rune-<tier>-*.mdc`) stay, because a hook cannot add prompt text.
+- The Cursor plugin's `.cursor-plugin/hooks.json` is deliberately empty: plugin hooks would run `npx` on every tool call for everyone who installs the plugin, and Rune's lifecycle scripts emit the Claude/Codex envelope, which Cursor's permission hooks would reject. Hooks stay opt-in per project through the installer.
 
 ### Windsurf (`.windsurf/workflows/` + `.windsurf/rules/`)
 
@@ -245,9 +256,27 @@ Cascade rules approximate auto-fire but the user still has to run the workflow c
 
 Experimental — mirrors Cursor's rule-injection pattern because Antigravity doesn't yet expose a tool-level hook primitive. Status may change as the platform matures.
 
+### Grok Build (`.grok/hooks/rune.json`)
+
+Native hooks (docs.x.ai/build/features/hooks). Grok reads project hooks from `.grok/hooks/*.json` with the same shape as Claude's `hooks` block and maps Claude tool names in `matcher`, so Rune writes the Claude preset into its own file, drops Claude's `async` flag (not in Grok's schema) and sets `timeout: 30` (Grok's default of 5 s is too short for a cold `npx`). Strict mode blocks through exit code 2, which Grok treats as deny; anything else is fail-open. Project hooks run only after the folder is trusted (`/hooks-trust` or `grok --trust`). Grok also reads `.claude/settings.json` — if Rune hooks are installed there too they fire twice, and the installer warns. Uninstall deletes `rune.json` and leaves other hook files alone.
+
+### Gemini CLI (`.gemini/settings.json`)
+
+Native hooks (geminicli.com docs/hooks). Gemini reads project hooks from the `hooks` key of `.gemini/settings.json`, Claude-shaped but with Gemini event and tool names and `timeout` in milliseconds. Rune merges these entries and keeps every other setting:
+
+| Skill | Gemini event | Matcher |
+|---|---|---|
+| preflight | `BeforeTool` | `write_file\|replace` |
+| sentinel | `BeforeTool` | `run_shell_command` |
+| dependency-doctor | `AfterTool` | `write_file\|replace` |
+| quarantine | `AfterTool` | `web_fetch\|read_file\|read_many_files\|mcp_.*` |
+| completion-gate | `AfterAgent` | — |
+
+Each entry has `name: "rune-<skill>"` (so `/hooks disable rune-sentinel` works), `timeout: 30000` and the command `npx --yes @rune-kit/rune hook-dispatch <skill> --format gemini [--gentle]`. Gemini parses stdout as JSON and shows stray text as a system message, so `--format gemini` prints `{}`. Exit 2 blocks the tool (`BeforeTool`) or asks for a retry (`AfterAgent`). Gemini fingerprints project hooks and asks you to trust them on first run. Claude Code and Grok never read this file. The Rune Gemini extension ships separate lifecycle hooks (`hooks/hooks.json`), which do not overlap with these. Pro/Business tier entries are not mapped to Gemini yet; the installer skips them with a note.
+
 ## Idempotency & safety
 
-- **Signature-based detection**: Claude hooks are identified by command substring, Cursor/Windsurf/Antigravity files by `rune-managed: true` frontmatter + `@rune-kit/rune hook-dispatch` signature. No HTML-comment markers.
+- **Signature-based detection**: JSON hooks (Claude, Codex, Cursor, Grok, Gemini) are identified by the dispatch command signature; Cursor tier rules and Windsurf/Antigravity files by `rune-managed: true` frontmatter + `@rune-kit/rune hook-dispatch` signature. No HTML-comment markers.
 - **User entries preserved**: Every adapter's `uninstall` walks the artifact directory and removes only files that carry the Rune signature. User-authored rules, workflows, and hooks in the same directory are untouched.
 - **Re-run safe**: `install` replaces Rune entries in-place; two consecutive runs produce byte-identical output.
 - **Malformed JSON**: `.claude/settings.json` with broken JSON throws an actionable error instead of overwriting — fix manually or delete and re-install.
@@ -267,10 +296,20 @@ Experimental — mirrors Cursor's rule-injection pattern because Antigravity doe
 
 These are warnings only — doctor never fails the pipeline for tier-coverage issues. Silent when no tier is installed.
 
+## Context watch and the Pro hint
+
+The Free plugin's `context-watch` hook (PreToolUse, all tools) counts tool calls as a context-pressure proxy: a yellow note at 80 calls, a red one at 120 (repeating every 20), each pointing at `rune:context-engine`.
+
+On the **first red warning of a session**, and only then, it adds one line about Rune Pro's statusline with the pricing link. It is never shown when a paid tier is wired (`RUNE_PRO_ROOT` or `RUNE_BUSINESS_ROOT` set — Pro replaces `context-watch` with `context-sense` anyway), it makes no network call, and you can turn it off for good:
+
+```bash
+export RUNE_PRO_HINT=0   # also accepts false / off / no
+```
+
 ## Limitations
 
-- Only Claude Code gets `Stop` (completion-gate) auto-fire. Every other platform requires manual `/rune completion-gate` invocation.
-- Cursor/Windsurf/Antigravity rule-injection is best-effort — the underlying LLM still decides whether to read and apply the rule. `strict` mode on these platforms is advisory, not enforced.
+- `Stop` (completion-gate) auto-fires on Claude Code, Codex, Cursor (`stop`), Grok and Gemini CLI (`AfterAgent`). Windsurf and Antigravity need a manual `/rune completion-gate`.
+- Windsurf/Antigravity (and Cursor tier rules) rule-injection is best-effort — the underlying LLM still decides whether to read and apply the rule. `strict` mode on these platforms is advisory, not enforced.
 - `rune hooks status --platform all` is the single source of truth for "what am I actually getting on this machine." Check it after install.
 
 See also: `docs/MULTI-PLATFORM.md` (skill compilation matrix), `.rune/plan-rune-autodiscipline.md` (design rationale).

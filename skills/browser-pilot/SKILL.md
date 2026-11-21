@@ -1,6 +1,6 @@
 ---
 name: browser-pilot
-description: "Playwright browser automation. Navigates URLs, takes screenshots, checks accessibility tree, interacts with UI elements, and reports findings."
+description: "Playwright browser automation. Use when a task needs a real browser: checking a running web UI, reproducing a UI bug, taking screenshots, or auditing the accessibility tree. Navigates URLs, interacts with UI elements, and reports findings."
 metadata:
   author: runedev
   version: "0.3.0"

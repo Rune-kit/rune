@@ -1,6 +1,6 @@
 ---
 name: research
-description: "Web search and external knowledge lookup. Gathers data on technologies, libraries, best practices, and competitor solutions."
+description: "Web search and external knowledge lookup. Use when an answer depends on facts outside the codebase: comparing technologies or libraries, current best practices, or how others solved a problem. Searches multiple sources and returns triangulated findings with citations. Not for one library's version-correct API or an error message (docs-seeker) or market and competitor scans (trend-scout)."
 metadata:
   author: runedev
   version: "0.4.0"
@@ -18,7 +18,7 @@ Web research utility. Receives a research question, executes targeted searches, 
 
 ## Calls (outbound)
 
-None — pure L3 utility using `WebSearch` and `WebFetch` tools directly.
+None — pure L3 utility using `WebSearch` and `WebFetch` directly.
 
 ## Called By (inbound)
 

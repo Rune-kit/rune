@@ -107,187 +107,19 @@ Pass the full sentinel report through to the final audit.
 
 ### Phase 3: Code Quality Audit
 
-Delegate to `autopsy` for codebase health (complexity, coupling, hotspots, dead code, health score per module).
-
-In addition, use `Grep` to find supplementary issues autopsy may not cover:
-
-```bash
-# console.log in production code
-grep -r "console\.log" src/ --include="*.ts" --include="*.js" -l
-
-# TypeScript any types
-grep -r ": any" src/ --include="*.ts" -n
-
-# Empty catch blocks
-grep -rn "catch.*{" src/ --include="*.ts" --include="*.js" -A 1 | grep -E "^\s*}"
-
-# Python print() in production
-grep -r "^print(" . --include="*.py" -l
-
-# Rust .unwrap() outside tests
-grep -rn "\.unwrap()" src/ --include="*.rs"
-```
-
-Merge autopsy report + supplementary findings.
-
-**3.5 Zombie Code Detection**
-
-Identify code that is effectively dead but hasn't been formally removed. Zombie code increases surface area, confuses contributors, and accumulates security debt.
-
-| Signal | Detection Method | Severity |
-|--------|-----------------|----------|
-| No commits in 6+ months | `git log --since="6 months ago" -- <file>` returns empty | MEDIUM |
-| No test coverage | File not imported by any test file (Grep for filename in `**/*.test.*` / `**/*.spec.*`) | MEDIUM |
-| No owner | File not in CODEOWNERS, no author active in last 6 months | LOW |
-| Failing tests referencing the module | Test suite has skipped/failing tests for this module | HIGH |
-| Unpatched CVEs in dependencies only this module uses | Cross-reference dependency-doctor CVE list with per-file imports | HIGH |
-| Orphaned docs | README/docs reference files or APIs that no longer exist | LOW |
-
-**Zombie Code Verdict:**
-- 3+ signals on same file/module → flag as **ZOMBIE** in audit report
-- Recommend: archive (move to `_deprecated/`), delete, or assign owner
-- Do NOT auto-delete — present zombie list to user for decision
-
----
+> Full detail moved to [`references/phase-checklists.md`](references/phase-checklists.md) (progressive disclosure). **Read that file before executing this section.**
 
 ### Phase 4: Architecture Audit
 
-Use `Read` and `Grep` to evaluate structural health directly.
-
-**4.1 Project Structure**
-- Logical folder organization (business logic vs infrastructure vs presentation separated?)
-- Circular dependencies between modules (A imports B, B imports A)
-- Barrel file analysis (excessive re-exports causing bundle bloat)
-
-**4.2 Design Patterns & Principles**
-- Single Responsibility violations (route handlers with direct DB calls, fat controllers)
-- Tight coupling between layers
-
-```typescript
-// BAD — route handler directly coupled to database
-app.get('/users/:id', async (req, res) => {
-  const user = await db.query('SELECT * FROM users WHERE id = $1', [req.params.id]);
-  res.json(user);
-});
-// GOOD — layered architecture
-app.get('/users/:id', async (req, res) => {
-  const user = await userService.getUser(req.params.id);
-  res.json(user);
-});
-```
-
-**4.3 API Design** (if applicable)
-- Consistent naming conventions (camelCase vs snake_case in JSON responses)
-- Correct HTTP method usage (GET reads, POST creates, PUT/PATCH updates, DELETE removes)
-- Consistent error response format across endpoints
-- Pagination on collection endpoints
-- API versioning strategy
-
-**4.4 Database Patterns** (if applicable)
-- N+1 query patterns
-
-```typescript
-// BAD — N+1
-const users = await db.query('SELECT * FROM users');
-for (const user of users) {
-  user.posts = await db.query('SELECT * FROM posts WHERE user_id = $1', [user.id]);
-}
-// GOOD — single JOIN
-const usersWithPosts = await db.query(`
-  SELECT u.*, json_agg(p.*) as posts
-  FROM users u LEFT JOIN posts p ON p.user_id = u.id
-  GROUP BY u.id
-`);
-```
-
-- Missing indexes (check schema/migrations for columns used in WHERE/JOIN)
-- Missing `LIMIT` on user-facing queries
-
-**4.5 State Management** (frontend only)
-- Global state pollution (local state handled globally)
-- Prop drilling (>3 levels deep — use Context or composition)
-- Data fetching patterns (caching, deduplication, stale-while-revalidate)
-
----
+> Full detail moved to [`references/phase-checklists.md`](references/phase-checklists.md) (progressive disclosure). **Read that file before executing this section.**
 
 ### Phase 5: Performance Audit
 
-**5.1 Build & Bundle** (frontend)
-- Tree-shaking effectiveness (importing entire libraries vs specific modules)
-
-```typescript
-// BAD — imports entire library
-import _ from 'lodash';
-// GOOD — tree-shakeable import
-import get from 'lodash/get';
-```
-
-- Code splitting / lazy loading for routes
-- Large unoptimized assets
-
-**5.2 Runtime Performance**
-- Synchronous operations that should be async (file I/O, network calls)
-- Memory leak patterns (event listeners not cleaned up, growing caches, unclosed streams)
-- Expensive operations in hot paths
-
-```typescript
-// BAD — regex compiled on every call
-function validate(input: string) {
-  return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(input);
-}
-// GOOD — compile once at module level
-const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-function validate(input: string) { return EMAIL_REGEX.test(input); }
-```
-
-**5.3 Database & I/O**
-- Missing connection pooling
-- Unbounded queries (no `LIMIT` on user-facing endpoints)
-- Sequential I/O that could be parallel
-
-```typescript
-// BAD — sequential when independent
-const users = await fetchUsers();
-const products = await fetchProducts();
-// GOOD — parallel
-const [users, products] = await Promise.all([fetchUsers(), fetchProducts()]);
-```
-
----
+> Full detail moved to [`references/phase-checklists.md`](references/phase-checklists.md) (progressive disclosure). **Read that file before executing this section.**
 
 ### Phase 6: Infrastructure & DevOps Audit
 
-Use `Glob` and `Read` to check:
-
-**6.1 CI/CD Pipeline**
-- CI config exists (`.github/workflows/`, `.gitlab-ci.yml`, `.circleci/`, `Jenkinsfile`)
-- Tests running in CI
-- Linting enforced in CI
-- Security scanning in pipeline (Dependabot, Snyk, CodeQL)
-
-**6.2 Environment Configuration**
-- `.env.example` exists with placeholder values (not real secrets)
-- Environment variables validated at startup
-
-```typescript
-// BAD — silently undefined
-const port = process.env.PORT;
-// GOOD — validate at startup
-const port = process.env.PORT;
-if (!port) throw new Error('PORT environment variable is required');
-```
-
-**6.3 Containerization** (if applicable)
-- Dockerfile: multi-stage build, non-root user, minimal base image
-- `.dockerignore` covers `node_modules`, `.git`, `.env`
-
-**6.4 Logging & Monitoring**
-- Structured logging (JSON format, not raw `console.log`)
-- Error tracking integration (Sentry, Datadog, etc.)
-- Health check endpoints (`/health`, `/ready`)
-- No sensitive data in logs (passwords, tokens, PII)
-
----
+> Full detail moved to [`references/phase-checklists.md`](references/phase-checklists.md) (progressive disclosure). **Read that file before executing this section.**
 
 ### Phase 7: Documentation Audit
 
@@ -309,47 +141,7 @@ Use `Glob` and `Read` to check:
 
 ### Framework-Specific Checks
 
-Apply **only** if the framework was detected in Phase 0. Skip entirely if not relevant.
-
-**React / Next.js** (detect: `react` or `next` in `package.json`)
-- `useEffect` with missing dependencies (stale closures)
-- State updates during render (infinite loop pattern)
-- List items using index as key on reorderable lists
-- Props drilled through 3+ levels
-- Client-side hooks in Server Components (Next.js App Router)
-- Components exceeding 200 JSX lines
-
-**Node.js / Express / Fastify** (detect: `express`, `fastify`, `koa`, `@nestjs/core`)
-- Missing rate limiting on public endpoints
-- Missing request timeout configuration
-- Error messages leaking internal details to clients
-- Unbounded `SELECT *` without pagination
-- Missing authentication middleware on protected routes
-- Synchronous operations blocking the event loop
-
-**Python (Django / Flask / FastAPI)** (detect: `django`, `flask`, `fastapi` in requirements)
-- Django: missing `permission_classes`, `DEBUG=True` in production, missing CSRF middleware
-- Flask: `app.run(debug=True)` without environment check
-- FastAPI: missing Pydantic models for request/response
-- Mutable default arguments (`def func(items=[])`)
-- Missing type hints on public functions (if project uses mypy/pyright)
-
-**Go** (detect: `go.mod`)
-- Ignored errors (`file, _ := os.Open(filename)`)
-- Goroutine leaks (goroutines without cancellation context)
-- Missing `defer` for resource cleanup (files, locks, connections)
-- Race conditions (shared state without mutex or channels)
-
-**Rust** (detect: `Cargo.toml`)
-- `.unwrap()` / `.expect()` in non-test production code (use `?` operator)
-- `unsafe` blocks without safety comments
-
-**Mobile (React Native / Flutter)** (detect: `react-native` in `package.json` or `pubspec.yaml`)
-- FlatList without `keyExtractor` or `getItemLayout`
-- Missing `React.memo` on list item components
-- Flutter: missing `const` constructors, missing `dispose()` for controllers and streams
-
----
+> Full detail moved to [`references/phase-checklists.md`](references/phase-checklists.md) (progressive disclosure). **Read that file before executing this section.**
 
 ### Phase 8: Mesh Analytics (H3 Intelligence)
 
@@ -409,134 +201,39 @@ If the user wants both, run `/rune audit` then `/rune audit dx` separately.
 
 ### DX Principle 1: Time to Hello World
 
-Measure: How many steps from `git clone` to running the project?
-
-```
-1. Read README.md — extract setup instructions
-2. Count discrete steps (clone, install, config, build, run)
-3. Check: are ALL commands copy-pasteable? (no placeholders without explanation)
-4. Check: does `npm start` / `python main.py` / equivalent work immediately after install?
-5. If browser-pilot available: attempt to follow the README steps literally
-```
-
-| Steps to Run | Score | Verdict |
-|--------------|-------|---------|
-| 1-2 commands | 10/10 | Excellent — "clone and go" |
-| 3-4 commands | 7/10 | Good — reasonable setup |
-| 5-7 commands | 4/10 | Fair — friction will lose contributors |
-| 8+ commands | 2/10 | Poor — significant onboarding barrier |
-| Cannot run from README | 0/10 | Broken — README is lying or incomplete |
+> Full detail moved to [`references/dx-review.md`](references/dx-review.md) (progressive disclosure). **Read that file before executing this section.**
 
 ### DX Principle 2: First-Time Setup Friction
 
-Check for common setup traps:
-
-- Missing `.env.example` → new dev has no idea what env vars are needed
-- Missing system dependency docs (e.g., needs Redis/Postgres but README doesn't say)
-- Node version mismatch (no `.nvmrc` or `engines` field)
-- Python version mismatch (no `python-version` in `pyproject.toml`)
-- Failing install on clean machine (native deps, missing build tools)
-- No `--help` or usage message when running CLI with no args
-
-Score: count friction points. 0 = 10/10, 1-2 = 7/10, 3-4 = 4/10, 5+ = 2/10.
+> Full detail moved to [`references/dx-review.md`](references/dx-review.md) (progressive disclosure). **Read that file before executing this section.**
 
 ### DX Principle 3: Error Message Quality
 
-Sample 5 error paths in the codebase (auth failure, invalid input, missing config, network error, permission denied). For each:
-
-- Does the error message say WHAT went wrong? (not just "Error" or "Something went wrong")
-- Does it say WHY? (context: which input, which config key)
-- Does it suggest HOW to fix? (actionable: "set X in .env" not "check configuration")
-
-| Quality | Score |
-|---------|-------|
-| All 3 (what + why + how) | 10/10 |
-| What + why, no how | 6/10 |
-| What only | 3/10 |
-| Generic errors | 1/10 |
+> Full detail moved to [`references/dx-review.md`](references/dx-review.md) (progressive disclosure). **Read that file before executing this section.**
 
 ### DX Principle 4: CLI Help Quality
 
-If project has a CLI entry point:
-
-```
-1. Run `<cli> --help` — capture output
-2. Check: does it list all commands with descriptions?
-3. Check: does each subcommand have `--help` with examples?
-4. Check: is there a quickstart example in help output?
-5. Check: are flags named predictably (--verbose not --v, --output not --o)?
-```
-
-Score: 2 points each for: command listing, subcommand help, examples, consistent naming, error on unknown flag.
-
-If no CLI: score as N/A (does not count toward total).
+> Full detail moved to [`references/dx-review.md`](references/dx-review.md) (progressive disclosure). **Read that file before executing this section.**
 
 ### DX Principle 5: Documentation Navigation
 
-Can a developer find answers in under 60 seconds?
-
-- README has a table of contents or clear section headers
-- API endpoints / functions have a reference page or inline docs
-- Search works (if docs site): try 3 common queries
-- Cross-references between related concepts exist
-- No dead links (use `Grep` for `](` patterns and spot-check 5 links)
-
-If `browser-pilot` available: navigate the docs site, time how long to find "how to authenticate" and "how to deploy".
+> Full detail moved to [`references/dx-review.md`](references/dx-review.md) (progressive disclosure). **Read that file before executing this section.**
 
 ### DX Principle 6: API Consistency
 
-For the top 10 exported functions / API endpoints:
-
-- Naming convention consistent? (all camelCase, or all snake_case — not mixed)
-- Return type pattern consistent? (all return `{ data, error }` or all throw — not mixed)
-- Parameter ordering consistent? (required first, optional last — across all functions)
-- HTTP methods correct? (GET for reads, POST for creates — no GET with side effects)
-
-Score: consistency percentage across the 10 sampled APIs.
+> Full detail moved to [`references/dx-review.md`](references/dx-review.md) (progressive disclosure). **Read that file before executing this section.**
 
 ### DX Principle 7: Progressive Disclosure
 
-- Simple use case achievable with 1-3 lines of code? (check README examples)
-- Advanced config available but not required? (sensible defaults exist)
-- Configuration is layered? (env vars → config file → CLI flags → defaults)
-- Type hints / IDE completion available? (`d.ts` files, JSDoc, type stubs)
+> Full detail moved to [`references/dx-review.md`](references/dx-review.md) (progressive disclosure). **Read that file before executing this section.**
 
 ### DX Principle 8: Recovery from Mistakes
 
-- Can the user undo/rollback? (migrations have `down`, deploys have rollback, git-based workflows)
-- Do destructive operations have confirmation prompts? (`--force` required for dangerous ops)
-- Are error states recoverable? (retry guidance, not just "failed")
-- Does `--dry-run` exist for risky operations?
+> Full detail moved to [`references/dx-review.md`](references/dx-review.md) (progressive disclosure). **Read that file before executing this section.**
 
 ### DX Review Output
 
-```markdown
-## DX Review: [Project Name]
-
-| # | Principle | Score | Key Finding |
-|---|-----------|-------|-------------|
-| 1 | Time to Hello World | ?/10 | [steps count + blocker if any] |
-| 2 | Setup Friction | ?/10 | [friction points found] |
-| 3 | Error Messages | ?/10 | [quality level + worst example] |
-| 4 | CLI Help | ?/10 | [coverage + gaps] |
-| 5 | Doc Navigation | ?/10 | [findability + dead links] |
-| 6 | API Consistency | ?/10 | [consistency % + violations] |
-| 7 | Progressive Disclosure | ?/10 | [simple path exists? defaults?] |
-| 8 | Recovery | ?/10 | [undo/rollback/dry-run support] |
-| **Overall DX** | | **?/10** | **[verdict]** |
-
-### Quick Wins (fix in <1 hour)
-1. [specific, actionable improvement]
-2. [specific, actionable improvement]
-3. [specific, actionable improvement]
-
-### Structural Improvements (plan needed)
-1. [deeper change needed]
-```
-
-Grade thresholds: 9-10 Excellent DX, 7-8 Good DX, 5-6 Fair DX (losing contributors), 3-4 Poor DX (significant barrier), 1-2 Hostile DX.
-
----
+> Full detail moved to [`references/dx-review.md`](references/dx-review.md) (progressive disclosure). **Read that file before executing this section.**
 
 ### Final Report
 

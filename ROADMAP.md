@@ -1,6 +1,6 @@
 # Rune Roadmap
 
-> Last updated: July 2026 | Version: 2.32.0
+> Last updated: November 2026 | Version: 2.33.0
 
 ---
 
@@ -8,104 +8,107 @@
 
 Rune is a **mesh**, not a plugin store. Every addition must deepen connections, not just add surface area.
 
-These principles guide every roadmap decision:
-
 - **Depth over breadth** — one enriched skill beats three shallow ones. Connections matter more than skill count.
 - **Mesh-first** — new skills must wire into existing L1/L2 orchestrators. Isolated skills don't ship.
+- **Meet developers where they work** — every core skill ships to every supported runtime, natively where the runtime allows.
 - **Community-driven quality** — community packs go through the same depth and connection review as core skills.
-- **Platform parity** — every core feature must work across all 13 supported platforms.
 - **Earn the paid tiers** — Pro/Business packs must demonstrably outperform free alternatives for their domain.
 
 ---
 
-## Current State (v2.32.0 — "Drawing the Mesh")
+## Current State (v2.33.0 — "Everywhere")
 
-| Layer | Count | Status |
+| Area | Count | Status |
 |-------|-------|--------|
-| L0 Router | 1 | ✅ Complete |
-| L1 Orchestrators | 5 | ✅ Complete |
-| L2 Workflow Hubs | 30 | ✅ Complete |
-| L3 Utilities | 30 | ✅ Complete |
-| L4 Free Extension Packs | 14 | ✅ Complete |
-| Pro Packs (9) | 60+ skills | ✅ Shipped |
-| Business Packs (4) | 26 skills | ✅ Shipped |
-| Tests | 1,598 | ✅ Passing |
-| Mesh Signals | 45 | ✅ Active |
-| Runtime Hooks | 4 platforms | ✅ Claude / Cursor / Windsurf / Antigravity |
-| Tier Stacking | Free + Pro + Business | ✅ `--tier` flag |
-| Platforms | 13 | ✅ Active (cross-provider model mapping for codex/antigravity/opencode/openclaw/generic) |
+| L0 Router | 1 | ✅ |
+| L1 Orchestrators | 5 | ✅ |
+| L2 Workflow Hubs | 30 | ✅ |
+| L3 Utilities | 31 | ✅ |
+| L4 Free Extension Packs | 14 | ✅ |
+| Pro Packs | 9 | ✅ Shipped — $49 lifetime |
+| Business Packs | 4 (+ 4 cross-department orchestrators) | ✅ Shipped — $149 lifetime |
+| Mesh | 248 connections · 46 signals | ✅ Enforced by `rune doctor` + `validate-signals` |
+| Tests | 1,680+ | ✅ CI (lint + tests + doctor + version/number sync) |
+| Compiler targets | 16 | ✅ claude, codex, cursor, windsurf, antigravity, opencode, openclaw, generic, aider, copilot, gemini, qoder, qwen, grok, cline, agents |
+| Native plugins | Claude Code · Codex · Cursor · Grok Build · Gemini CLI · Agent Plugins 1.0 | ✅ Manifests in repo; marketplace listings in progress |
+| Runtime hooks | Claude Code + Codex + Grok Build + Cursor + Gemini CLI (native) · Windsurf / Antigravity (rules) | ✅ |
+| Payments | Polar (card / PayPal) · SePay (VN bank transfer) | ✅ Live on the landing page |
 
 ---
 
-## v2.3 — "Solid Ground" · Q2 2026
+## Shipped (v2.3 – v2.32, May → Aug 2026)
 
-**Theme:** Test coverage, health score, and Business tier depth. No new skills until the foundation earns it.
+The old "Solid Ground" and "Deeper Mesh" milestones are closed. Highlights:
 
-### Health & Quality
-- ⬚ Skill validation tests — parse all 59 SKILL.md, assert required frontmatter fields (name, layer, model, connections)
-- ⬚ E2E build pipeline tests — build each platform adapter, assert output structure matches spec
-- ⬚ Pack validation tests — doctor checks for all 143 split skill files, no dangling refs
-- ⬚ Coverage reporting with c8 — enforce 80%+ threshold on CI
-- ⬚ Target: 200+ total tests, health score 85+/100
+- ✅ Skill validation, E2E build-pipeline and pack validation tests; c8 coverage; CI on every push
+- ✅ `CONTRIBUTING.md`, skill template, extension template, community-pack doc
+- ✅ Payments on **Polar + SePay** (replaced the LemonSqueezy plan) with GitHub-username delivery for Pro/Business repos
+- ✅ `rune setup` wizard, `rune update`, tier stacking (`--tier pro,business`), hook drift reporter
+- ✅ Codex as a first-class native runtime (plugin, synchronous hooks, `.codex/agents` roles)
+- ✅ Agent Skills migration for all directory-per-skill adapters (v2.23)
+- ✅ Spec discipline + convergence gates (`ba`, `converge`, Level 3.5 verification), `council`, `diagram`
+- ✅ Visual brainstorming via `diagram` (Mermaid import → editorial HTML/SVG)
 
-### Business Tier Depth
-- ⬚ HR pack deepening — current depth below 700-line target; add talent-acquisition, performance-cycles, offboarding workflows
-- ⬚ Enterprise-search pack deepening — add semantic search patterns, RAG pipeline integration, index management workflows
-- ⬚ Cross-pack orchestration protocol — define handoff contracts between product→sales→support→data-science (v1 spec only, no new orchestrator yet)
-
-### Infrastructure
-- ⬚ LemonSqueezy integration for Pro/Business license key delivery
-- ⬚ License validation in `rune init` — detect tier, unlock paid pack installation
-- ⬚ CONTRIBUTING.md — community contribution guide (code style, skill template, review checklist)
+Full detail: [`CHANGELOG.md`](CHANGELOG.md).
 
 ---
 
-## v2.4 — "Deeper Mesh" · Q3 2026
+## v2.33 — "Everywhere" · Q4 2026 (this release)
 
-**Theme:** Enrichment backlog cleared, orchestration upgraded, community foundation laid.
+**Theme:** Rune installs natively in every major agent, and the Free → Pro path stops leaking.
 
-### Enrichment Backlog (HIGH priority)
-- ⬚ Wave-based parallel execution in `cook` and `plan` — `depends_on` field → wave grouping → parallel task dispatch; biggest workflow throughput win
-- ⬚ Nyquist validation gate — test-as-planning-gate pattern wired into `plan` Step 1; reject plans that skip testability
-- ⬚ Cross-phase integration checker — `cook` Phase 7 validates no regressions across phase boundaries before commit
+### Platform reach
+- ✅ Agent Plugins 1.0 root `plugin.json` (skills; no MCP server shipped)
+- ✅ Cursor plugin manifest (`.cursor-plugin/plugin.json`)
+- ✅ Gemini CLI extension (`gemini-extension.json`)
+- ✅ Grok Build: `grok` compiler target (`.grok/skills`) + `.grok-plugin/marketplace.json` (Grok also loads the Claude plugin and hooks)
+- ✅ `cline` (`.cline/skills`) and universal `agents` (`.agents/skills` — Kiro, Amp, Goose, Factory, Junie, Trae …) targets
+- ✅ `npx skills add rune-kit/rune` documented (skills.sh)
+- ✅ Claude marketplace ids fixed (`@rune/<pack>` → `rune-<pack>`) — `claude plugin validate` passes
+- ⬚ Marketplace submissions: Cursor Marketplace, Anthropic community marketplace, xAI plugin marketplace, Gemini extension gallery (topic `gemini-cli-extension`)
+- ⬚ Awesome-list PRs (awesome-claude-code, awesome-claude-skills ×2, awesome-agent-skills)
 
-### Enrichment Backlog (MEDIUM priority)
-- ⬚ Self-host + SaaS toggle pattern — `scaffold` and `ba` get dual-track output: self-hosted infra vs managed SaaS path
-- ⬚ Credit billing with AI cost passthrough — `saas` pack + `ba` financial modeling for per-seat vs usage billing
-- ⬚ Visual brainstorming companion — `brainstorm` output can generate Mermaid diagrams (mindmap, flowchart) for spatial thinkers
-- ⬚ UI design contract + 6-pillar audit — `design` skill formalizes contract with `review`; 6 pillars: layout, typography, color, motion, accessibility, content
+### Free → Pro
+- ✅ README buy links go to the public pricing page (were 404s to private repos)
+- ✅ One-line, opt-out Pro hint when the Free context counter reaches RED (`RUNE_PRO_HINT=0` disables)
+- ⬚ 60-second demo GIF (with vs without Rune) at the top of the README
+- ⬚ Re-run the benchmark on Codex, Cursor and Grok Build; publish per-platform numbers
+
+### Quality
+- ✅ Drift scanner in `version-sync-check` — stale skill/signal/connection/platform counts fail CI
+- ✅ `AGENTS.md` + `llms.txt`
+- ✅ `rune doctor` works on directory-per-skill output (was crashing with EISDIR)
+- ✅ Every platform ships `references/` (single-file targets and packs included); cross-skill reference links resolve after compile
+- ✅ The 13 largest SKILL.md files split into SKILL.md + `references/` in two passes (every skill ≤ 500 lines; nothing dropped, guarded by a test)
+- ✅ Look-alike skills sharpened instead of merged (research / docs-seeker / trend-scout, problem-solver / sequential-thinking, hallucination-guard / completion-gate / constraint-check)
+- ✅ Codex roles on GPT-6.x (gpt-6.2-astra / gpt-6.2-sol / gpt-6-luna); Antigravity no longer gets an invented `model` field
+- ✅ Platform-neutral worktree path (`.claude/worktrees/` for Claude Code, `.rune/worktrees/` elsewhere)
+- ✅ `onboard --runtimes`: one canonical `AGENTS.md`, per-runtime pointers and hooks; native Grok hooks (`rune hooks install --platform grok`)
+- ✅ Native Cursor hooks (`.cursor/hooks.json`) and Gemini CLI hooks (`.gemini/settings.json`) via `rune hooks install --platform cursor|gemini`
+
+---
+
+## Next — v2.34+ · Q1 2027
+
+### Hooks everywhere
+- ⬚ Gemini extension: ship Gemini-format lifecycle hooks and move the Claude ones out of `hooks/hooks.json`, so Gemini stops logging skipped events
+- ⬚ Pro/Business tier hook entries on Cursor (native events) and Gemini CLI
+- ⬚ Copilot and Kiro hook adapters
+- ⬚ CI job that installs Rune into each runtime that has a headless validator (`claude plugin validate`, `gemini extensions validate`, `grok plugin validate`)
+
+### Reach
+- ⬚ Rune MCP server — expose the skill router to claude.ai, ChatGPT and any MCP client
+- ⬚ Standalone "starter" skills on skills.sh (cook, sentinel, rescue) that lead to the full mesh
+- ⬚ Pro on every native runtime (Cursor, Grok Build, Gemini), not just Claude Code and Codex
 
 ### Community
-- ⬚ Community pack submission process — GitHub issue template, review checklist, depth + mesh requirements
-- ⬚ Pack marketplace page — browseable catalog on website with install commands, skill counts, platform support
-- ⬚ Skill authoring tutorial — written guide + example pack walkthrough (targeting: "I want to build a pack for my domain")
+- ⬚ GitHub Discussions + Discord; `good first issue` labels
+- ⬚ Community pack registry (rune-kit/community-packs) with the same depth review as core
+- ⬚ Skill authoring tutorial (build a pack for your domain)
 
-### Enrichment Backlog (LOW priority)
-- ⬚ CLAUDE.md template injection — `scaffold` can auto-generate project CLAUDE.md from stack answers in `ba` elicitation
-- ⬚ Brownfield codebase mapper — `onboard` skill extension: reads existing repo, generates mesh-compatible context map
-
----
-
-## v3.0 — "Open Ecosystem" · Q4 2026
-
-**Theme:** Community becomes a first-class contributor. Platform reach expands. Intelligence layer gets visibility.
-
-### Platform Expansion
-- ⬚ Gemini Code Assist adapter — 9th platform; requires research into Google IDE plugin format
-- ⬚ Amazon Q Developer adapter — enterprise IDE coverage
-- ⬚ VS Code extension — auto-install Rune rules into any AI IDE via marketplace; reduces friction from "download + configure" to one click
-- ⬚ GitHub Copilot Workspace adapter — pending API availability assessment
-
-### Community Ecosystem
-- ⬚ GitHub Discussions or Discord community — official space for pack authors, users, and contributors
-- ⬚ Community pack registry — reviewed and curated third-party packs listed at rune-kit/community-packs
-- ⬚ Monthly enrichment sessions — public issue where top-voted skills get deepened with community research
-
-### Intelligence & Analytics
-- ⬚ Web-based mesh analytics dashboard — replaces CLI-only `/rune metrics`; visualize skill usage heatmap, chain frequency, session counts
-- ⬚ Skill usage heatmap across projects — aggregate anonymized telemetry (opt-in) to surface underused skills
-- ⬚ Adaptive routing refinement — routing-overrides.json gets seeded from community usage patterns, not just local sessions
-- ⬚ Cost optimization recommendations — `cook` post-session analysis: "these 3 skills ran on opus, could be sonnet — save ~40%"
+### Intelligence
+- ⬚ Web mesh-analytics dashboard (skill heatmap, chain frequency) — opt-in telemetry only
+- ⬚ Cost recommendations after `cook` ("these 3 skills ran on the heavy tier, could be mid")
 
 ---
 

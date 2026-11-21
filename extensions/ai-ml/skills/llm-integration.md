@@ -37,7 +37,7 @@ const SentimentSchema = z.object({
 });
 
 async function analyzeSentiment(text: string, attempt = 0): Promise<z.infer<typeof SentimentSchema>> {
-  const models = ['gpt-4o-mini', 'gpt-4o'] as const; // fallback chain
+  const models = ['gpt-6-luna', 'gpt-6.1-terra'] as const; // fallback chain (check the provider's current model list)
   const model = attempt >= 2 ? models[1] : models[0];
 
   try {

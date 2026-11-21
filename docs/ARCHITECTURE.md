@@ -106,19 +106,26 @@ Mode discovery is automatic via signals + input pattern matching. Cook / team / 
 
 SKILL.md frontmatter uses Anthropic-native tier names (`opus`/`sonnet`/`haiku`) as the canonical authoring vocabulary. Adapters translate this hint to provider-correct model names so the field is meaningful in every compiled output:
 
-| Tier | claude / cursor / windsurf | codex | antigravity | opencode / openclaw / generic / qoder | qwen | gemini | aider / copilot |
+| Tier | claude / cursor / windsurf | codex (`.codex/agents` roles) | antigravity (body hint) | opencode / openclaw / generic / qoder | qwen | gemini | aider / copilot |
 |------|---------------------------|-------|-------------|---------------------------------------|------|--------|------------------|
-| opus | claude-opus-4-8 (no-op) | gpt-5.6-sol | gemini-3-pro | tier:heavy | qwen3-coder-plus | gemini-2.5-pro | tier-hint inline |
-| sonnet | claude-sonnet-5 (no-op) | gpt-5.6-terra | gemini-3-flash | tier:mid | qwen3-coder | gemini-2.5-flash | tier-hint inline |
-| haiku | claude-haiku-4-5 (no-op) | gpt-5.6-terra | gemini-3-flash-lite | tier:light | qwen3-coder-flash | gemini-2.0-flash-lite | tier-hint inline |
+| opus | `opus` (no-op → Claude Opus 5.5) | gpt-6.2-astra · effort high | Gemini 4 Neon (High) / Orchestrator | tier:heavy | qwen3-coder-plus | gemini-4-carbon | tier-hint inline |
+| sonnet | `sonnet` (no-op → Claude Sonnet 5.5) | gpt-6.2-sol · effort medium | Gemini 4 Hydrogen | tier:mid | qwen3-coder | gemini-4-hydrogen | tier-hint inline |
+| haiku | `haiku` (no-op → Claude Haiku 5.5) | gpt-6-luna · effort high | Gemini 3.8 Flash | tier:light | qwen3-coder-flash | gemini-3.5-flash-lite | tier-hint inline |
 
-> **Verified at source (2026-07): Claude** (Opus 4.8 / Sonnet 5 / Haiku 4.5,
-> Anthropic catalog) and **Codex** (GPT-5.6 sol/terra, developers.openai.com/codex/models).
-> Codex also gained a per-config reasoning control — `model_reasoning_effort =
-> minimal|low|medium|high|xhigh` (and `plan_mode_reasoning_effort`). The codex
-> adapter now emits project-scoped `.codex/agents/*.toml` roles for the
-> tier→effort mapping (opus→high, sonnet→medium, haiku→low) and documents it in
-> generated `AGENTS.md`; per-skill model frontmatter is intentionally omitted.
+> **Verified at source 2026-11-21.** **Codex**: developers.openai.com/codex/models
+> ("Recommended models": GPT-6.2 Astra for demanding work, GPT-6.2 Sol for everyday
+> work, Luna for focused repeatable tasks) and /codex/subagents ("If you select GPT-6
+> Luna explicitly, start with `high`"). GPT-6.1 Terra is skipped because it needs Codex
+> CLI ≥ 0.159.0. `model_reasoning_effort` accepts `low|medium|high|xhigh|max|ultra`
+> depending on the model; Rune emits it only in `.codex/agents/*.toml` roles and the
+> generated `AGENTS.md`, never as per-skill frontmatter.
+> **Antigravity**: SKILL.md frontmatter supports only `name` and `description`
+> (antigravity.google/docs/skills), so the adapter no longer writes a `model:` field
+> (it used to emit `gemini-3-*`, which Antigravity ignored and no longer lists); a
+> one-line "Suggested Antigravity model" hint follows the frontmatter instead, using
+> the display names from antigravity.google/docs/models.
+> **Gemini** column re-verified 2026-11 (Gemini 4 Carbon / Hydrogen, 3.5 Flash-Lite;
+> 2.x models deprecated).
 > **Still pending verification:**
 > gemini and qwen provider IDs. Note: **Gemini CLI retired 2026-06-18 → Antigravity
 > CLI** (free/individual tier); the `gemini` adapter target is legacy for that
@@ -135,7 +142,7 @@ Rules:
 
 ### Cross-Platform Adapter Coverage (v2.18+)
 
-Rune compiles core skills + extension packs into 13 platform-native formats. Each adapter targets a documented file convention; Rune emits the files, the platform's native loader picks them up.
+Rune compiles core skills + extension packs into 16 platform-native formats. Each adapter targets a documented file convention; Rune emits the files, the platform's native loader picks them up.
 
 | Adapter | Output | Skill Format | Extra Files | Source Doc |
 |---------|--------|--------------|-------------|------------|
@@ -152,6 +159,9 @@ Rune compiles core skills + extension packs into 13 platform-native formats. Eac
 | **gemini** | `.gemini/skills/rune-<n>/SKILL.md` | dir-per-skill, lazy-loaded natively | `GEMINI.md` (slim pointer) | geminicli.com/docs/cli/skills |
 | **qoder** | `.qoder/skills/rune-<n>/SKILL.md` | dir-per-skill, YAML w/ tier:* | `AGENTS.md` | docs.qoder.com |
 | **qwen** | `.qwen/skills/rune-<n>/SKILL.md` | dir-per-skill, Qwen model hint | `QWEN.md` (slim pointer) | qwenlm.github.io |
+| **grok** | `.grok/skills/rune-<n>/SKILL.md` | dir-per-skill Agent Skills, tier hint comment | — | docs.x.ai/build/features/skills-plugins-marketplaces |
+| **cline** | `.cline/skills/rune-<n>/SKILL.md` | dir-per-skill Agent Skills (name = dir, desc ≤ 1024) | — | docs.cline.bot/customization/skills |
+| **agents** | `.agents/skills/rune-<n>/SKILL.md` | dir-per-skill Agent Skills, skills only (Amp, Goose, Factory, Junie, Kiro, Trae, …) | — | agentskills.io |
 
 Adapters with `generateExtraFiles()` emit additional context files alongside per-skill rules — this generic hook (added v2.18) replaces ad-hoc `if (adapter.name === ...)` special cases in the emitter.
 
@@ -213,6 +223,18 @@ Adapters with `generateExtraFiles()` emit additional context files alongside per
 | GIT | git |
 | DOCUMENTS | doc-processor |
 | SECURITY | sentinel-env, quarantine |
+
+## Overlap Review (v2.33.0) — sharpened, not merged
+
+Three groups looked like merge candidates. Each was kept separate and given a description that names its boundary ("Not for … (other skill)"), because a merge would not remove real overlap and would cost more than it saves:
+
+| Group | Distinct job of each skill | Why no merge |
+|---|---|---|
+| `research` / `docs-seeker` / `trend-scout` | research = open-ended multi-source web answers; docs-seeker = one library's version-correct API, errors, migrations; trend-scout = market, competitor and launch signals | Different sources, outputs and callers (debug/fix lean on docs-seeker, brainstorm/marketing on trend-scout). A merged skill would load all three playbooks for every lookup. |
+| `problem-solver` / `sequential-thinking` | problem-solver picks *how to think* about an ambiguous or non-technical problem (19 frameworks, bias detectors); sequential-thinking orders *known*, interdependent decisions and traces reversibility | Different entry questions; together ~660 lines, so a merge would breach the 650-line SKILL.md ceiling and need a split right back. |
+| `hallucination-guard` / `completion-gate` / `constraint-check` | hallucination-guard checks the **code** (imports, APIs, packages exist); completion-gate checks **claims** against evidence; constraint-check checks **process** (HARD-GATE compliance) | Three different evidence sources at three points in a workflow. Folding them would blur which gate blocked and why. |
+
+Merging with thin aliases would also keep the skill count at 67 (aliases are still skill folders), leave every `rune:<name>` reference, pack manifest and user command pointing at a redirect, and add a hop on every call. Sharper descriptions fix the routing ambiguity directly; the skill-router Tier 3 table now lists each one with its boundary.
 
 ## Runtime Layer (v2.12.0)
 

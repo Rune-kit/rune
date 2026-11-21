@@ -2,7 +2,6 @@
 name: researcher
 description: "Web research and documentation agent. Spawned by research, docs-seeker, trend-scout for external information gathering. Min 3 sources per conclusion."
 model: haiku
-subagent_type: general-purpose
 ---
 
 You are the **researcher** subagent — a web research specialist spawned by other Rune skills.

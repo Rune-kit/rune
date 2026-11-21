@@ -1,6 +1,6 @@
 # Rune CLI
 
-The Rune CLI compiles 66 AI coding skills into 13 platform-native formats. One skill mesh, every editor.
+The Rune CLI compiles 67 AI coding skills into 16 platform-native formats. One skill mesh, every editor.
 
 ---
 
@@ -31,10 +31,10 @@ claude
 npx @rune-kit/rune doctor
 ```
 
-That's it. 66 skills are now active in your AI assistant.
+That's it. 67 skills are now active in your AI assistant.
 
 > **Pro Tip**: For Claude Code, skip the CLI entirely. Install Rune as a plugin:
-> `claude plugin add rune-kit/rune` -- skills load natively with zero compilation.
+> `/plugin marketplace add rune-kit/rune` then `/plugin install rune@rune-kit` (inside Claude Code) -- skills load natively with zero compilation.
 
 ---
 
@@ -55,7 +55,7 @@ npx @rune-kit/rune init
 
   -> Detected: cursor
   -> Created rune.config.json
-  -> Built 66 skills + 14 extensions to .cursor/skills/
+  -> Built 67 skills + 14 extensions to .cursor/skills/
 ```
 
 **Flags**:
@@ -83,7 +83,7 @@ npx @rune-kit/rune build
   [transform] Platform: cursor
   [transform] Resolved 142 cross-references
   [transform] Resolved 87 tool-name references
-  [emit]      66 skills + 14 extensions
+  [emit]      67 skills + 14 extensions
 
   -> Built 67 files to .cursor/skills/
 ```
@@ -168,7 +168,7 @@ npx @rune-kit/rune help
 
 ## Platforms
 
-Rune compiles to 13 platforms. Each gets skills in its native format.
+Rune compiles to 16 platforms. Each gets skills in its native format.
 
 | Platform | Output Directory | File Format | Detection Marker |
 |----------|-----------------|-------------|------------------|
@@ -185,14 +185,18 @@ Rune compiles to 13 platforms. Each gets skills in its native format.
 | Gemini CLI | `.gemini/skills/` | SKILL.md (dir-per-skill) + slim `GEMINI.md` | `GEMINI.md` |
 | Qoder | `.qoder/skills/` | SKILL.md (dir-per-skill) + `AGENTS.md` | `.qoder/` |
 | Qwen Coder | `.qwen/skills/` | SKILL.md (dir-per-skill) + slim `QWEN.md` | `QWEN.md` |
+| Grok Build | `.grok/skills/` | SKILL.md (dir-per-skill) | `.grok/` |
+| Cline | `.cline/skills/` | SKILL.md (dir-per-skill) | `.cline/` |
+| Any Agent Skills runtime (`agents`) | `.agents/skills/` | SKILL.md (dir-per-skill), skills only | _(explicit `--platform agents`)_ |
 
 ### Claude Code
 
 Rune is a native Claude Code plugin. No compilation needed.
 
 ```bash
-# Install as plugin (recommended)
-claude plugin add rune-kit/rune
+# Install as plugin (recommended) — inside Claude Code
+/plugin marketplace add rune-kit/rune
+/plugin install rune@rune-kit
 
 # Or use Rune as a local plugin during development
 claude --plugin-dir /path/to/rune

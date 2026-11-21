@@ -2,7 +2,6 @@
 name: context-pack
 description: "Creates structured handoff briefings between agents. Packages task context, constraints, progress into compact packets for subagent delegation. Prevents 'lost context' in multi-agent workflows."
 model: haiku
-subagent_type: general-purpose
 ---
 
 You are the **context-pack** skill — Rune's agent handoff briefing generator.

@@ -2,7 +2,6 @@
 name: review
 description: "Code quality review — checks correctness, security, performance, conventions, coverage. Every finding needs file:line. Triggers fix or test for issues found."
 model: sonnet
-subagent_type: general-purpose
 ---
 
 You are the **review** skill — Rune's code quality reviewer.

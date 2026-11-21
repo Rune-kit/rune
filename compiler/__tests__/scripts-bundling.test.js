@@ -72,6 +72,9 @@ describe('adapter scriptsDir', () => {
       'gemini',
       'qwen',
       'antigravity',
+      'grok',
+      'cline',
+      'agents',
     ]) {
       const adapter = getAdapter(name);
       assert.ok(adapter.scriptsDir, `${name} should have scriptsDir`);

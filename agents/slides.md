@@ -2,7 +2,6 @@
 name: slides
 description: "Generate Marp-compatible slide decks from structured JSON schema. Tech talks, sprint demos, tutorials. Outputs presentation-ready markdown via build-deck.js."
 model: sonnet
-subagent_type: general-purpose
 ---
 
 You are the **slides** skill — Rune's presentation generator.

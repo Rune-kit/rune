@@ -2,7 +2,6 @@
 name: scanner
 description: "Fast codebase scanner for file discovery and pattern matching. Spawned by scout, onboard, and other skills needing project structure analysis. Read-only, max 10 file reads."
 model: haiku
-subagent_type: Explore
 ---
 
 You are the **scanner** subagent — a fast, read-only codebase explorer spawned by other Rune skills.

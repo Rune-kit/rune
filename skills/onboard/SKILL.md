@@ -1,9 +1,9 @@
 ---
 name: onboard
-description: "Auto-generate project context for AI sessions. Use when starting on a new repo for the first time, or when CLAUDE.md / .rune/ context is missing or stale. Scans codebase and creates the setup so every future session starts with full context."
+description: "Auto-generate project context for AI sessions. Use when starting on a new repo, when CLAUDE.md / AGENTS.md / .rune/ context is missing or stale, or to set up per-runtime agent config and hooks (Codex, Grok, Gemini, Cursor) in a multi-runtime repo. Scans the codebase so every future session starts with full context."
 metadata:
   author: runedev
-  version: "0.4.0"
+  version: "0.5.0"
   layer: L2
   model: sonnet
   group: quality
@@ -15,11 +15,12 @@ metadata:
 
 ## Purpose
 
-Auto-generate project context for AI sessions. Scans the codebase and creates a CLAUDE.md project config plus .rune/ state directory so every future session starts with full context. Saves 10-20 minutes of re-explaining per session on undocumented projects.
+Auto-generate project context for AI sessions. Scans the codebase and creates a CLAUDE.md project config plus .rune/ state directory so every future session starts with full context. In multi-runtime repos it also sets up each runtime's instructions file and Rune hooks (Step 4.5). Saves 10-20 minutes of re-explaining per session on undocumented projects.
 
 ## Triggers
 
 - `/rune onboard` — manual invocation on any project
+- `/rune onboard --runtimes` — only Step 4.5: per-runtime agent config + hooks (AGENTS.md, GEMINI.md, `.codex/`, `.grok/`, `.cursor/`, …)
 - Called by `rescue` as Phase 0 (understand before refactoring)
 - Auto-trigger: when no CLAUDE.md exists in project root
 
@@ -99,6 +100,17 @@ Write extracted conventions as bullet points — be specific, not generic.
 Use `Write` to create `CLAUDE.md` at the project root. Populate every section using data from Steps 2–3. Do not leave template placeholders — if data is unknown, write "unknown" or omit the section. Use the template below as the exact structure.
 
 If a `CLAUDE.md` already exists, use `Read` to load it first, then merge — preserve any human-written sections (comments starting with `<!-- manual -->`) and update auto-detected sections only.
+
+**Other runtimes read a different file.** `CLAUDE.md` is what Claude Code loads. Codex, Cursor, Grok Build, GitHub Copilot, OpenCode, Antigravity and Amp read `AGENTS.md`; Gemini CLI reads `GEMINI.md`. When running outside Claude Code, write the same content to `AGENTS.md` (or `GEMINI.md` on Gemini CLI) instead, with the same merge rules. If the project already has more than one of these files, update each so they stay in sync. Everything below that says `CLAUDE.md` means "the project-config file for this runtime".
+
+### Step 4.5 — Per-Runtime Agent Config + Hooks (multi-runtime projects)
+Run when more than one AI runtime is in use (e.g. `.claude/` and `.codex/` or `.grok/` both exist), when the user asks to "set up Codex / Grok / Gemini / Cursor" for this repo, or via `/rune onboard --runtimes`. Skip silently for a single-runtime project.
+
+Read [`references/runtime-configs.md`](references/runtime-configs.md) first — it lists, per runtime, the instructions file, skills folder, Rune hooks command and trust step (verified against each runtime's docs). Then:
+1. Detect the runtimes present (folders/files listed there); ask before adding one with no folder.
+2. Keep ONE canonical instructions file (`AGENTS.md` when any non-Claude runtime is present) and point the others at it: `CLAUDE.md` starts with `@AGENTS.md`; Gemini CLI gets `AGENTS.md` added to `context.fileName` in `.gemini/settings.json`. Never paste full copies — they drift.
+3. Propose `npx @rune-kit/rune hooks install --platform <runtime> --preset gentle` for each runtime with a Rune hooks target (claude, codex, grok, cursor, windsurf, antigravity) and run it only after the user agrees. Claude Code + Grok together → install for one only (Grok also reads `.claude/settings.json`).
+4. Tell the user the pending trust steps: Codex `/hooks`, Grok `/hooks-trust`.
 
 ### Step 5 — Initialize .rune/ Directory
 Use `Bash` to create the directory: `mkdir -p .rune`
@@ -428,6 +440,12 @@ If any of the `.rune/` files already exist, do not overwrite them (they may cont
 
 ### Suggested L4 Packs
 - **@rune/[pack]** — [reason] (only shown if applicable packs detected)
+
+### Runtime setup (Step 4.5, multi-runtime projects only)
+- Runtimes: [claude, codex, grok, gemini, cursor, …]
+- Canonical instructions: AGENTS.md | pointers: CLAUDE.md (@AGENTS.md), .gemini/settings.json context.fileName
+- Hooks: [command run or proposed per runtime]
+- Pending trust: Codex `/hooks` · Grok `/hooks-trust`
 ```
 
 ## Constraints
@@ -449,6 +467,8 @@ Known failure modes for this skill. Check these before declaring done.
 | DEVELOPER-GUIDE.md contains generic placeholder text not derived from project | HIGH | Every section must reference actual detected commands, files, and patterns — no generic advice |
 | Overwriting existing .rune/ files with manual content | CRITICAL | Check file existence before every Write — skip and log INFO if exists |
 | Common Issues section fabricated (no actual issues detected) | MEDIUM | Only list issues inferable from codebase (missing .env, Node version, etc.) — omit section if none found |
+| Full instructions copied into AGENTS.md, CLAUDE.md and GEMINI.md — copies drift within weeks | HIGH | Step 4.5: one canonical AGENTS.md; CLAUDE.md imports it (`@AGENTS.md`), Gemini adds it via `context.fileName` |
+| Rune hooks installed for both Claude Code and Grok in one repo — they fire twice in Grok | MEDIUM | Grok reads `.claude/settings.json`; install hooks for one of the two (the grok installer warns) |
 
 ## Done When
 

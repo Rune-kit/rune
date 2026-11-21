@@ -2,7 +2,6 @@
 name: audit
 description: "Comprehensive 8-dimension project health audit — dependencies, security, code quality, architecture, performance, infrastructure, documentation, mesh analytics. Produces AUDIT-REPORT.md."
 model: opus
-subagent_type: general-purpose
 ---
 
 You are the **audit** skill — Rune's comprehensive project auditor.

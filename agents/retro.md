@@ -2,7 +2,6 @@
 name: retro
 description: "Engineering retrospective — analyzes commit history, work patterns, code quality metrics. Per-person breakdowns, shipping streaks, actionable improvements. READ-ONLY, never modifies code."
 model: sonnet
-subagent_type: general-purpose
 ---
 
 You are the **retro** skill — Rune's engineering retrospective engine.

@@ -10,6 +10,7 @@ import { cp, mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { extractCrossRefs, extractToolRefs, parseOrgConfig, parsePack, parseSkill, parseTemplate } from './parser.js';
 import { transformSkill } from './transformer.js';
+import { rewriteReferencePaths } from './transforms/reference-paths.js';
 import { resolveScriptsPath } from './transforms/scripts-path.js';
 
 /**
@@ -103,12 +104,17 @@ async function discoverPacks(extensionsDir, enabledPacks = null) {
  */
 const COPY_DENYLIST = new Set(['.git', 'node_modules', '__pycache__', '.DS_Store', '.venv', '.env']);
 
-async function copySkillExtraDirs(sourceSkillDir, outputSkillDir) {
+// Pack dirs whose content is already concatenated into the compiled pack body
+const PACK_CONTENT_DIRS = new Set(['skills', 'templates']);
+
+async function copySkillExtraDirs(sourceSkillDir, outputSkillDir, skip = new Set()) {
   if (!existsSync(sourceSkillDir)) return [];
 
   const entries = await readdir(sourceSkillDir, { withFileTypes: true });
   // scripts/ is excluded: copyScriptsDir handles it explicitly (with stats counting)
-  const dirs = entries.filter((e) => e.isDirectory() && !COPY_DENYLIST.has(e.name) && e.name !== 'scripts');
+  const dirs = entries.filter(
+    (e) => e.isDirectory() && !COPY_DENYLIST.has(e.name) && e.name !== 'scripts' && !skip.has(e.name),
+  );
 
   const copied = [];
   for (const dir of dirs) {
@@ -511,6 +517,11 @@ export async function buildAll({
   // Build skills — collect parsed data for skill-index + openclaw reuse
   const parsedSkills = [];
 
+  // skill name → source dir, so reference paths can be rewritten per platform
+  const skillDirs = new Map(
+    skillEntries.map((e) => [e.name || path.basename(path.dirname(e.path)), path.dirname(e.path)]),
+  );
+
   for (const skillEntry of skillEntries) {
     const skillPath = skillEntry.path;
     try {
@@ -532,7 +543,8 @@ export async function buildAll({
       const scriptsRelPath = hasScripts
         ? path.join(adapter.outputDir, adapter.scriptsDir(parsed.name)).replaceAll('\\', '/')
         : null;
-      const body = hasScripts ? resolveScriptsPath(rawBody, scriptsRelPath) : rawBody;
+      const scriptedBody = hasScripts ? resolveScriptsPath(rawBody, scriptsRelPath) : rawBody;
+      const body = rewriteReferencePaths(scriptedBody, { skillName: parsed.name, skillDirs, adapter });
 
       // Warn if {scripts_dir} placeholder exists but no scripts/ folder to resolve it
       if (!hasScripts && rawBody.includes('{scripts_dir}')) {
@@ -580,9 +592,13 @@ export async function buildAll({
 
       await writeFile(outputPath, output, 'utf-8');
 
-      // Copy extra directories (references/, etc.) from skill source
+      // Copy extra directories (references/, etc.) from skill source.
+      // Single-file platforms get them in a sibling folder (`rune-cook/references/`)
+      // so progressive-disclosure content is never dropped.
       if (adapter.useSkillDirectories && skillDir) {
         await copySkillExtraDirs(skillSourceDir, skillDir);
+      } else {
+        await copySkillExtraDirs(skillSourceDir, path.join(outputDir, `${adapter.skillPrefix}${parsed.name}`));
       }
 
       // Copy scripts/ directory if present
@@ -706,8 +722,17 @@ export async function buildAll({
       // Normalize pack name for headers (ext-trading instead of @rune/trading)
       parsed.name = `ext-${packName}`;
 
-      const { header, body, footer } = transformSkill(parsed, adapter);
+      const { header, body: packBody, footer } = transformSkill(parsed, adapter);
+      // Pack-level reference folders (e.g. zalo/references/) ship next to the
+      // compiled pack, and their paths are rewritten for single-file platforms.
+      const packRefDirs = new Map([[parsed.name, packDir]]);
+      const body = rewriteReferencePaths(packBody, { skillName: parsed.name, skillDirs: packRefDirs, adapter });
       const output = [header, body, footer].filter(Boolean).join('\n');
+      await copySkillExtraDirs(
+        packDir,
+        path.join(outputDir, `${adapter.skillPrefix}ext-${packName}`),
+        PACK_CONTENT_DIRS,
+      );
 
       let outputPath;
       let displayName;

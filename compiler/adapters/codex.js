@@ -13,18 +13,21 @@
  * only (config.toml). Repo skills MUST live in .agents/skills/ to be
  * auto-discovered. @see https://developers.openai.com/codex/skills
  *
- * MODEL TIER MAPPING (v2.15+, lineup refreshed 2026-07):
+ * MODEL TIER MAPPING (v2.15+, lineup refreshed 2026-11):
  * Skill frontmatter `model: opus|sonnet|haiku` (Anthropic naming) is
  * translated to Codex/OpenAI provider-correct model names so the field
  * is meaningful in the compiled output. Unknown tier values pass through.
  *
- * Codex GPT-5.6 tiers (verified against codex-cli 0.144.1 + developers.openai.com/codex/models):
- *   sol  = flagship/complex → opus
- *   terra = balanced everyday → sonnet
- *   terra at low effort = fast/affordable → haiku
- * Codex also exposes `model_reasoning_effort = minimal|low|medium|high|xhigh`
- * (a config.toml key, not per-skill frontmatter) — Rune surfaces the tier→effort
- * suggestion in AGENTS.md rather than emitting a speculative per-skill field.
+ * Codex GPT-6.x tiers (verified 2026-11-21 against developers.openai.com/codex/models
+ * "Recommended models" and /codex/subagents "Model choice"):
+ *   gpt-6.2-astra = demanding end-to-end work → opus
+ *   gpt-6.2-sol   = everyday agents that plan, use tools, check work → sonnet
+ *   gpt-6-luna    = fast, narrowly scoped, repeatable work → haiku
+ *                   (docs: "If you select GPT-6 Luna explicitly, start with `high`")
+ * gpt-6.1-terra is skipped on purpose: it needs Codex CLI >= 0.159.0.
+ * `model_reasoning_effort` (low|medium|high|xhigh|max|ultra, model-dependent)
+ * is a config.toml / custom-agent key, not per-skill frontmatter — Rune emits it
+ * in `.codex/agents/*.toml` roles and documents it in AGENTS.md.
  */
 
 import { existsSync } from 'node:fs';
@@ -33,16 +36,16 @@ import path from 'node:path';
 import { BRANDING_FOOTER } from '../transforms/branding.js';
 
 const MODEL_MAP = {
-  opus: 'gpt-5.6-sol',
-  sonnet: 'gpt-5.6-terra',
-  haiku: 'gpt-5.6-terra',
+  opus: 'gpt-6.2-astra',
+  sonnet: 'gpt-6.2-sol',
+  haiku: 'gpt-6-luna',
 };
 
 // Suggested config.toml `model_reasoning_effort` per tier (global key, documented in AGENTS.md).
 const REASONING_EFFORT_MAP = {
   opus: 'high',
   sonnet: 'medium',
-  haiku: 'low',
+  haiku: 'high', // Luna: official starting point is `high`
 };
 
 const TOOL_MAP = {
@@ -137,7 +140,7 @@ export default {
       `- sonnet → \`${MODEL_MAP.sonnet}\` (\`model_reasoning_effort = "${REASONING_EFFORT_MAP.sonnet}"\`) — code / edit / review`,
       `- haiku → \`${MODEL_MAP.haiku}\` (\`model_reasoning_effort = "${REASONING_EFFORT_MAP.haiku}"\`) — scan / read-only`,
       '',
-      'Generated project-scoped roles live in `.codex/agents/` so spawned agents can apply these settings natively.',
+      'Generated project-scoped roles live in `.codex/agents/` (`rune_heavy`, `rune_standard`, `rune_fast`) so spawned agents apply these settings natively. Codex loads a project `.codex/` folder only when the project is trusted.',
       '',
       '---',
       '> Rune Skill Mesh — https://github.com/rune-kit/rune',

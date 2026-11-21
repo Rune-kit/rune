@@ -3,7 +3,8 @@
 /**
  * bump-version.js — Atomically bump the Rune version across all distribution touchpoints.
  *
- * Replaces the manual sweep of: package.json, Claude/Codex plugin manifests, marketplace.json,
+ * Replaces the manual sweep of: package.json, Claude/Codex/Cursor/Agent Plugins/Gemini/Grok manifests,
+ * marketplace.json,
  * docs/index.html (hero badge), ROADMAP.md (header + Current State title),
  * CHANGELOG.md (heading promotion).
  *
@@ -75,6 +76,14 @@ const targets = [
     find: new RegExp(`"version":\\s*"${oldEsc}"`),
     replace: () => `"version": "${newVersion}"`,
   },
+  // v2.33 "Everywhere" manifests — Agent Plugins, Cursor, Gemini CLI, Grok.
+  ...['plugin.json', '.cursor-plugin/plugin.json', 'gemini-extension.json', '.grok-plugin/marketplace.json'].map(
+    (file) => ({
+      file,
+      find: new RegExp(`"version":\\s*"${oldEsc}"`),
+      replace: () => `"version": "${newVersion}"`,
+    }),
+  ),
   {
     file: 'docs/index.html',
     find: new RegExp(`v${oldEsc}\\s*&mdash;`),
