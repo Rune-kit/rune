@@ -164,3 +164,25 @@ describe('Description integrity', () => {
     assert.strictEqual(violations.length, 0, `Bare quotes:\n${violations.join('\n')}`);
   });
 });
+
+describe('Overlap boundaries (v2.33.0: sharpened instead of merged)', () => {
+  // See docs/ARCHITECTURE.md "Overlap Review". Each skill in a look-alike
+  // group must name at least one sibling so routers can tell them apart.
+  const GROUPS = [
+    ['research', 'docs-seeker', 'trend-scout'],
+    ['problem-solver', 'sequential-thinking'],
+    ['hallucination-guard', 'completion-gate', 'constraint-check'],
+  ];
+  for (const group of GROUPS) {
+    for (const name of group) {
+      test(`${name} description names a sibling from its group`, () => {
+        const line = readDescriptionLine(name);
+        const siblings = group.filter((s) => s !== name);
+        assert.ok(
+          siblings.some((s) => line.includes(s)),
+          `${name} must point to one of ${siblings.join(', ')} for the overlapping case`,
+        );
+      });
+    }
+  }
+});

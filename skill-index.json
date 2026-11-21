@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "generated": "2026-11-21T09:27:09.145Z",
+  "generated": "2026-11-21T09:28:51.605Z",
   "skillCount": 67,
   "skills": {
     "adversary": {
@@ -630,7 +630,7 @@
       "layer": "L3",
       "model": "sonnet",
       "group": "reasoning",
-      "description": "Structured reasoning frameworks for complex, ambiguous problems. Use when a decision has many competing factors, the problem is not purely technical (strategy, prioritization, trade-offs), or you susp",
+      "description": "Structured reasoning frameworks for complex, ambiguous problems. Use when the hard part is choosing how to think: many competing factors, a non-technical question (strategy, prioritization, trade-offs",
       "connections": [
         "council"
       ]
@@ -813,7 +813,7 @@
       "layer": "L3",
       "model": "sonnet",
       "group": "reasoning",
-      "description": "Step-by-step reasoning for multi-variable problems. Use when a decision has interdependent parts whose order matters, consequences are hard to reverse, or second-order effects need tracing. Breaks int",
+      "description": "Step-by-step reasoning for multi-variable problems. Use when the options are known but the decisions depend on each other, order matters, consequences are hard to reverse, or second-order effects need",
       "connections": []
     },
     "session-bridge": {
@@ -885,9 +885,13 @@
         "verification",
         "hallucination-guard",
         "completion-gate",
+        "constraint-check",
         "sentinel-env",
-        "research",
         "docs-seeker",
+        "research",
+        "trend-scout",
+        "problem-solver",
+        "sequential-thinking",
         "session-bridge",
         "journal",
         "neural-memory",
@@ -1287,9 +1291,13 @@
       "verification",
       "hallucination-guard",
       "completion-gate",
+      "constraint-check",
       "sentinel-env",
-      "research",
       "docs-seeker",
+      "research",
+      "trend-scout",
+      "problem-solver",
+      "sequential-thinking",
       "session-bridge",
       "journal",
       "neural-memory",

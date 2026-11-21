@@ -220,6 +220,18 @@ Adapters with `generateExtraFiles()` emit additional context files alongside per
 | DOCUMENTS | doc-processor |
 | SECURITY | sentinel-env, quarantine |
 
+## Overlap Review (v2.33.0) — sharpened, not merged
+
+Three groups looked like merge candidates. Each was kept separate and given a description that names its boundary ("Not for … (other skill)"), because a merge would not remove real overlap and would cost more than it saves:
+
+| Group | Distinct job of each skill | Why no merge |
+|---|---|---|
+| `research` / `docs-seeker` / `trend-scout` | research = open-ended multi-source web answers; docs-seeker = one library's version-correct API, errors, migrations; trend-scout = market, competitor and launch signals | Different sources, outputs and callers (debug/fix lean on docs-seeker, brainstorm/marketing on trend-scout). A merged skill would load all three playbooks for every lookup. |
+| `problem-solver` / `sequential-thinking` | problem-solver picks *how to think* about an ambiguous or non-technical problem (19 frameworks, bias detectors); sequential-thinking orders *known*, interdependent decisions and traces reversibility | Different entry questions; together ~660 lines, so a merge would breach the 650-line SKILL.md ceiling and need a split right back. |
+| `hallucination-guard` / `completion-gate` / `constraint-check` | hallucination-guard checks the **code** (imports, APIs, packages exist); completion-gate checks **claims** against evidence; constraint-check checks **process** (HARD-GATE compliance) | Three different evidence sources at three points in a workflow. Folding them would blur which gate blocked and why. |
+
+Merging with thin aliases would also keep the skill count at 67 (aliases are still skill folders), leave every `rune:<name>` reference, pack manifest and user command pointing at a redirect, and add a hop on every call. Sharper descriptions fix the routing ambiguity directly; the skill-router Tier 3 table now lists each one with its boundary.
+
 ## Runtime Layer (v2.12.0)
 
 The mesh ships as a **library** (invoke via slash commands) and as a **runtime** (native hooks that auto-fire on tool use). The runtime converts passive advice into enforced discipline.

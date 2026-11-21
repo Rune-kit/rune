@@ -1,6 +1,6 @@
 ---
 name: problem-solver
-description: "Structured reasoning frameworks for complex, ambiguous problems. Use when a decision has many competing factors, the problem is not purely technical (strategy, prioritization, trade-offs), or you suspect bias in the current reasoning. 19 analytical frameworks, 12 cognitive bias detectors, decomposition methods, mental models, and Cynefin domain classification."
+description: "Structured reasoning frameworks for complex, ambiguous problems. Use when the hard part is choosing how to think: many competing factors, a non-technical question (strategy, prioritization, trade-offs), or suspected bias. 19 frameworks, 12 bias detectors, mental models, Cynefin classification. Not for ordering a known chain of dependent decisions (sequential-thinking)."
 metadata:
   author: runedev
   version: "0.6.0"

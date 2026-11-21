@@ -1,6 +1,6 @@
 ---
 name: completion-gate
-description: "Validates agent claims against evidence trail. Use when verifying an agent has actually done what it claims — auto-fires at workflow end. Catches 'done' without proof, 'tests pass' without output, 'fixed' without verification. Called by cook and team."
+description: "Validates agent claims against evidence trail. Use when verifying an agent has actually done what it claims — auto-fires at workflow end. Catches 'done' without proof, 'tests pass' without output, 'fixed' without verification. Called by cook and team. Checks claims, not code (hallucination-guard) or skill rules (constraint-check)."
 user-invocable: false
 metadata:
   author: runedev

@@ -1,6 +1,6 @@
 ---
 name: constraint-check
-description: "Meta-validator for HARD-GATEs. Use when auditing whether a skill's mandatory constraints were actually followed during a workflow (not just claimed). Called by cook, team, and audit for discipline compliance."
+description: "Meta-validator for HARD-GATEs. Use when auditing whether a skill's mandatory constraints were actually followed during a workflow (not just claimed). Called by cook, team, and audit for discipline compliance. Checks process rules; output claims are completion-gate, phantom imports/APIs are hallucination-guard."
 user-invocable: false
 metadata:
   author: runedev

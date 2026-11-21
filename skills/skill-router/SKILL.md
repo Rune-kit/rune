@@ -192,11 +192,15 @@ These are rarely invoked directly — they're called by Tier 1/2 skills:
 | `rune:fix` | debug, cook | Apply code changes |
 | `rune:preflight` | cook | Quality gate |
 | `rune:verification` | cook, fix | Run lint/test/build |
-| `rune:hallucination-guard` | cook, fix | Verify imports |
-| `rune:completion-gate` | cook | Validate claims |
+| `rune:hallucination-guard` | cook, fix | Verify imports/APIs in the code exist |
+| `rune:completion-gate` | cook, team | Validate agent claims against evidence |
+| `rune:constraint-check` | cook, team, audit | Audit HARD-GATE compliance (process rules) |
 | `rune:converge` | cook | Spec↔code gap scan (Phase 6.5) |
 | `rune:sentinel-env` | cook, scaffold, onboard | Environment pre-flight |
-| `rune:research` / `rune:docs-seeker` | any | Look up docs |
+| `rune:docs-seeker` | any | Version-correct API docs, error messages, migration guides |
+| `rune:research` | any | Multi-source web research, comparisons, best practices |
+| `rune:trend-scout` | brainstorm, marketing | Market, competitor and trend scans |
+| `rune:problem-solver` / `rune:sequential-thinking` | debug, plan, brainstorm | Pick a reasoning framework for an ambiguous problem / order known dependent decisions |
 | `rune:session-bridge` | cook, team | Save context (in-session state handoff) |
 | `rune:journal` | cook, team | Persistent work log within a session |
 | `rune:neural-memory` | cook, team, any L1/L2 | Cross-session cognitive persistence via Neural Memory MCP — semantic complement to session-bridge and journal |

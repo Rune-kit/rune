@@ -1,6 +1,6 @@
 ---
 name: sequential-thinking
-description: "Step-by-step reasoning for multi-variable problems. Use when a decision has interdependent parts whose order matters, consequences are hard to reverse, or second-order effects need tracing. Breaks interconnected decisions into ordered logical steps with bias detection, reversibility classification, and second-order effect tracking."
+description: "Step-by-step reasoning for multi-variable problems. Use when the options are known but the decisions depend on each other, order matters, consequences are hard to reverse, or second-order effects need tracing. Ordered logical steps with reversibility classification and bias checks. Not for picking a framework for an ambiguous or strategic problem (problem-solver)."
 metadata:
   author: runedev
   version: "0.3.0"
