@@ -135,6 +135,28 @@ describe('Grok Build marketplace', () => {
   });
 });
 
+describe('Claude Code marketplace ↔ README install command', () => {
+  test('README advertises /plugin install rune@<marketplace name>', () => {
+    const market = readJson('.claude-plugin/marketplace.json');
+    const readme = readFileSync(join(ROOT, 'README.md'), 'utf8');
+    assert.ok(readme.includes('/plugin marketplace add rune-kit/rune'));
+    assert.ok(readme.includes(`/plugin install rune@${market.name}`));
+    assert.ok(!readme.includes('claude plugin add rune-kit/rune'), 'stale install command');
+  });
+});
+
+describe('Claude Code marketplace plugin ids', () => {
+  test('every entry is installable (letters, digits, ".", "_", "-"; starts alphanumeric)', () => {
+    // `claude plugin validate` rejected the whole marketplace while packs were
+    // named "@rune/<pack>" — `/plugin marketplace add rune-kit/rune` failed.
+    const market = readJson('.claude-plugin/marketplace.json');
+    assert.match(market.name, /^[A-Za-z0-9][A-Za-z0-9._-]*$/);
+    for (const p of market.plugins) {
+      assert.match(p.name, /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/, `"${p.name}" is not a valid plugin id`);
+    }
+  });
+});
+
 describe('all manifests share one version', () => {
   for (const [file, read] of [
     ['plugin.json', (j) => j.version],
