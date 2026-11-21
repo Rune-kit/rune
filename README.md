@@ -133,9 +133,9 @@ npx @rune-kit/rune init --platform <name>   # grok · cline · copilot · windsu
 | **Claude Code** | `/plugin install rune@rune-kit` | 67 | ✅ native | ✅ |
 | **OpenAI Codex** | `.codex-plugin` + `rune setup --platform codex` | 67 | ✅ native | ✅ `spawn_agent` |
 | **Grok Build** (xAI CLI) | `grok plugin install rune-kit/rune --trust` · or `--platform grok` → `.grok/skills/` | 67 | ✅ native `.grok/hooks/` via `rune hooks install --platform grok` (beta) | ✅ (beta) |
-| **Cursor** | Cursor plugin (`.cursor-plugin/`) · or `--platform cursor` → `.cursor/skills/` | 67 | rules via `rune hooks install` | — |
+| **Cursor** | Cursor plugin (`.cursor-plugin/`) · or `--platform cursor` → `.cursor/skills/` | 67 | ✅ native `.cursor/hooks.json` via `rune hooks install --platform cursor` (beta) | — |
 | **Grok Bot** | Cursor plugin (Cursor Marketplace listing pending) | 67 | — | — |
-| **Gemini CLI** | `gemini extensions install …/rune` · or `--platform gemini` | 67 | — ¹ | — |
+| **Gemini CLI** | `gemini extensions install …/rune` · or `--platform gemini` | 67 | ✅ native `.gemini/settings.json` via `rune hooks install --platform gemini` (beta) ¹ | — |
 | **GitHub Copilot** (CLI / VS Code agent mode) | `--platform copilot` → `.github/skills/` | 67 | — | — |
 | **Cline** | `--platform cline` → `.cline/skills/` | 67 | — | — |
 | **Kiro · Amp · Goose · Factory · Junie · Trae · Roo** | `--platform agents` → `.agents/skills/` · or `npx skills add rune-kit/rune` | 67 | — | — |
@@ -145,7 +145,7 @@ npx @rune-kit/rune init --platform <name>   # grok · cline · copilot · windsu
 
 Every route ships all 67 core skills and the 14 free extension packs. Where a runtime has no native hooks or subagents, Rune compiles the same gates into inline MUST/NEVER constraints and sequential workflows — same knowledge, runtime-dependent enforcement.
 
-<sub>¹ Gemini skips Rune's Claude-format hook events and may log a notice at startup; skills are unaffected.</sub>
+<sub>¹ The Gemini extension's bundled `hooks/hooks.json` is Claude-format; Gemini skips the events it doesn't know and may log a notice at startup. Skills are unaffected, and `rune hooks install --platform gemini` writes Gemini-native hooks separately.</sub>
 
 ## Quick start
 

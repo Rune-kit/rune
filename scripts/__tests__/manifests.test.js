@@ -90,6 +90,14 @@ describe('Cursor plugin manifest', () => {
     assert.strictEqual(hooks.version, 1);
     assert.strictEqual(typeof hooks.hooks, 'object');
   });
+
+  test('plugin ships no always-on hooks — native hooks are opt-in via `rune hooks install --platform cursor`', () => {
+    // Plugin hooks would run `npx` on every tool call for every plugin user, and
+    // Rune's lifecycle scripts emit the Claude/Codex envelope, which Cursor's
+    // permission hooks reject as schema-mismatched (= block). See docs/HOOKS.md.
+    const hooks = readJson(m.hooks);
+    assert.deepStrictEqual(hooks.hooks, {});
+  });
 });
 
 describe('Gemini CLI extension manifest', () => {

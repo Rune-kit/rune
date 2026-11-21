@@ -6,8 +6,21 @@
  * execution (currently a no-op placeholder that emits a verdict line — skill
  * invocation wiring happens when skills gain a headless mode).
  *
- * In gentle mode: always exits 0, prints advisory line.
- * In strict mode: exits 2 on BLOCK verdict (Claude Code blocks the tool call).
+ * In gentle mode: always exits 0, prints advisory line (stderr).
+ * In strict mode: exits 2 on BLOCK verdict (Claude Code, Cursor, Gemini CLI and
+ * Grok all treat exit 2 as "block").
+ *
+ * Output contract (`--format`):
+ *   - claude (default): stdout stays EMPTY, advisory goes to stderr. Cursor
+ *     imports `.claude/settings.json` hooks and treats non-JSON stdout from a
+ *     permission hook as "block", so a plain-text line here would stall edits
+ *     in Cursor; empty stdout is a no-op in Claude Code and Grok.
+ *   - cursor: stdout is one JSON object — `{"permission":"allow"}` for
+ *     Cursor's permission hooks (preToolUse, beforeShellExecution,
+ *     beforeMCPExecution, beforeReadFile, subagentStart), `{}` otherwise.
+ *     (cursor.com/docs/hooks: invalid JSON from a permission hook blocks.)
+ *   - gemini: stdout is `{}` — Gemini CLI parses stdout as JSON and shows any
+ *     plain text as a system message (geminicli docs/hooks "Golden Rule").
  *
  * Security:
  *   - Skill name MUST match the allowlist (no arbitrary shell injection)
@@ -18,6 +31,28 @@
 import { WIRED_SKILLS } from './hooks/presets.js';
 
 const ALLOWLIST = new Set(WIRED_SKILLS);
+export const FORMATS = Object.freeze(['claude', 'cursor', 'gemini']);
+const CURSOR_PERMISSION_EVENTS = new Set([
+  'preToolUse',
+  'beforeShellExecution',
+  'beforeMCPExecution',
+  'beforeReadFile',
+  'subagentStart',
+]);
+
+function readFormat(argv) {
+  const idx = argv.findIndex((a) => a === '--format' || a.startsWith('--format='));
+  if (idx === -1) return 'claude';
+  const value = argv[idx].includes('=') ? argv[idx].split('=')[1] : argv[idx + 1];
+  return FORMATS.includes(value) ? value : 'claude';
+}
+
+/** JSON (or nothing) a runtime expects on stdout for a non-blocking result. */
+export function passThroughOutput(format, eventName) {
+  if (format === 'cursor') return CURSOR_PERMISSION_EVENTS.has(eventName) ? '{"permission":"allow"}\n' : '{}\n';
+  if (format === 'gemini') return '{}\n';
+  return '';
+}
 
 /**
  * @param {string[]} argv — positional args after `hook-dispatch`
@@ -29,7 +64,9 @@ export async function dispatchHook(argv, io = {}) {
   const stderr = io.stderr || process.stderr;
   const stdin = io.stdin || process.stdin;
 
-  const positional = argv.filter((a) => !a.startsWith('--'));
+  const format = readFormat(argv);
+  const formatValueIdx = argv.indexOf('--format');
+  const positional = argv.filter((a, i) => !a.startsWith('--') && !(formatValueIdx !== -1 && i === formatValueIdx + 1));
   const flags = new Set(argv.filter((a) => a.startsWith('--')));
   const skill = positional[0];
   const gentle = flags.has('--gentle');
@@ -57,7 +94,9 @@ export async function dispatchHook(argv, io = {}) {
   // For v1: emit advisory line, pass through. This unblocks hook installation
   // while skill-forge adds `--hook-mode` to preflight/sentinel/etc.
   const mode = gentle ? 'advisory' : 'enforcing';
-  stdout.write(`rune-hook: ${skill} [${mode}] — tool=${eventJson?.tool_name || 'unknown'}\n`);
+  stderr.write(`rune-hook: ${skill} [${mode}] — tool=${eventJson?.tool_name || 'unknown'}\n`);
+  const out = passThroughOutput(format, eventJson?.hook_event_name);
+  if (out) stdout.write(out);
 
   // Until skills expose headless verdicts, dispatcher returns neutral success.
   // When skills add `--hook-mode`, extend this to run them and propagate exit codes.

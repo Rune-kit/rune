@@ -34,7 +34,7 @@ export async function hookStatus(projectRoot, runeRoot, args = {}) {
       tiers,
       missingInRepo,
       notes: [
-        'No target platform detected. Create `.claude/`, `.codex/`, `.cursor/`, `.windsurf/`, `.antigravity/`, or `.grok/` first, or pass `--platform <name>`.',
+        'No target platform detected. Create `.claude/`, `.codex/`, `.cursor/`, `.windsurf/`, `.antigravity/`, `.grok/`, or `.gemini/` first, or pass `--platform <name>`.',
       ],
     };
   }

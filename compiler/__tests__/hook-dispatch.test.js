@@ -51,16 +51,50 @@ describe('dispatchHook', () => {
     const io = makeIO({ stdinData: JSON.stringify({ tool_name: 'Edit' }) });
     const code = await dispatchHook(['preflight', '--gentle'], io);
     assert.strictEqual(code, 0);
-    assert.match(io.getOut(), /rune-hook: preflight/);
-    assert.match(io.getOut(), /advisory/);
-    assert.match(io.getOut(), /Edit/);
+    assert.match(io.getErr(), /rune-hook: preflight/);
+    assert.match(io.getErr(), /advisory/);
+    assert.match(io.getErr(), /Edit/);
+    assert.strictEqual(io.getOut(), '', 'claude format keeps stdout empty (Cursor imports Claude hooks)');
   });
 
   test('strict mode prints enforcing label', async () => {
     const io = makeIO({ stdinData: '{}' });
     const code = await dispatchHook(['sentinel'], io);
     assert.strictEqual(code, 0);
-    assert.match(io.getOut(), /enforcing/);
+    assert.match(io.getErr(), /enforcing/);
+  });
+
+  // Cursor: invalid JSON from a permission hook blocks the action (cursor.com/docs/hooks)
+  for (const event of ['preToolUse', 'beforeShellExecution', 'beforeMCPExecution', 'beforeReadFile', 'subagentStart']) {
+    test(`--format cursor: ${event} prints {"permission":"allow"}`, async () => {
+      const io = makeIO({ stdinData: JSON.stringify({ hook_event_name: event, tool_name: 'Write' }) });
+      const code = await dispatchHook(['preflight', '--gentle', '--format', 'cursor'], io);
+      assert.strictEqual(code, 0);
+      assert.deepStrictEqual(JSON.parse(io.getOut()), { permission: 'allow' });
+    });
+  }
+
+  for (const event of ['afterFileEdit', 'postToolUse', 'stop']) {
+    test(`--format=cursor: ${event} prints {} (no follow-up, no override)`, async () => {
+      const io = makeIO({ stdinData: JSON.stringify({ hook_event_name: event }) });
+      await dispatchHook(['completion-gate', '--gentle', '--format=cursor'], io);
+      assert.deepStrictEqual(JSON.parse(io.getOut()), {});
+    });
+  }
+
+  test('--format gemini: stdout is exactly one JSON object', async () => {
+    const io = makeIO({ stdinData: JSON.stringify({ hook_event_name: 'BeforeTool', tool_name: 'write_file' }) });
+    const code = await dispatchHook(['preflight', '--format', 'gemini', '--gentle'], io);
+    assert.strictEqual(code, 0);
+    assert.deepStrictEqual(JSON.parse(io.getOut()), {});
+    assert.match(io.getErr(), /write_file/);
+  });
+
+  test('--format value is not mistaken for the skill name', async () => {
+    const io = makeIO({ stdinData: '{}' });
+    const code = await dispatchHook(['--format', 'gemini', 'sentinel'], io);
+    assert.strictEqual(code, 0);
+    assert.match(io.getErr(), /sentinel/);
   });
 
   test('malformed stdin does not crash', async () => {

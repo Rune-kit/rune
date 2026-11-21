@@ -16,7 +16,7 @@ export const RUNE_MANAGED_SIGNATURE = 'rune hook-dispatch';
 /** Shared relative path to avoid per-file duplication. */
 export const SETTINGS_REL_PATH = '.claude/settings.json';
 
-const DISPATCH_CMD = 'npx --yes @rune-kit/rune hook-dispatch';
+export const DISPATCH_CMD = 'npx --yes @rune-kit/rune hook-dispatch';
 
 /**
  * Regex that matches the exact dispatch invocation Rune writes.
