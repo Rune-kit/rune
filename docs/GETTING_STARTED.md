@@ -42,7 +42,7 @@ Verify install:
 npx @rune-kit/rune doctor
 ```
 
-You should see: `✓ 66 skills, 14 packs, mesh valid`.
+You should see: `✓ 67 skills, 14 packs, mesh valid`.
 
 For the native Codex plugin experience, add the marketplace and install Rune once:
 
@@ -123,7 +123,7 @@ npx @rune-kit/rune doctor       # validate install + mesh integrity
 ```
 
 Read next:
-- [`SKILLS.md`](SKILLS.md) — all 66 skills, categorized by intent
+- [`SKILLS.md`](SKILLS.md) — all 67 skills, categorized by intent
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) — 5-layer architecture reference
 - [`SIGNALS.md`](SIGNALS.md) — how skills auto-trigger each other
 - [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md) — stuck? common fixes here

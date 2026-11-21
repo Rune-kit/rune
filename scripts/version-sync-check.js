@@ -223,6 +223,66 @@ for (const fact of publicFacts) {
   else fail(`${fact.path}: missing ${fact.label} "${fact.value}"`);
 }
 
+// 1f. Drift scanner — any public count claim in the plausible range for a
+// product fact must equal the live value. Catches stale numbers the targeted
+// patterns above miss (e.g. "66 skills" in a guide, "45 signals" in a footer).
+// Historical design docs and the changelog are exempt by construction.
+const DRIFT_FILES = [
+  'README.md',
+  'ROADMAP.md',
+  'AGENTS.md',
+  'llms.txt',
+  'CLAUDE.md',
+  'CONTRIBUTING.md',
+  'package.json',
+  'plugin.json',
+  'gemini-extension.json',
+  '.cursor-plugin/plugin.json',
+  '.claude-plugin/plugin.json',
+  '.claude-plugin/marketplace.json',
+  '.codex-plugin/plugin.json',
+  '.grok-plugin/marketplace.json',
+  'docs/index.html',
+  'docs/guides/index.html',
+  'docs/skills/index.html',
+  'docs/guides/cli.md',
+  'docs/GETTING_STARTED.md',
+  'docs/SKILLS.md',
+  'docs/SIGNALS.md',
+  'docs/VISION.md',
+  'docs/ARCHITECTURE.md',
+  'compiler/transforms/branding.js',
+  'compiler/adapters/openclaw.js',
+];
+const DRIFT_RULES = [
+  { label: 'skills', re: /\b(\d{2})(?:-skill\b| (?:core )?skills\b)/g, min: 60, max: 99, live: liveStats.skillCount },
+  { label: 'signals', re: /\b(\d{2}) (?:mesh |async )?signals\b/g, min: 40, max: 69, live: liveStats.signalCount },
+  {
+    label: 'connections',
+    re: /\b(\d{3}) (?:mesh |sync )?connections\b/g,
+    min: 200,
+    max: 399,
+    live: liveStats.totalConnections,
+  },
+  { label: 'platforms', re: /\b(\d{1,2})(?:-platform\b| platforms\b)/g, min: 8, max: 40, live: platformCount },
+];
+let driftHits = 0;
+for (const rel of DRIFT_FILES) {
+  const filePath = join(ROOT, rel);
+  if (!existsSync(filePath)) continue;
+  const content = readFileSync(filePath, 'utf8');
+  for (const rule of DRIFT_RULES) {
+    for (const m of content.matchAll(rule.re)) {
+      const n = parseInt(m[1], 10);
+      if (n < rule.min || n > rule.max || n === rule.live) continue;
+      const line = content.slice(0, m.index).split('\n').length;
+      fail(`${rel}:${line}: stale ${rule.label} count "${m[0]}" (live: ${rule.live})`);
+      driftHits++;
+    }
+  }
+}
+if (driftHits === 0) pass(`No stale skill/signal/connection/platform counts in ${DRIFT_FILES.length} public files`);
+
 const forbiddenClaims = [
   { path: 'README.md', value: '209 connections' },
   { path: 'README.md', value: '205 connections' },

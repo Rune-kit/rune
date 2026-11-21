@@ -36,7 +36,7 @@ Thanks for helping build a disciplined AI coding mesh! This guide explains how t
 git clone https://github.com/rune-kit/rune.git
 cd rune
 npm install
-npm test                   # 1,152+ tests should pass
+npm test                   # 1,500+ tests should pass
 npm run ci                 # lint + test + doctor
 ```
 

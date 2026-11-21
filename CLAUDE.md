@@ -3,10 +3,10 @@
 ## Overview
 
 Rune is an interconnected skill ecosystem for AI coding assistants.
-67 core skills | 5-layer mesh architecture | 209 connections + 45 signals | Multi-platform.
+67 core skills | 5-layer mesh architecture | 248 connections + 46 signals | Multi-platform.
 Philosophy: "Less skills. Deeper connections."
 
-Works on: Claude Code (native plugin) · Cursor · Windsurf · Google Antigravity · OpenAI Codex · OpenCode · Aider · GitHub Copilot CLI · Gemini CLI · Qoder · Qwen Coder · any AI IDE.
+Works on: Claude Code (native plugin) · OpenAI Codex (native plugin) · Cursor (plugin) · Grok Build (plugin) · Gemini CLI (extension) · Windsurf · Google Antigravity · OpenCode · Aider · GitHub Copilot · Cline · Qoder · Qwen Coder · any Agent Skills runtime (`.agents/skills`).
 
 ## Tech Stack
 
