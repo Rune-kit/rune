@@ -28,10 +28,10 @@ Rune is a **mesh**, not a plugin store. Every addition must deepen connections, 
 | Pro Packs | 9 | ✅ Shipped — $49 lifetime |
 | Business Packs | 4 (+ 4 cross-department orchestrators) | ✅ Shipped — $149 lifetime |
 | Mesh | 248 connections · 46 signals | ✅ Enforced by `rune doctor` + `validate-signals` |
-| Tests | 1,500+ | ✅ CI (lint + tests + doctor + version/number sync) |
+| Tests | 1,680+ | ✅ CI (lint + tests + doctor + version/number sync) |
 | Compiler targets | 16 | ✅ claude, codex, cursor, windsurf, antigravity, opencode, openclaw, generic, aider, copilot, gemini, qoder, qwen, grok, cline, agents |
 | Native plugins | Claude Code · Codex · Cursor · Grok Build · Gemini CLI · Agent Plugins 1.0 | ✅ Manifests in repo; marketplace listings in progress |
-| Runtime hooks | Claude Code + Codex (native) · Grok Build (Claude-compatible) · Cursor / Windsurf / Antigravity (rules) | ✅ |
+| Runtime hooks | Claude Code + Codex + Grok Build (native) · Cursor / Windsurf / Antigravity (rules) | ✅ |
 | Payments | Polar (card / PayPal) · SePay (VN bank transfer) | ✅ Live on the landing page |
 
 ---
@@ -78,6 +78,12 @@ Full detail: [`CHANGELOG.md`](CHANGELOG.md).
 - ✅ Drift scanner in `version-sync-check` — stale skill/signal/connection/platform counts fail CI
 - ✅ `AGENTS.md` + `llms.txt`
 - ✅ `rune doctor` works on directory-per-skill output (was crashing with EISDIR)
+- ✅ Every platform ships `references/` (single-file targets and packs included); cross-skill reference links resolve after compile
+- ✅ The 8 largest SKILL.md files split into SKILL.md + `references/` (all ≤ 650 lines; nothing dropped, guarded by a test)
+- ✅ Look-alike skills sharpened instead of merged (research / docs-seeker / trend-scout, problem-solver / sequential-thinking, hallucination-guard / completion-gate / constraint-check)
+- ✅ Codex roles on GPT-6.x (gpt-6.2-astra / gpt-6.2-sol / gpt-6-luna); Antigravity no longer gets an invented `model` field
+- ✅ Platform-neutral worktree path (`.claude/worktrees/` for Claude Code, `.rune/worktrees/` elsewhere)
+- ✅ `onboard --runtimes`: one canonical `AGENTS.md`, per-runtime pointers and hooks; native Grok hooks (`rune hooks install --platform grok`)
 
 ---
 
@@ -100,9 +106,7 @@ Full detail: [`CHANGELOG.md`](CHANGELOG.md).
 - ⬚ Skill authoring tutorial (build a pack for your domain)
 
 ### Skills
-- ⬚ Split the 8 SKILL.md files above ~650 lines into `references/` (cook, ba, review, design, skill-forge, audit, session-bridge, test) — first make the flat adapters (`claude` build, generic, openclaw, aider) ship `references/` too
-- ⬚ Codex model map → GPT-6.x line; Antigravity model ids re-verified
-- ⬚ Platform-neutral worktree path (today `.claude/worktrees/`)
+- ⬚ Second split pass for skills between 500 and 650 lines (cook, team, ba, context-engine, autopsy)
 
 ### Intelligence
 - ⬚ Web mesh-analytics dashboard (skill heatmap, chain frequency) — opt-in telemetry only

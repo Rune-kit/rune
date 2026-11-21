@@ -168,6 +168,8 @@ Outside Claude Code, pick a skill from your agent's skill or slash-command menu 
 - **`rune doctor` works on every directory-per-skill platform** (it crashed with EISDIR on Codex, Cursor, Gemini …).
 - **Numbers you can trust.** CI now fails if any README, doc or manifest quotes a stale skill / signal / connection / platform count.
 - **Skills other agents can pick.** Every skill description now says when to use it, model examples are current, and Claude-only tool names compile to neutral wording elsewhere.
+- **Nothing lost in compilation.** Every platform now ships each skill's `references/`; the 8 largest skills were split into lean SKILL.md + references (nothing dropped — a test checks every line).
+- **One `AGENTS.md` for every agent.** `/rune onboard --runtimes` sets up per-runtime config and hooks; new native Grok hooks (`rune hooks install --platform grok`); Codex subagent roles on GPT-6.x.
 - **`AGENTS.md` + `llms.txt`**, a shorter README, and an honest ROADMAP.
 
 Full notes: [`CHANGELOG.md`](CHANGELOG.md#2330---2026-11-21). Older release notes: [`CHANGELOG.md`](CHANGELOG.md).

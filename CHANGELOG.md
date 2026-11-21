@@ -21,11 +21,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Skills that other agents actually pick.** 23 skill descriptions (brainstorm, debug, fix, plan, review, test, sentinel, research, perf …) said what they do but not when to use them, which makes them harder for Codex, Cursor, Gemini and Grok to select on their own. Every description now has a "Use when …" trigger, and a test keeps it that way.
 - **Current model names.** Examples in skills and packs moved off retired or legacy ids (gpt-4, gpt-4o, claude-haiku-4-5, gemini-2.x) to the November 2026 lines; the Gemini model hint follows suit.
 - **Cleaner output on non-Claude agents.** `WebSearch`, `WebFetch` and `AskUserQuestion` compile to neutral wording outside Claude Code, and `onboard` writes `AGENTS.md` (or `GEMINI.md`) instead of `CLAUDE.md` when it runs elsewhere.
+- **No content lost on any platform.** Single-file targets (generic, openclaw, aider) silently dropped every skill's `references/` folder, packs never shipped theirs (e.g. `zalo/references/`), and cross-skill reference links broke once compiled folders became `rune-<skill>/`. All three fixed: every reference file ships, and a test checks every link resolves on all 15 compiled platforms.
+- **Leaner core skills.** cook (975 → 630 lines), ba, review, design, skill-forge, audit, session-bridge and test were split into a lean SKILL.md plus 42 `references/` files. HARD-GATEs, frontmatter, mesh sections, Sharp Edges and always-run phases stay inline; a test proves every original line, connection (248) and gate survived.
+- **Look-alike skills now say where they stop.** Instead of merging, research / docs-seeker / trend-scout, problem-solver / sequential-thinking and hallucination-guard / completion-gate / constraint-check each name the sibling to use for the overlapping case (reasons in `docs/ARCHITECTURE.md` → "Overlap Review").
+- **Codex subagents on GPT-6.x.** `.codex/agents` roles: rune_heavy → `gpt-6.2-astra` (high), rune_standard → `gpt-6.2-sol` (medium), rune_fast → `gpt-6-luna` (high), per the Codex docs; verified offline with codex-cli 0.171.0. Antigravity skills no longer carry a `model:` field it doesn't support — a one-line model suggestion replaces it.
+- **Worktrees outside Claude Code.** Compiled skills for Codex, Cursor, Gemini, Grok and the rest create worktrees in `.rune/worktrees/` (Claude Code keeps `.claude/worktrees/`), and the worktree skill git-ignores the folder first.
+- **Set up every agent in a repo at once.** `/rune onboard --runtimes` keeps one canonical `AGENTS.md`, points `CLAUDE.md` (`@AGENTS.md`) and Gemini CLI (`context.fileName`) at it, and proposes the right `rune hooks install` per runtime. New `rune hooks install --platform grok` writes native `.grok/hooks/rune.json` (Grok 1.0.92 `grok inspect` loads all five hooks).
+- **A fine-tuning example you can still run.** OpenAI is winding down self-serve fine-tuning (closed to new orgs; jobs end Jan 6, 2027; `gpt-4o-mini` isn't trainable), so the ai-ml example now defaults to open-weight LoRA with Hugging Face TRL + PEFT and keeps the OpenAI path for existing customers on `gpt-4.1-mini-2025-04-14`.
 
 ### Added
 - `plugin.json` (Agent Plugins 1.0; validated against `agent-plugins.org/schemas/1.0.0`), `.cursor-plugin/plugin.json` (+ empty `hooks.json` override so Cursor doesn't parse the Claude-format hooks), `gemini-extension.json`, `.grok-plugin/marketplace.json`, `assets/logo.svg`.
 - `compiler/adapters/agent-skills-base.js` — shared factory for directory-per-skill runtimes; `grok`, `cline`, `agents` adapters built on it.
-- Tests: Agent Skills compliance for every source skill, per-runtime manifest contracts, README install commands, Claude plugin-id rules, llms.txt structure and links, Pro-hint behaviour, when-to-use triggers, skill size and references/ paths, catalog page completeness (1,537 tests).
+- Tests: Agent Skills compliance for every source skill, per-runtime manifest contracts, README install commands, Claude plugin-id rules, llms.txt structure and links, Pro-hint behaviour, when-to-use triggers, skill size and references/ paths, catalog page completeness, references shipped + resolving on every platform, split preservation, overlap boundaries, worktree paths, Codex role schema, Grok hooks, onboard runtime table (1,682 tests).
+- `scripts/check-split-preservation.js` — compares a git ref's SKILL.md with SKILL.md + references/ (lines, cross-refs, HARD-GATEs, frontmatter).
+- `compiler/transforms/reference-paths.js`, `compiler/transforms/runtime-paths.js`, `compiler/adapters/hooks/grok.js`.
 
 ### Changed
 - `agents/*.md`: dropped the unused `subagent_type` key — Gemini CLI rejected all 66 subagents because of it.
@@ -35,7 +44,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Known limitations
 - Gemini CLI logs "Invalid hook event name … Skipping" for Rune's Claude-format hooks at startup; skills, commands and subagents load. Native Gemini hooks are on the roadmap.
-- Cursor and Grok Build plugin installs are validated against their published specs, not yet by a live marketplace install.
+- Cursor and Grok Build plugin installs are validated against their published specs, not yet by a live marketplace install. Codex roles and Grok hooks were checked with the real CLIs offline (`codex debug prompt-input`, `grok inspect`); no model call was made.
+- `rune hooks install --platform cursor` still writes `.mdc` rules, not Cursor's newer native `.cursor/hooks.json` (roadmap).
 
 ## [2.32.0] - 2026-08-16
 
