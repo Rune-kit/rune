@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "generated": "2026-11-21T09:38:31.709Z",
+  "generated": "2026-11-21T09:56:01.496Z",
   "skillCount": 67,
   "skills": {
     "adversary": {
@@ -173,13 +173,13 @@
       "connections": [
         "deploy",
         "fix",
+        "graft",
         "incident",
         "journal",
         "neural-memory",
         "sentinel",
         "verification",
         "watchdog",
-        "graft",
         "sentinel-env",
         "scout",
         "ba",
@@ -1062,13 +1062,13 @@
     "cook": [
       "deploy",
       "fix",
+      "graft",
       "incident",
       "journal",
       "neural-memory",
       "sentinel",
       "verification",
       "watchdog",
-      "graft",
       "sentinel-env",
       "scout",
       "ba",
@@ -1720,9 +1720,9 @@
         "cook",
         "deploy",
         "fix",
+        "graft",
         "incident",
-        "journal",
-        "neural-memory"
+        "journal"
       ]
     },
     "team": {

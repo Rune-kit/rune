@@ -27,7 +27,7 @@ Without this WRITE path, oral rejections vanish — the next session re-asks the
 
 4. **Lexical-similarity check**: `Glob` `.out-of-scope/*.md`, parse each frontmatter's `concept` + `aliases`, compute overlap. If any existing concept has ≥0.7 overlap → APPEND to that file's `prior_requests` list and mark `rejected_by: ba` for this round. Do NOT create a duplicate.
 
-5. **Write the file** using the format in [`references/out-of-scope-format.md`](references/out-of-scope-format.md):
+5. **Write the file** using the format in [`references/out-of-scope-format.md`](out-of-scope-format.md):
    - YAML frontmatter (`concept`, `aliases`, `decision: rejected`, `rejected_at`, `rejected_by: ba`, `prior_requests`, optional `revisit_if`)
    - Markdown body: concept name, "Why out of scope" (substantive reasoning from step 2), "What would change our mind" (if user volunteered signals)
 

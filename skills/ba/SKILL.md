@@ -80,23 +80,8 @@ If Refactor → light version (Step 1 + Step 4 only). Skip Steps 2, 2.5, 3, 5, 6
 If existing codebase → invoke `rune:scout` for context before proceeding.
 
 ### Step 1.4 — Synthesis Trigger Check
-<MUST-READ path="references/synthesis-mode.md" trigger="when prior conversation already contains rich requirement context (pasted spec, > 1000 words discussion, continuation session, filled issue template)"/>
 
-Before proceeding to elicitation, check whether the requirements are **already in context**. Re-asking what the user already told you is the second-most expensive bug.
-
-Activate **Synthesis Mode** instead of standard elicitation if ANY of:
-
-| Signal | Threshold |
-|--------|-----------|
-| User pasted a spec / PRD / brief | > 200 words describing the feature |
-| Conversation has > 1000 words on this feature | Sufficient context already gathered |
-| User said "synthesize" / "I already explained" / "just write the spec" | Explicit synthesis request |
-| Continuation — `.rune/features/<name>/requirements.md` exists with prior answers | Re-elicitation would duplicate |
-| Issue tracker has filled-in template (problem, story, acceptance criteria) | Source already structured |
-
-In Synthesis Mode: extract answers from existing context, draft the Requirements Document with **source citations** for every section, then **confirm** rather than re-interview. Ask follow-ups ONLY on the 1-2 dimensions with genuine gaps. Skip steps 2, 2.5 if all 5 dimensions are filled or partial-but-acceptable.
-
-Workflow detail + anti-patterns: [references/synthesis-mode.md](references/synthesis-mode.md).
+> Full detail moved to [`references/synthesis-trigger.md`](references/synthesis-trigger.md) (progressive disclosure). **Read that file before executing this section.**
 
 ### Step 1.5 — Out-of-Scope Match Check (READ)
 
@@ -331,34 +316,8 @@ Based on all gathered information, produce:
 - [APIs, services, libraries, access, existing code]
 
 ### Step 4.5 — Functional Requirements (EARS)
-<MUST-READ path="references/ears-format.md" trigger="when writing the functional-requirements section for a Feature/Integration/Greenfield requirement"/>
 
-Translate each in-scope item (Step 4) into atomic, testable **functional requirements** using EARS (Easy Approach to Requirements Syntax). EARS sits between user stories (WHY) and acceptance criteria (HOW we prove it) — it names exactly WHAT the system shall do, with an explicit trigger or condition.
-
-Pick the simplest EARS template that fits each behavior; give each a stable ID (`FR-1`, `FR-2`, …):
-
-| Type | Template |
-|------|----------|
-| Ubiquitous | The `<system>` shall `<response>`. |
-| Event-driven | When `<trigger>`, the `<system>` shall `<response>`. |
-| State-driven | While `<state>`, the `<system>` shall `<response>`. |
-| Optional | Where `<feature is included>`, the `<system>` shall `<response>`. |
-| Unwanted | If `<unwanted condition>`, then the `<system>` shall `<response>`. |
-| Complex | While `<state>`, when `<trigger>`, the `<system>` shall `<response>`. |
-
-```
-FR-1  The API shall return responses in JSON.
-FR-2  When a request omits a valid auth token, the API shall respond with HTTP 401.
-FR-3  If the payment provider times out, then the system shall mark the order pending and queue a retry.
-```
-
-Rules (full guidance in [references/ears-format.md](references/ears-format.md)):
-- **One `shall` per requirement** — compound "shall do A and B" splits into two `FR-n`.
-- **Named subject, testable response** — never "it shall handle gracefully". Move measurable limits into the response; pure performance targets stay in NFRs (Step 6).
-- **Don't smuggle HOW** — observable behavior only; leave implementation to `plan`.
-- Every `FR-n` traces up to a User Story and down to an Acceptance Criterion (checked in Step 3.6).
-
-**Skip EARS** for Bug Fix and Refactor types (no new behavior to specify). For plumbing/integration, a few event-driven + unwanted-behavior lines suffice — don't pad with ubiquitous filler. EARS is a format recommendation, not a gate.
+> Full detail moved to [`references/ears-requirements.md`](references/ears-requirements.md) (progressive disclosure). **Read that file before executing this section.**
 
 ### Step 5 — User Stories & Acceptance Criteria
 
@@ -384,19 +343,7 @@ Rules:
 
 ### Step 5.5 — Key Entities (mandatory if feature involves data)
 
-If ANY user story creates, reads, updates, or deletes data, list the key entities — WHAT the data is, not HOW it's stored (no table names, no column types, no ORM detail):
-
-```
-## Key Entities
-- **Order**: what a customer submits — items, quantities, status (draft → submitted → fulfilled). One User has many Orders.
-- **User**: the person placing orders — identity, contact. Referenced by Order.
-```
-
-Rules:
-- One line per entity: name, what it represents, key attributes (plain language), relationships
-- State-bearing entities name their lifecycle states — these become the state machine in requirements.mermaid
-- This section SEEDS `plan`'s data-model.md — a story that touches data but has no entity here is a spec gap (plan will bounce it back)
-- Skip entirely for stateless features (pure computation, styling, config)
+> Full detail moved to [`references/key-entities.md`](references/key-entities.md) (progressive disclosure). **Read that file before executing this section.**
 
 ### Step 6 — Non-Functional Requirements (NFRs)
 
@@ -418,46 +365,11 @@ Only include NFRs relevant to this specific task. Don't generate a generic check
 
 ### Step 7 — Artifact Triad
 
-Produce three structured artifacts — not one prose doc. Plan consumes all three; each answers a different question.
-
-| Artifact | Question Answered | Consumer |
-|----------|-------------------|----------|
-| `requirements.md` | WHAT to build and WHY | plan, cook |
-| `requirements.mermaid` | WHAT does the flow look like visually | plan, design, review |
-| `tasks.md` | WHAT work layers exist | plan (as task backbone, not from scratch) |
-
-#### Artifact 1: requirements.md
-
-> Full detail moved to [`references/artifact-templates.md`](references/artifact-templates.md) (progressive disclosure). **Read that file before executing this section.** Mesh links used there: `rune:plan`.
-
-#### Artifact 2: requirements.mermaid
-
-> Full detail moved to [`references/artifact-templates.md`](references/artifact-templates.md) (progressive disclosure). **Read that file before executing this section.**
-
-#### Artifact 3: tasks.md
-
-> Full detail moved to [`references/artifact-templates.md`](references/artifact-templates.md) (progressive disclosure). **Read that file before executing this section.**
-
-#### Handoff
-
-Emit signal to `plan` with paths to all three artifacts. Plan MUST read all three before producing phase files — the triad is the contract.
+> Full detail moved to [`references/artifact-triad.md`](references/artifact-triad.md) (progressive disclosure). **Read that file before executing this section.** Mesh links used there: `rune:plan`.
 
 ### Step 7.5 — Glossary Sharpen (CONTEXT.md update)
 
-After the artifact triad is saved, append/update the project glossary `CONTEXT.md` with any domain terms that were sharpened during this session.
-
-1. Determine glossary location:
-   - If `CONTEXT-MAP.md` exists at root → multi-context; pick the right per-context CONTEXT.md
-   - Else if root `CONTEXT.md` exists → use it
-   - Else if any term needs recording → create root `CONTEXT.md` lazily
-   - Else → skip silently (no-op when no terms emerged)
-2. For each new term, add a row to the **Language** table (term, definition, aliases-to-avoid, status).
-3. For each user-asserted relationship, add to the **Relationships** section.
-4. For each ambiguity surfaced during elicitation, add to **Flagged ambiguities**.
-
-**Conflict gate** — if a new term has ≥0.7 token overlap with an existing one, surface to user (merge / rename / keep distinct). NEVER silently re-define an existing term.
-
-Format reference: [references/context-md-format.md](references/context-md-format.md).
+> Full detail moved to [`references/artifact-triad.md`](references/artifact-triad.md) (progressive disclosure). **Read that file before executing this section.**
 
 ## Output Format
 

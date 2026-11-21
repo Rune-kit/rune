@@ -66,10 +66,10 @@ describe('source skills conform to the Agent Skills spec', () => {
 
 describe('progressive disclosure', () => {
   // Agent Skills guidance: keep SKILL.md lean and push detail into references/.
-  // v2.33.0 split the 8 largest skills (cook, ba, review, design, skill-forge,
-  // audit, session-bridge, test) into SKILL.md + references/. A handful stay
-  // between 500 and 650 lines; this ceiling stops any skill growing back.
-  const CEILING = 650;
+  // v2.33.0 split the 13 largest skills into SKILL.md + references/ (two
+  // passes); every SKILL.md now fits the spec's 500-line guidance and this
+  // ceiling stops any skill growing back past it.
+  const CEILING = 500;
 
   test(`no SKILL.md exceeds ${CEILING} lines`, () => {
     const over = [];

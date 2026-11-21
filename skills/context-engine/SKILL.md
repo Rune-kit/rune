@@ -199,80 +199,11 @@ Most compaction loses the **continuation point** — the agent knows WHAT was di
 
 ## Incremental Stream Processing
 
-When processing streaming LLM output (e.g., in skills that invoke AI calls or process tool output incrementally), use **sentence-level buffering** instead of waiting for the full response:
-
-### Pattern: Buffer → Detect Boundary → Act
-
-```
-1. ACCUMULATE: Feed incoming chunks into a text buffer
-2. DETECT: Check for sentence boundaries:
-   - Primary: 40+ chars ending in . ! ? ; :
-   - Secondary: paragraph break (\n\n) with 15+ chars accumulated
-   - Never split mid-word or mid-code-block
-3. EXTRACT: Remove the complete sentence from the buffer
-4. ACT: Process the extracted sentence immediately (e.g., queue for TTS, parse for structured data, update progress display)
-5. CONTINUE: Keep accumulating the next sentence while processing the current one
-```
-
-### When to Use
-
-- **Skills that stream AI responses to the user**: process and display incrementally instead of waiting for the full response
-- **Background note-taking**: extract key points from streaming output as they arrive
-- **Progress reporting**: detect milestone keywords in streaming output to update progress
-
-### When NOT to Use
-
-- **Code generation**: wait for the full code block — partial code is useless
-- **JSON output**: accumulate until the closing brace — partial JSON can't be parsed
-- **Short responses** (<100 chars expected): overhead of boundary detection exceeds benefit
+> Full detail moved to [`references/stream-processing.md`](references/stream-processing.md) (progressive disclosure). **Read that file before executing this section.**
 
 ## Artifact Folding (Large Output Management)
 
-When tool results are excessively large, they consume disproportionate context without proportionate value. **Artifact folding** saves the full output to a file and replaces it in context with a compact preview.
-
-### When to Fold
-
-| Condition | Action |
-|-----------|--------|
-| Tool output > 4000 characters | Fold to artifact |
-| Tool output > 120 lines | Fold to artifact |
-| Multiple tool outputs from the same command class (e.g., 5+ Grep results) | Fold all into single artifact |
-| Code block output > 200 lines | Fold to artifact |
-
-### Folding Procedure
-
-1. **Save full output** to `.rune/artifacts/artifact-{timestamp}-{tool}.md`:
-   ```markdown
-   # Artifact: {tool_name} output
-   Generated: {timestamp}
-   Command: {tool_call_summary}
-   
-   {full_output}
-   ```
-
-2. **Replace in context** with a compact preview:
-   ```
-   [FOLDED: {tool_name} output — {line_count} lines, {char_count} chars]
-   Preview (first 10 lines):
-   {first_10_lines}
-   ...
-   Full output: .rune/artifacts/artifact-{timestamp}-{tool}.md
-   Use Read to access the full artifact if needed.
-   ```
-
-3. **On compaction**: Artifact files survive compaction — the continuation summary references them by path. This means large outputs are preserved across compaction boundaries without consuming context.
-
-### Rules
-
-- **Never fold user messages** — only tool outputs
-- **Never fold error outputs** — errors need full visibility for debugging
-- **Never fold outputs < 1000 chars** — folding overhead exceeds savings
-- **Fold preemptively in YELLOW/ORANGE** — don't wait for RED to start managing output size
-- **Clean up artifacts** at session end: artifacts older than the current session can be deleted (they're already in git history or irrelevant)
-
-### Why
-
-A single `Grep` across a large codebase can return 3000+ lines. Without folding, this consumes ~4000 tokens of context — often more than the rest of the conversation combined. Folding preserves the information (accessible via Read) while keeping context lean. Combined with the Structured Summary compaction technique, artifact folding enables much longer productive sessions.
+> Full detail moved to [`references/artifact-folding.md`](references/artifact-folding.md) (progressive disclosure). **Read that file before executing this section.**
 
 ## Context Health Levels
 

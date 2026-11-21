@@ -31,25 +31,7 @@ This applies to EVERY feature regardless of perceived simplicity.
 
 ## Workflow Chains (Predefined)
 
-Cook supports predefined workflow chains for common task types. Use these as shortcuts instead of manually determining phases:
-
-```
-/rune cook feature    → Full TDD pipeline (all phases)
-/rune cook bugfix     → Diagnose → fix → verify (Phase 1 → 4 → 6 → 7)
-/rune cook refactor   → Understand → plan → implement → quality (Phase 1 → 2 → 4 → 5 → 6 → 7)
-/rune cook security   → Full pipeline + sentinel@opus + sast (all phases, security-escalated)
-/rune cook hotfix     → Production Hotfix Protocol: contain → fix → verify → deploy → watchdog → postmortem (see below)
-/rune cook nano       → Trivial: do → verify → done (no phases, ≤3 steps)
-/rune cook --template <name> → Load pre-built workflow template from installed Pro/Business packs
-```
-
-### Production Hotfix Protocol
-
-> Full detail moved to [`references/workflow-variants.md`](references/workflow-variants.md) (progressive disclosure). **Read that file before executing this section.** Mesh links used there: `rune:deploy`, `rune:fix`, `rune:incident`, `rune:journal`, `rune:neural-memory`, `rune:sentinel`, `rune:verification`, `rune:watchdog`.
-
-### Template Workflows (Pro/Business)
-
-> Full detail moved to [`references/workflow-variants.md`](references/workflow-variants.md) (progressive disclosure). **Read that file before executing this section.** Mesh links used there: `rune:graft`.
+> Full detail moved to [`references/modes.md`](references/modes.md) (progressive disclosure). **Read that file before executing this section.** Mesh links used there: `rune:deploy`, `rune:fix`, `rune:graft`, `rune:incident`, `rune:journal`, `rune:neural-memory`, `rune:sentinel`, `rune:verification`, `rune:watchdog`.
 
 ## Phase Skip Rules
 
@@ -102,24 +84,7 @@ Before selecting a workflow chain or phase set, compute the task's **rigor level
 
 ## Nano Mode (Auto-Detect)
 
-For trivial tasks that don't need any pipeline at all:
-
-```
-IF all of these are true:
-  - Task is ≤3 discrete steps (e.g., run command, edit 1 file, commit)
-  - Task description < 60 chars OR user prefixes with "quick:", "just", "chỉ cần"
-  - No code logic changes (copy files, config edits, version bumps, git ops, run scripts)
-  - No new functions/classes/components created
-THEN: Nano Mode activated
-  - Execute directly: DO → VERIFY → DONE
-  - No phases. No plan. No test. No review.
-  - Still verify output (check exit codes, confirm file exists, etc.)
-  - Still use semantic commit message if committing
-```
-
-**Announce**: "Nano mode: trivial task, executing directly."
-**Override**: User can say "full pipeline" or "cook feature" to force phases.
-**Escape hatch**: If during execution the task turns out more complex than expected → announce upgrade: "Upgrading to Fast/Full mode — task is more complex than detected." Resume from Phase 1.
+> Full detail moved to [`references/modes.md`](references/modes.md) (progressive disclosure). **Read that file before executing this section.**
 
 <HARD-GATE>
 Nano mode MUST NOT be used for:
@@ -132,25 +97,7 @@ If any of these are detected mid-task, STOP and upgrade to Fast/Full mode.
 
 ## Fast Mode (Auto-Detect)
 
-Cook auto-detects small changes and streamlines the pipeline:
-
-```
-IF all of these are true:
-  - Total estimated change < 30 LOC
-  - Single file affected
-  - No security-relevant code (auth, crypto, payments, .env)
-  - No public API changes
-  - No database schema changes
-THEN: Fast Mode activated
-  - Skip Phase 2 (PLAN) — change is too small for a formal plan
-  - Skip Phase 3 (TEST) — unless existing tests cover the area
-  - Skip Phase 5b (SENTINEL) — non-security code
-  - Skip Phase 8 (BRIDGE) — not worth persisting
-  - KEEP Phase 5a (PREFLIGHT) and Phase 6 (VERIFY) — always run quality checks
-```
-
-**Announce fast mode**: "Fast mode: small change detected (<30 LOC, single file, non-security). Streamlined pipeline."
-**Override**: User can say "full pipeline" to force all phases even on small changes.
+> Full detail moved to [`references/modes.md`](references/modes.md) (progressive disclosure). **Read that file before executing this section.**
 
 ## Phase 0.5: ENVIRONMENT CHECK (First Run Only)
 
@@ -189,11 +136,7 @@ Skip if: bug fix with clear repro steps | user said "just do it" | fast mode + <
 
 ## Phase 1.5: DOMAIN CONTEXT (L4 Pack Detection)
 
-**Goal**: Detect if domain-specific L4 extension packs apply to this task.
-
-<MUST-READ path="references/pack-detection.md" trigger="Phase 1.5 — before checking L4 pack mapping"/>
-
-After scout completes, check if the detected tech stack or task description matches any L4 extension pack. This phase is lightweight — a Read + pattern match. It does NOT replace Phase 1 (scout) or Phase 2 (plan). If 0 packs match: skip silently.
+> Full detail moved to [`references/domain-context.md`](references/domain-context.md) (progressive disclosure). **Read that file before executing this section.**
 
 ## Phase 1.7: WORKFLOW ORCHESTRATION (Multi-Skill Sequences)
 
@@ -253,9 +196,7 @@ Contract violations are NON-NEGOTIABLE. If `.rune/contract.md` exists and a plan
 
 ### Phase 2.5: RFC GATE (Breaking Changes Only)
 
-**Goal**: Formal change management for breaking changes. Prevents unreviewed breaking changes from reaching production.
-
-<MUST-READ path="references/rfc-template.md" trigger="Phase 2.5 — any time a breaking change is detected in the plan"/>
+> Full detail moved to [`references/plan-gates.md`](references/plan-gates.md) (progressive disclosure). **Read that file before executing this section.**
 
 <HARD-GATE>
 Breaking change without RFC = BLOCKED. No exceptions.
@@ -264,17 +205,7 @@ Breaking change without RFC = BLOCKED. No exceptions.
 
 ### Phase 2.5: ADVERSARY (Red-Team Challenge)
 
-**Goal**: Stress-test the approved plan BEFORE writing code — catch flaws at plan time, not implementation time.
-
-**REQUIRED SUB-SKILL**: Use `rune:adversary`
-
-1. **Skip conditions**: bug fixes, hotfixes, simple refactors (< 3 files, no new logic), fast mode
-2. **Run adversary** — Full Red-Team mode for new features/architectural changes; Quick Challenge mode for smaller plans
-3. **Handle verdict**:
-   - **REVISE** → return to Phase 2 with adversary findings as constraints; user must re-approve
-   - **HARDEN** → present remediations, update plan inline, then proceed to Phase 3
-   - **PROCEED** → pass findings as implementation notes to Phase 3
-4. **Max 1 REVISE loop** per cook session — if revised plan also gets REVISE, ask user to decide
+> Full detail moved to [`references/plan-gates.md`](references/plan-gates.md) (progressive disclosure). **Read that file before executing this section.** Mesh links used there: `rune:adversary`.
 
 ### Phase-Aware Execution (Master Plan + Phase Files)
 
@@ -394,21 +325,7 @@ Before entering ANY Phase N+1, assert: Phase N `completed` in TodoWrite | gate c
 
 ## Phase 6.5: CONVERGE (Spec↔Code Gap Scan)
 
-**REQUIRED SUB-SKILL**: Use `rune:converge` — verify the ACTUAL codebase matches the spec before committing.
-
-**Trigger**: feature/greenfield chains where `.rune/features/<name>/requirements.md` exists.
-**Skip** (announce the skip): nano/fast/bugfix/refactor/hotfix chains, or no requirements.md (ad-hoc task — Phase 5 gates are the only protection).
-
-1. Invoke `rune:converge` — it re-reads spec/plan/contracts as sole intent, scans present code state, classifies gaps (`missing` / `partial` / `contradicts` / `unrequested`)
-2. **`convergence.clean`** → proceed to Phase 7
-3. **`convergence.gaps`** → inspect the signal's `counts` payload first:
-   - **Unrequested-only** (`counts.missing`=0, `counts.partial`=0, `counts.contradicts`=0, `counts.unrequested`>0): no CV tasks were appended — surface the findings in the Cook Report and proceed to Phase 7. Do NOT enter the remediation loop for informational scope-creep findings
-   - **Otherwise**: converge appended `CV-*` remediation tasks to the active phase file:
-     - Execute the CV tasks (return to Phase 4 loop for them; CRITICAL/HIGH first)
-     - Re-run Phase 6 VERIFY on the remediated code, then re-invoke converge (round 2)
-     - **Max 2 remediation rounds.** Gaps still present after round 2 → produce a Structured Escalation Report (the same gap surviving 2 rounds means the approach is wrong, not the effort)
-4. `unrequested` findings are surfaced to the user in the Cook Report — never silently deleted, never blocking
-5. **Stale CV tasks**: if converge reports clean but unchecked `CV-*` tasks remain from earlier rounds (e.g., rules changed between rounds), cook closes them as `[x] (resolved — superseded)` with a Cook Report note — converge's append-only contract means only cook may touch them
+> Full detail moved to [`references/converge-phase.md`](references/converge-phase.md) (progressive disclosure). **Read that file before executing this section.** Mesh links used there: `rune:converge`.
 
 <HARD-GATE>
 A P1 story with a CRITICAL convergence gap (missing/contradicts) MUST NOT be committed as "done."
@@ -421,24 +338,7 @@ Either remediate within the round cap, or escalate with the gap documented — n
 
 ## Phase 8: BRIDGE
 
-**Goal**: Save context for future sessions and record metrics for mesh analytics.
-
-**REQUIRED SUB-SKILL**: Use `rune:session-bridge`
-
-1. Mark Phase 8 as `in_progress`
-2. Save to `.rune/decisions.md` (approach + trade-offs), `.rune/progress.md` (task complete), `.rune/conventions.md` (new patterns)
-3. **Skill metrics** → `.rune/metrics/skills.json`: increment phase run/skip counts, quality gate results, debug loop counts under `cook` key
-4. **Routing overrides** (H3): if Phase 4 hit max loops for an error pattern → write rule to `.rune/metrics/routing-overrides.json`. Max 10 active rules.
-5. **Step 8.5 — Cross-Cutting Sweep**: After commit, check if this phase changed stats (skill count, test count, signal count, pack count, layer counts). If ANY stat changed:
-   - [ ] `README.md` — stats, badges, feature list
-   - [ ] `docs/index.html` (landing page) — meta tags, hero badge, install section, mesh stats, footer
-   - [ ] `dashboard.html` (if local) — KPI cards, test count, skill tabs, layer counts
-   - [ ] `CLAUDE.md` — commands, test count, skill list
-   - [ ] `MEMORY.md` — milestones, version info
-
-   **Skip if**: No stats changed (pure refactor, docs-only, style change). **MANDATORY** if any numeric stat in README differs from actual.
-6. **Step 8.6 — Capture Learnings**: `neural-memory` (Capture Mode) — 2-5 memories: architecture decisions, patterns, error root-causes, trade-offs. Cognitive language (causal/decisional/comparative). Tags: `[project, tech, topic]`. Priority 5 routine / 7-8 decisions / 9-10 critical errors.
-6. Mark Phase 8 as `completed`
+> Full detail moved to [`references/bridge-phase.md`](references/bridge-phase.md) (progressive disclosure). **Read that file before executing this section.** Mesh links used there: `rune:session-bridge`.
 
 ## Autonomous Loop Patterns
 
@@ -455,15 +355,11 @@ If ambiguous between Cancel and Steer → ask user: "Did you mean stop, or chang
 
 ## Deviation Rules
 
-<MUST-READ path="references/deviation-rules.md" trigger="when implementation diverges from the approved plan"/>
-
-R1-R3 (bug/security/blocking fix): auto-fix, continue. R4 (architectural change): ASK user first.
+> Full detail moved to [`references/recovery.md`](references/recovery.md) (progressive disclosure). **Read that file before executing this section.**
 
 ## Error Recovery
 
-<MUST-READ path="references/error-recovery.md" trigger="when any phase fails or a task hits repeated errors"/>
-
-Includes phase-by-phase failure handling and repair operators (RETRY → DECOMPOSE → PRUNE) with a 2-attempt budget before escalation.
+> Full detail moved to [`references/recovery.md`](references/recovery.md) (progressive disclosure). **Read that file before executing this section.**
 
 ## Analysis Paralysis Guard
 
@@ -530,11 +426,7 @@ A wrong first attempt that produces feedback beats perfect understanding that ne
 
 ## Data Flow
 
-**Feeds Into →** `journal` (decisions → ADRs) | `session-bridge` (context → .rune/ state) | `neural-memory` (learnings → cross-session)
-
-**Fed By ←** `ba` (requirements → Phase 1) | `plan` (master plan → Phase 2-4) | `session-bridge` (.continue-here.md → Phase 0 resume) | `neural-memory` (past decisions → Phase 0 recall)
-
-**Feedback Loops ↻** cook↔debug (Phase 4 bug → debug → fix → resume; if plan wrong → Approach Pivot) | cook↔test (RED → GREEN → failures loop back)
+> Full detail moved to [`references/contracts.md`](references/contracts.md) (progressive disclosure). **Read that file before executing this section.**
 
 ## Constraints
 
@@ -549,18 +441,7 @@ A wrong first attempt that produces feedback beats perfect understanding that ne
 
 ## Mesh Gates
 
-| Gate | Requires | If Missing |
-|------|----------|------------|
-| Resume Gate | Phase 0 checks for master plan before starting | Proceed to Phase 1 |
-| Spec-Backfill Gate | Feature/greenfield resume requires `requirements.md` to exist alongside the plan | Plan without spec → invoke `rune:ba` to backfill, reconcile plan, THEN resume |
-| Scout Gate | scout output before Phase 2 | Invoke rune:scout first |
-| Plan Gate | User-approved plan before Phase 3 | Cannot proceed |
-| Adversary Gate | adversary verdict before Phase 3 for features | Skip for bugfix/hotfix/refactor |
-| Phase File Gate | Active phase file only (multi-session) | Load only active phase |
-| Test-First Gate | Failing tests before Phase 4 | Write tests or get explicit skip |
-| Quality Gate | preflight + sentinel + review before Phase 7 | Fix findings, re-run |
-| Verification Gate | lint + types + tests + build green before commit | Fix, re-run |
-| Convergence Gate | `convergence.clean` (or documented escalation) before Phase 7 for features with requirements.md | Execute CV tasks, re-verify, re-converge (max 2 rounds) |
+> Full detail moved to [`references/contracts.md`](references/contracts.md) (progressive disclosure). **Read that file before executing this section.** Mesh links used there: `rune:ba`, `rune:scout`.
 
 ## Structured Output Contract (Prompt-as-API Pattern)
 
@@ -568,31 +449,15 @@ A wrong first attempt that produces feedback beats perfect understanding that ne
 
 ## Output Format
 
-<MUST-READ path="references/output-format.md" trigger="before emitting the Cook Report at end of any session"/>
-
-Emit a Cook Report with: Status, Phases, Files Changed, Tests, Quality results, Commit hash.
-When invoked by `team` with a NEXUS Handoff, include the Deliverables table — MANDATORY.
+> Full detail moved to [`references/contracts.md`](references/contracts.md) (progressive disclosure). **Read that file before executing this section.**
 
 ## Returns
 
-| Artifact | Format | Location |
-|----------|--------|----------|
-| Plan files (master + phase) | Markdown | `.rune/plan-<feature>.md`, `.rune/plan-<feature>-phase<N>.md` |
-| Implementation code | Source files | Per plan file paths |
-| Test files | Source files | Co-located or `__tests__/` per project convention |
-| Verification results | Inline stdout | Shown in Cook Report |
-| Cook Report | Markdown (inline) | Emitted at end of session |
-| Session state | Markdown | `.rune/decisions.md`, `.rune/progress.md`, `.rune/conventions.md` |
+> Full detail moved to [`references/contracts.md`](references/contracts.md) (progressive disclosure). **Read that file before executing this section.**
 
 ## Document Ownership
 
-| Scope | Access | Files |
-|-------|--------|-------|
-| **Owns** (read + write) | `.rune/plan-*.md`, `.rune/progress.md`, `.rune/decisions.md`, `.rune/conventions.md`, source files per approved plan |
-| **Reads** (never writes) | `CLAUDE.md`, `SKILL.md` (any), `.rune/contract.md`, `.rune/checkpoint.md` |
-| **Never modifies** | `compiler/**`, `extensions/**`, `PACK.md`, other skills' `SKILL.md`, `.rune/learnings.jsonl` |
-
-When delegating to sub-skills (scout, plan, test, review), each sub-skill owns its own output. Cook coordinates but does not overwrite sub-skill artifacts.
+> Full detail moved to [`references/contracts.md`](references/contracts.md) (progressive disclosure). **Read that file before executing this section.**
 
 ## Anti-Patterns
 
@@ -606,17 +471,7 @@ When delegating to sub-skills (scout, plan, test, review), each sub-skill owns i
 
 ## Self-Validation
 
-```
-SELF-VALIDATION (run before emitting Cook Report):
-- [ ] Every phase in Phase Skip Rules was either executed or explicitly skipped with reason
-- [ ] Plan approval gate was not bypassed — user said "go" (check conversation history)
-- [ ] No Phase 4 code was written before Phase 3 tests (TDD order preserved)
-- [ ] All Phase 5 quality gates (preflight, sentinel, review) ran — not just claimed
-- [ ] Phase 6.5 converge ran for features with requirements.md — or skip announced (no spec) / escalation documented
-- [ ] No quality gate exceeded 3 remediation cycles without user escalation
-- [ ] No upstream issue was fixed by code change alone — UPSTREAM findings re-invoked the source skill
-- [ ] Cook Report contains actual commit hash, not placeholder
-```
+> Full detail moved to [`references/contracts.md`](references/contracts.md) (progressive disclosure). **Read that file before executing this section.**
 
 ## Done When
 

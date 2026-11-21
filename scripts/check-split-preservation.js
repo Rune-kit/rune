@@ -15,7 +15,9 @@
  *   --write-baseline <file>  record line hashes, cross-refs and HARD-GATE
  *                            counts of the ref's SKILL.md files, so a unit
  *                            test can keep guarding the split without git
- *                            history (CI clones are shallow).
+ *                            history (CI clones are shallow). Merges into an
+ *                            existing file: the listed skills are (re)written
+ *                            with their own `ref`, other skills are kept.
  */
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -27,7 +29,12 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const CROSS_REF = /`?rune:([a-z][\w-]*)`?/g;
 const GATE = /<HARD-GATE>([\s\S]*?)<\/HARD-GATE>/g;
 
-const norm = (l) => l.trim();
+// A line moved into references/ may have its markdown link target rebased so it
+// still clicks through on GitHub (`](references/x.md)` → `](x.md)` inside a
+// reference file). Normalise local .md link targets to their path inside
+// references/ so a rebased line still counts as preserved.
+const LOCAL_MD_LINK = /\]\((?:\.\/)?(?:references\/)?([\w.-]+\.md)\)/g;
+const norm = (l) => l.trim().replace(LOCAL_MD_LINK, '](<ref>/$1)');
 export const hashLine = (l) => createHash('sha1').update(norm(l)).digest('hex').slice(0, 12);
 const frontmatter = (t) => t.match(/^---\n([\s\S]*?)\n---/)?.[1] ?? '';
 const body = (t) => t.replace(/^---\n[\s\S]*?\n---\n?/, '');
@@ -83,21 +90,25 @@ function main(argv) {
     else names.push(argv[i]);
   }
   if (baselineOut) {
-    const out = {
-      ref: execFileSync('git', ['rev-parse', '--short', ref], { cwd: ROOT, encoding: 'utf-8' }).trim(),
-      skills: {},
-    };
+    const short = execFileSync('git', ['rev-parse', '--short', ref], { cwd: ROOT, encoding: 'utf-8' }).trim();
+    const out = existsSync(baselineOut) ? JSON.parse(readFileSync(baselineOut, 'utf-8')) : { skills: {} };
+    // Legacy single-ref files: push the top-level ref down into each skill.
+    if (out.ref) {
+      for (const v of Object.values(out.skills)) v.ref ??= out.ref;
+      delete out.ref;
+    }
     for (const s of names) {
       const old = gitShow(ref, `skills/${s}/SKILL.md`);
       if (old === null) throw new Error(`skills/${s}/SKILL.md not found at ${ref}`);
       out.skills[s] = {
+        ref: short,
         lines: [...new Set(old.split('\n').map(norm).filter(Boolean).map(hashLine))],
         crossRefs: [...refs(old)].sort(),
         hardGates: gates(old).length,
       };
     }
     writeFileSync(baselineOut, `${JSON.stringify(out, null, 1)}\n`);
-    console.log(`baseline for ${names.length} skill(s) at ${out.ref} → ${baselineOut}`);
+    console.log(`baseline for ${names.length} skill(s) at ${short} → ${baselineOut}`);
     return 0;
   }
   const skillsRoot = path.join(ROOT, 'skills');

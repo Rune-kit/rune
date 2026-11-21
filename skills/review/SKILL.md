@@ -126,28 +126,7 @@ Modifying a symbol with 50+ callers + HIGH severity change (logic, types, behavi
 
 ### Step 1.6: Decorrelated Bug-Finding (council, high-blast-radius only)
 
-review's own pass is one model reading the diff once. For the same 50+ caller / HIGH-severity
-symbols that trigger the Step 1.5 HARD-GATE, call `rune:council` (mode=review) on the diff
-itself BEFORE writing up Step 2's findings — a second architecture reading the same code
-independently catches bugs a single pass rationalizes past.
-
-This is complementary to (not a replacement for) the existing adversary escalation: council
-here examines the ALREADY-WRITTEN diff for bugs; adversary examines plan-level risk before
-code exists. Both can fire on the same high-blast-radius change.
-
-**Request**: `{ question: <the diff, symbol name, and blast radius context — self-contained>,
-mode: "review", n: 3, diversity: { prefer_model_families: true },
-evidence_required: [repro, reasoning] }`.
-
-**Consume**: fold `agreement.consensus_claims` into Step 2's CRITICAL/HIGH findings, tagged
-`[council-verified]`. Fold `agreement.dissent` into MEDIUM findings or the report's NEEDS
-DISCUSSION section, tagged `[council-dissent]`. If `decorrelation: NO_DECORRELATION`, do not
-claim independent confirmation in the report — say plainly that no second model family was
-reachable.
-
-**Skip if**: blast radius is under 50 callers, or the change is not HIGH-severity — council is
-opt-in overhead reserved for the same tier that already requires adversarial escalation, not a
-default tax on every review.
+> Full detail moved to [`references/decorrelated-council.md`](references/decorrelated-council.md) (progressive disclosure). **Read that file before executing this section.** Mesh links used there: `rune:council`.
 
 ### Step 2: Logic Check (Production-Critical Focus)
 
@@ -339,31 +318,7 @@ This is the same asymmetry as the Falsification Pass, applied in the other direc
 
 ## Weighted Composite Scoring
 
-When a review is part of a recurring quality-gate cycle (e.g., sprint review, pre-release gate), produce a **composite quality score** alongside the findings list. This makes review output numeric and comparable across runs.
-
-### Formula
-
-```
-Quality Score = (Correctness × 0.35) + (Security × 0.30) + (Test Coverage × 0.20) + (Conventions × 0.15)
-```
-
-Each dimension is scored 0–100 based on findings count and severity:
-- 0 CRITICAL/HIGH findings → 100 for that dimension
-- 1 CRITICAL → dimension capped at 40
-- 1 HIGH → dimension capped at 70
-- Each additional MEDIUM → subtract 5 (floor: 50)
-
-### Grade Thresholds
-
-| Score | Grade | Verdict |
-|-------|-------|---------|
-| 90–100 | Excellent | APPROVE |
-| 75–89 | Good | APPROVE with notes |
-| 60–74 | Fair | REQUEST CHANGES (MEDIUM issues) |
-| 40–59 | Poor | REQUEST CHANGES (HIGH issues present) |
-| 0–39 | Critical | REQUEST CHANGES (CRITICAL present) |
-
-**When to include**: Only when `mode: "scored"` is passed by the caller, or when invoked by `audit`. Default review output uses the standard severity-ranked report without the score.
+> Full detail moved to [`references/composite-scoring.md`](references/composite-scoring.md) (progressive disclosure). **Read that file before executing this section.**
 
 
 ## Severity Levels
