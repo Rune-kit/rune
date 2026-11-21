@@ -153,269 +153,35 @@ These rules apply regardless of domain, mood, or platform. Every generated desig
 
 #### Rule 1 — Scale Minimums
 
-Below these thresholds, designs read as "AI boilerplate" no matter how good the palette is.
-
-| Element | Minimum | Ideal |
-|---------|---------|-------|
-| Hero/display text | 48px | 56-72px |
-| H1 (page title) | 32px | 36-40px |
-| Body text | 16px (never 14px for primary content) | 16-18px |
-| Secondary/meta text | 14px | 14-15px |
-| Touch targets (mobile) | 44×44px | 48×48px |
-| Touch target gap (mobile) | 8px | 12px |
-| Focus-visible ring | 2px | 3px |
-
-Write these minimums to `.rune/design-system.md` under `## Scale Minimums`. Downstream skills (`cook`, `fix`) treat violations as review findings.
+> Full detail moved to [`references/anti-ai-rules.md`](references/anti-ai-rules.md) (progressive disclosure). **Read that file before executing this section.**
 
 #### Rule 2 — Placeholder Over Bad SVG
 
-If the design calls for an icon, illustration, or graphic that the agent cannot generate at high quality, **ship a boxed placeholder, not a malformed SVG**.
-
-```html
-<!-- GOOD: placeholder -->
-<div class="placeholder" data-icon="dashboard" aria-label="Dashboard icon — design pass needed">
-  [ ICON: dashboard ]
-</div>
-
-<!-- BAD: AI-generated SVG with broken geometry -->
-<svg viewBox="0 0 24 24">
-  <path d="M12 2L2 7l10 5 10-5-10-5z M2 17l10 5 10-5 M2 12l10 5 10-5"/>
-</svg>
-```
-
-- Use **Phosphor Icons** (`@phosphor-icons/react`) or **Huge Icons** as the library default. Never generate custom SVG for standard iconography.
-- For illustrations, reference a placeholder string (e.g., `[ILLUSTRATION: empty-state-dashboard]`) that a human or asset-creator pass fills in later.
-- Malformed SVG is the #1 AI tell. A clean labeled placeholder is honest and professional.
-
-**Placeholder Ownership (MANDATORY)**: every placeholder or intentionally inert element the design ships — `[ ICON: ... ]`, `[ILLUSTRATION: ...]`, `[ PLACEHOLDER: ... ]`, and any button/link/form rendered as visual-only (no behavior designed yet) — MUST be listed in `.rune/ui-spec.md` under a `## Unwired Elements` section:
-
-```markdown
-## Unwired Elements
-| Element | Location | Why unwired | Owner of wiring |
-|---------|----------|-------------|-----------------|
-| product-grid | ProductGrid.tsx | awaiting US-2 backend | US-2 Endpoint task |
-| [ ICON: dashboard ] | Sidebar.tsx | asset pass pending | asset-creator |
-```
-
-This list is how downstream gates tell **declared debt** from **accidental dead UI**: `preflight` skips these elements, `verification` reports them as INFO (visible, non-failing), and `converge` counts them as `missing` until wired. A placeholder NOT on this list that reaches implementation = a dead element with no owner — that's the bug this section exists to prevent.
+> Full detail moved to [`references/anti-ai-rules.md`](references/anti-ai-rules.md) (progressive disclosure). **Read that file before executing this section.**
 
 #### Rule 3 — Color Derivation via oklch(), not Manual Shading
 
-When the design needs a darker hover, lighter surface, or tinted state, **derive from the accent via oklch()** — never eyeball a hex value.
-
-```css
-/* GOOD: relative derivation */
---accent: oklch(65% 0.2 255);
---accent-hover:  oklch(from var(--accent) calc(l - 0.08) c h);
---accent-pressed: oklch(from var(--accent) calc(l - 0.15) c h);
---accent-subtle:  oklch(from var(--accent) calc(l + 0.3) calc(c * 0.4) h);
-
-/* BAD: manual hex shading — breaks hue/chroma consistency */
---accent: #3b82f6;
---accent-hover: #2563eb;  /* guessed darker */
-```
-
-Why: HSL shading distorts perceived brightness at different hues. oklch() keeps perceptual lightness consistent, so derived states look intentional rather than "kinda close." Write derived tokens to `.rune/design-system.md` — downstream skills reuse these, not re-derive.
-
-Bonus: use `text-wrap: pretty` on headings to prevent widow words. One line, zero ceremony.
+> Full detail moved to [`references/anti-ai-rules.md`](references/anti-ai-rules.md) (progressive disclosure). **Read that file before executing this section.**
 
 #### Rule 4 — Measurable Constraints, Not Vague Directives
 
-Every design rule written into `.rune/design-system.md` MUST be measurable. Vague directives are not constraints — they are decoration. A reviewer cannot enforce "use modern typography"; they CAN enforce "Inter 96/64/40/24/16 px on an 8 px grid."
-
-| Vague (reject) | Measurable (accept) |
-|---|---|
-| "Use modern typography" | "Inter 96/64/40/24/16 px on an 8 px grid" |
-| "Subtle shadows" | "0 1px 2px rgba(0,0,0,0.05) (sm), 0 4px 6px rgba(0,0,0,0.07) (md)" |
-| "Brand-aligned color" | "Accent: oklch(65% 0.2 255); hover: oklch(from var(--accent) calc(l - 0.08) c h)" |
-| "Good contrast" | "All text/bg pairs ≥ 4.5:1 (WCAG AA), large text ≥ 3:1" |
-| "Tasteful spacing" | "8 px grid: every margin, padding, line-height a multiple of 8" |
-| "Real content, not lorem ipsum" | "Use the user's actual data; if missing, ship a labelled `[ PLACEHOLDER: content-type ]` block" |
+> Full detail moved to [`references/anti-ai-rules.md`](references/anti-ai-rules.md) (progressive disclosure). **Read that file before executing this section.**
 
 #### Rule 5 — No Pure Black, No Pure White, No Lorem Ipsum
 
-Three small forbids that catch the highest-frequency AI tells:
-
-1. **No `#000` or `#fff`** for any default text or background. Both crush perceived depth and read as "default browser styles." Use `oklch(98% 0 0)` / `oklch(8% 0 0)` (or domain-appropriate neutrals) and derive surfaces from them.
-2. **No lorem ipsum / "Lorem ipsum dolor"** anywhere in shipped output. Either use the user's real data, or ship a labelled `[ PLACEHOLDER: hero-headline ]` block (same pattern as Rule 2 SVG placeholder). Lorem ipsum is the #2 AI tell after malformed SVG.
-3. **No `outline: none` without a `:focus-visible` replacement.** Already covered by Pre-Delivery Checklist; restated here so it lives next to the other two highest-impact forbids.
+> Full detail moved to [`references/anti-ai-rules.md`](references/anti-ai-rules.md) (progressive disclosure). **Read that file before executing this section.**
 
 #### Rule 6 — CJK-First Font Stack (Multi-Language Products Only)
 
-If the product ships in Chinese / Japanese / Korean (or mixes CJK with Latin), the font stack MUST list a CJK-capable family FIRST, with Latin as fallback:
-
-```css
-/* GOOD: CJK-first, Latin fallback */
-font-family: "Noto Sans SC", "Source Han Sans SC", "Inter", system-ui, sans-serif;
-
-/* BAD: Latin-first — Chinese characters render in browser fallback (PingFang, Heiti) and break rhythm */
-font-family: "Inter", "Noto Sans SC", system-ui;
-```
-
-For prose / serif: `"Noto Serif SC" / "Source Han Serif SC" / "Manrope"`. For monospace: `"JetBrains Mono" / "Sarasa Mono SC"` (Sarasa unifies CJK + Latin metrics). Skip this rule entirely if the product is Latin-only — listing CJK fonts you don't need slows first-paint.
+> Full detail moved to [`references/anti-ai-rules.md`](references/anti-ai-rules.md) (progressive disclosure). **Read that file before executing this section.**
 
 ### Step 3 — Apply Domain Reasoning Rules
 
-Map domain to design system parameters:
-
-**Trading/Fintech:**
-```
-Style:       Data-Dense Dark
-Palette:     Neutral dark (#0c1419 bg), semantic colors ONLY for profit/loss
-             Profit: #00d084 (green) | Loss: #ff6b6b (red)
-             Accent: #2196f3 (data highlight) — NOT purple
-Typography:  JetBrains Mono 700 for ALL numeric values (prices, P&L, %)
-             Inter 400 for labels, Inter 600 for headings
-Effects:     Subtle grid lines, real-time pulse animations on live data
-Anti-patterns:
-  ❌ Gradient washes on data tables (obscures precision)
-  ❌ Accent colors that conflict with profit/loss signal colors
-  ❌ Decorative motion (distracts from live data)
-  ❌ Dark-on-dark text for secondary labels (contrast required)
-```
-
-**SaaS Dashboard:**
-```
-Style:       Minimalism or Flat Design
-Palette:     Professional neutrals, single brand accent (NOT purple unless brand)
-             Light: #ffffff bg, #f8fafc surface | Dark: #0f172a bg, #1e293b surface
-             Accent: brand-defined — default #6366f1 is acceptable here as a SaaS pattern
-Typography:  Inter 400/500/600 throughout — consistent, readable, data-friendly
-             Space Grotesk 700 for hero/display only
-Effects:     Skeleton loaders, subtle hover states, clean data tables
-Anti-patterns:
-  ❌ Card-grid monotony (every section same layout)
-  ❌ Animations that delay data visibility
-  ❌ Missing empty/error states in data tables
-```
-
-**Landing/Marketing:**
-```
-Style:       Glassmorphism (current era) or Aurora/Mesh
-Palette:     Brand-expressive — this is the ONE context where bold palette is correct
-             High-contrast CTAs (must pass 4.5:1 contrast on all backgrounds)
-Typography:  Space Grotesk 700 for hero display (48–72px)
-             Inter 400/500 for body — max line-width 720px
-Effects:     Animated mesh gradients, floating glass cards, scroll-triggered reveals
-Anti-patterns:
-  ❌ Generic hero: "big text + diagonal purple-to-blue gradient" — AI signature
-  ❌ Centered layout throughout (breaks directional reading flow)
-  ❌ Missing scroll animations on a static page
-  ❌ CTAs that don't stand out from body copy
-```
-
-**Healthcare:**
-```
-Style:       Trust & Authority (clean, clinical, accessible)
-Palette:     Clean blue/white/green — NO red except clinical alerts
-             #f0f9ff bg, #1e40af accent, #059669 success, #dc2626 CRITICAL_ONLY
-Typography:  Inter throughout — never decorative fonts
-             Body minimum 16px for readability by older/impaired users
-Effects:     Minimal — subtle hover, no motion by default
-Anti-patterns:
-  ❌ Dark mode as default (patients/elderly → light mode)
-  ❌ Gamification patterns (inappropriate for medical context)
-  ❌ Red for informational messages (reserved for clinical alerts)
-  ❌ Dense data layouts without clear visual hierarchy
-```
-
-**E-commerce:**
-```
-Style:       Conversion-Optimized (Warm Minimalism)
-Palette:     Warm neutrals, high-contrast CTAs
-             Urgency signals: #ef4444 for "low stock", #f59e0b for "sale"
-Typography:  Bold product names (Space Grotesk 600+), readable descriptions (Inter 400)
-Effects:     Hover zoom on product images, add-to-cart pulse, trust badges
-Anti-patterns:
-  ❌ Cluttered above-fold (too many competing CTAs)
-  ❌ Add to cart button that doesn't stand out
-  ❌ Missing product image zoom/gallery
-  ❌ Checkout flow with more than 3 steps visible at once
-```
-
-**Developer Tools:**
-```
-Style:       Minimalism or Neubrutalism
-Palette:     Dark mode default — #0d1117 bg (GitHub-scale), #161b22 surface
-             Syntax highlighting colors as accent palette
-             No heavy gradients — developers recognize and distrust decorative UI
-Typography:  JetBrains Mono for code/commands, Inter for prose
-Effects:     Keyboard shortcuts visible, dense information layout OK
-Anti-patterns:
-  ❌ Decorative animations that delay tool response
-  ❌ Non-monospace font for code blocks or command output
-  ❌ Light mode only (developer tools default to dark)
-  ❌ Visual noise around core functionality
-```
-
-**Creative/Portfolio:**
-```
-Style:       Editorial Grid or Glassmorphism or Brutalism (brand-specific)
-Palette:     MUST be distinctive — generic palettes are disqualifying
-             This is the one category where custom/unusual palettes are required
-Typography:  Custom or display font as headline (NOT Inter alone)
-             Font pairing must have contrast: Display + neutral body
-Effects:     Curated — hover reveals, scroll-based reveals, cursor effects
-Anti-patterns:
-  ❌ Generic card grid with equal padding everywhere
-  ❌ Inter-only typography (zero personality)
-  ❌ Stock photo backgrounds
-  ❌ Navigation that looks like every other portfolio
-```
-
-**AI-Native:**
-```
-Style:       Minimal Functional or Glassmorphism
-Palette:     Purple/violet IS acceptable here (it is the AI-native signal)
-             #7c3aed accent, dark neutral bg, subtle gradients
-Typography:  Inter throughout — clarity over personality
-Effects:     Typing indicators, streaming text, thinking states
-Anti-patterns:
-  ❌ Purple on non-AI product (exports the AI signal to inappropriate contexts)
-  ❌ Static empty states — AI interfaces must show "thinking" states
-  ❌ Missing latency UX (skeleton during generation, cancel button)
-```
+> Full detail moved to [`references/domain-rules.md`](references/domain-rules.md) (progressive disclosure). **Read that file before executing this section.**
 
 ### Step 4 — Platform-Specific Overrides
 
-Apply platform conventions on top of domain rules:
-
-**iOS (SwiftUI / iOS 26+):**
-```
-Visual language: Liquid Glass — translucent surfaces with backdrop blur
-  background: UIBlurEffect or .regularMaterial
-  border: subtle 1px rgba(white, 0.15) — NOT solid
-  roundness: aggressive corner radius (16–24px on cards, full on buttons)
-Icons: SF Symbols ONLY — not Heroicons, not Lucide
-Typography: SF Pro family — Dynamic Type scaling is mandatory
-Safe areas: Content must respect safeAreaInsets on all edges
-Anti-patterns:
-  ❌ Solid-background cards (deprecated in iOS 26 Liquid Glass era)
-  ❌ Custom icon fonts (SF Symbols is the platform contract)
-  ❌ Fixed font sizes (Dynamic Type must be supported)
-```
-
-**Android (Jetpack Compose / Material 3 Expressive):**
-```
-Color: MaterialTheme.colorScheme — dynamic color derived from wallpaper
-  NEVER hardcode hex colors in Compose — use semantic tokens
-Shape: Extreme corner expressiveness — use shape variation as affordance signal
-  Small interactive: RoundedCornerShape(4dp)
-  Cards/surfaces: RoundedCornerShape(16dp)
-  FABs: CircleShape
-Motion: Spring physics — tween() is almost never the right choice
-  spring(dampingRatio = Spring.DampingRatioMediumBouncy)
-Anti-patterns:
-  ❌ Hardcoded hex colors (breaks dynamic color contract)
-  ❌ Linear easing (Material 3 Expressive uses spring physics)
-  ❌ Small corner radii (shape expressiveness is a key M3 Expressive principle)
-```
-
-**Web:**
-- Apply domain rules from Step 3
-- Default: dark mode support required (`prefers-color-scheme: dark`)
-- Responsive: must design for 375px, 768px, 1024px, 1440px breakpoints
-- Accessibility: WCAG 2.2 AA minimum
+> Full detail moved to [`references/platform-overrides.md`](references/platform-overrides.md) (progressive disclosure). **Read that file before executing this section.**
 
 ### Step 5 — Generate Design System File
 
@@ -523,37 +289,7 @@ content string, empty state, dark mode.
 
 ### Step 5.5 — UI Design Contract (UI-SPEC.md)
 
-After generating the design system, lock key visual decisions in `.rune/ui-spec.md` — a binding contract that prevents design drift during implementation.
-
-**Why**: design-system.md defines tokens (what's available). UI-SPEC locks decisions (what was chosen and WHY). Without a spec, each component re-decides layout, density, and hierarchy — causing visual inconsistency.
-
-**Generate `.rune/ui-spec.md`:**
-
-```markdown
-# UI Specification: [Project Name]
-Locked: [YYYY-MM-DD] | Mood: [selected mood]
-
-## Layout Decisions
-- Page max-width: [value]px
-- Sidebar: [yes/no] — [width]px [fixed/collapsible]
-- Content density: [compact/balanced/spacious]
-- Card sizing: [uniform/varied] — if varied, specify hierarchy rules
-
-## Visual Hierarchy Rules
-- Primary action: [color] [size] [weight] — ONE per viewport
-- Secondary action: [ghost/outline] style — max 2 per section
-- Data emphasis: [monospace + bold] for numbers, [color accent] for status
-- Section separation: [border/spacing/background] — pick ONE, be consistent
-
-## Component Decisions
-- Card style: [elevated/bordered/glass] — reasoning: [why]
-- Table style: [striped/bordered/minimal] — reasoning: [why]
-- Form layout: [stacked/inline/grid] — reasoning: [why]
-- Navigation: [sidebar/topbar/tabs] — reasoning: [why]
-
-## Locked Anti-Decisions (things we explicitly chose NOT to do)
-- ❌ [rejected option] — because [reason]
-```
+> Full detail moved to [`references/ui-spec.md`](references/ui-spec.md) (progressive disclosure). **Read that file before executing this section.**
 
 <HARD-GATE>
 UI-SPEC.md is a contract. Once written, changes require explicit user approval ("I want to change the card style"). Skills that generate UI (`cook`, `fix`, `scaffold`) MUST read UI-SPEC.md before producing components. Drift from spec = review finding.
@@ -577,36 +313,7 @@ If violations found → add them to `.rune/design-system.md` Anti-Patterns secti
 
 ### Step 6.5 — 6-Pillar Visual Audit
 
-Score the generated design system across 6 pillars. Each pillar scored 1-4 (1=Poor, 2=Fair, 3=Good, 4=Excellent). Minimum passing score: **18/24** (average 3.0).
-
-| Pillar | Score 1 (Poor) | Score 2 (Fair) | Score 3 (Good) | Score 4 (Excellent) |
-|--------|---------------|----------------|----------------|---------------------|
-| **Copy** | Placeholder text, generic CTAs ("Submit"), no voice | Real copy but inconsistent tone | Consistent voice, domain-appropriate, clear CTAs | Personality-rich, scannable, microcopy for every state |
-| **Visuals** | Stock photos, generic icons, no visual identity | Consistent icon set, basic imagery | Custom illustrations or curated photography, clear hierarchy | Distinctive visual language, icons tell stories, zero stock |
-| **Color** | Default framework palette, no semantic meaning | Brand colors defined but inconsistent usage | Full semantic palette, dark mode, accessible contrast | Mood-aligned, colorblind-safe, context-adaptive (profit/loss/status) |
-| **Typography** | Single font, no scale | Font pairing exists but inconsistent sizing | Clear hierarchy (display/heading/body/mono), numbers monospace | Mood-aligned pairing, fluid scaling, platform-native where needed |
-| **Spacing** | Inconsistent gaps, cramped or too loose | Base unit defined but not consistently applied | 8px grid, consistent section/component/element spacing | Density variants (compact/default/spacious), rhythm feels intentional |
-| **UX** | Missing states (empty/error/loading), no feedback | Basic states exist, some interactive feedback | All states covered, toast/loading/skeleton, focus management | Delightful micro-interactions, smart defaults, zero dead-ends |
-
-**Audit output:**
-
-```
-### Visual Audit Score: [total]/24
-
-| Pillar | Score | Notes |
-|--------|-------|-------|
-| Copy | 3 | Consistent voice, missing loading microcopy |
-| Visuals | 2 | Using Phosphor icons (good), no custom illustration |
-| Color | 4 | Full semantic palette, colorblind alternates defined |
-| Typography | 3 | JetBrains Mono for numbers, Inter for prose — solid |
-| Spacing | 3 | 8px grid applied, density variants not needed yet |
-| UX | 3 | All states covered, micro-interactions in progress |
-| **Total** | **18/24** | PASS — ship-ready with Copy improvements recommended |
-```
-
-**If score < 18**: Flag specific weak pillars in Design Report. Add improvement tasks to `.rune/design-system.md` under `## Improvement Backlog`.
-
-**Registry safety check**: If an existing component library is in use (shadcn, MUI, etc.), verify the design system doesn't conflict with the library's token structure. Flag collisions.
+> Full detail moved to [`references/visual-audit.md`](references/visual-audit.md) (progressive disclosure). **Read that file before executing this section.**
 
 ### Step 7 — UX Writing Patterns
 
@@ -659,30 +366,7 @@ Emit design summary to calling skill:
 
 ## Output Format
 
-```
-## Design Report: TradingOS Dashboard
-
-### Domain Classification
-Trading/Fintech — Data-Dense Dark — Web
-
-### Design System Generated
-.rune/design-system.md
-
-### Key Decisions
-- Accent: #2196f3 (blue) — neutral data highlight; profit/loss colors (#00d084/#ff6b6b)
-  are reserved as semantic signals, not brand colors
-- Typography: JetBrains Mono 700 for all numeric values (prices, P&L, %),
-  Inter 400/600 for prose and labels
-- Style: Data-Dense Dark — users scan real-time data under time pressure;
-  decorative elements compete with data for attention
-
-### Anti-Patterns Registered
-- ❌ 4 domain-specific (gradient wash, conflicting accent colors, decorative motion, dark-on-dark)
-- ❌ 1 platform-specific (fixed font sizes not applicable — web target)
-
-### Pre-Delivery Checklist
-12 items to verify before shipping
-```
+> Full detail moved to [`references/output-example.md`](references/output-example.md) (progressive disclosure). **Read that file before executing this section.**
 
 ## Constraints
 

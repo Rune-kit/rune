@@ -68,7 +68,7 @@ export function transformToolNames(body, adapter) {
   });
 
   // Fourth: Claude-only tools without a per-adapter mapping
-  result = result.replace(GENERIC_TOOL_PATTERN, (match, toolName) => {
+  result = result.replace(GENERIC_TOOL_PATTERN, (_match, toolName) => {
     const mapped = adapter.transformToolName?.(toolName) ?? toolName;
     return mapped !== toolName ? mapped : GENERIC_TOOL_WORDING[toolName];
   });

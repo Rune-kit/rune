@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "generated": "2026-11-21T09:10:31.057Z",
+  "generated": "2026-11-21T09:27:09.145Z",
   "skillCount": 67,
   "skills": {
     "adversary": {
@@ -171,14 +171,14 @@
       "group": "orchestrator",
       "description": "Feature implementation orchestrator. ALWAYS use this skill for ANY code change — implement, build, add feature, create, fix bug, or any task that modifies source code. This is the default route for 70",
       "connections": [
-        "incident",
-        "fix",
-        "verification",
-        "sentinel",
         "deploy",
-        "watchdog",
+        "fix",
+        "incident",
         "journal",
         "neural-memory",
+        "sentinel",
+        "verification",
+        "watchdog",
         "graft",
         "sentinel-env",
         "scout",
@@ -1056,14 +1056,14 @@
     ],
     "converge": [],
     "cook": [
-      "incident",
-      "fix",
-      "verification",
-      "sentinel",
       "deploy",
-      "watchdog",
+      "fix",
+      "incident",
       "journal",
       "neural-memory",
+      "sentinel",
+      "verification",
+      "watchdog",
       "graft",
       "sentinel-env",
       "scout",
@@ -1710,11 +1710,11 @@
       "model": "sonnet",
       "chain": [
         "cook",
-        "incident",
+        "deploy",
         "fix",
-        "verification",
-        "sentinel",
-        "deploy"
+        "incident",
+        "journal",
+        "neural-memory"
       ]
     },
     "team": {

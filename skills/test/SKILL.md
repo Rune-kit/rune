@@ -107,26 +107,7 @@ Use `Write` to create test files following the detected conventions:
 
 #### Python Async Tests (pytest-asyncio)
 
-When writing tests for async Python code:
-
-1. **Verify setup before writing tests**:
-   - Confirm `pytest-asyncio` is in project dependencies
-   - Confirm `asyncio_mode` is set in `pyproject.toml` `[tool.pytest.ini_options]` (recommend `"auto"`)
-   - If neither is configured, warn the caller and suggest setup before proceeding
-
-2. **Writing async test functions**:
-   - With `asyncio_mode = "auto"`: just write `async def test_something():` — no decorator needed
-   - With `asyncio_mode = "strict"`: every async test needs `@pytest.mark.asyncio`
-   - Without asyncio_mode set: always use `@pytest.mark.asyncio` decorator explicitly
-
-3. **Async fixtures**:
-   - Use `@pytest_asyncio.fixture` (NOT `@pytest.fixture`) for async setup/teardown
-   - Scope rules: async fixtures default to `function` scope — use `scope="session"` carefully with async
-
-4. **Common pitfalls**:
-   - Tests that `pass` without `await` — they run but don't execute the async path
-   - Missing `pytest-asyncio` makes `async def test_*` silently pass as empty coroutines
-   - Mixing sync and async fixtures can cause event loop errors
+> Full detail moved to [`references/python-async.md`](references/python-async.md) (progressive disclosure). **Read that file before executing this section.**
 
 ### Phase 3.5: Cycle Discipline (Vertical Slicing Gate)
 
@@ -209,121 +190,15 @@ Output: Prioritized test plan targeting only affected paths
 
 ## Test Types — 4-Layer Methodology
 
-Tests are organized in 4 layers. Each layer catches a different failure class. Higher layers are slower but catch integration issues lower layers miss.
-
-| Layer | Type | What It Catches | Framework | Speed |
-|-------|------|-----------------|-----------|-------|
-| L1 | **Unit** | Logic bugs, boundary violations, pure function errors | jest/vitest/pytest/cargo test | Fast |
-| L2 | **Integration** | API contract breaks, DB query errors, service interaction failures | supertest/httpx/reqwest | Medium |
-| L3 | **True Backend** | Real tool/service output correctness (not just exit 0) | Same + real software invocation | Medium-Slow |
-| L4 | **E2E / Subprocess** | Full workflow from user/agent perspective, installed app works | Playwright/Cypress/subprocess | Slow |
-
-**Layer rules:**
-- **L1 (Unit)**: Synthetic data, no external deps. Every function tested in isolation. Fast, deterministic, CI-friendly
-- **L2 (Integration)**: Tests service boundaries — API endpoints, DB operations, message queues. May need test DB or mock server
-- **L3 (True Backend)**: **Invokes the REAL tool/service** and verifies output programmatically. No graceful degradation — if the dependency isn't installed, tests FAIL (not skip). Verify: magic bytes, file size > 0, content structure. Print artifact paths for manual inspection
-- **L4 (E2E/Subprocess)**: Tests the installed command/app via subprocess or browser automation. Full user workflow: input → process → output → verify
-
-**"No graceful degradation" rule** (L3/L4): Hard dependencies MUST be installed. Tests MUST NOT skip or produce fake results when the dependency is missing. A silently skipping test is worse than a loudly failing test.
-
-Additional modes:
-
-| Type | When | Speed |
-|------|------|-------|
-| Regression | After bug fixes | Fast |
-| Diff-aware | After implementation, large codebases (Phase 6.5) | Fast (targeted) |
+> Full detail moved to [`references/test-types.md`](references/test-types.md) (progressive disclosure). **Read that file before executing this section.**
 
 ## TEST.md — Test Plan + Results Document
 
-For non-trivial features (3+ test files or 20+ test cases), create a `TEST.md` in the test directory. This is BOTH a planning doc (written BEFORE tests) and results doc (appended AFTER tests pass).
-
-### Before writing tests — write the plan:
-```markdown
-# Test Plan: [Feature Name]
-
-## Test Inventory
-- `test_core.py`: ~XX unit tests planned (L1)
-- `test_integration.py`: ~XX integration tests planned (L2)
-- `test_e2e.py`: ~XX E2E tests planned (L3/L4)
-
-## Unit Test Plan (L1)
-| Module | Functions | Edge Cases | Est. Tests | Req IDs |
-|--------|-----------|------------|------------|---------|
-| `core/auth.py` | login, register, refresh | expired token, invalid creds, rate limit | 12 | REQ-001, REQ-003 |
-
-## E2E Scenarios (L3/L4)
-| Workflow | Simulates | Operations | Verified | Req IDs |
-|----------|-----------|------------|----------|---------|
-| User signup | New user onboarding | register → verify → login | Token valid, profile created | REQ-005 |
-
-## Realistic Workflow Scenarios
-- **[Name]**: [Step 1] → [Step 2] → verify [output properties]
-```
-
-### After tests pass — append results:
-```markdown
-## Test Results
-[Paste full `pytest -v --tb=no` or `npm test` output]
-
-## Summary
-- Total: XX | Passed: XX | Failed: 0
-- Execution time: X.Xs | Coverage: XX%
-
-## Requirement Coverage
-| Req ID | Test File(s) | Status |
-|--------|-------------|--------|
-| REQ-001 | `test_auth.py::test_login` | ✅ Covered |
-| REQ-002 | — | ❌ Not covered |
-
-## Gaps
-- [Areas not covered and why]
-```
-
-**Why TEST.md**: Planning tests before code catches missing edge cases early. Appending results creates permanent evidence. One document = complete testing story.
+> Full detail moved to [`references/test-plan-doc.md`](references/test-plan-doc.md) (progressive disclosure). **Read that file before executing this section.**
 
 ## Skill Behavior Tests (Eval Scenarios)
 
-For testing SKILL.md behavior (not code), use **Eval Scenarios** — unit tests for skill files, not code files.
-
-### Eval Scenario Format
-
-```markdown
-## Eval: E[NN] — [scenario name]
-
-### Prompt
-[The exact situation/message an agent receives]
-
-### Expected Reasoning
-[Step-by-step reasoning the agent SHOULD follow]
-
-### Must Include
-- [Assertion 1: what the output MUST contain or do]
-- [Assertion 2]
-
-### Must NOT
-- [Anti-pattern 1: what the output MUST NOT do]
-- [Anti-pattern 2]
-
-### Category
-happy-path | adversarial | edge-case | jailbreak | credential-leak
-```
-
-### Eval Coverage Requirements
-
-A skill is **behavior-tested** when it has evals covering:
-
-| Category | Min Evals | Purpose |
-|----------|-----------|---------|
-| Happy path | 1 | Core workflow executes correctly |
-| Edge case | 1 | Empty input, missing context, unusual state |
-| Adversarial | 1 | Time pressure, sunk cost, authority pressure |
-| Jailbreak / injection | 1 | Prompt injection attempt, "ignore instructions" |
-
-**Minimum**: 4 evals per skill (1 per category). Security-critical skills (sentinel, safeguard): 8+ evals.
-
-### Eval Storage
-
-Save eval files as `skills/<name>/evals.md`. Each eval is a numbered scenario (E01–E24 range). skill-forge Phase 7 checks for evals presence before ship.
+> Full detail moved to [`references/evals.md`](references/evals.md) (progressive disclosure). **Read that file before executing this section.**
 
 
 ## Error Recovery
@@ -392,99 +267,16 @@ Save eval files as `skills/<name>/evals.md`. Each eval is a numbered scenario (E
 
 ## Advanced: Oracle-Injection E2E Testing
 
-For **data pipelines, AI workflows, and multi-stage processing** where comparing full output structures is impractical, use oracle injection:
-
-1. **Generate a UUID oracle token**: `const oracle = crypto.randomUUID()`
-2. **Inject into synthetic input**: embed the oracle in realistic test data that flows through the pipeline
-3. **Run the full pipeline**: input → all stages → output
-4. **Search for oracle in output**: if found → data flowed end-to-end correctly
-
-```
-// Example: testing a document processing pipeline
-const oracle = "ORACLE-" + crypto.randomUUID();
-const testDoc = `Meeting notes: discussed ${oracle} integration timeline`;
-const result = await pipeline.process(testDoc);
-assert(result.output.includes(oracle), "Oracle not found — pipeline lost data");
-```
-
-**When to use**: E2E tests for pipelines with 3+ stages, LLM-based processing, ETL workflows, or any system where output structure is complex/non-deterministic but data preservation is critical.
-
-**When NOT to use**: Unit tests, simple CRUD, or when exact output comparison is feasible.
+> Full detail moved to [`references/oracle-e2e.md`](references/oracle-e2e.md) (progressive disclosure). **Read that file before executing this section.**
 
 
 ## Spec→Test Traceability
 
-When a spec or plan with acceptance criteria exists (`.rune/features/<name>/requirements.md`, `plan.md`, or phase file), every criterion MUST map to at least one test case.
-
-```
-Spec Acceptance Criteria → Test Case → Implementation
-
-US-1/AC-1.1: "User can reset password via email" → test_password_reset_sends_email()
-US-1/AC-1.2: "Rate limit: max 3 reset attempts/hour" → test_password_reset_rate_limit()
-FR-3: "Expired tokens rejected" → test_expired_reset_token_rejected()
-```
-
-**Validation step** (after writing tests): Cross-check acceptance criteria against test names. For each criterion:
-- Has test → OK
-- No test → flag as UNTESTED REQUIREMENT (more serious than uncovered lines)
-
-**Cross-boundary minimum**: every user story whose path crosses the UI↔data boundary (story has both a UI task and an endpoint/data task) needs **≥1 L2 integration test** exercising handler → service/endpoint with the REAL route wired (contract-level is fine; mocking the ENTIRE chain does not count). A story covered only by unit tests with the handler mocked = the story is NOT covered — that's how dead buttons reach 80% coverage.
-
-**Contract tests first**: when plan emitted `.rune/features/<name>/contracts/`, each contract gets a failing contract test (request/response shape, error cases) BEFORE the endpoint is implemented — the RED phase for the API surface.
-
-**Why this is stronger than coverage**: Coverage checks that lines were EXECUTED. Traceability checks that INTENT was VERIFIED. You can have 100% coverage but miss a requirement if the test doesn't assert the right behavior.
-
-**Skip if**: No spec AND no plan exists (ad-hoc fix), or neither has an acceptance criteria section. A requirements.md with US/AC IDs makes this section MANDATORY — "no plan file" alone is not a skip reason.
-
-**Browser click-through (advisory)**: when a UI story completes, SUGGEST a `browser-pilot` run of the story's Independent Test (from requirements.md) — one real click-path beats ten mocked renders. Advisory, not a gate: skip freely in headless/CI-only environments.
+> Full detail moved to [`references/traceability.md`](references/traceability.md) (progressive disclosure). **Read that file before executing this section.**
 
 ## Eval-Driven Development
 
-Define **capability evals** and **regression evals** BEFORE writing implementation code. Evals go beyond unit tests — they verify that the agent/system can handle the feature's intent, not just its mechanics.
-
-### Two Eval Types
-
-| Type | Purpose | Pass Criteria | When |
-|------|---------|---------------|------|
-| **Capability eval** | Can the system do this new thing? | pass@k: ≥1 success in k attempts (k=3-5) | Before implementation |
-| **Regression eval** | Did we break existing behavior? | pass^k: ALL k attempts must pass | After implementation |
-
-**pass@k** (capability): At least 1 of k runs succeeds. Used for new features where some variance is acceptable. Threshold: ≥90% pass@3 for standard features, ≥95% pass@5 for critical paths.
-
-**pass^k** (regression): ALL k runs must pass. Used for existing behavior that must never break. If ANY run fails, it's a regression. Threshold: 100% pass^3.
-
-### Eval File Format
-
-Store evals in `.rune/evals/<feature>.md`:
-
-```markdown
-# Eval: <feature name>
-
-## Capability Evals (pass@k)
-| ID | Description | k | Threshold | Status |
-|----|-------------|---|-----------|--------|
-| CAP-1 | [what the system should be able to do] | 3 | 90% | pending |
-
-## Regression Evals (pass^k)
-| ID | Description | k | Status |
-|----|-------------|---|--------|
-| REG-1 | [existing behavior that must not break] | 3 | pending |
-```
-
-### Anti-Pattern: Eval Overfitting
-
-Do NOT overfit evals to specific prompts or known examples. Evals should test the **capability**, not the **exact input**.
-
-- BAD: `"When user says 'hello', respond with 'Hi there!'"` — tests exact string match
-- GOOD: `"When user greets, respond with a greeting"` — tests capability
-
-### Integration with TDD
-
-1. Write eval definitions (capability + regression) → `.rune/evals/<feature>.md`
-2. Write unit/integration tests (RED phase) → test files
-3. Implement feature (GREEN phase) → source files
-4. Run evals to verify capability achieved + no regressions
-5. Preflight checks eval results as part of quality gate
+> Full detail moved to [`references/evals.md`](references/evals.md) (progressive disclosure). **Read that file before executing this section.**
 
 ## Red Flags — STOP and Start Over
 
@@ -546,45 +338,7 @@ If you catch yourself with ANY of these, delete implementation code and restart 
 
 ## Testing Anti-Patterns (Gate Functions)
 
-Before writing tests, check yourself against these 5 anti-patterns. Each has a **gate function** — a question you MUST answer before proceeding.
-
-### Anti-Pattern 1: Testing Mock Behavior
-Asserting that a mock exists (e.g., `testId="sidebar-mock"`) instead of testing real component behavior. You're proving the mock works, not the code.
-**Gate**: "Am I testing real component behavior or just mock existence?" → If mock existence: STOP. Rewrite to test real behavior.
-
-### Anti-Pattern 2: Test-Only Methods in Production
-Adding `destroy()`, `reset()`, or `__testSetup()` methods to production classes that are ONLY called from test files. Production code should not know tests exist.
-**Gate**: "Is this method only called by tests?" → If yes: STOP. Move to test utilities or test helper file, not production class.
-
-### Anti-Pattern 3: Mocking Without Understanding Side Effects
-Mocking a function without first understanding ALL its side effects. The real function may write config files, update caches, or emit events that downstream code depends on.
-**Gate**: Before mocking, STOP and answer: "What side effects does the REAL function have? Does this test depend on any of those?" → Run with real implementation first, observe what happens, THEN add minimal mocking.
-
-### Anti-Pattern 4: Incomplete Mocks
-Partial mock missing fields that downstream code consumes. Your test passes because it only checks the fields you mocked, but production code reads fields your mock doesn't have → runtime crash.
-**Iron Rule**: Mock the COMPLETE data structure as it exists in reality, not just fields your immediate test uses. Examine actual API response / real data shape before writing mock.
-
-### Anti-Pattern 5: Mock Setup Longer Than Test Logic
-If mock setup is 30 lines and the actual test assertion is 3 lines, the test is testing infrastructure, not behavior. This is a code smell that indicates wrong abstraction level.
-**Gate**: "Is my mock setup longer than my test logic?" → If yes: test at a higher level (integration) or extract mock factories.
-
-### Anti-Pattern 6: Test Slop (Framework-Behavior Tests)
-Tests that verify the framework works rather than YOUR code works. If the test would still pass with an empty component/function, it's testing infrastructure.
-**Gate**: "Would this test pass if I deleted my business logic?" → If yes: STOP. Rewrite to test behavior that YOUR code introduces.
-
-Examples of test slop:
-- "renders without crashing" (tests that React works, not your component)
-- "route responds with 200" without checking response body (tests Express, not your handler)
-- Asserting a mock was called N times without checking the RESULT of those calls
-- Type existence tests (`typeof result === 'object'`) when you should test the actual value
-- Component renders + handler fully mocked, presented as story coverage — the click path was never exercised; the story's dead button ships with "green" tests
-
-**Red flags — any of these means STOP and rethink:**
-- Mock setup longer than test logic
-- `*-mock` test IDs in assertions
-- Methods only called in test files
-- Can't explain in one sentence why a mock is needed
-- Test would pass with empty implementation (test slop)
+> Full detail moved to [`references/testing-anti-patterns.md`](references/testing-anti-patterns.md) (progressive disclosure). **Read that file before executing this section.**
 
 ## Returns
 
