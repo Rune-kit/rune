@@ -1,6 +1,6 @@
 # Rune Roadmap
 
-> Last updated: November 2026 | Version: 2.32.0
+> Last updated: November 2026 | Version: 2.33.0
 
 ---
 
@@ -16,7 +16,7 @@ Rune is a **mesh**, not a plugin store. Every addition must deepen connections, 
 
 ---
 
-## Current State (v2.32.0 — "Drawing the Mesh")
+## Current State (v2.33.0 — "Everywhere")
 
 | Area | Count | Status |
 |-------|-------|--------|

@@ -3,6 +3,36 @@
 All notable changes to Rune are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.33.0] - 2026-11-21
+
+"Everywhere" — Rune installs natively in the agents people actually use in late 2026, and the numbers on the box are checked by CI.
+
+### What you get
+
+- **Install in one line, in your agent of choice.** `npx skills add rune-kit/rune` (skills.sh, ~80 agents) · Claude Code `/plugin marketplace add rune-kit/rune` + `/plugin install rune@rune-kit` · Grok Build `grok plugin install rune-kit/rune --trust` · Gemini CLI `gemini extensions install https://github.com/rune-kit/rune` · Cursor plugin manifest · any Agent Plugins 1.0 client.
+- **Three new compile targets — 16 in total.** `rune init --platform grok` (`.grok/skills/`), `--platform cline` (`.cline/skills/`) and `--platform agents` (`.agents/skills/`, the shared directory read by Kiro, Amp, Goose, Factory, Junie, Trae and others). `rune init` auto-detects `.grok/` and `.cline/` projects.
+- **The Claude marketplace installs again.** Extension-pack ids were `@rune/<pack>`, which Claude Code rejects (14 validation errors); they are now `rune-<pack>`. `claude plugin validate .` passes.
+- **`rune doctor` on every platform.** It crashed with `EISDIR` on all directory-per-skill outputs (Codex, Cursor, Windsurf, Antigravity, Copilot, Gemini, Qwen, Qoder) and flagged `rune-pro` / `rune-business` / `rune-kit` mentions as broken refs. Both fixed; a build → doctor round trip runs in CI for the new targets.
+- **Every number is checked.** `version-sync-check` scans 26 public files (README, ROADMAP, CLAUDE.md, AGENTS.md, llms.txt, manifests, landing + guides HTML, docs, the compiled branding footer) and fails CI on a stale skill / signal / connection / platform count. It found and fixed 39 stale claims (66 → 67 skills, 43/45 → 46 signals, 209 → 248 connections, 13 → 16 platforms).
+- **Working buy links.** The README and the footer compiled into every skill linked to the private Pro/Business repos (404 for buyers); they now go to the pricing page.
+- **A shorter README.** 73 KB → ~20 KB: pitch, per-agent install, platform support table, tiers. Every old "What's New" section (v2.6 – v2.32) moved verbatim to the bottom of this file.
+- **`AGENTS.md` and `llms.txt`** (also served at `rune-kit.github.io/rune/llms.txt`).
+- **A Pro tip you can switch off.** The first red context warning of a session (120 tool calls) adds one line about Pro's real-% statusline. Once per session, never when a paid tier is wired, no network; `RUNE_PRO_HINT=0` hides it.
+
+### Added
+- `plugin.json` (Agent Plugins 1.0; validated against `agent-plugins.org/schemas/1.0.0`), `.cursor-plugin/plugin.json` (+ empty `hooks.json` override so Cursor doesn't parse the Claude-format hooks), `gemini-extension.json`, `.grok-plugin/marketplace.json`, `assets/logo.svg`.
+- `compiler/adapters/agent-skills-base.js` — shared factory for directory-per-skill runtimes; `grok`, `cline`, `agents` adapters built on it.
+- Tests: Agent Skills compliance for every source skill, per-runtime manifest contracts, README install commands, Claude plugin-id rules, llms.txt structure and links, Pro-hint behaviour (1,529 tests).
+
+### Changed
+- `agents/*.md`: dropped the unused `subagent_type` key — Gemini CLI rejected all 66 subagents because of it.
+- `bump-version.js` stamps the four new manifests; `version-sync-check` requires all manifest versions to match.
+- ROADMAP rewritten: Polar + SePay (not LemonSqueezy), shipped milestones closed, v2.33 and Q1 2027 plans.
+
+### Known limitations
+- Gemini CLI logs "Invalid hook event name … Skipping" for Rune's Claude-format hooks at startup; skills, commands and subagents load. Native Gemini hooks are on the roadmap.
+- Cursor and Grok Build plugin installs are validated against their published specs, not yet by a live marketplace install.
+
 ## [2.32.0] - 2026-08-16
 
 "Drawing the Mesh" — the mesh finally knows what its pieces look like: a new `diagram` skill draws editorial figures, five partner skills hand off to it, and the `quarantine` hook stops being mute.

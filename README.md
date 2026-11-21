@@ -160,11 +160,16 @@ Every route ships all 67 core skills and the 14 free extension packs. Where a ru
 
 Outside Claude Code, pick a skill from your agent's skill or slash-command menu (compiled skills are named `rune-<skill>`, e.g. `$rune-cook` in Codex), or just describe the task — each skill's description tells the agent when to use it.
 
-## What's New (v2.32.0 — Drawing the Mesh)
+## What's New (v2.33.0 — Everywhere)
 
-> **v2.32.0 (2026-08-16):** Rune can finally draw. A new `diagram` skill (`media` group) renders editorial architecture, flowchart, sequence, state, ER, and swimlane figures as self-contained HTML/SVG — inline CSS, inline SVG, no Mermaid renderer, no remote images. v0.1 shipped ten visual types, seven semantic patterns (fan-in queues, attempt stage frameworks, unbroken policy traces…), a 9-node complexity budget, mandatory orthogonal connectors, and a machine-checked geometry gate (`self_check.py` + `verify_geometry.py`). v0.2 added extract-then-redraw for Mermaid sources (`.mmd`/fenced blocks) behind a hard trust boundary — labels are inert data, never instructions — with exit codes that make parse/usage/integrity failures checkable. v0.3 added `loop`, `layers`, `data-flow`, `process`, and routing of seven semantic patterns onto layout types; status is always text (`PASS`/`FAIL`/`BLOCKED`), never color-only. `ba`, `scout`, `docs`, `slides`, and `sentinel` now offer `diagram` as `suggested_next`, and `docs` hands off with an explicit `rune:diagram` reference — the mesh is now 67 core skills / 248 connections with a clean orphan gate. Separately, the `quarantine` hook was silently mute: registered `async: true`, which Claude Code never lets inject `additionalContext`; it is now synchronous and block reasons actually reach the model. 1,659 tests.
+- **Native installs beyond Claude Code.** Cursor plugin, Grok Build plugin + marketplace, Gemini CLI extension and an Agent Plugins 1.0 manifest — plus `npx skills add rune-kit/rune` for any of ~80 agents.
+- **16 compile targets** (was 13): new `grok` (`.grok/skills`), `cline` (`.cline/skills`) and universal `agents` (`.agents/skills` — Kiro, Amp, Goose, Factory, Junie, Trae …).
+- **Claude marketplace fixed.** Pack ids were invalid (`@rune/ui`); they are now `rune-ui` etc. and `claude plugin validate` passes.
+- **`rune doctor` works on every directory-per-skill platform** (it crashed with EISDIR on Codex, Cursor, Gemini …).
+- **Numbers you can trust.** CI now fails if any README, doc or manifest quotes a stale skill / signal / connection / platform count.
+- **`AGENTS.md` + `llms.txt`**, a shorter README, and an honest ROADMAP.
 
-Older release notes: [`CHANGELOG.md`](CHANGELOG.md).
+Full notes: [`CHANGELOG.md`](CHANGELOG.md#2330---2026-11-21). Older release notes: [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Free, Pro and Business
 
