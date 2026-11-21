@@ -130,7 +130,7 @@ export async function POST(req: Request) {
   const openai = new OpenAI();
 
   const stream = await openai.chat.completions.create({
-    model: 'gpt-4',
+    model: 'gpt-6-luna',
     messages: [{ role: 'user', content: prompt }],
     stream: true,
   });

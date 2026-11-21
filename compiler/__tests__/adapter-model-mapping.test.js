@@ -193,19 +193,19 @@ describe('qwen adapter model mapping (Qwen family)', () => {
 describe('gemini adapter model mapping (Gemini family)', () => {
   const gemini = getAdapter('gemini');
 
-  test('opus translates to gemini-2.5-pro', () => {
+  test('opus translates to gemini-4-carbon', () => {
     const header = gemini.generateHeader({ ...baseSkill, model: 'opus' });
-    assert.match(header, /gemini-2\.5-pro/);
+    assert.match(header, /gemini-4-carbon/);
   });
 
-  test('sonnet translates to gemini-2.5-flash', () => {
+  test('sonnet translates to gemini-4-hydrogen', () => {
     const header = gemini.generateHeader({ ...baseSkill, model: 'sonnet' });
-    assert.match(header, /gemini-2\.5-flash/);
+    assert.match(header, /gemini-4-hydrogen/);
   });
 
-  test('haiku translates to gemini-2.0-flash-lite', () => {
+  test('haiku translates to gemini-3.5-flash-lite', () => {
     const header = gemini.generateHeader({ ...baseSkill, model: 'haiku' });
-    assert.match(header, /gemini-2\.0-flash-lite/);
+    assert.match(header, /gemini-3\.5-flash-lite/);
   });
 });
 

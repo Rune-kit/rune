@@ -108,12 +108,15 @@ SKILL.md frontmatter uses Anthropic-native tier names (`opus`/`sonnet`/`haiku`) 
 
 | Tier | claude / cursor / windsurf | codex | antigravity | opencode / openclaw / generic / qoder | qwen | gemini | aider / copilot |
 |------|---------------------------|-------|-------------|---------------------------------------|------|--------|------------------|
-| opus | claude-opus-4-8 (no-op) | gpt-5.6-sol | gemini-3-pro | tier:heavy | qwen3-coder-plus | gemini-2.5-pro | tier-hint inline |
-| sonnet | claude-sonnet-5 (no-op) | gpt-5.6-terra | gemini-3-flash | tier:mid | qwen3-coder | gemini-2.5-flash | tier-hint inline |
-| haiku | claude-haiku-4-5 (no-op) | gpt-5.6-terra | gemini-3-flash-lite | tier:light | qwen3-coder-flash | gemini-2.0-flash-lite | tier-hint inline |
+| opus | claude-opus-4-8 (no-op) | gpt-5.6-sol | gemini-3-pro | tier:heavy | qwen3-coder-plus | gemini-4-carbon | tier-hint inline |
+| sonnet | claude-sonnet-5 (no-op) | gpt-5.6-terra | gemini-3-flash | tier:mid | qwen3-coder | gemini-4-hydrogen | tier-hint inline |
+| haiku | claude-haiku-4-5 (no-op) | gpt-5.6-terra | gemini-3-flash-lite | tier:light | qwen3-coder-flash | gemini-3.5-flash-lite | tier-hint inline |
 
 > **Verified at source (2026-07): Claude** (Opus 4.8 / Sonnet 5 / Haiku 4.5,
 > Anthropic catalog) and **Codex** (GPT-5.6 sol/terra, developers.openai.com/codex/models).
+> **Gemini** hint column re-verified 2026-11 (Gemini 4 Carbon / Hydrogen, 3.5 Flash-Lite;
+> 2.x models deprecated). Codex `gpt-5.6-*` still ships in Codex but is no longer the
+> recommended line (GPT-6.x); the Codex and Antigravity maps are tracked as a follow-up.
 > Codex also gained a per-config reasoning control — `model_reasoning_effort =
 > minimal|low|medium|high|xhigh` (and `plan_mode_reasoning_effort`). The codex
 > adapter now emits project-scoped `.codex/agents/*.toml` roles for the
