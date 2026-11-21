@@ -16,7 +16,7 @@ The wizard handles 95% of cases. Use the explicit flags below only for CI / scri
 ## Manual flags
 
 ```bash
-# Auto-detect platforms (.claude/, .codex/, .cursor/, .windsurf/, .antigravity/)
+# Auto-detect platforms (.claude/, .codex/, .cursor/, .windsurf/, .antigravity/, .grok/)
 rune hooks install --preset gentle
 
 # Install GLOBALLY — every Claude Code session, regardless of project
@@ -140,6 +140,7 @@ Presets:
 | Cursor      | beta         | rule-inject | —        | —         | —                      | `.cursor/rules/rune-*.mdc`          |
 | Windsurf    | beta         | workflow + cascade-rule | workflow | — | —                      | `.windsurf/workflows/` + `.windsurf/rules/` |
 | Antigravity | experimental | rule-inject | —        | —         | —                      | `.antigravity/rules/rune-*.md`      |
+| Grok Build  | beta         | auto-fire | auto-fire  | auto-fire | **auto-fire**          | `.grok/hooks/rune.json` (JSON)      |
 
 ### Pro tier (`--tier pro`)
 
@@ -244,6 +245,10 @@ Cascade rules approximate auto-fire but the user still has to run the workflow c
 ### Antigravity (`.antigravity/rules/rune-*.md`)
 
 Experimental — mirrors Cursor's rule-injection pattern because Antigravity doesn't yet expose a tool-level hook primitive. Status may change as the platform matures.
+
+### Grok Build (`.grok/hooks/rune.json`)
+
+Native hooks (docs.x.ai/build/features/hooks). Grok reads project hooks from `.grok/hooks/*.json` with the same shape as Claude's `hooks` block and maps Claude tool names in `matcher`, so Rune writes the Claude preset into its own file, drops Claude's `async` flag (not in Grok's schema) and sets `timeout: 30` (Grok's default of 5 s is too short for a cold `npx`). Strict mode blocks through exit code 2, which Grok treats as deny; anything else is fail-open. Project hooks run only after the folder is trusted (`/hooks-trust` or `grok --trust`). Grok also reads `.claude/settings.json` — if Rune hooks are installed there too they fire twice, and the installer warns. Uninstall deletes `rune.json` and leaves other hook files alone.
 
 ## Idempotency & safety
 

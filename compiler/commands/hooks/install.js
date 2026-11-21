@@ -1,5 +1,5 @@
 /**
- * `rune hooks install [--preset strict|gentle|off] [--platform claude|codex|cursor|windsurf|antigravity|all]`
+ * `rune hooks install [--preset strict|gentle|off] [--platform claude|codex|cursor|windsurf|antigravity|grok|all]`
  *
  * Writes Rune-managed hook/rule/workflow entries for one or more platforms.
  * Idempotent: re-running replaces existing Rune entries, preserves user entries.
@@ -41,7 +41,7 @@ export async function installHooks(projectRoot, args = {}) {
       results: [],
       written: false,
       notes: [
-        'No target platform detected. Create `.claude/`, `.codex/`, `.cursor/`, `.windsurf/`, or `.antigravity/` first, or pass `--platform <name>`.',
+        'No target platform detected. Create `.claude/`, `.codex/`, `.cursor/`, `.windsurf/`, `.antigravity/`, or `.grok/` first, or pass `--platform <name>`.',
         ...tierNotes,
       ],
     };

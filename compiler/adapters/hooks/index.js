@@ -17,6 +17,7 @@ import * as antigravity from './antigravity.js';
 import * as claude from './claude.js';
 import * as codex from './codex.js';
 import * as cursor from './cursor.js';
+import * as grok from './grok.js';
 import * as windsurf from './windsurf.js';
 
 export const ADAPTERS = Object.freeze({
@@ -25,6 +26,7 @@ export const ADAPTERS = Object.freeze({
   cursor,
   windsurf,
   antigravity,
+  grok,
 });
 
 export const PLATFORM_KEYS = Object.freeze(Object.keys(ADAPTERS));
@@ -88,5 +90,14 @@ export const CAPABILITIES = Object.freeze({
     postToolEdit: false,
     stop: false,
     notes: 'Early platform; uses rule-injection fallback only.',
+  },
+  grok: {
+    maturity: 'beta',
+    preToolEdit: true,
+    preToolBash: true,
+    postToolEdit: true,
+    stop: true,
+    notes:
+      'Native hooks via `.grok/hooks/rune.json` (Claude-shaped schema); folder trust required; fail-open on errors.',
   },
 });

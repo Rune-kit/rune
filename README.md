@@ -132,7 +132,7 @@ npx @rune-kit/rune init --platform <name>   # grok · cline · copilot · windsu
 |---|---|:-:|:-:|:-:|
 | **Claude Code** | `/plugin install rune@rune-kit` | 67 | ✅ native | ✅ |
 | **OpenAI Codex** | `.codex-plugin` + `rune setup --platform codex` | 67 | ✅ native | ✅ `spawn_agent` |
-| **Grok Build** (xAI CLI) | `grok plugin install rune-kit/rune --trust` · or `--platform grok` → `.grok/skills/` | 67 | ✅ Claude-compatible (beta) | ✅ (beta) |
+| **Grok Build** (xAI CLI) | `grok plugin install rune-kit/rune --trust` · or `--platform grok` → `.grok/skills/` | 67 | ✅ native `.grok/hooks/` via `rune hooks install --platform grok` (beta) | ✅ (beta) |
 | **Cursor** | Cursor plugin (`.cursor-plugin/`) · or `--platform cursor` → `.cursor/skills/` | 67 | rules via `rune hooks install` | — |
 | **Grok Bot** | Cursor plugin (Cursor Marketplace listing pending) | 67 | — | — |
 | **Gemini CLI** | `gemini extensions install …/rune` · or `--platform gemini` | 67 | — ¹ | — |

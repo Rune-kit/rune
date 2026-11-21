@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "generated": "2026-11-21T09:35:00.983Z",
+  "generated": "2026-11-21T09:38:31.709Z",
   "skillCount": 67,
   "skills": {
     "adversary": {
@@ -562,7 +562,7 @@
       "layer": "L2",
       "model": "sonnet",
       "group": "quality",
-      "description": "Auto-generate project context for AI sessions. Use when starting on a new repo for the first time, or when CLAUDE.md / .rune/ context is missing or stale. Scans codebase and creates the setup so every",
+      "description": "Auto-generate project context for AI sessions. Use when starting on a new repo, when CLAUDE.md / AGENTS.md / .rune/ context is missing or stale, or to set up per-runtime agent config and hooks (Codex,",
       "connections": [
         "scout"
       ],
