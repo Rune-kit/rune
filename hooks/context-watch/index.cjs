@@ -30,6 +30,19 @@ const FIRST_WARNING = 80;
 const REPEAT_INTERVAL = 20;
 const CRITICAL_THRESHOLD = 120;
 
+// Free → Pro hint: ONE line, at most once per session, only on the first RED
+// warning (the moment a real context % would have helped). Never shown when a
+// paid tier is wired (RUNE_PRO_ROOT / RUNE_BUSINESS_ROOT), and off with
+// RUNE_PRO_HINT=0. No network, no tracking — it is just a console line.
+const PRO_HINT =
+  '  Tip: Rune Pro shows the real context % in your statusline instead of a tool-count guess → https://rune-kit.github.io/rune#pricing (hide: RUNE_PRO_HINT=0)';
+
+function proHintEnabled(env) {
+  if (env.RUNE_PRO_ROOT || env.RUNE_BUSINESS_ROOT) return false;
+  const v = String(env.RUNE_PRO_HINT ?? '').trim().toLowerCase();
+  return !['0', 'false', 'off', 'no'].includes(v);
+}
+
 // Read stdin JSON to get tool name (Claude Code passes hook data via stdin)
 let stdinData = '';
 stdinData = readStdinSync();
@@ -86,7 +99,12 @@ stdinData = readStdinSync();
   if (count >= CRITICAL_THRESHOLD && sinceLast >= REPEAT_INTERVAL) {
     console.log(`\n🔴 [Rune context-watch] ${count} tool calls — context likely RED (tool count is directional, not a %).`);
     console.log('  RECOMMENDED: Invoke rune:context-engine for state save + /compact.');
-    console.log('  Risk: auto-compaction may lose critical decisions without state save.\n');
+    console.log('  Risk: auto-compaction may lose critical decisions without state save.');
+    if (!state.proHintShown && proHintEnabled(process.env)) {
+      console.log(PRO_HINT);
+      state.proHintShown = true;
+    }
+    console.log('');
     state.lastWarning = count;
   } else if (count >= FIRST_WARNING && sinceLast >= REPEAT_INTERVAL) {
     console.log(`\n🟡 [Rune context-watch] ${count} tool calls — context filling up.`);

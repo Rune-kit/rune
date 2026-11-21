@@ -807,3 +807,65 @@ emitBlock('PreToolUse', 'BLOCKED: reason-text');`;
     assert.ok(buf.isEmpty());
   });
 });
+
+describe('context-watch: Free → Pro hint', () => {
+  const FREE_ENV = { RUNE_PRO_ROOT: '', RUNE_BUSINESS_ROOT: '', RUNE_PRO_HINT: '' };
+  const PRICING = 'rune-kit.github.io/rune#pricing';
+
+  function withCounter(sessionId, state, fn) {
+    const tmpCwd = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'rune-prohint-')));
+    const counterFile = statePath('rune-context-watch', sessionId, tmpCwd);
+    try {
+      fs.writeFileSync(
+        counterFile,
+        JSON.stringify({ sessionStart: new Date().toISOString(), sessionId, toolCounts: {}, ...state }),
+      );
+      return fn(tmpCwd, counterFile);
+    } finally {
+      fs.rmSync(counterFile, { force: true });
+      fs.rmSync(tmpCwd, { recursive: true, force: true });
+    }
+  }
+  const stdin = (sessionId) => JSON.stringify({ session_id: sessionId, tool_name: 'Read' });
+
+  test('shows one pricing line on the first RED warning and remembers it', () => {
+    withCounter('prohint-red', { count: 119, lastWarning: 100 }, (cwd, counterFile) => {
+      const { stdout, exitCode } = runHook('context-watch', stdin('prohint-red'), FREE_ENV, cwd);
+      assert.strictEqual(exitCode, 0);
+      assert.ok(stdout.includes('context likely RED'));
+      assert.strictEqual(stdout.split(PRICING).length - 1, 1, 'exactly one pricing link');
+      assert.strictEqual(JSON.parse(fs.readFileSync(counterFile, 'utf-8')).proHintShown, true);
+    });
+  });
+
+  test('never repeats within a session', () => {
+    withCounter('prohint-once', { count: 139, lastWarning: 120, proHintShown: true }, (cwd) => {
+      const { stdout } = runHook('context-watch', stdin('prohint-once'), FREE_ENV, cwd);
+      assert.ok(stdout.includes('context likely RED'), 'RED warning still fires');
+      assert.ok(!stdout.includes(PRICING));
+    });
+  });
+
+  test('not shown on the yellow warning', () => {
+    withCounter('prohint-yellow', { count: 79, lastWarning: 0 }, (cwd) => {
+      const { stdout } = runHook('context-watch', stdin('prohint-yellow'), FREE_ENV, cwd);
+      assert.ok(stdout.includes('context filling up'));
+      assert.ok(!stdout.includes(PRICING));
+    });
+  });
+
+  for (const [label, env] of [
+    ['RUNE_PRO_HINT=0', { ...FREE_ENV, RUNE_PRO_HINT: '0' }],
+    ['RUNE_PRO_HINT=off', { ...FREE_ENV, RUNE_PRO_HINT: 'off' }],
+    ['Pro wired (RUNE_PRO_ROOT)', { ...FREE_ENV, RUNE_PRO_ROOT: '/opt/rune-pro' }],
+    ['Business wired (RUNE_BUSINESS_ROOT)', { ...FREE_ENV, RUNE_BUSINESS_ROOT: '/opt/rune-business' }],
+  ]) {
+    test(`suppressed when ${label}`, () => {
+      withCounter(`prohint-${label.replace(/\W+/g, '-')}`, { count: 119, lastWarning: 100 }, (cwd) => {
+        const { stdout } = runHook('context-watch', stdin(`prohint-${label.replace(/\W+/g, '-')}`), env, cwd);
+        assert.ok(stdout.includes('context likely RED'));
+        assert.ok(!stdout.includes(PRICING));
+      });
+    });
+  }
+});

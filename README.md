@@ -267,6 +267,7 @@ deploy ─emit:deploy.complete───→ watchdog
 | PostToolUse(Edit\|Write) | dependency-doctor | After dependency manifest edits |
 | PostToolUse(MCP, WebFetch) | quarantine | Marks untrusted external content as data, not instructions |
 | Stop | completion-gate | End of session — checks claims against evidence |
+| PreToolUse(all) | context-watch | Warns at 80 / 120 tool calls; the first red warning carries a one-line Pro tip (`RUNE_PRO_HINT=0` hides it) |
 
 ```bash
 npx @rune-kit/rune setup                       # interactive: scope, runtime, tiers

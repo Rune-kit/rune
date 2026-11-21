@@ -267,6 +267,16 @@ Experimental — mirrors Cursor's rule-injection pattern because Antigravity doe
 
 These are warnings only — doctor never fails the pipeline for tier-coverage issues. Silent when no tier is installed.
 
+## Context watch and the Pro hint
+
+The Free plugin's `context-watch` hook (PreToolUse, all tools) counts tool calls as a context-pressure proxy: a yellow note at 80 calls, a red one at 120 (repeating every 20), each pointing at `rune:context-engine`.
+
+On the **first red warning of a session**, and only then, it adds one line about Rune Pro's statusline with the pricing link. It is never shown when a paid tier is wired (`RUNE_PRO_ROOT` or `RUNE_BUSINESS_ROOT` set — Pro replaces `context-watch` with `context-sense` anyway), it makes no network call, and you can turn it off for good:
+
+```bash
+export RUNE_PRO_HINT=0   # also accepts false / off / no
+```
+
 ## Limitations
 
 - Only Claude Code gets `Stop` (completion-gate) auto-fire. Every other platform requires manual `/rune completion-gate` invocation.
