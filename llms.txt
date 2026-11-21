@@ -1,0 +1,37 @@
+# Rune
+
+> Rune is a free, MIT-licensed 67-skill engineering mesh for AI coding agents. Skills are connected in a 5-layer architecture (248 connections, 46 event signals) so a request like "build X" flows through scout → plan → test → implement → review → security → verification instead of one prompt. It installs natively in Claude Code, OpenAI Codex, Cursor, Grok Build and Gemini CLI, and compiles to 16 platforms in total, including any Agent Skills runtime (`.agents/skills`).
+
+Install: `npx skills add rune-kit/rune` (any agent), `/plugin marketplace add rune-kit/rune` then `/plugin install rune@rune-kit` (Claude Code), `grok plugin install rune-kit/rune --trust` (Grok Build), `gemini extensions install https://github.com/rune-kit/rune` (Gemini CLI), or `npx @rune-kit/rune init` (auto-detects the platform). Rune Pro ($49 lifetime) and Rune Business ($149 lifetime) add domain packs: https://rune-kit.github.io/rune#pricing
+
+## Docs
+
+- [README](https://raw.githubusercontent.com/rune-kit/rune/master/README.md): what Rune is, install per agent, platform support table
+- [Getting started](https://raw.githubusercontent.com/rune-kit/rune/master/docs/GETTING_STARTED.md): first session walkthrough
+- [Architecture](https://raw.githubusercontent.com/rune-kit/rune/master/docs/ARCHITECTURE.md): the 5 layers, mesh rules, signal catalog
+- [Skill catalog](https://raw.githubusercontent.com/rune-kit/rune/master/docs/SKILLS.md): every core skill and pack with its purpose
+- [CLI guide](https://raw.githubusercontent.com/rune-kit/rune/master/docs/guides/cli.md): `rune init`, `build`, `doctor`, `hooks`, `status`, `dashboard`
+- [Multi-platform](https://raw.githubusercontent.com/rune-kit/rune/master/docs/MULTI-PLATFORM.md): how the compiler maps skills to each runtime
+- [Hooks](https://raw.githubusercontent.com/rune-kit/rune/master/docs/HOOKS.md): runtime guards (preflight, sentinel, completion gate, context watch)
+- [Troubleshooting](https://raw.githubusercontent.com/rune-kit/rune/master/docs/TROUBLESHOOTING.md)
+
+## Key skills
+
+- [cook](https://raw.githubusercontent.com/rune-kit/rune/master/skills/cook/SKILL.md): end-to-end feature workflow (L1)
+- [skill-router](https://raw.githubusercontent.com/rune-kit/rune/master/skills/skill-router/SKILL.md): routes every request to the right skill (L0)
+- [plan](https://raw.githubusercontent.com/rune-kit/rune/master/skills/plan/SKILL.md): phased plans with contracts
+- [sentinel](https://raw.githubusercontent.com/rune-kit/rune/master/skills/sentinel/SKILL.md): security gate
+- [debug](https://raw.githubusercontent.com/rune-kit/rune/master/skills/debug/SKILL.md): hypothesis-driven debugging
+- [rescue](https://raw.githubusercontent.com/rune-kit/rune/master/skills/rescue/SKILL.md): legacy code recovery
+
+## Contributing
+
+- [AGENTS.md](https://raw.githubusercontent.com/rune-kit/rune/master/AGENTS.md): commands and rules for agents working on the repo
+- [CONTRIBUTING](https://raw.githubusercontent.com/rune-kit/rune/master/CONTRIBUTING.md)
+
+## Optional
+
+- [Changelog](https://raw.githubusercontent.com/rune-kit/rune/master/CHANGELOG.md)
+- [Roadmap](https://raw.githubusercontent.com/rune-kit/rune/master/ROADMAP.md)
+- [Vision](https://raw.githubusercontent.com/rune-kit/rune/master/docs/VISION.md)
+- [Machine-readable skill index](https://raw.githubusercontent.com/rune-kit/rune/master/skill-index.json)

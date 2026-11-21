@@ -167,3 +167,32 @@ describe('all manifests share one version', () => {
     test(file, () => assert.strictEqual(read(readJson(file)), pkg.version));
   }
 });
+
+describe('llms.txt + AGENTS.md', () => {
+  test('docs/llms.txt (served on GitHub Pages) is identical to the root llms.txt', () => {
+    assert.equal(readFileSync(join(ROOT, 'docs', 'llms.txt'), 'utf-8'), readFileSync(join(ROOT, 'llms.txt'), 'utf-8'));
+  });
+
+  test('llms.txt follows llmstxt.org: H1 first, then a blockquote summary', () => {
+    const lines = readFileSync(join(ROOT, 'llms.txt'), 'utf-8').split('\n');
+    assert.match(lines[0], /^# \S/);
+    assert.ok(
+      lines.find((l) => l.startsWith('> ')),
+      'missing blockquote summary',
+    );
+    assert.ok(lines.some((l) => l === '## Optional'));
+  });
+
+  test('every repo path linked from llms.txt exists', () => {
+    const text = readFileSync(join(ROOT, 'llms.txt'), 'utf-8');
+    const paths = [...text.matchAll(/rune-kit\/rune\/master\/([^)\s]+)/g)].map((m) => m[1]);
+    assert.ok(paths.length > 10);
+    for (const p of paths) assert.ok(existsSync(join(ROOT, p)), `llms.txt links missing file ${p}`);
+  });
+
+  test('AGENTS.md lists every registered platform id', async () => {
+    const { listPlatforms } = await import('../../compiler/adapters/index.js');
+    const text = readFileSync(join(ROOT, 'AGENTS.md'), 'utf-8');
+    for (const id of listPlatforms()) assert.ok(text.includes(id), `AGENTS.md missing platform ${id}`);
+  });
+});

@@ -232,6 +232,7 @@ const DRIFT_FILES = [
   'ROADMAP.md',
   'AGENTS.md',
   'llms.txt',
+  'docs/llms.txt',
   'CLAUDE.md',
   'CONTRIBUTING.md',
   'package.json',

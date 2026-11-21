@@ -11,7 +11,7 @@ Works on: Claude Code (native plugin) · OpenAI Codex (native plugin) · Cursor 
 ## Tech Stack
 
 - Claude Code Plugin System (native)
-- Multi-platform compiler (Node.js) — 13 adapters: Cursor, Windsurf, Antigravity, Codex, OpenCode, OpenClaw, Aider, GitHub Copilot CLI, Gemini CLI, Qoder, Qwen Coder, generic
+- Multi-platform compiler (Node.js) — 16 adapters: Claude, Codex, Cursor, Windsurf, Antigravity, OpenCode, OpenClaw, Aider, GitHub Copilot, Gemini CLI, Qoder, Qwen Coder, Grok Build, Cline, universal `.agents/skills`, generic
 - Agent Skills SKILL.md format
 - Git for version control
 - Markdown + JSON for configuration
@@ -24,6 +24,10 @@ rune/
 ├── .claude-plugin/     # Plugin manifest (Claude Code native)
 │   ├── plugin.json     # Plugin metadata
 │   └── marketplace.json # Marketplace catalog
+├── plugin.json         # Agent Plugins 1.0 manifest (any compliant client)
+├── .cursor-plugin/     # Cursor plugin manifest (+ empty hooks override)
+├── .grok-plugin/       # Grok Build marketplace index
+├── gemini-extension.json # Gemini CLI extension manifest
 ├── skills/             # Core skills — SINGLE SOURCE OF TRUTH
 ├── extensions/         # L4 extension packs (one dir per pack)
 ├── compiler/           # Multi-platform compiler
@@ -31,7 +35,7 @@ rune/
 │   ├── parser.js       # SKILL.md → IR
 │   ├── transformer.js  # Transform pipeline
 │   ├── emitter.js      # IR → platform files
-│   ├── adapters/       # Platform adapters (claude, cursor, windsurf, antigravity, codex, openclaw, opencode, generic, aider, copilot, gemini, qoder, qwen)
+│   ├── adapters/       # Platform adapters (claude, cursor, windsurf, antigravity, codex, openclaw, opencode, generic, aider, copilot, gemini, qoder, qwen, grok, cline, agents)
 │   └── transforms/     # Cross-refs, tool-names, frontmatter, subagents, hooks, branding
 ├── commands/           # Slash command definitions
 ├── agents/             # Subagent definitions
@@ -94,7 +98,7 @@ When the user's intent matches a skill, invoke it BEFORE writing any code or ana
 - Project dashboard: `node compiler/bin/rune.js status` (tiered neofetch)
 - Comprehension dashboard: `node compiler/bin/rune.js dashboard` (self-contained HTML — Verdict/Govern/Measure/Understand/Improve tabs; tier-aware: Pro = My Lens, Business = full Govern)
 - Mesh visualizer: `node compiler/bin/rune.js visualize` (interactive graph)
-- Run tests: `npm test` (1,641 tests — compiler + signals + hooks + tier-hooks + scripts + status + visualizer + setup wizard + update + dashboard)
+- Run tests: `npm test` (1,500+ tests — compiler + signals + hooks + tier-hooks + scripts + status + visualizer + setup wizard + update + dashboard)
 - Install runtime hooks (manual): `node compiler/bin/rune.js hooks install --preset gentle [--global]` (add `--tier pro` / `--tier business` to stack paid tiers)
 - Run tests with coverage: `npm run test:coverage` (c8 + lcov)
 - Lint: `npm run lint` (Biome)
