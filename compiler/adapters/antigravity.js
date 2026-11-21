@@ -9,19 +9,25 @@
  * Antigravity skills dir: .agents/skills/
  * Antigravity skill format: .agents/skills/{name}/SKILL.md
  *
- * MODEL TIER MAPPING (v2.15+):
- * Skill frontmatter `model: opus|sonnet|haiku` (Anthropic naming) is
- * translated to Gemini provider-correct model names. Antigravity supports
- * both Gemini and Claude — defaulting to Gemini family since it is the
- * native model. Unknown tier values pass through.
+ * MODEL TIER HINT (v2.33.0, verified 2026-11-21):
+ * Antigravity's SKILL.md frontmatter supports only `name` and `description`
+ * (antigravity.google/docs/skills) — there is no per-skill `model` field, so
+ * Rune no longer emits one (earlier versions wrote `model: gemini-3-*`, which
+ * Antigravity ignored and which is not in its current model list). Instead a
+ * one-line hint after the frontmatter names the model that fits the tier, per
+ * antigravity.google/docs/models:
+ *   opus   → Gemini 4 Neon (High) or Orchestrator — planner-grade reasoning
+ *   sonnet → Gemini 4 Hydrogen — the default executor (search, edit, build, test)
+ *   haiku  → Gemini 3.8 Flash — fast, available on every plan
+ * Unknown tier values produce no hint.
  */
 
 import { BRANDING_FOOTER } from '../transforms/branding.js';
 
-const MODEL_MAP = {
-  opus: 'gemini-3-pro',
-  sonnet: 'gemini-3-flash',
-  haiku: 'gemini-3-flash-lite',
+const MODEL_HINT = {
+  opus: 'Gemini 4 Neon (High) or Orchestrator — planner-grade reasoning',
+  sonnet: 'Gemini 4 Hydrogen — the default executor model',
+  haiku: 'Gemini 3.8 Flash — fast, available on every plan',
 };
 
 const TOOL_MAP = {
@@ -59,9 +65,10 @@ export default {
   generateHeader(skill) {
     const desc = (skill.description || '').replace(/"/g, '\\"');
     const lines = ['---', `name: rune-${skill.name}`, `description: "${desc}"`];
-    const translatedModel = skill.model ? MODEL_MAP[skill.model] || skill.model : null;
-    if (translatedModel) lines.push(`model: ${translatedModel}`);
-    lines.push('---', '', '');
+    lines.push('---', '');
+    const hint = MODEL_HINT[skill.model];
+    if (hint) lines.push(`> Suggested Antigravity model: ${hint}.`, '');
+    lines.push('');
     return lines.join('\n');
   },
 
