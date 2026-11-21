@@ -73,7 +73,11 @@ export async function runDoctor({ outputRoot, adapter, config, runeRoot }) {
     ? files.filter(
         (f) => f.startsWith('rune-') && existsSync(path.join(outputDir, f, adapter.skillFileName || 'SKILL.md')),
       )
-    : files.filter((f) => f.startsWith('rune-') && f !== `rune-index${adapter.fileExtension}`);
+    : // single-file platforms: only `rune-<name>.<ext>` files are skills; sibling
+      // `rune-<name>/` (references) and `rune-<name>-scripts/` folders are assets
+      files.filter(
+        (f) => f.startsWith('rune-') && f.endsWith(adapter.fileExtension) && f !== `rune-index${adapter.fileExtension}`,
+      );
 
   // Dynamic expected count: scan source skills/ directory
   const sourceSkillsDir = path.join(runeRoot, 'skills');
