@@ -135,7 +135,7 @@ Rules:
 
 ### Cross-Platform Adapter Coverage (v2.18+)
 
-Rune compiles core skills + extension packs into 13 platform-native formats. Each adapter targets a documented file convention; Rune emits the files, the platform's native loader picks them up.
+Rune compiles core skills + extension packs into 16 platform-native formats. Each adapter targets a documented file convention; Rune emits the files, the platform's native loader picks them up.
 
 | Adapter | Output | Skill Format | Extra Files | Source Doc |
 |---------|--------|--------------|-------------|------------|
@@ -152,6 +152,9 @@ Rune compiles core skills + extension packs into 13 platform-native formats. Eac
 | **gemini** | `.gemini/skills/rune-<n>/SKILL.md` | dir-per-skill, lazy-loaded natively | `GEMINI.md` (slim pointer) | geminicli.com/docs/cli/skills |
 | **qoder** | `.qoder/skills/rune-<n>/SKILL.md` | dir-per-skill, YAML w/ tier:* | `AGENTS.md` | docs.qoder.com |
 | **qwen** | `.qwen/skills/rune-<n>/SKILL.md` | dir-per-skill, Qwen model hint | `QWEN.md` (slim pointer) | qwenlm.github.io |
+| **grok** | `.grok/skills/rune-<n>/SKILL.md` | dir-per-skill Agent Skills, tier hint comment | — | docs.x.ai/build/features/skills-plugins-marketplaces |
+| **cline** | `.cline/skills/rune-<n>/SKILL.md` | dir-per-skill Agent Skills (name = dir, desc ≤ 1024) | — | docs.cline.bot/customization/skills |
+| **agents** | `.agents/skills/rune-<n>/SKILL.md` | dir-per-skill Agent Skills, skills only (Amp, Goose, Factory, Junie, Kiro, Trae, …) | — | agentskills.io |
 
 Adapters with `generateExtraFiles()` emit additional context files alongside per-skill rules — this generic hook (added v2.18) replaces ad-hoc `if (adapter.name === ...)` special cases in the emitter.
 

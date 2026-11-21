@@ -5,7 +5,7 @@
 <p align="center">
   <strong>Less skills. Deeper connections.</strong><br>
   A lean, interconnected skill ecosystem for AI coding assistants.<br>
-  67 skills · 248 connections · 46 signals · 13 platforms · MIT
+  67 skills · 248 connections · 46 signals · 16 platforms · MIT
 </p>
 
 <p align="center">

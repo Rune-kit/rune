@@ -4,14 +4,17 @@
  * Central registry for all platform adapters.
  */
 
+import agents from './agents.js';
 import aider from './aider.js';
 import antigravity from './antigravity.js';
 import claude from './claude.js';
+import cline from './cline.js';
 import codex from './codex.js';
 import copilot from './copilot.js';
 import cursor from './cursor.js';
 import gemini from './gemini.js';
 import generic from './generic.js';
+import grok from './grok.js';
 import openclaw from './openclaw.js';
 import opencode from './opencode.js';
 import qoder from './qoder.js';
@@ -32,6 +35,9 @@ const adapters = {
   gemini,
   qoder,
   qwen,
+  grok,
+  cline,
+  agents,
 };
 
 /**

@@ -69,6 +69,8 @@ function detectPlatform(projectRoot) {
   if (existsSync(path.join(projectRoot, '.antigravity'))) return 'antigravity';
   if (existsSync(path.join(projectRoot, '.openclaw'))) return 'openclaw';
   if (existsSync(path.join(projectRoot, '.opencode'))) return 'opencode';
+  if (existsSync(path.join(projectRoot, '.grok'))) return 'grok';
+  if (existsSync(path.join(projectRoot, '.cline'))) return 'cline';
   return null;
 }
 
@@ -181,7 +183,7 @@ async function cmdInit(projectRoot, args) {
   log('  Next steps:');
   log('    1. /rune onboard       Generate project context (CLAUDE.md + .rune/)');
   log('    2. /rune cook "..."    Build a feature (full TDD cycle)');
-  log('    3. /rune help          See all 62 skills');
+  log(`    3. /rune help          See all ${stats.coreSkillCount ?? stats.skillCount} core skills`);
   log('');
 }
 
@@ -926,7 +928,9 @@ async function main() {
       log('');
       log('  Options:');
       log(
-        '    --platform <name>   Override platform (cursor, windsurf, antigravity, codex, openclaw, opencode, generic)',
+        `    --platform <name>   Override platform (${listPlatforms()
+          .filter((p) => p !== 'claude')
+          .join(', ')})`,
       );
       log('    --output <dir>      Override output directory');
       log('    --disable <skills>  Comma-separated skills to disable');

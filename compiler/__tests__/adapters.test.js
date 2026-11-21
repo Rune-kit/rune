@@ -4,7 +4,7 @@ import { getAdapter, listPlatforms } from '../adapters/index.js';
 
 // --- Adapter registry ---
 
-test('listPlatforms returns all 13 platform adapters', () => {
+test('listPlatforms returns all 16 platform adapters', () => {
   const adapters = listPlatforms();
   const expected = [
     'claude',
@@ -20,7 +20,11 @@ test('listPlatforms returns all 13 platform adapters', () => {
     'gemini',
     'qoder',
     'qwen',
+    'grok',
+    'cline',
+    'agents',
   ];
+  assert.strictEqual(adapters.length, expected.length, 'update README/manifests when adding a platform');
   for (const name of expected) {
     assert.ok(adapters.includes(name), `missing adapter: ${name}`);
   }
@@ -61,6 +65,9 @@ const ADAPTER_NAMES = [
   'gemini',
   'qoder',
   'qwen',
+  'grok',
+  'cline',
+  'agents',
 ];
 
 for (const adapterName of ADAPTER_NAMES) {
@@ -119,7 +126,20 @@ test('generateHeader escapes quoted descriptions exactly once (valid YAML)', () 
   // adapter re-escapes exactly once. Double-escaping produced `\\"` which
   // prematurely terminates the YAML scalar.
   const skill = { name: 'docs', layer: 'L2', group: 'workflow', description: 'The "docs are never outdated" skill' };
-  for (const name of ['cursor', 'windsurf', 'copilot', 'codex', 'antigravity', 'opencode', 'gemini', 'qoder', 'qwen']) {
+  for (const name of [
+    'cursor',
+    'windsurf',
+    'copilot',
+    'codex',
+    'antigravity',
+    'opencode',
+    'gemini',
+    'qoder',
+    'qwen',
+    'grok',
+    'cline',
+    'agents',
+  ]) {
     const header = getAdapter(name).generateHeader(skill);
     assert.ok(header.includes('\\"docs are never outdated\\"'), `${name} should escape quotes once`);
     assert.ok(!header.includes('\\\\"'), `${name} must not double-escape quotes`);
@@ -279,4 +299,40 @@ test('gemini adapter targets .gemini/skills and emits slim GEMINI.md pointer', a
   assert.ok(geminiMd);
   assert.ok(geminiMd.content.includes('.gemini/skills/rune-<name>/SKILL.md'));
   assert.ok(!geminiMd.content.includes('## rune-cook'), 'no bundled H2 sections — skills are lazy-loaded natively');
+});
+
+// --- v2.33 "Everywhere" adapters: Grok Build, Cline, universal .agents ---
+
+for (const [name, dir] of [
+  ['grok', '.grok/skills'],
+  ['cline', '.cline/skills'],
+  ['agents', '.agents/skills'],
+]) {
+  test(`${name} adapter emits Agent Skills into ${dir}`, () => {
+    const adapter = getAdapter(name);
+    assert.strictEqual(adapter.name, name);
+    assert.strictEqual(adapter.outputDir, dir);
+    assert.strictEqual(adapter.useSkillDirectories, true);
+    assert.strictEqual(adapter.skillFileName, 'SKILL.md');
+    assert.strictEqual(adapter.scriptsDir('slides'), 'rune-slides/scripts');
+
+    const header = adapter.generateHeader({
+      name: 'fix',
+      layer: 'L2',
+      group: 'workflow',
+      model: 'opus',
+      description: 'Fix code',
+    });
+    // Agent Skills: name must equal the directory name the emitter creates.
+    assert.ok(header.startsWith('---\nname: rune-fix\ndescription: "Fix code"\n'));
+    assert.ok(header.includes('# model-hint: tier:heavy'), 'tier travels as a comment, not a runtime key');
+    assert.ok(!/^model:/m.test(header), 'no runtime-specific model key');
+    assert.strictEqual(adapter.transformReference('plan', '`rune:plan`'), '`the rune-plan skill`');
+  });
+}
+
+test('agents adapter writes skills only — no Codex AGENTS.md / role files', () => {
+  assert.strictEqual(getAdapter('agents').generateExtraFiles, undefined);
+  assert.strictEqual(getAdapter('grok').generateExtraFiles, undefined);
+  assert.strictEqual(getAdapter('cline').generateExtraFiles, undefined);
 });
