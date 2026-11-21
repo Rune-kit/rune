@@ -1,6 +1,6 @@
 ---
 name: git
-description: "Specialized git operations — semantic commits, PR descriptions, branch management, conflict resolution guidance. Replaces ad-hoc git commands with a dedicated, convention-aware utility."
+description: "Specialized git operations: semantic commits, PR descriptions, branch naming, changelogs, and conflict-resolution guidance. Use when committing, opening a PR, creating a branch, tagging a release, or resolving a merge conflict. Replaces ad-hoc git commands with a convention-aware utility."
 metadata:
   author: runedev
   version: "0.3.0"

@@ -1,6 +1,6 @@
 ---
 name: scaffold
-description: "Autonomous project bootstrapper. Generates complete project from a description — structure, code, tests, docs, config. Orchestrates ba → plan → design → fix → test → docs → git in one pipeline. The \"0 to production-ready\" skill."
+description: "Autonomous project bootstrapper. Use when starting a new project from scratch ('new project', 'bootstrap', 'create a new app/API/library'). Generates structure, code, tests, docs, and config by orchestrating ba, plan, design, fix, test, docs, and git in one pipeline."
 metadata:
   author: runedev
   version: "0.1.0"

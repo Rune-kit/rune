@@ -1,6 +1,6 @@
 ---
 name: docs-seeker
-description: "Find documentation for APIs, libraries, and error messages. Looks up official docs, changelog entries, and migration guides."
+description: "Find documentation for APIs, libraries, and error messages. Use when you need the current, version-correct API of a library, the meaning of an error message, or a migration guide, instead of relying on memory. Looks up official docs, llms.txt, changelog entries, and migration guides."
 context: fork
 agent: general-purpose
 background: false

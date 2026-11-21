@@ -1,6 +1,6 @@
 ---
 name: perf
-description: "Performance regression gate. Detects N+1 queries, sync-in-async, missing indexes, memory leaks, and bundle bloat before they reach production. Ranks findings by Cost Impact Hierarchy (architecture > data transfer > compute > DB > caching) so fix priority maps to actual unit-cost reduction."
+description: "Performance regression gate. Use before committing or deploying performance-sensitive code, or when something is slow, memory grows, or the bundle is large. Detects N+1 queries, sync-in-async, missing indexes, memory leaks, and bundle bloat, and ranks findings by Cost Impact Hierarchy (architecture > data transfer > compute > DB > caching)."
 metadata:
   author: runedev
   version: "0.6.0"

@@ -1,6 +1,6 @@
 ---
 name: debug
-description: "Root cause analysis for bugs and unexpected behavior. Traces errors through code, uses structured reasoning, and hands off to fix when cause is found. Core of the debug↔fix mesh. When the diagnosed cause is a memory leak in a long-running process, escalates to perf for cost-impact framing (leaks drive OOM-restart → cold-start → autoscaler spend, often 20-40% bill inflation)."
+description: "Root cause analysis for bugs and unexpected behavior. Use when something fails and the cause is unclear: a stack trace, a failing test, 'why is this broken', or an error during implementation. Traces errors through code with structured reasoning and hands off to fix once the cause is found. Escalates memory leaks in long-running processes to perf for cost-impact framing."
 metadata:
   author: runedev
   version: "1.4.0"

@@ -1,6 +1,6 @@
 ---
 name: design
-description: "Design system reasoning. Maps product domain to style, palette, typography, and platform-specific patterns. Generates .rune/design-system.md as the shared design contract for all UI-generating skills."
+description: "Design system reasoning. Use when starting UI work in a project with no .rune/design-system.md, when UI looks generic or inconsistent, or when choosing style, palette, and typography. Maps product domain to platform-specific patterns and generates .rune/design-system.md as the shared design contract for all UI-generating skills."
 metadata:
   author: runedev
   version: "0.9.0"

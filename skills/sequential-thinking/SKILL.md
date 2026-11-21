@@ -1,6 +1,6 @@
 ---
 name: sequential-thinking
-description: "Step-by-step complex reasoning for multi-variable problems. Breaks interconnected decisions into ordered logical steps with bias detection, reversibility classification, and second-order effect tracking."
+description: "Step-by-step reasoning for multi-variable problems. Use when a decision has interdependent parts whose order matters, consequences are hard to reverse, or second-order effects need tracing. Breaks interconnected decisions into ordered logical steps with bias detection, reversibility classification, and second-order effect tracking."
 metadata:
   author: runedev
   version: "0.3.0"

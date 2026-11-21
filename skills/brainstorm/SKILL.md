@@ -1,6 +1,6 @@
 ---
 name: brainstorm
-description: "Creative ideation and solution exploration. Generates multiple approaches with trade-offs, uses structured frameworks (SCAMPER, First Principles), and hands off to plan for structuring."
+description: "Creative ideation and solution exploration. Use when a task is vague or open-ended, several approaches are viable, or the current approach has fundamentally failed ('ideas', 'explore options', 'what are the ways to'). Generates multiple approaches with trade-offs using structured frameworks (SCAMPER, First Principles) and hands off to plan."
 metadata:
   author: runedev
   version: "0.8.0"

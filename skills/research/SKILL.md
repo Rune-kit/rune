@@ -1,6 +1,6 @@
 ---
 name: research
-description: "Web search and external knowledge lookup. Gathers data on technologies, libraries, best practices, and competitor solutions."
+description: "Web search and external knowledge lookup. Use when an answer depends on facts outside the codebase: comparing technologies or libraries, current best practices, or how others solved a problem. Searches multiple sources, fetches the most relevant pages, and returns triangulated findings with citations."
 metadata:
   author: runedev
   version: "0.4.0"

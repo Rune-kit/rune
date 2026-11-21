@@ -1,6 +1,6 @@
 ---
 name: video-creator
-description: "Video content planning. Writes narration scripts, storyboards, shot lists, and asset checklists. Saves plan to marketing/video-plan.md."
+description: "Video content planning. Use when a launch, demo, or tutorial needs a video: narration script, storyboard, shot list, and asset checklist. Saves the plan to marketing/video-plan.md."
 metadata:
   author: runedev
   version: "0.3.0"

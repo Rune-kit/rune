@@ -1,6 +1,6 @@
 ---
 name: fix
-description: "Apply code changes and fixes. Writes implementation code, applies bug fixes, and verifies changes with tests. Core action hub in the development mesh."
+description: "Apply code changes and fixes. Use when the change to make is already known: implementing code to pass written tests, applying a diagnosed bug fix, or addressing review findings. Writes the implementation and verifies it with tests. Core action hub in the development mesh; runs debug first when the cause is still unclear."
 metadata:
   author: runedev
   version: "1.0.0"

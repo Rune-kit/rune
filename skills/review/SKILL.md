@@ -1,6 +1,6 @@
 ---
 name: review
-description: "Code quality review — patterns, security, performance, correctness. Finds bugs, suggests improvements, triggers fix for issues found. Escalates to opus for security-critical code."
+description: "Code quality review: patterns, security, performance, correctness. Use after implementation, before merging, or when the user asks to 'review' or 'check this code'. Finds bugs with file:line evidence, suggests improvements, and triggers fix for issues found. Escalates security-critical code to the heavy reasoning tier."
 metadata:
   author: runedev
   version: "1.5.0"

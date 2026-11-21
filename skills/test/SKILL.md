@@ -1,6 +1,6 @@
 ---
 name: test
-description: "TDD test writer. Writes failing tests FIRST (red), then verifies they pass after implementation (green). Covers unit, integration, and e2e tests."
+description: "TDD test writer. Use before implementing any feature or fix (write the failing test first), when the user asks to 'write tests', or when coverage is missing. Writes failing tests FIRST (red), then verifies they pass after implementation (green). Covers unit, integration, and e2e tests."
 metadata:
   author: runedev
   version: "1.4.0"

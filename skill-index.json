@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "generated": "2026-08-16T05:11:32.529Z",
+  "generated": "2026-11-21T09:10:31.057Z",
   "skillCount": 67,
   "skills": {
     "adversary": {
@@ -86,7 +86,7 @@
       "layer": "L2",
       "model": "opus",
       "group": "creation",
-      "description": "Creative ideation and solution exploration. Generates multiple approaches with trade-offs, uses structured frameworks (SCAMPER, First Principles), and hands off to plan for structuring.",
+      "description": "Creative ideation and solution exploration. Use when a task is vague or open-ended, several approaches are viable, or the current approach has fundamentally failed ('ideas', 'explore options', 'what a",
       "connections": [
         "research",
         "trend-scout",
@@ -107,7 +107,7 @@
       "layer": "L3",
       "model": "sonnet",
       "group": "media",
-      "description": "Playwright browser automation. Navigates URLs, takes screenshots, checks accessibility tree, interacts with UI elements, and reports findings.",
+      "description": "Playwright browser automation. Use when a task needs a real browser: checking a running web UI, reproducing a UI bug, taking screenshots, or auditing the accessibility tree. Navigates URLs, interacts ",
       "connections": []
     },
     "completion-gate": {
@@ -232,7 +232,7 @@
       "layer": "L2",
       "model": "sonnet",
       "group": "development",
-      "description": "Database workflow specialist. Generates migration files with rollback scripts, detects breaking schema changes, and validates query parameterization.",
+      "description": "Database workflow specialist. Use when a change touches the schema, migrations, or raw queries, and before deploying migrations. Generates migration files with rollback scripts, detects breaking schem",
       "connections": [],
       "signals": {
         "emit": [
@@ -245,7 +245,7 @@
       "layer": "L2",
       "model": "opus",
       "group": "development",
-      "description": "Root cause analysis for bugs and unexpected behavior. Traces errors through code, uses structured reasoning, and hands off to fix when cause is found. Core of the debug↔fix mesh. When the diagnosed ca",
+      "description": "Root cause analysis for bugs and unexpected behavior. Use when something fails and the cause is unclear: a stack trace, a failing test, 'why is this broken', or an error during implementation. Traces ",
       "connections": [
         "fix",
         "problem-solver",
@@ -271,7 +271,7 @@
       "layer": "L3",
       "model": "sonnet",
       "group": "deps",
-      "description": "Dependency health management. Detects package manager, checks outdated packages and vulnerabilities, and produces a prioritized update plan.",
+      "description": "Dependency health management. Use when adding, upgrading, or auditing packages, after a dependency manifest changes, or when 'outdated' / vulnerability warnings appear. Detects the package manager, ch",
       "connections": [
         "docs-seeker",
         "verification"
@@ -308,7 +308,7 @@
       "layer": "L2",
       "model": "opus",
       "group": "creation",
-      "description": "Design system reasoning. Maps product domain to style, palette, typography, and platform-specific patterns. Generates .rune/design-system.md as the shared design contract for all UI-generating skills.",
+      "description": "Design system reasoning. Use when starting UI work in a project with no .rune/design-system.md, when UI looks generic or inconsistent, or when choosing style, palette, and typography. Maps product dom",
       "connections": [
         "review"
       ]
@@ -337,7 +337,7 @@
       "layer": "L2",
       "model": "sonnet",
       "group": "delivery",
-      "description": "Auto-generate and maintain project documentation. Creates README, API docs, architecture docs, changelogs, and keeps them in sync with code changes. The \"docs are never outdated\" skill.",
+      "description": "Generate and maintain project documentation. Use when a project needs a README, API docs, architecture docs, or a changelog, or when docs must be synced after a feature ships ('update the docs', 'writ",
       "connections": [
         "scout",
         "diagram",
@@ -354,14 +354,14 @@
       "layer": "L3",
       "model": "haiku",
       "group": "knowledge",
-      "description": "Find documentation for APIs, libraries, and error messages. Looks up official docs, changelog entries, and migration guides.",
+      "description": "Find documentation for APIs, libraries, and error messages. Use when you need the current, version-correct API of a library, the meaning of an error message, or a migration guide, instead of relying o",
       "connections": []
     },
     "fix": {
       "layer": "L2",
       "model": "sonnet",
       "group": "development",
-      "description": "Apply code changes and fixes. Writes implementation code, applies bug fixes, and verifies changes with tests. Core action hub in the development mesh.",
+      "description": "Apply code changes and fixes. Use when the change to make is already known: implementing code to pass written tests, applying a diagnosed bug fix, or addressing review findings. Writes the implementat",
       "connections": [
         "debug",
         "scout",
@@ -389,7 +389,7 @@
       "layer": "L3",
       "model": "haiku",
       "group": "utility",
-      "description": "Specialized git operations — semantic commits, PR descriptions, branch management, conflict resolution guidance. Replaces ad-hoc git commands with a dedicated, convention-aware utility.",
+      "description": "Specialized git operations: semantic commits, PR descriptions, branch naming, changelogs, and conflict-resolution guidance. Use when committing, opening a PR, creating a branch, tagging a release, or ",
       "connections": []
     },
     "graft": {
@@ -578,14 +578,14 @@
       "layer": "L2",
       "model": "sonnet",
       "group": "quality",
-      "description": "Performance regression gate. Detects N+1 queries, sync-in-async, missing indexes, memory leaks, and bundle bloat before they reach production. Ranks findings by Cost Impact Hierarchy (architecture > d",
+      "description": "Performance regression gate. Use before committing or deploying performance-sensitive code, or when something is slow, memory grows, or the bundle is large. Detects N+1 queries, sync-in-async, missing",
       "connections": []
     },
     "plan": {
       "layer": "L2",
       "model": "opus",
       "group": "creation",
-      "description": "Create structured implementation plans from requirements. Produces master plan + phase files for enterprise-scale project management. Master plan = overview (<80 lines). Phase files = execution detail",
+      "description": "Create structured implementation plans from requirements. Use when a task touches more than one file, needs architecture decisions, or the user asks to 'plan', 'design', or 'break this down'. Produces",
       "connections": [
         "ba",
         "scout",
@@ -630,7 +630,7 @@
       "layer": "L3",
       "model": "sonnet",
       "group": "reasoning",
-      "description": "Structured reasoning frameworks for complex problems. 19 analytical frameworks, 12 cognitive bias detectors, 10 decomposition methods, 10 mental models, Cynefin domain classification, ethical dimensio",
+      "description": "Structured reasoning frameworks for complex, ambiguous problems. Use when a decision has many competing factors, the problem is not purely technical (strategy, prioritization, trade-offs), or you susp",
       "connections": [
         "council"
       ]
@@ -670,7 +670,7 @@
       "layer": "L3",
       "model": "sonnet",
       "group": "knowledge",
-      "description": "Web search and external knowledge lookup. Gathers data on technologies, libraries, best practices, and competitor solutions.",
+      "description": "Web search and external knowledge lookup. Use when an answer depends on facts outside the codebase: comparing technologies or libraries, current best practices, or how others solved a problem. Searche",
       "connections": []
     },
     "retro": {
@@ -684,7 +684,7 @@
       "layer": "L2",
       "model": "sonnet",
       "group": "development",
-      "description": "Code quality review — patterns, security, performance, correctness. Finds bugs, suggests improvements, triggers fix for issues found. Escalates to opus for security-critical code.",
+      "description": "Code quality review: patterns, security, performance, correctness. Use after implementation, before merging, or when the user asks to 'review' or 'check this code'. Finds bugs with file:line evidence,",
       "connections": [
         "fix",
         "test",
@@ -745,7 +745,7 @@
       "layer": "L1",
       "model": "sonnet",
       "group": "orchestrator",
-      "description": "Autonomous project bootstrapper. Generates complete project from a description — structure, code, tests, docs, config. Orchestrates ba → plan → design → fix → test → docs → git in one pipeline. The \"0",
+      "description": "Autonomous project bootstrapper. Use when starting a new project from scratch ('new project', 'bootstrap', 'create a new app/API/library'). Generates structure, code, tests, docs, and config by orches",
       "connections": [
         "ba",
         "research",
@@ -786,7 +786,7 @@
       "layer": "L2",
       "model": "sonnet",
       "group": "quality",
-      "description": "Automated security gatekeeper. Blocks unsafe code before commit — secret scanning, OWASP top 10, dependency audit, permission checks. A GATE, not a suggestion.",
+      "description": "Automated security gatekeeper. Use before every commit or deploy, and whenever auth, secrets, .env files, permissions, or other security-critical code change. Blocks unsafe code: secret scanning, OWAS",
       "connections": [
         "quarantine",
         "integrity-check"
@@ -813,7 +813,7 @@
       "layer": "L3",
       "model": "sonnet",
       "group": "reasoning",
-      "description": "Step-by-step complex reasoning for multi-variable problems. Breaks interconnected decisions into ordered logical steps with bias detection, reversibility classification, and second-order effect tracki",
+      "description": "Step-by-step reasoning for multi-variable problems. Use when a decision has interdependent parts whose order matters, consequences are hard to reverse, or second-order effects need tracing. Breaks int",
       "connections": []
     },
     "session-bridge": {
@@ -849,7 +849,7 @@
       "layer": "L0",
       "model": "sonnet",
       "group": "orchestrator",
-      "description": "Meta-enforcement layer that routes EVERY agent action through the correct skill. MUST check this routing table before ANY response involving code, files, or technical decisions. Default: route to rune",
+      "description": "Meta-enforcement layer that routes EVERY agent action through the correct skill. Use on every user message, before any response involving code, files, or technical decisions. Default route: rune:cook ",
       "connections": [
         "cook",
         "team",
@@ -899,7 +899,7 @@
       "layer": "L3",
       "model": "sonnet",
       "group": "media",
-      "description": "Generate Marp-compatible slide decks from structured JSON schema. Converts context into presentations for tech talks, sprint demos, and tutorials.",
+      "description": "Generate Marp-compatible slide decks from a structured JSON schema. Use when the user asks for slides, a presentation, a demo deck, sprint review slides, or a tech talk. Converts project context into ",
       "connections": []
     },
     "surgeon": {
@@ -943,7 +943,7 @@
       "layer": "L2",
       "model": "sonnet",
       "group": "development",
-      "description": "TDD test writer. Writes failing tests FIRST (red), then verifies they pass after implementation (green). Covers unit, integration, and e2e tests.",
+      "description": "TDD test writer. Use before implementing any feature or fix (write the failing test first), when the user asks to 'write tests', or when coverage is missing. Writes failing tests FIRST (red), then ver",
       "connections": [
         "fix",
         "debug",
@@ -965,7 +965,7 @@
       "layer": "L3",
       "model": "haiku",
       "group": "knowledge",
-      "description": "Scan market trends, competitor activity, and emerging patterns. Monitors Product Hunt, GitHub Trending, HackerNews, and social platforms.",
+      "description": "Scan market trends, competitor activity, and emerging patterns. Use when evaluating a product idea, positioning against competitors, or picking what to build next. Monitors Product Hunt, GitHub Trendi",
       "connections": []
     },
     "verification": {
@@ -988,7 +988,7 @@
       "layer": "L3",
       "model": "sonnet",
       "group": "media",
-      "description": "Video content planning. Writes narration scripts, storyboards, shot lists, and asset checklists. Saves plan to marketing/video-plan.md.",
+      "description": "Video content planning. Use when a launch, demo, or tutorial needs a video: narration script, storyboard, shot list, and asset checklist. Saves the plan to marketing/video-plan.md.",
       "connections": []
     },
     "watchdog": {

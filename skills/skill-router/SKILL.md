@@ -1,6 +1,6 @@
 ---
 name: skill-router
-description: "Meta-enforcement layer that routes EVERY agent action through the correct skill. MUST check this routing table before ANY response involving code, files, or technical decisions. Default: route to rune:cook for code tasks. Prevents rationalization, enforces check-before-act discipline."
+description: "Meta-enforcement layer that routes EVERY agent action through the correct skill. Use on every user message, before any response involving code, files, or technical decisions. Default route: rune:cook for code tasks. Prevents rationalization and enforces check-before-act discipline."
 user-invocable: false
 metadata:
   author: runedev

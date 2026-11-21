@@ -1,6 +1,6 @@
 ---
 name: plan
-description: "Create structured implementation plans from requirements. Produces master plan + phase files for enterprise-scale project management. Master plan = overview (<80 lines). Phase files = execution detail (<200 lines each). Each session handles 1 phase. Uses opus for deep reasoning."
+description: "Create structured implementation plans from requirements. Use when a task touches more than one file, needs architecture decisions, or the user asks to 'plan', 'design', or 'break this down'. Produces a master plan (<80 lines) plus phase files (<200 lines each), one phase per session. Runs on the heavy reasoning tier."
 metadata:
   author: runedev
   version: "1.7.1"
