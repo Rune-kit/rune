@@ -43,6 +43,7 @@ Input: { name: string, base_branch?: string }
 Default base: current HEAD
 
 Steps:
+0. Keep worktrees out of git: Bash: git check-ignore -q .claude/worktrees/ || echo ".claude/worktrees/" >> .gitignore
 1. Bash: git worktree add .claude/worktrees/<name> -b rune/<name> [base_branch]
 2. Verify: Bash: git worktree list | grep <name>
 3. Return: { path: ".claude/worktrees/<name>", branch: "rune/<name>" }
@@ -52,6 +53,8 @@ Naming convention:
   - Path: .claude/worktrees/<name>
   - Max 3 active worktrees (enforced)
 ```
+
+**Worktree directory per runtime:** in Claude Code, worktrees live under the `.claude/` folder, next to the ones its own `claude --worktree` sessions create. Compiled skills for every other runtime (Codex, Cursor, Gemini CLI, Grok Build, …) use `.rune/worktrees/`, so non-Claude projects never grow a `.claude/` folder.
 
 ### List Worktrees
 
