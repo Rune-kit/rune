@@ -11,7 +11,9 @@
  */
 
 import assert from 'node:assert';
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { execFileSync, spawnSync } from 'node:child_process';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { describe, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -135,11 +137,39 @@ describe('Grok Build marketplace', () => {
     }
   });
 
-  test('rune entry points at the repo root plugin', () => {
+  // Grok Build does not list a plugin whose local source is the marketplace
+  // root ("./" or "."), so `grok plugin marketplace add rune-kit/rune && grok
+  // plugin install rune` failed with "No marketplace plugin named rune"
+  // (verified on grok 1.0.92). A url source pointing back at this repo works.
+  test('rune entry is a git url source (a local "./" root source is not listed by Grok)', () => {
     const rune = m.plugins.find((p) => p.name === 'rune');
     assert.ok(rune);
-    const path = typeof rune.source === 'string' ? rune.source : rune.source.path;
-    assert.strictEqual(path, './');
+    assert.strictEqual(typeof rune.source, 'object');
+    assert.strictEqual(rune.source.source, 'url');
+    assert.match(rune.source.url, /^https:\/\/github\.com\/rune-kit\/rune\.git$/i);
+  });
+
+  // Live check with the real CLI when it is installed (skipped in CI without it).
+  const hasGrok = spawnSync('grok', ['--version'], { encoding: 'utf8' }).status === 0;
+  test('grok CLI: plugin validates and the marketplace lists `rune`', {
+    skip: !hasGrok && 'grok CLI not installed',
+  }, () => {
+    const home = mkdtempSync(join(tmpdir(), 'rune-grok-home-'));
+    const env = { ...process.env, GROK_HOME: home };
+    try {
+      const validate = execFileSync('grok', ['plugin', 'validate', ROOT], { env, encoding: 'utf8' });
+      assert.match(validate, /Plugin manifest is valid/);
+      execFileSync('grok', ['plugin', 'marketplace', 'add', ROOT], { env, encoding: 'utf8' });
+      const listed = JSON.parse(
+        execFileSync('grok', ['plugin', 'list', '--json', '--available'], { env, encoding: 'utf8' }),
+      );
+      assert.ok(
+        listed.some((p) => p.name === 'rune'),
+        'marketplace must list the rune plugin',
+      );
+    } finally {
+      rmSync(home, { recursive: true, force: true });
+    }
   });
 });
 
