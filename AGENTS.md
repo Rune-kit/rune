@@ -13,9 +13,11 @@ Node.js ≥ 18, no build step for the source. Install dev deps with `npm install
 | Task | Command |
 |------|---------|
 | Full CI gate (run before every commit) | `npm run ci` — Biome lint + all tests + `rune doctor` + version/number sync + skill-index check |
-| Tests only | `npm test` (`node --test`, ~1,500 tests, < 10 s) |
+| Tests only | `npm test` (`node --test`, ~1,800 tests) |
 | Lint / auto-fix | `npm run lint` / `npm run lint:fix` |
 | Number + version drift check | `node scripts/version-sync-check.js` |
+| Skill description budget | `npm run description-check` (≤ 500 chars each, ≤ 20,000 total, no ALWAYS/ANY shouting) |
+| Validate the Grok plugin + hooks | `grok plugin validate .` · `grok inspect --json` (`hookLoadErrors` must be empty) |
 | Regenerate `skill-index.json` | `node scripts/build-skill-index.js` |
 | Compile for a platform | `node compiler/bin/rune.js build --platform <id> --output <dir>` |
 | Validate a compiled output | `node compiler/bin/rune.js doctor --output <dir>` |

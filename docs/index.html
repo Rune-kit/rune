@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Rune — Less skills. Deeper connections.</title>
-  <meta name="description" content="67-skill mesh ecosystem for AI coding assistants across 16 platforms, including native Claude Code and OpenAI Codex runtimes.">
+  <meta name="description" content="67-skill mesh ecosystem for AI coding agents across 16 platforms, with native plugins for Claude Code, OpenAI Codex and Grok Build.">
   <meta property="og:title" content="Rune — AI Skill Mesh">
   <meta property="og:description" content="67 skills, 248 connections + 46 signals, 16 platforms. From idea to production.">
   <meta property="og:image" content="https://raw.githubusercontent.com/rune-kit/rune/master/assets/banner.svg">
@@ -310,12 +310,12 @@ D &harr; E &harr; F
         <div class="feature-card">
           <div class="feature-icon">&#128274;</div>
           <h3>Security Gates</h3>
-          <p>sentinel (OWASP, secrets, deps) + sast (static analysis) + integrity-check (prompt injection detection). Gates, not suggestions.</p>
+          <p>sentinel (OWASP, secrets, deps) + sast (static analysis) + integrity-check (prompt injection detection). With hooks on the strict preset, secret-file reads and secret commits are blocked; the other checks report findings for the agent to act on.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">&#127760;</div>
           <h3>Multi-Platform</h3>
-          <p>Same 67 skills compile to Claude Code, Cursor, Windsurf, Antigravity, OpenAI Codex, OpenClaw, and generic. Zero knowledge loss across IDEs.</p>
+          <p>Same 67 skills on 16 targets: Claude Code, OpenAI Codex, Grok Build, Cursor, Antigravity, Gemini CLI, Copilot, Cline, Windsurf and any Agent Skills runtime. Zero knowledge loss across agents.</p>
         </div>
       </div>
     </div>
@@ -333,7 +333,7 @@ D &harr; E &harr; F
 claude plugin marketplace add rune-kit/rune
 
 # 2. Install plugin
-claude plugin install rune
+claude plugin install rune@rune-kit
 
 # 3. Wire hooks (interactive — pick scope, tiers, preset)
 npx @rune-kit/rune setup</code></pre>
@@ -356,10 +356,31 @@ npx @rune-kit/rune setup --here --platform codex
           <p>Native Agent Skills, project-scoped roles, subagents, and lifecycle hooks. Codex keeps hook trust explicit.</p>
         </div>
         <div class="install-card">
-          <h3>Cursor / Windsurf / Any IDE</h3>
+          <h3>Grok Build</h3>
+          <p class="install-badge">Native Plugin</p>
+          <pre class="code-block"><code># Install plugin (skills + hooks)
+grok plugin install rune-kit/rune --trust
+
+# or via the marketplace
+grok plugin marketplace add rune-kit/rune
+grok plugin install rune --trust</code></pre>
+          <p>xAI&#39;s coding agent. Grok Build also reads <code>.cursor/</code> and <code>.claude/</code> skills and hooks, so a Cursor-ready project works as-is.</p>
+        </div>
+        <div class="install-card">
+          <h3>Cursor / Antigravity / Any IDE</h3>
           <p class="install-badge">Native Agent Skills</p>
-          <pre class="code-block"><code>npx @rune-kit/rune init</code></pre>
-          <p>Auto-detects platform. Compiles all 67 skills to each platform&#39;s native Agent Skills format &mdash; loaded on demand.</p>
+          <pre class="code-block"><code>npx @rune-kit/rune init
+
+# optional: native hooks
+npx @rune-kit/rune hooks install --platform cursor,grok
+npx @rune-kit/rune hooks install --platform antigravity</code></pre>
+          <p>Auto-detects platform. Compiles all 67 skills to each platform&#39;s native Agent Skills format &mdash; loaded on demand. Cursor is Grok Build&#39;s predecessor (SpaceX acquired its maker in Aug 2026); Rune supports both.</p>
+        </div>
+        <div class="install-card">
+          <h3>Any agent (skills.sh)</h3>
+          <p class="install-badge">One command</p>
+          <pre class="code-block"><code>npx skills add rune-kit/rune</code></pre>
+          <p>Installs every Rune skill into the agents you pick (~80 supported). Use a native install above for hooks and subagents.</p>
         </div>
         <div class="install-card">
           <h3>OpenClaw</h3>
@@ -402,7 +423,7 @@ npx @rune-kit/rune setup --here --platform codex
           <span class="guide-icon">&#128187;</span>
           <div>
             <strong>Platform Guides</strong>
-            <span>Claude, Cursor, Windsurf, Codex, OpenClaw</span>
+            <span>Claude, Codex, Grok Build, Cursor, Antigravity, Windsurf</span>
           </div>
         </a>
         <a href="guides/#ext-using" class="guide-link">
@@ -878,7 +899,7 @@ npx @rune-kit/rune setup --here --platform codex
       <div class="cc-term">
         <div class="cc-term-bar"><span class="cc-dot r"></span><span class="cc-dot y"></span><span class="cc-dot g"></span><span class="cc-term-title">claude code &mdash; acme-api</span></div>
         <div class="cc-term-body">
-          <div class="cc-sl"><span class="cc-model">&#9672; Opus 4.8</span> <span class="cc-sep">&#9474;</span> <span class="cc-fill">&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;</span><span class="cc-empty">&#9617;&#9617;&#9617;</span> <span class="cc-warn">73%</span><span class="cc-sev">WARM</span> <span class="cc-sep">&#9474;</span> <span class="cc-skill">&#11041; cook&#183;L1</span> <span class="cc-sep">&#9474;</span> <span class="cc-cost">$0.91</span> <span class="cc-sep">&#9474;</span> <span class="cc-dim">5h</span> <span class="cc-ok">&#9608;&#9608;</span><span class="cc-empty">&#9617;&#9617;</span> <span class="cc-ok">22%</span> <span class="cc-dim">7d</span> <span class="cc-warn">&#9608;&#9608;&#9608;</span><span class="cc-empty">&#9617;</span> <span class="cc-warn">61%</span></div>
+          <div class="cc-sl"><span class="cc-model">&#9672; Opus 5.5</span> <span class="cc-sep">&#9474;</span> <span class="cc-fill">&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;</span><span class="cc-empty">&#9617;&#9617;&#9617;</span> <span class="cc-warn">73%</span><span class="cc-sev">WARM</span> <span class="cc-sep">&#9474;</span> <span class="cc-skill">&#11041; cook&#183;L1</span> <span class="cc-sep">&#9474;</span> <span class="cc-cost">$0.91</span> <span class="cc-sep">&#9474;</span> <span class="cc-dim">5h</span> <span class="cc-ok">&#9608;&#9608;</span><span class="cc-empty">&#9617;&#9617;</span> <span class="cc-ok">22%</span> <span class="cc-dim">7d</span> <span class="cc-warn">&#9608;&#9608;&#9608;</span><span class="cc-empty">&#9617;</span> <span class="cc-warn">61%</span></div>
           <div class="cc-sl cc-sl-2"><span class="cc-dim">~/acme-api</span>  <span class="cc-branch">&#9095; main</span><span class="cc-dirty">*</span></div>
         </div>
       </div>
@@ -1078,7 +1099,7 @@ Context is mostly files 61% &middot; mcp 22% &mdash; trim the largest to free ro
             <li>14 domain extension packs</li>
             <li>248 connections + 46 signals</li>
             <li>5-layer architecture</li>
-            <li>Multi-platform compiler (13 targets)</li>
+            <li>Multi-platform compiler (16 targets)</li>
             <li>Phase-aware execution</li>
             <li>Security gates (sentinel, sast)</li>
             <li>Adaptive model routing</li>
@@ -1350,7 +1371,7 @@ Context is mostly files 61% &middot; mcp 22% &mdash; trim the largest to free ro
           <span class="stat-label">Extension Packs</span>
         </div>
         <div class="stat">
-          <span class="stat-num" data-target="8">0</span>
+          <span class="stat-num" data-target="16">0</span>
           <span class="stat-label">Platforms</span>
         </div>
       </div>
