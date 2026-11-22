@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "generated": "2026-11-21T09:56:01.496Z",
+  "generated": "2026-11-22T08:16:34.585Z",
   "skillCount": 67,
   "skills": {
     "adversary": {
@@ -169,7 +169,7 @@
       "layer": "L1",
       "model": "sonnet",
       "group": "orchestrator",
-      "description": "Feature implementation orchestrator. ALWAYS use this skill for ANY code change — implement, build, add feature, create, fix bug, or any task that modifies source code. This is the default route for 70",
+      "description": "Feature implementation orchestrator — runs the TDD cycle understand → plan → test → implement → quality → verify → commit. Use when the user wants working code built or changed across more than a line",
       "connections": [
         "deploy",
         "fix",
@@ -849,7 +849,7 @@
       "layer": "L0",
       "model": "sonnet",
       "group": "orchestrator",
-      "description": "Meta-enforcement layer that routes EVERY agent action through the correct skill. Use on every user message, before any response involving code, files, or technical decisions. Default route: rune:cook ",
+      "description": "Routing table that maps a request to the right Rune skill before acting. Use before starting a coding task to decide which skill applies (default for code changes: rune:cook), and whenever unsure whic",
       "connections": [
         "cook",
         "team",

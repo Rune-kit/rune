@@ -15,8 +15,11 @@
  * @see https://docs.x.ai/build/features/skills-plugins-marketplaces
  * @see https://github.com/xai-org/grok-build (docs/user-guide/08-skills.md)
  *
- * MODEL TIER MAPPING: Grok accepts but does not apply a per-skill `model`
- * key, so the tier travels as a provider-agnostic `# model-hint` comment.
+ * MODEL TIER MAPPING: Grok Build honors a per-skill `model` frontmatter key
+ * (08-skills.md: "Model override for running the skill"), but Rune does not
+ * write one — `opus`/`sonnet`/`haiku` are not Grok model ids, and pinning a
+ * concrete model would override the model the user picked (and break for
+ * accounts without it). The tier travels as a `# model-hint` comment instead.
  */
 
 import { createAgentSkillsAdapter } from './agent-skills-base.js';

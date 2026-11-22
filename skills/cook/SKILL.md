@@ -1,6 +1,6 @@
 ---
 name: cook
-description: "Feature implementation orchestrator. ALWAYS use this skill for ANY code change — implement, build, add feature, create, fix bug, or any task that modifies source code. This is the default route for 70% of all requests. Runs full TDD cycle: understand → plan → test → implement → quality → verify → commit."
+description: "Feature implementation orchestrator — runs the TDD cycle understand → plan → test → implement → quality → verify → commit. Use when the user wants working code built or changed across more than a line or two: a new feature, a bug fix with an unknown blast radius, a refactor. Not for questions, reviews or trivial one-line edits; for a change that is already fully specified, use fix."
 context: fork
 background: false
 agent: general-purpose

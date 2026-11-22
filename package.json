@@ -8,7 +8,7 @@
   },
   "scripts": {
     "build": "node compiler/bin/rune.js build",
-    "doctor": "node compiler/bin/rune.js doctor && node scripts/version-sync-check.js && node scripts/build-skill-index.js --check",
+    "doctor": "node compiler/bin/rune.js doctor && node scripts/version-sync-check.js && node scripts/build-skill-index.js --check && node scripts/description-budget-check.js",
     "test": "node --test compiler/__tests__/*.test.js scripts/__tests__/*.test.js",
     "test:coverage": "c8 --reporter=text --reporter=lcov node --test compiler/__tests__/*.test.js scripts/__tests__/*.test.js",
     "lint": "biome check .",
@@ -18,11 +18,14 @@
     "eval": "node scripts/run-evals.js",
     "version-check": "node scripts/version-sync-check.js",
     "version-bump": "node scripts/bump-version.js",
-    "prepublishOnly": "node scripts/version-sync-check.js"
+    "prepublishOnly": "node scripts/version-sync-check.js",
+    "description-check": "node scripts/description-budget-check.js"
   },
   "keywords": [
     "claude-code",
     "cursor",
+    "grok",
+    "grok-build",
     "windsurf",
     "antigravity",
     "codex",

@@ -74,7 +74,7 @@ function buildPending(overrides = {}) {
     dispatchedAt: '2026-04-27T12:34:56Z',
     triggerSignal: 'agent.stuck',
     sourceSkill: 'debug',
-    targetModel: 'claude-opus-4-7',
+    targetModel: 'claude-opus-5-5',
     bundleHash: 'sha256:9f3a4b5c6d7e8f90',
     status: 'pending',
     timeoutAt: '2026-04-27T12:44:56Z',
