@@ -76,7 +76,7 @@ export const CAPABILITIES = Object.freeze({
     postToolEdit: true,
     stop: true,
     notes:
-      'Native hooks via `.cursor/hooks.json` (preToolUse / beforeShellExecution / afterFileEdit / postToolUse / stop); trusted workspace required. Tier context rules stay `.mdc`.',
+      'Native hooks via `.cursor/hooks.json` (preToolUse / postToolUse / stop, tool-filtered by matcher); each entry also carries a matcher group so Grok Build runs the same file. Trusted workspace required. Tier context rules stay `.mdc`.',
   },
   windsurf: {
     maturity: 'beta',
@@ -87,12 +87,13 @@ export const CAPABILITIES = Object.freeze({
     notes: 'Workflows fire on user command, not tool use. Cascade rules approximate auto-fire.',
   },
   antigravity: {
-    maturity: 'experimental',
-    preToolEdit: 'rule-injection',
-    preToolBash: false,
-    postToolEdit: false,
-    stop: false,
-    notes: 'Early platform; uses rule-injection fallback only.',
+    maturity: 'beta',
+    preToolEdit: true,
+    preToolBash: true,
+    postToolEdit: true,
+    stop: true,
+    notes:
+      'Native hooks via `.agents/hooks.json` (App, CLI `agy`, IDE); PreToolUse answers `decision`. Tier rules go to `.agents/rules/`.',
   },
   grok: {
     maturity: 'beta',

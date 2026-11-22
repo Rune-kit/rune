@@ -506,8 +506,8 @@ const phase5Data = {
     { skill: 'plan', count: 5 },
   ],
   modelDistribution: [
-    { model: 'claude-sonnet-4-5', skill_count: 40 },
-    { model: 'claude-haiku-4-5', skill_count: 10 },
+    { model: 'claude-sonnet-5-5', skill_count: 40 },
+    { model: 'claude-haiku-5-5', skill_count: 10 },
   ],
   skillHeatmap: {
     heatmap: [
@@ -563,7 +563,7 @@ describe('generateComprehensionHTML — Phase 5a: Measure tab model section', ()
   it('renders model distribution when data is present', () => {
     const result = generateComprehensionHTML(phase5Data);
     assert.ok(
-      result.includes('claude-sonnet-4-5') || result.includes('"claude-sonnet-4-5"'),
+      result.includes('claude-sonnet-5-5') || result.includes('"claude-sonnet-5-5"'),
       'Expected model name in output',
     );
   });

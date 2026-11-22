@@ -6,7 +6,7 @@
  *   - Pro + Claude regression: settings.json gets UserPromptSubmit + PreToolUse(Edit|Write) + statusLine
  *   - Pro + Cursor: pro-prefixed .mdc files written, statusLine skipped with note
  *   - Pro + Windsurf: workflow + rule pair per non-Claude-only entry
- *   - Pro + Antigravity: rule-injection only
+ *   - Pro + Antigravity: tier rules in .agents/rules (claudeOnly entries skipped)
  *   - `--tier pro` resolution via $RUNE_PRO_ROOT env var + monorepo fallback
  *   - Requires-env warning surfaces when RUNE_PRO_ROOT unset at install time
  *   - Rejection of bad manifests (missing fields, bad event, duplicate ids)
@@ -381,7 +381,7 @@ describe('installHooks --tier pro (Antigravity)', () => {
     await mkdir(path.join(tmpRoot, '.antigravity'), { recursive: true });
     await installHooks(tmpRoot, { preset: 'gentle', tier: 'pro' });
 
-    const rulesDir = path.join(tmpRoot, '.antigravity', 'rules');
+    const rulesDir = path.join(tmpRoot, '.agents', 'rules');
     const files = (await readdir(rulesDir)).sort();
     assert.ok(files.includes('rune-pro-context-inject.md'));
     assert.ok(files.includes('rune-pro-context-sense.md'));

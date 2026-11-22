@@ -14,17 +14,20 @@
  * @see https://geminicli.com/docs/cli/skills/
  * @see https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/skills.md
  *
- * MODEL TIER MAPPING (v2.18+):
- * Gemini CLI exposes Pro / Flash / Flash-Lite families. Anthropic tier names
- * translate to Gemini families as a hint comment — Gemini CLI reads model
- * from --model flag / config, not from the skill body.
+ * MODEL TIER MAPPING (re-checked 2026-11-22 against the Gemini CLI 0.70.0
+ * model catalog): Gemini CLI is now the Gemini Code Assist (enterprise)
+ * terminal agent and ships no Gemini 4 models — Gemini 4 lives in Antigravity
+ * (see the antigravity adapter). Tier names translate to Gemini CLI model ids
+ * as a hint comment; Gemini CLI reads the model from --model / config, not
+ * from the skill body.
+ *   opus → gemini-3.1-pro-preview · sonnet → gemini-3.8-flash · haiku → gemini-3.5-flash-lite
  */
 
 import { BRANDING_FOOTER } from '../transforms/branding.js';
 
 const MODEL_MAP = {
-  opus: 'gemini-4-carbon',
-  sonnet: 'gemini-4-hydrogen',
+  opus: 'gemini-3.1-pro-preview',
+  sonnet: 'gemini-3.8-flash',
   haiku: 'gemini-3.5-flash-lite',
 };
 

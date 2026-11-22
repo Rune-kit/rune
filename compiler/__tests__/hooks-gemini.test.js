@@ -68,7 +68,7 @@ describe('gemini hooks adapter', () => {
           for (const k of Object.keys(h)) assert.ok(DOC_HOOK_KEYS.has(k), `undocumented hook key ${k}`);
           assert.strictEqual(h.type, 'command');
           assert.strictEqual(h.timeout, 30000, 'Gemini timeouts are milliseconds');
-          assert.match(h.command, /@rune-kit\/rune hook-dispatch \S+ --format gemini --gentle$/);
+          assert.match(h.command, /@rune-kit\/rune@\S+ hook-dispatch \S+ --format gemini --gentle$/);
         }
       }
     }
@@ -92,7 +92,12 @@ describe('gemini hooks adapter', () => {
       });
       stderr.resume();
       stdin.end(JSON.stringify({ hook_event_name: 'BeforeTool', tool_name: 'write_file' }));
-      const code = await dispatchHook([skill, '--format', 'gemini', '--gentle'], { stdin, stdout, stderr });
+      const code = await dispatchHook([skill, '--format', 'gemini', '--gentle'], {
+        stdin,
+        stdout,
+        stderr,
+        cwd: tmpRoot,
+      });
       assert.strictEqual(code, 0);
       assert.deepStrictEqual(JSON.parse(out), {});
     }

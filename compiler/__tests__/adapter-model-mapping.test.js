@@ -237,14 +237,14 @@ describe('qwen adapter model mapping (Qwen family)', () => {
 describe('gemini adapter model mapping (Gemini family)', () => {
   const gemini = getAdapter('gemini');
 
-  test('opus translates to gemini-4-carbon', () => {
+  test('opus translates to gemini-3.1-pro-preview', () => {
     const header = gemini.generateHeader({ ...baseSkill, model: 'opus' });
-    assert.match(header, /gemini-4-carbon/);
+    assert.match(header, /gemini-3\.1-pro-preview/);
   });
 
-  test('sonnet translates to gemini-4-hydrogen', () => {
+  test('sonnet translates to gemini-3.8-flash', () => {
     const header = gemini.generateHeader({ ...baseSkill, model: 'sonnet' });
-    assert.match(header, /gemini-4-hydrogen/);
+    assert.match(header, /gemini-3\.8-flash/);
   });
 
   test('haiku translates to gemini-3.5-flash-lite', () => {

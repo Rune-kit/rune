@@ -1,4 +1,5 @@
 import assert from 'node:assert';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -92,5 +93,65 @@ describe('Grok Build hooks adapter', () => {
     await uninstallHooks(tmpRoot, { platform: 'grok' });
     assert.strictEqual(existsSync(hooksPath(tmpRoot)), false);
     assert.strictEqual(existsSync(userFile), true);
+  });
+});
+
+describe('Grok Build + Cursor: one registration (v2.33.0)', () => {
+  test('installing cursor and grok together writes only .cursor/hooks.json (Grok runs it)', async () => {
+    await mkdir(path.join(tmpRoot, '.cursor'), { recursive: true });
+    const result = await installHooks(tmpRoot, { preset: 'strict', platform: ['cursor', 'grok'] });
+    assert.ok(existsSync(path.join(tmpRoot, '.cursor', 'hooks.json')));
+    assert.ok(!existsSync(hooksPath(tmpRoot)), 'no .grok/hooks/rune.json — Grok would fire every gate twice');
+    const grokNotes = result.results.find((r) => r.platform === 'grok').notes.join(' ');
+    assert.match(grokNotes, /runs Rune's \.cursor\/hooks\.json/);
+  });
+
+  test('cursor install removes an earlier Free-preset .grok/hooks/rune.json', async () => {
+    await installHooks(tmpRoot, { preset: 'gentle', platform: 'grok' });
+    assert.ok(existsSync(hooksPath(tmpRoot)));
+    await installHooks(tmpRoot, { preset: 'gentle', platform: 'cursor' });
+    assert.ok(!existsSync(hooksPath(tmpRoot)));
+  });
+
+  test('a later grok install does not re-add the duplicate', async () => {
+    await installHooks(tmpRoot, { preset: 'gentle', platform: 'cursor' });
+    await installHooks(tmpRoot, { preset: 'gentle', platform: 'grok' });
+    assert.ok(!existsSync(hooksPath(tmpRoot)));
+  });
+
+  test('every Cursor entry carries a matcher group Grok can load', async () => {
+    await installHooks(tmpRoot, { preset: 'strict', platform: 'cursor' });
+    const cfg = JSON.parse(await readFile(path.join(tmpRoot, '.cursor', 'hooks.json'), 'utf-8'));
+    for (const entries of Object.values(cfg.hooks)) {
+      for (const e of entries) {
+        assert.ok(Array.isArray(e.hooks) && e.hooks.length === 1);
+        assert.strictEqual(e.hooks[0].type, 'command');
+        assert.strictEqual(e.hooks[0].command, e.command);
+      }
+    }
+  });
+});
+
+// Live: the real Grok Build CLI loads Rune's Cursor hooks with zero load errors.
+const hasGrok = spawnSync('grok', ['--version'], { encoding: 'utf8' }).status === 0;
+describe('grok CLI live check', { skip: !hasGrok && 'grok CLI not installed' }, () => {
+  test('grok inspect: 5 Rune hooks from .cursor/hooks.json, no hookLoadErrors', async () => {
+    execFileSync('git', ['init', '-q'], { cwd: tmpRoot });
+    await mkdir(path.join(tmpRoot, '.cursor'), { recursive: true });
+    await installHooks(tmpRoot, { preset: 'strict', platform: ['cursor', 'grok'] });
+    const home = await mkdtemp(path.join(tmpdir(), 'rune-grok-home-'));
+    try {
+      const out = execFileSync('grok', ['inspect', '--json'], {
+        cwd: tmpRoot,
+        env: { ...process.env, GROK_HOME: home, GROK_FOLDER_TRUST: '0' },
+        encoding: 'utf8',
+      });
+      const d = JSON.parse(out);
+      assert.deepStrictEqual(d.hookLoadErrors || [], []);
+      const rune = d.hooks.filter((h) => /@rune-kit\/rune@\S+ hook-dispatch/.test(h.target || ''));
+      assert.strictEqual(rune.length, 5);
+    } finally {
+      await rm(home, { recursive: true, force: true });
+    }
   });
 });

@@ -9,12 +9,28 @@
  * invalid JSON on stdout also blocks, so every Rune command passes
  * `--format cursor` and the dispatcher prints schema-valid JSON.
  *
- * Mapping (Claude preset → Cursor event):
- *   preflight         PreToolUse Edit|Write   → preToolUse (matcher "Write")
- *   sentinel          PreToolUse Bash         → beforeShellExecution
- *   dependency-doctor PostToolUse Edit|Write  → afterFileEdit
- *   quarantine        PostToolUse mcp/Read    → postToolUse (matcher "MCP:.*|Read")
+ * Mapping (Claude preset → Cursor event, all tool-filtered by `matcher`):
+ *   preflight         PreToolUse Edit|Write   → preToolUse  (matcher "Read|Write|StrReplace")
+ *   sentinel          PreToolUse Bash         → preToolUse  (matcher "Shell")
+ *   dependency-doctor PostToolUse Edit|Write  → postToolUse (matcher "Write|StrReplace")
+ *   quarantine        PostToolUse mcp/Read    → postToolUse (matcher "MCP:.*|mcp__.*|Read|WebFetch|Fetch")
  *   completion-gate   Stop                    → stop
+ *
+ * Grok Build compatibility (v2.33.0). Grok Build — xAI's CLI, which since
+ * SpaceX acquired Cursor (Aug 2026) ships Cursor's model list and reads
+ * `.cursor/` config — loads `.cursor/hooks.json`, but runs only Claude-style
+ * matcher groups (entries with a `hooks` list) and reports Cursor's flat
+ * `{command, matcher, timeout}` entries as load errors. Cursor runs only the
+ * flat form. So every Rune entry is a hybrid that carries both:
+ *   { command, matcher, timeout, hooks: [{ type: "command", command, timeout }] }
+ * Cursor reads `command`/`matcher`/`timeout`; Grok reads `matcher` + `hooks`.
+ * One registration, each runtime runs it once (verified with `grok inspect`
+ * on Grok Build 1.0.92: loaded, no load errors). That is why sentinel uses
+ * `preToolUse` + matcher "Shell" rather than `beforeShellExecution`: there
+ * Cursor matches `matcher` against the command text, while Grok maps the event
+ * to PreToolUse and matches the tool name — one `matcher` can't mean both.
+ * Because Grok Build runs these entries, the grok adapter skips
+ * `.grok/hooks/rune.json` when Cursor hooks are installed (no double fire).
  *
  * `.cursor/hooks.json` may hold the user's own hooks, so emit/uninstall only
  * add/remove entries whose command carries the Rune dispatch signature.
@@ -41,18 +57,22 @@ export const HOOKS_REL_PATH = '.cursor/hooks.json';
 export const HOOK_TIMEOUT_SECONDS = 30;
 
 const RULES_REL_DIR = '.cursor/rules';
+const GROK_HOOKS_REL_PATH = '.grok/hooks/rune.json';
 const RUNE_PREFIX = 'rune-';
 const AUTO_SIGNATURE = '@rune-kit/rune hook-dispatch';
 const LEGACY_PRESET_RULES = ['rune-preflight.mdc', 'rune-sentinel.mdc', 'rune-dependency-doctor.mdc'];
 
 /** Documented Cursor events Rune writes to (subset of cursor.com/docs/hooks). */
 export const PRESET_EVENTS = Object.freeze([
-  { event: 'preToolUse', skill: 'preflight', matcher: 'Write' },
-  { event: 'beforeShellExecution', skill: 'sentinel' },
-  { event: 'afterFileEdit', skill: 'dependency-doctor' },
-  { event: 'postToolUse', skill: 'quarantine', matcher: 'MCP:.*|Read' },
+  { event: 'preToolUse', skill: 'preflight', matcher: 'Read|Write|StrReplace' },
+  { event: 'preToolUse', skill: 'sentinel', matcher: 'Shell' },
+  { event: 'postToolUse', skill: 'dependency-doctor', matcher: 'Write|StrReplace' },
+  { event: 'postToolUse', skill: 'quarantine', matcher: 'MCP:.*|mcp__.*|Read|WebFetch|Fetch' },
   { event: 'stop', skill: 'completion-gate' },
 ]);
+
+/** Events earlier Rune versions wrote to; their Rune entries are migrated away. */
+export const LEGACY_EVENTS = Object.freeze(['beforeShellExecution', 'afterFileEdit']);
 
 export function detect(projectRoot) {
   return existsSync(path.join(projectRoot, '.cursor'));
@@ -62,10 +82,13 @@ export function buildCursorPreset(preset) {
   const flag = preset === 'gentle' ? ' --gentle' : '';
   const hooks = {};
   for (const { event, skill, matcher } of PRESET_EVENTS) {
-    const entry = { command: `${DISPATCH_CMD} ${skill} --format cursor${flag}` };
+    const command = `${DISPATCH_CMD} ${skill} --format cursor${flag}`;
+    const entry = { command };
     if (matcher) entry.matcher = matcher;
     entry.timeout = HOOK_TIMEOUT_SECONDS;
-    hooks[event] = [entry];
+    // Matcher-group view of the same entry, for Grok Build (see header).
+    entry.hooks = [{ type: 'command', command, timeout: HOOK_TIMEOUT_SECONDS }];
+    (hooks[event] ||= []).push(entry);
   }
   return hooks;
 }
@@ -105,6 +128,16 @@ export async function emit({ preset, projectRoot, tierManifests = [] }) {
     notes.push(
       `Native Cursor hooks written to ${HOOKS_REL_PATH} (${preset}). Project hooks run only in a trusted workspace — check Settings → Hooks.`,
     );
+    notes.push(
+      'Grok Build also reads .cursor/hooks.json and runs these same entries — no separate `--platform grok` hooks needed.',
+    );
+    const grokFile = path.join(projectRoot, GROK_HOOKS_REL_PATH);
+    if (existsSync(grokFile) && (await isFreePresetOnly(grokFile))) {
+      files.push({ path: grokFile, content: null });
+      notes.push(
+        `Removed ${GROK_HOOKS_REL_PATH}: Grok Build would run Rune hooks twice (it also reads ${HOOKS_REL_PATH}).`,
+      );
+    }
     if (await claudeHasRuneHooks(projectRoot)) {
       notes.push(
         'Cursor also imports .claude/settings.json hooks (Settings → Agents → Third-Party Imports), which already has Rune hooks — inside Cursor they would fire twice. Keep one: `rune hooks install --platform claude --preset off`, or turn off Third-Party Imports.',
@@ -136,6 +169,33 @@ export async function emit({ preset, projectRoot, tierManifests = [] }) {
   }
 
   return { files, notes };
+}
+
+/** True when a Grok hook file holds only Free-preset Rune dispatch entries (no tier or user hooks). */
+export async function isFreePresetOnly(file) {
+  try {
+    const cfg = JSON.parse(await readFile(file, 'utf-8'));
+    const entries = Object.values(cfg?.hooks || {})
+      .flat()
+      .flatMap((g) => (Array.isArray(g?.hooks) ? g.hooks : [g]));
+    return (
+      entries.length > 0 && entries.every((e) => isRuneManaged(e) && !/\$\{RUNE_[A-Z0-9_]+_ROOT\}/.test(e.command))
+    );
+  } catch {
+    return false;
+  }
+}
+
+/** True when `.cursor/hooks.json` already carries Rune-managed entries. */
+export async function hasRuneHooks(projectRoot) {
+  const p = path.join(projectRoot, HOOKS_REL_PATH);
+  if (!existsSync(p)) return false;
+  try {
+    const cfg = JSON.parse(await readFile(p, 'utf-8'));
+    return Object.values(cfg?.hooks || {}).some((list) => Array.isArray(list) && list.some((e) => isRuneManaged(e)));
+  } catch {
+    return false;
+  }
 }
 
 async function legacyRuleDeletions(rulesDir) {

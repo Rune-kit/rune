@@ -40,3 +40,30 @@ jobs:
           name: coverage-report
           path: coverage/
           retention-days: 30
+
+  grok-build-compat:
+    # Live check against the real Grok Build CLI: plugin manifest validates,
+    # the marketplace lists `rune`, and Rune's .cursor/hooks.json loads with
+    # zero hook load errors. Needs no Grok login.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Grok Build CLI (pinned)
+        run: |
+          curl -fsSL https://x.ai/cli/install.sh | bash -s 1.0.92
+          echo "$HOME/.grok/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Grok CLI version
+        run: grok --version
+
+      - name: Manifest + hook-load tests against the real CLI
+        run: node --test scripts/__tests__/manifests.test.js compiler/__tests__/hooks-grok.test.js

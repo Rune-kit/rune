@@ -3,22 +3,22 @@ import { existsSync } from 'node:fs';
 import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { PassThrough } from 'node:stream';
 import { afterEach, beforeEach, describe, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import * as antigravity from '../adapters/hooks/antigravity.js';
+import { dispatchHook } from '../commands/hook-dispatch.js';
 import { installHooks } from '../commands/hooks/install.js';
+import { WIRED_SKILLS } from '../commands/hooks/presets.js';
 import { hookStatus } from '../commands/hooks/status.js';
 import { uninstallHooks } from '../commands/hooks/uninstall.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const RUNE_ROOT = path.resolve(__dirname, '..', '..');
-const RULES_DIR = '.antigravity/rules';
+const HOOKS = '.agents/hooks.json';
 
 let tmpRoot;
-
-async function seedAntigravity(root) {
-  await mkdir(path.join(root, '.antigravity'), { recursive: true });
-}
+const read = async () => JSON.parse(await readFile(path.join(tmpRoot, HOOKS), 'utf-8'));
 
 beforeEach(async () => {
   tmpRoot = await mkdtemp(path.join(tmpdir(), 'rune-antigravity-'));
@@ -28,93 +28,148 @@ afterEach(async () => {
   if (tmpRoot) await rm(tmpRoot, { recursive: true, force: true });
 });
 
-describe('antigravity adapter', () => {
-  test('detect() true when .antigravity exists', async () => {
-    await seedAntigravity(tmpRoot);
+function io(stdinData) {
+  const stdin = new PassThrough();
+  const stdout = new PassThrough();
+  const stderr = new PassThrough();
+  let out = '';
+  let err = '';
+  stdout.on('data', (c) => {
+    out += c;
+  });
+  stderr.on('data', (c) => {
+    err += c;
+  });
+  stdin.end(stdinData);
+  return { stdin, stdout, stderr, cwd: tmpRoot, out: () => out, err: () => err };
+}
+
+// antigravity.google/docs/hooks (checked 2026-11-22)
+const EVENTS = new Set(['SessionStart', 'PreToolUse', 'PostToolUse', 'PreInvocation', 'PostInvocation', 'Stop']);
+
+describe('antigravity hooks adapter (.agents/hooks.json)', () => {
+  test('detect(): .antigravity/ or .agents/hooks.json, but not a bare .agents/ (shared with Codex)', async () => {
+    await mkdir(path.join(tmpRoot, '.agents', 'skills'), { recursive: true });
+    assert.strictEqual(antigravity.detect(tmpRoot), false);
+    await mkdir(path.join(tmpRoot, '.antigravity'), { recursive: true });
     assert.strictEqual(antigravity.detect(tmpRoot), true);
   });
 
-  test('emit(gentle) returns 3 rule markdowns with WARN mode', async () => {
-    const plan = await antigravity.emit({ preset: 'gentle', projectRoot: tmpRoot });
-    assert.strictEqual(plan.files.length, 3);
-    for (const file of plan.files) {
-      assert.ok(file.content.includes('rune-managed: true'));
-      assert.ok(file.content.includes('mode: WARN'));
+  test('preset: one rune-<skill> hook per wired skill, documented events and shapes', () => {
+    const cfg = antigravity.buildAntigravityPreset('gentle');
+    assert.deepStrictEqual(Object.keys(cfg).sort(), WIRED_SKILLS.map((s) => `rune-${s}`).sort());
+    for (const def of Object.values(cfg)) {
+      for (const [event, list] of Object.entries(def)) {
+        assert.ok(EVENTS.has(event), `undocumented event ${event}`);
+        const handlers =
+          event === 'PreToolUse' || event === 'PostToolUse'
+            ? list.flatMap((g) => {
+                assert.strictEqual(typeof g.matcher, 'string');
+                return g.hooks;
+              })
+            : list;
+        for (const h of handlers) {
+          assert.strictEqual(h.type, 'command');
+          assert.strictEqual(h.timeout, 30);
+          assert.match(
+            h.command,
+            new RegExp(`@rune-kit/rune@\\S+ hook-dispatch \\S+ --format antigravity --event ${event} --gentle$`),
+          );
+        }
+      }
     }
+    assert.strictEqual(cfg['rune-sentinel'].PreToolUse[0].matcher, 'run_command');
   });
 
-  test('emit(strict) renders BLOCK mode', async () => {
-    const plan = await antigravity.emit({ preset: 'strict', projectRoot: tmpRoot });
-    for (const file of plan.files) {
-      assert.ok(file.content.includes('mode: BLOCK'));
-    }
+  test('install merges, preserves user hooks, is idempotent', async () => {
+    await mkdir(path.join(tmpRoot, '.agents'), { recursive: true });
+    await writeFile(path.join(tmpRoot, HOOKS), JSON.stringify({ 'my-lint': { PostToolUse: [] } }), 'utf-8');
+    await installHooks(tmpRoot, { preset: 'strict', platform: 'antigravity' });
+    const first = await readFile(path.join(tmpRoot, HOOKS), 'utf-8');
+    const cfg = JSON.parse(first);
+    assert.ok(cfg['my-lint']);
+    assert.ok(cfg['rune-preflight']);
+    await installHooks(tmpRoot, { preset: 'strict', platform: 'antigravity' });
+    assert.strictEqual(await readFile(path.join(tmpRoot, HOOKS), 'utf-8'), first);
+  });
+
+  test('install migrates old .antigravity/rules stand-ins away', async () => {
+    const legacy = path.join(tmpRoot, '.antigravity', 'rules');
+    await mkdir(legacy, { recursive: true });
+    await writeFile(path.join(legacy, 'rune-preflight.md'), '---\nrune-managed: true\n---\n', 'utf-8');
+    await writeFile(path.join(legacy, 'mine.md'), '# mine\n', 'utf-8');
+    await installHooks(tmpRoot, { preset: 'gentle', platform: 'antigravity' });
+    assert.deepStrictEqual(await readdir(legacy), ['mine.md']);
+  });
+
+  test('uninstall removes only rune-* hooks', async () => {
+    await mkdir(path.join(tmpRoot, '.agents'), { recursive: true });
+    await writeFile(path.join(tmpRoot, HOOKS), JSON.stringify({ 'my-lint': {} }), 'utf-8');
+    await installHooks(tmpRoot, { preset: 'gentle', platform: 'antigravity' });
+    await uninstallHooks(tmpRoot, { platform: 'antigravity' });
+    assert.deepStrictEqual(await read(), { 'my-lint': {} });
+  });
+
+  test('uninstall deletes hooks.json when only Rune hooks were in it', async () => {
+    await installHooks(tmpRoot, { preset: 'gentle', platform: 'antigravity' });
+    await uninstallHooks(tmpRoot, { platform: 'antigravity' });
+    assert.ok(!existsSync(path.join(tmpRoot, HOOKS)));
+  });
+
+  test('status reports wired skills and preset', async () => {
+    await installHooks(tmpRoot, { preset: 'strict', platform: 'antigravity' });
+    const r = (await hookStatus(tmpRoot, RUNE_ROOT, { platform: 'antigravity' })).results.find(
+      (x) => x.platform === 'antigravity',
+    );
+    assert.strictEqual(r.installed, true);
+    assert.strictEqual(r.preset, 'strict');
+    assert.deepStrictEqual(r.missing, []);
   });
 
   test('emit() rejects invalid preset', async () => {
     await assert.rejects(antigravity.emit({ preset: 'weird', projectRoot: tmpRoot }), /invalid preset/);
   });
+});
 
-  test('emit() notes call out experimental status', async () => {
-    const plan = await antigravity.emit({ preset: 'gentle', projectRoot: tmpRoot });
-    assert.ok(plan.notes.some((n) => n.toLowerCase().includes('experimental')));
+describe('hook-dispatch --format antigravity', () => {
+  test('PreToolUse pass → {"decision":"allow"}', async () => {
+    const x = io(JSON.stringify({ toolCall: { name: 'view_file', args: { AbsolutePath: '/w/src/a.ts' } } }));
+    const code = await dispatchHook(['preflight', '--format', 'antigravity', '--event', 'PreToolUse'], x);
+    assert.strictEqual(code, 0);
+    assert.deepStrictEqual(JSON.parse(x.out()), { decision: 'allow' });
   });
 
-  test('install writes rule files under .antigravity/rules/', async () => {
-    await seedAntigravity(tmpRoot);
-    const result = await installHooks(tmpRoot, { preset: 'gentle', platform: 'antigravity' });
-    assert.strictEqual(result.written, true);
-    const files = await readdir(path.join(tmpRoot, RULES_DIR));
-    assert.ok(files.includes('rune-preflight.md'));
-    assert.ok(files.includes('rune-sentinel.md'));
-    assert.ok(files.includes('rune-dependency-doctor.md'));
+  test('PreToolUse strict block → {"decision":"deny","reason"}', async () => {
+    const x = io(JSON.stringify({ toolCall: { name: 'view_file', args: { AbsolutePath: '/w/.ssh/id_rsa' } } }));
+    const code = await dispatchHook(['preflight', '--format', 'antigravity', '--event', 'PreToolUse'], x);
+    assert.strictEqual(code, 0, 'decision travels on stdout');
+    const out = JSON.parse(x.out());
+    assert.strictEqual(out.decision, 'deny');
+    assert.match(out.reason, /BLOCKED/);
+    assert.match(x.err(), /BLOCK/);
   });
 
-  test('idempotent re-install', async () => {
-    await seedAntigravity(tmpRoot);
-    await installHooks(tmpRoot, { preset: 'gentle', platform: 'antigravity' });
-    const first = await readFile(path.join(tmpRoot, RULES_DIR, 'rune-preflight.md'), 'utf-8');
-    await installHooks(tmpRoot, { preset: 'gentle', platform: 'antigravity' });
-    const second = await readFile(path.join(tmpRoot, RULES_DIR, 'rune-preflight.md'), 'utf-8');
-    assert.strictEqual(first, second);
+  test('PreToolUse gentle → allow + advisory', async () => {
+    const x = io(JSON.stringify({ toolCall: { name: 'view_file', args: { AbsolutePath: '/w/.ssh/id_rsa' } } }));
+    await dispatchHook(['preflight', '--format', 'antigravity', '--event', 'PreToolUse', '--gentle'], x);
+    assert.deepStrictEqual(JSON.parse(x.out()), { decision: 'allow' });
+    assert.match(x.err(), /would block/);
   });
 
-  test('uninstall removes Rune rules, preserves user rules', async () => {
-    await seedAntigravity(tmpRoot);
-    const rulesDir = path.join(tmpRoot, RULES_DIR);
-    await mkdir(rulesDir, { recursive: true });
-    await writeFile(path.join(rulesDir, 'user-rule.md'), '# User rule\n', 'utf-8');
-
-    await installHooks(tmpRoot, { preset: 'gentle', platform: 'antigravity' });
-    await uninstallHooks(tmpRoot, { platform: 'antigravity' });
-
-    const remaining = await readdir(rulesDir);
-    assert.ok(remaining.includes('user-rule.md'), 'user rule must survive');
-    assert.ok(!remaining.some((f) => f.startsWith('rune-')), 'no rune-* files should remain');
+  test('PostToolUse → {} ; Stop → {"decision":"allow"} (never "continue")', async () => {
+    const post = io(JSON.stringify({ toolCall: { name: 'write_to_file', args: { TargetFile: '/w/package.json' } } }));
+    await dispatchHook(['dependency-doctor', '--format', 'antigravity', '--event', 'PostToolUse'], post);
+    assert.deepStrictEqual(JSON.parse(post.out()), {});
+    assert.match(post.err(), /package\.json changed/);
+    const stop = io(JSON.stringify({ terminationReason: 'model_stop', fullyIdle: true }));
+    await dispatchHook(['completion-gate', '--format', 'antigravity', '--event', 'Stop'], stop);
+    assert.deepStrictEqual(JSON.parse(stop.out()), { decision: 'allow' });
   });
 
-  test('uninstall leaves non-managed rune-* files alone', async () => {
-    await seedAntigravity(tmpRoot);
-    const rulesDir = path.join(tmpRoot, RULES_DIR);
-    await mkdir(rulesDir, { recursive: true });
-    await writeFile(path.join(rulesDir, 'rune-fake.md'), '---\ndescription: imposter\n---\n\nnot ours\n', 'utf-8');
-
-    await uninstallHooks(tmpRoot, { platform: 'antigravity' });
-    assert.ok(existsSync(path.join(rulesDir, 'rune-fake.md')));
-  });
-
-  test('status after install reports wired skills', async () => {
-    await seedAntigravity(tmpRoot);
-    await installHooks(tmpRoot, { preset: 'strict', platform: 'antigravity' });
-    const result = await hookStatus(tmpRoot, RUNE_ROOT, { platform: 'antigravity' });
-    const r = result.results.find((x) => x.platform === 'antigravity');
-    assert.strictEqual(r.installed, true);
-    assert.strictEqual(r.preset, 'strict');
-    assert.ok(r.wired.includes('preflight'));
-  });
-
-  test('status reports not installed when .antigravity missing', async () => {
-    const result = await hookStatus(tmpRoot, RUNE_ROOT, { platform: 'antigravity' });
-    const r = result.results.find((x) => x.platform === 'antigravity');
-    assert.strictEqual(r.installed, false);
+  test('--event value is not mistaken for the skill name', async () => {
+    const x = io('{}');
+    const code = await dispatchHook(['--event', 'PreToolUse', 'sentinel', '--format', 'antigravity'], x);
+    assert.strictEqual(code, 0);
+    assert.match(x.err(), /rune-hook: sentinel/);
   });
 });

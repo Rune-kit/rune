@@ -11,20 +11,38 @@
  * detect and cleanly replace them without comment markers (settings.json is JSON).
  */
 
+import { readFileSync } from 'node:fs';
+
 export const RUNE_MANAGED_SIGNATURE = 'rune hook-dispatch';
 
 /** Shared relative path to avoid per-file duplication. */
 export const SETTINGS_REL_PATH = '.claude/settings.json';
 
-export const DISPATCH_CMD = 'npx --yes @rune-kit/rune hook-dispatch';
+/** Version of this package — hook commands pin to it (see DISPATCH_CMD). */
+export const PACKAGE_VERSION = (() => {
+  try {
+    return JSON.parse(readFileSync(new URL('../../../package.json', import.meta.url), 'utf-8')).version;
+  } catch {
+    return 'latest';
+  }
+})();
+
+/**
+ * Pinned to the installed version. An unpinned `npx @rune-kit/rune` would run
+ * whatever is newest on the registry at every tool call — slow (registry
+ * lookup) and a supply-chain risk. With an exact version npx reuses its cache;
+ * `rune doctor --hooks` reports drift after an upgrade, and re-running
+ * `rune hooks install` re-pins.
+ */
+export const DISPATCH_CMD = `npx --yes @rune-kit/rune@${PACKAGE_VERSION} hook-dispatch`;
 
 /**
  * Regex that matches the exact dispatch invocation Rune writes.
- * Matches: `npx [--yes] @rune-kit/rune hook-dispatch` or
+ * Matches: `npx [--yes] @rune-kit/rune[@<version>] hook-dispatch` or
  *          `node ... @rune-kit/rune hook-dispatch` as word boundary.
  * Does NOT match arbitrary strings that merely contain those words.
  */
-const RUNE_DISPATCH_RE = /(^|\s)npx(\s+--yes)?\s+@rune-kit\/rune\s+hook-dispatch\b/;
+const RUNE_DISPATCH_RE = /(^|\s)npx(\s+--yes)?\s+@rune-kit\/rune(@[\w.-]+)?\s+hook-dispatch\b/;
 
 /**
  * Regex that matches tier-emitted commands — they substitute a tier env var

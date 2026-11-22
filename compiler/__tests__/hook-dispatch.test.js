@@ -1,9 +1,16 @@
 import assert from 'node:assert';
+import { execFileSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { PassThrough } from 'node:stream';
 import { describe, test } from 'node:test';
-import { dispatchHook } from '../commands/hook-dispatch.js';
+import { dispatchHook, normalizeEvent, translate } from '../commands/hook-dispatch.js';
 
-function makeIO({ stdinData = '' } = {}) {
+// Plain (non-git) dir so completion-gate stays quiet in the contract tests.
+const QUIET_CWD = mkdtempSync(path.join(os.tmpdir(), 'rune-dispatch-'));
+
+function makeIO({ stdinData = '', cwd = QUIET_CWD } = {}) {
   const stdin = new PassThrough();
   stdin.setEncoding = () => {};
   stdin.isTTY = false;
@@ -22,7 +29,7 @@ function makeIO({ stdinData = '' } = {}) {
   stderr.on('data', (chunk) => {
     err += chunk.toString();
   });
-  return { stdin, stdout, stderr, getOut: () => out, getErr: () => err };
+  return { stdin, stdout, stderr, cwd, getOut: () => out, getErr: () => err };
 }
 
 describe('dispatchHook', () => {
@@ -57,7 +64,7 @@ describe('dispatchHook', () => {
     assert.strictEqual(io.getOut(), '', 'claude format keeps stdout empty (Cursor imports Claude hooks)');
   });
 
-  test('strict mode prints enforcing label', async () => {
+  test('strict mode prints enforcing label (nothing to check → pass)', async () => {
     const io = makeIO({ stdinData: '{}' });
     const code = await dispatchHook(['sentinel'], io);
     assert.strictEqual(code, 0);
@@ -136,5 +143,125 @@ describe('dispatchHook', () => {
     assert.ok(typeof code === 'number', 'must return a numeric exit code');
     // gentle mode: still exits 0 even if stdin was discarded
     assert.strictEqual(code, 0);
+  });
+
+  // ── Real gates (v2.33.0: dispatcher runs hooks/*.cjs, strict actually blocks) ──
+  const keyEvent = (extra = {}) =>
+    JSON.stringify({ tool_name: 'Read', tool_input: { file_path: 'secrets/id_rsa' }, ...extra });
+
+  test('preflight strict: private key read is BLOCKED with exit 2 + reason on stderr', async () => {
+    const io = makeIO({ stdinData: keyEvent({ hook_event_name: 'PreToolUse' }) });
+    const code = await dispatchHook(['preflight'], io);
+    assert.strictEqual(code, 2);
+    assert.match(io.getErr(), /privacy-mesh\] BLOCKED: secrets\/id_rsa/);
+    assert.match(io.getErr(), /BLOCK/);
+    assert.match(JSON.parse(io.getOut()).systemMessage, /BLOCKED/);
+  });
+
+  test('preflight gentle: same read passes (exit 0) with an advisory', async () => {
+    const io = makeIO({ stdinData: keyEvent() });
+    const code = await dispatchHook(['preflight', '--gentle'], io);
+    assert.strictEqual(code, 0);
+    assert.match(io.getErr(), /would block/);
+    assert.strictEqual(io.getOut(), '');
+  });
+
+  test('preflight strict --format cursor: deny JSON + exit 2', async () => {
+    const io = makeIO({ stdinData: keyEvent({ hook_event_name: 'preToolUse' }) });
+    const code = await dispatchHook(['preflight', '--format', 'cursor'], io);
+    assert.strictEqual(code, 2);
+    const out = JSON.parse(io.getOut());
+    assert.strictEqual(out.permission, 'deny');
+    assert.match(out.agent_message, /BLOCKED/);
+  });
+
+  test('preflight strict --format cursor: Cursor top-level `path` payload is normalized', async () => {
+    const io = makeIO({
+      stdinData: JSON.stringify({ hook_event_name: 'beforeReadFile', file_path: 'certs/server.pem' }),
+    });
+    const code = await dispatchHook(['preflight', '--format', 'cursor'], io);
+    assert.strictEqual(code, 2);
+    assert.strictEqual(JSON.parse(io.getOut()).permission, 'deny');
+  });
+
+  test('preflight strict --format gemini: decision deny + exit 2', async () => {
+    const io = makeIO({ stdinData: keyEvent({ hook_event_name: 'BeforeTool' }) });
+    const code = await dispatchHook(['preflight', '--format', 'gemini'], io);
+    assert.strictEqual(code, 2);
+    assert.deepStrictEqual(Object.keys(JSON.parse(io.getOut())).sort(), ['decision', 'reason']);
+  });
+
+  test('preflight strict: ordinary file passes', async () => {
+    const io = makeIO({ stdinData: JSON.stringify({ tool_name: 'Write', tool_input: { file_path: 'src/app.ts' } }) });
+    assert.strictEqual(await dispatchHook(['preflight'], io), 0);
+  });
+
+  test('sentinel strict: git commit with a staged secret is BLOCKED', async () => {
+    const repo = mkdtempSync(path.join(os.tmpdir(), 'rune-sentinel-'));
+    const git = (...args) => execFileSync('git', args, { cwd: repo, stdio: 'pipe' });
+    git('init', '-q');
+    // Built at runtime so this test file does not itself contain a secret pattern.
+    writeFileSync(path.join(repo, 'config.js'), `const k = "${'AKIA'}${'ABCDEFGHIJKLMNOP'}";\n`);
+    git('add', 'config.js');
+    const io = makeIO({
+      stdinData: JSON.stringify({ tool_name: 'Bash', tool_input: { command: 'git commit -m x' } }),
+      cwd: repo,
+    });
+    const code = await dispatchHook(['sentinel'], io);
+    assert.strictEqual(code, 2);
+    assert.match(io.getErr(), /AWS Access Key/);
+  });
+
+  test('sentinel: Cursor beforeShellExecution top-level command is normalized', () => {
+    const e = normalizeEvent({ hook_event_name: 'beforeShellExecution', command: 'git commit -m x' });
+    assert.strictEqual(e.tool_name, 'Bash');
+    assert.strictEqual(e.tool_input.command, 'git commit -m x');
+  });
+
+  test('dependency-doctor: manifest edit → advisory, never blocks', async () => {
+    const io = makeIO({ stdinData: JSON.stringify({ tool_name: 'Edit', tool_input: { file_path: 'package.json' } }) });
+    const code = await dispatchHook(['dependency-doctor'], io);
+    assert.strictEqual(code, 0);
+    assert.match(JSON.parse(io.getOut()).systemMessage, /dependency-doctor\] package\.json changed/);
+  });
+
+  test('completion-gate: uncommitted changes → advisory on Stop, never blocks', async () => {
+    const repo = mkdtempSync(path.join(os.tmpdir(), 'rune-gate-'));
+    execFileSync('git', ['init', '-q'], { cwd: repo });
+    mkdirSync(path.join(repo, 'src'));
+    writeFileSync(path.join(repo, 'src', 'a.js'), 'x\n');
+    const io = makeIO({ stdinData: JSON.stringify({ hook_event_name: 'Stop' }), cwd: repo });
+    const code = await dispatchHook(['completion-gate'], io);
+    assert.strictEqual(code, 0);
+    assert.match(JSON.parse(io.getOut()).systemMessage, /uncommitted change/);
+  });
+
+  test('completion-gate: stop_hook_active short-circuits', async () => {
+    const io = makeIO({ stdinData: JSON.stringify({ hook_event_name: 'Stop', stop_hook_active: true }) });
+    assert.strictEqual(await dispatchHook(['completion-gate'], io), 0);
+    assert.strictEqual(io.getOut(), '');
+  });
+
+  test('crashed gate fails open', () => {
+    const r = translate({
+      skill: 'preflight',
+      format: 'cursor',
+      gentle: false,
+      eventName: 'preToolUse',
+      gate: { status: 1, stdout: '', stderr: 'boom' },
+    });
+    assert.strictEqual(r.code, 0);
+    assert.deepStrictEqual(JSON.parse(r.stdout), { permission: 'allow' });
+  });
+
+  test('advisory skills never block even on exit 2', () => {
+    const r = translate({
+      skill: 'quarantine',
+      format: 'claude',
+      gentle: false,
+      eventName: 'PostToolUse',
+      gate: { status: 2, stdout: '', stderr: 'x' },
+    });
+    assert.strictEqual(r.code, 0);
   });
 });

@@ -51,7 +51,7 @@ export async function installHooks(projectRoot, args = {}) {
   let totalWrites = 0;
   for (const id of platforms) {
     const adapter = getAdapter(id);
-    const plan = await adapter.emit({ preset, projectRoot, tierManifests });
+    const plan = await adapter.emit({ preset, projectRoot, tierManifests, platforms });
     let platformWrites = 0;
     if (!args.dry) {
       for (const file of plan.files) {
@@ -103,7 +103,9 @@ async function resolveTierManifests(projectRoot, requested) {
 
 function resolvePlatforms(projectRoot, requested) {
   if (!requested) return detectPlatforms(projectRoot);
-  const list = Array.isArray(requested) ? requested : [requested];
+  const list = (Array.isArray(requested) ? requested : [requested])
+    .flatMap((p) => String(p).split(','))
+    .filter(Boolean);
   const expanded = [];
   for (const item of list) {
     if (item === 'all') {

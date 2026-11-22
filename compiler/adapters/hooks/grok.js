@@ -20,6 +20,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { appendHookBlock, detectPreset, stripHooksBySkill, summarizeRuneHooks } from '../../commands/hooks/merge.js';
 import { buildPreset, SETTINGS_REL_PATH, WIRED_SKILLS } from '../../commands/hooks/presets.js';
+import { hasRuneHooks as cursorHasRuneHooks } from './cursor.js';
 
 export const id = 'grok';
 export const HOOKS_REL_PATH = '.grok/hooks/rune.json';
@@ -29,8 +30,21 @@ export function detect(projectRoot) {
   return existsSync(path.join(projectRoot, '.grok'));
 }
 
-export async function emit({ preset, projectRoot, tierManifests = [] }) {
+export async function emit({ preset, projectRoot, tierManifests = [], platforms = [] }) {
   if (preset === 'off' && tierManifests.length === 0) return uninstall({ projectRoot });
+  // Grok Build also runs Rune's `.cursor/hooks.json` entries (hybrid format,
+  // see adapters/hooks/cursor.js). Writing the Free preset here too would fire
+  // every gate twice, so leave it to the Cursor file.
+  const cursorCovers = preset !== 'off' && (platforms.includes('cursor') || (await cursorHasRuneHooks(projectRoot)));
+  if (cursorCovers && tierManifests.length === 0) {
+    const hooksPath = path.join(projectRoot, HOOKS_REL_PATH);
+    return {
+      files: existsSync(hooksPath) ? [{ path: hooksPath, content: null }] : [],
+      notes: [
+        `Grok Build runs Rune's .cursor/hooks.json entries — skipped ${HOOKS_REL_PATH} so the gates fire once. Trust the folder (/hooks-trust) and check the /hooks tab.`,
+      ],
+    };
+  }
   if (preset !== 'off' && preset !== 'strict' && preset !== 'gentle') {
     throw new Error(`grok adapter: invalid preset '${preset}'`);
   }
@@ -45,7 +59,7 @@ export async function emit({ preset, projectRoot, tierManifests = [] }) {
     );
   }
 
-  if (preset !== 'off') merged = appendHookBlock(merged, normalizeBlock(buildPreset(preset)));
+  if (preset !== 'off' && !cursorCovers) merged = appendHookBlock(merged, normalizeBlock(buildPreset(preset)));
 
   for (const manifest of tierManifests) {
     const overrideKeys = Object.keys(manifest.overrides || {});

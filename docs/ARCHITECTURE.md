@@ -108,8 +108,8 @@ SKILL.md frontmatter uses Anthropic-native tier names (`opus`/`sonnet`/`haiku`) 
 
 | Tier | claude / cursor / windsurf | codex (`.codex/agents` roles) | antigravity (body hint) | opencode / openclaw / generic / qoder | qwen | gemini | aider / copilot |
 |------|---------------------------|-------|-------------|---------------------------------------|------|--------|------------------|
-| opus | `opus` (no-op → Claude Opus 5.5) | gpt-6.2-astra · effort high | Gemini 4 Neon (High) / Orchestrator | tier:heavy | qwen3-coder-plus | gemini-4-carbon | tier-hint inline |
-| sonnet | `sonnet` (no-op → Claude Sonnet 5.5) | gpt-6.2-sol · effort medium | Gemini 4 Hydrogen | tier:mid | qwen3-coder | gemini-4-hydrogen | tier-hint inline |
+| opus | `opus` (no-op → Claude Opus 5.5) | gpt-6.2-astra · effort high | Gemini 4 Neon (High) / Orchestrator | tier:heavy | qwen3-coder-plus | gemini-3.1-pro-preview | tier-hint inline |
+| sonnet | `sonnet` (no-op → Claude Sonnet 5.5) | gpt-6.2-sol · effort medium | Gemini 4 Hydrogen | tier:mid | qwen3-coder | gemini-3.8-flash | tier-hint inline |
 | haiku | `haiku` (no-op → Claude Haiku 5.5) | gpt-6-luna · effort high | Gemini 3.8 Flash | tier:light | qwen3-coder-flash | gemini-3.5-flash-lite | tier-hint inline |
 
 > **Verified at source 2026-11-21.** **Codex**: developers.openai.com/codex/models
@@ -124,12 +124,17 @@ SKILL.md frontmatter uses Anthropic-native tier names (`opus`/`sonnet`/`haiku`) 
 > (it used to emit `gemini-3-*`, which Antigravity ignored and no longer lists); a
 > one-line "Suggested Antigravity model" hint follows the frontmatter instead, using
 > the display names from antigravity.google/docs/models.
-> **Gemini** column re-verified 2026-11 (Gemini 4 Carbon / Hydrogen, 3.5 Flash-Lite;
-> 2.x models deprecated).
+> **Gemini** column re-verified 2026-11-22 against the Gemini CLI 0.70.0 model catalog
+> (`packages/core/src/config/models.ts`): it has no `gemini-4-*` id — Gemini 4 (Argon,
+> Carbon, Neon, Hydrogen) is only in Antigravity and the Gemini API — so the hints are
+> 3.1 Pro (preview) / 3.8 Flash / 3.5 Flash-Lite.
+> **Claude**: the top tier above Opus 5.5 is **Claude Fable 5.2** (`claude-fable-5-2`,
+> Nov 9 2026) — Rune keeps `opus` as the authoring tier and names Fable in the
+> adversary oracle's frontier class. Older Claude 4.x ids are gone from Rune (Sonnet 4.5 retires 2026-11-30).
 > **Still pending verification:**
-> gemini and qwen provider IDs. Note: **Gemini CLI retired 2026-06-18 → Antigravity
-> CLI** (free/individual tier); the `gemini` adapter target is legacy for that
-> audience. **Windsurf is now Devin Desktop (2026-06-02)** — rules moved to
+> qwen provider IDs. Note: **Gemini CLI moved to enterprise (Gemini Code Assist)
+> on 2026-06-18; individual users moved to Antigravity CLI**, so the `gemini`
+> adapter target is legacy for that audience. **Windsurf is now Devin Desktop (2026-06-02)** — rules moved to
 > `.devin/rules/` (with `.windsurf/rules/` fallback), skills to `.devin/skills/`.
 
 Rules:
@@ -247,7 +252,7 @@ The mesh ships as a **library** (invoke via slash commands) and as a **runtime**
 - `preset` — `strict` | `gentle` | `off`
 - `tierManifests` — loaded declarative hook specs from Pro/Business
 
-The adapter translates the preset + tier manifests into the runtime's supported format: Claude `.claude/settings.json`, Codex `.codex/hooks.json`, Cursor `.cursor/rules`, Windsurf workflow+rule, or Antigravity rule-inject. Claude and Codex auto-fire lifecycle handlers; the other adapters emit their documented best-effort rule/workflow equivalents. Free-core adapters are tier-agnostic — they receive already-parsed manifests and do not hardcode Pro/Business awareness.
+The adapter translates the preset + tier manifests into the runtime's supported format: Claude `.claude/settings.json`, Codex `.codex/hooks.json`, Cursor `.cursor/hooks.json` (hybrid entries Grok Build also runs), Grok `.grok/hooks/rune.json`, Gemini `.gemini/settings.json`, Antigravity `.agents/hooks.json`, or Windsurf workflow+rule. Every target except Windsurf auto-fires lifecycle handlers through `rune hook-dispatch`; tier entries a runtime cannot host fall back to rules (Cursor `.mdc`, Antigravity `.agents/rules`). Free-core adapters are tier-agnostic — they receive already-parsed manifests and do not hardcode Pro/Business awareness.
 
 ### Tier-tagged manifest
 

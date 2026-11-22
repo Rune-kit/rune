@@ -516,6 +516,7 @@
       <div class="sidebar-group">
         <div class="sidebar-group-title">IDE & Platforms</div>
         <a href="#ide-claude" class="sidebar-link">Claude Code</a>
+        <a href="#ide-grok" class="sidebar-link">Grok Build</a>
         <a href="#ide-cursor" class="sidebar-link">Cursor</a>
         <a href="#ide-windsurf" class="sidebar-link">Windsurf</a>
         <a href="#ide-antigravity" class="sidebar-link">Antigravity</a>
@@ -597,6 +598,7 @@
       <div class="tab-group">
         <div class="tab-buttons">
           <button class="tab-btn active" data-tab="install-claude">Claude Code</button>
+          <button class="tab-btn" data-tab="install-grok">Grok Build</button>
           <button class="tab-btn" data-tab="install-cursor">Cursor</button>
           <button class="tab-btn" data-tab="install-windsurf">Windsurf</button>
           <button class="tab-btn" data-tab="install-antigravity">Antigravity</button>
@@ -611,17 +613,31 @@
 <span class="cmd">claude plugin marketplace add rune-kit/rune</span>
 
 <span class="comment"># Step 2: Install the plugin</span>
-<span class="cmd">claude plugin install rune</span>
+<span class="cmd">claude plugin install rune@rune-kit</span>
 
 <span class="comment"># Verify it's loaded</span>
 <span class="cmd">claude</span>
 <span class="output">  67 skills loaded from rune</span></div>
-            <button class="copy-btn" data-copy="claude plugin marketplace add rune-kit/rune && claude plugin install rune">Copy</button>
+            <button class="copy-btn" data-copy="claude plugin marketplace add rune-kit/rune && claude plugin install rune@rune-kit">Copy</button>
           </div>
           <div class="callout callout-tip">
             <strong>Tip:</strong> The marketplace only needs to be added once. After that,
-            just <code>claude plugin install rune</code> or <code>claude plugin update rune</code>.
+            just <code>claude plugin install rune@rune-kit</code> or <code>claude plugin update rune</code>.
           </div>
+        </div>
+
+        <div class="tab-panel" id="install-grok">
+          <p>Grok Build (xAI&#39;s coding agent, the <code>grok</code> CLI) installs Rune as a <strong>native plugin</strong> — skills plus the lifecycle hooks.</p>
+          <div class="code-wrapper">
+            <div class="code-block"><span class="comment"># Install straight from GitHub</span>
+<span class="cmd">grok plugin install rune-kit/rune <span class="flag">--trust</span></span>
+
+<span class="comment"># or through the marketplace</span>
+<span class="cmd">grok plugin marketplace add rune-kit/rune</span>
+<span class="cmd">grok plugin install rune <span class="flag">--trust</span></span></div>
+            <button class="copy-btn" data-copy="grok plugin install rune-kit/rune --trust">Copy</button>
+          </div>
+          <p>Grok Build also reads skills from <code>.cursor/</code>, <code>.claude/</code> and <code>.agents/</code>, and hooks from <code>.cursor/hooks.json</code> and <code>.claude/settings.json</code>, so a project set up for Cursor works unchanged.</p>
         </div>
 
         <div class="tab-panel" id="install-cursor">
@@ -635,7 +651,7 @@
 <span class="output">  ✓ Built 67 skills + 14 extensions to .cursor/skills/</span></div>
             <button class="copy-btn" data-copy="npx --yes @rune-kit/rune init --platform cursor">Copy</button>
           </div>
-          <p>Skills are compiled into <code>.cursor/skills/</code>. Cursor picks them up automatically.</p>
+          <p>Skills are compiled into <code>.cursor/skills/</code>. Cursor picks them up automatically. For native hooks, run <code>npx @rune-kit/rune hooks install --platform cursor,grok</code> — one <code>.cursor/hooks.json</code> that Cursor and Grok Build both run.</p>
         </div>
 
         <div class="tab-panel" id="install-windsurf">
@@ -649,17 +665,18 @@
         </div>
 
         <div class="tab-panel" id="install-antigravity">
-          <p>Google Antigravity (formerly Jules) uses the <code>.agent/</code> directory.</p>
+          <p>Google Antigravity (IDE and Antigravity CLI) reads skills from <code>.agents/skills/</code>, rules from <code>.agents/rules/</code> and hooks from <code>.agents/hooks.json</code>.</p>
           <div class="code-wrapper">
             <div class="code-block"><span class="cmd">npx --yes @rune-kit/rune init <span class="flag">--platform antigravity</span></span>
 
 <span class="output">  ✓ Built 67 skills + 14 extensions to .agents/skills/</span></div>
             <button class="copy-btn" data-copy="npx --yes @rune-kit/rune init --platform antigravity">Copy</button>
           </div>
+          <p>Optional native hooks (beta): <code>npx @rune-kit/rune hooks install --platform antigravity</code>.</p>
           <div class="callout callout-info">
-            <strong>Note:</strong> Antigravity is currently in early access. Install it from
-            <a href="https://idx.google.com/" target="_blank" rel="noopener">idx.google.com</a> (Project IDX)
-            or via your Google Cloud workspace.
+            <strong>Note:</strong> Get Antigravity at
+            <a href="https://antigravity.google/" target="_blank" rel="noopener">antigravity.google</a>.
+            Gemini CLI is now Google&#39;s enterprise (Gemini Code Assist) CLI; individual developers use Antigravity CLI.
           </div>
         </div>
 
@@ -1012,7 +1029,7 @@
 <span class="cmd">claude plugin marketplace add rune-kit/rune</span>
 
 <span class="comment"># Step 2: Install</span>
-<span class="cmd">claude plugin install rune</span>
+<span class="cmd">claude plugin install rune@rune-kit</span>
 
 <span class="comment"># Use any skill directly</span>
 <span class="cmd">/rune cook "add user authentication"</span>
@@ -1020,9 +1037,29 @@
 <span class="cmd">/rune review</span></div>
       </div>
 
+      <h2 id="ide-grok">Grok Build</h2>
+
+      <p>
+        Grok Build is xAI&#39;s coding agent. It installs Rune&#39;s plugin natively (skills + hooks) and also
+        reads skills from <code>.cursor/</code>, <code>.claude/</code> and <code>.agents/</code>, and hooks from
+        <code>.cursor/hooks.json</code> and <code>.claude/settings.json</code>.
+      </p>
+
+      <div class="code-wrapper">
+        <div class="code-block"><span class="cmd">grok plugin install rune-kit/rune <span class="flag">--trust</span></span>
+
+<span class="comment"># or compile vendored skills into .grok/skills/</span>
+<span class="cmd">npx --yes @rune-kit/rune init <span class="flag">--platform grok</span></span>
+
+<span class="comment"># project hooks (shared with Cursor)</span>
+<span class="cmd">npx --yes @rune-kit/rune hooks install <span class="flag">--platform cursor,grok</span></span></div>
+      </div>
+
       <h2 id="ide-cursor">Cursor</h2>
 
       <p>
+        Cursor is Grok Build&#39;s predecessor: SpaceX acquired its maker, Anysphere, in August 2026, and Cursor
+        is reported to be merging into Grok Build. Rune supports both, with configs that work in either.
         Cursor uses <strong>Agent Skills</strong> (Cursor 2.4+) — directory-per-skill <code>SKILL.md</code> files
         that the agent loads on demand, keeping context lean.
       </p>
@@ -1047,7 +1084,10 @@
       <div class="code-wrapper">
         <div class="code-block"><span class="cmd">npx --yes @rune-kit/rune init <span class="flag">--platform antigravity</span></span>
 
-<span class="comment"># Skills appear in .agents/skills/</span></div>
+<span class="comment"># Skills appear in .agents/skills/</span>
+
+<span class="comment"># Native hooks in .agents/hooks.json (beta)</span>
+<span class="cmd">npx --yes @rune-kit/rune hooks install <span class="flag">--platform antigravity</span></span></div>
       </div>
 
       <h2 id="ide-codex">OpenAI Codex</h2>

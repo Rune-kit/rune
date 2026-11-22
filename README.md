@@ -17,7 +17,7 @@
 </p>
 
 <p align="center">
-  <strong>Claude Code</strong> · <strong>OpenAI Codex</strong> · <strong>Cursor</strong> · <strong>Grok Build</strong> · <strong>Gemini CLI</strong> · <strong>GitHub Copilot</strong> · <strong>Cline</strong> · <strong>Windsurf</strong> · <strong>Kiro</strong> · <strong>Amp</strong> · <strong>Goose</strong> · any Agent Skills runtime
+  <strong>Claude Code</strong> · <strong>OpenAI Codex</strong> · <strong>Grok Build</strong> · <strong>Cursor</strong> · <strong>Antigravity</strong> · <strong>Gemini CLI</strong> · <strong>GitHub Copilot</strong> · <strong>Cline</strong> · <strong>Windsurf</strong> · <strong>Kiro</strong> · <strong>Amp</strong> · <strong>Goose</strong> · any Agent Skills runtime
 </p>
 
 ```bash
@@ -101,20 +101,32 @@ npx @rune-kit/rune setup --here --platform codex
 
 Review and trust the new hooks with `/hooks` in Codex.
 
-**Grok Build** — Grok reads Rune's plugin, skills and hooks natively:
+**Grok Build** (xAI's coding agent, `grok` CLI) — native plugin (skills + hooks):
 
 ```bash
 grok plugin install rune-kit/rune --trust
-# or browse it first: grok plugin marketplace add rune-kit/rune && grok plugin install rune --trust
+# or via the marketplace: grok plugin marketplace add rune-kit/rune && grok plugin install rune --trust
 ```
+
+Grok Build also reads `.cursor/` and `.claude/` skills and hooks, so a project already set up for Cursor works in Grok as-is. For project-local preset hooks: `npx @rune-kit/rune hooks install --platform grok` (or `--platform cursor,grok` to share one `.cursor/hooks.json` between both).
 
 **Cursor** — Cursor plugin (skills, agents, `/rune` command) is in the repo under [`.cursor-plugin/`](.cursor-plugin/plugin.json); until the Marketplace listing is live, compile into your project:
 
 ```bash
 npx @rune-kit/rune init --platform cursor
+npx @rune-kit/rune hooks install --platform cursor   # optional: .cursor/hooks.json (also read by Grok Build)
 ```
 
-**Gemini CLI** — extension (skills):
+<sub>SpaceX (which merged with xAI) acquired Anysphere, Cursor's maker, in August 2026. Reports say Cursor is being folded into Grok Build; until that is official, Rune supports both and keeps their configs compatible.</sub>
+
+**Antigravity** (IDE and Antigravity CLI) — skills in `.agents/skills/`, rules in `.agents/rules/`, hooks in `.agents/hooks.json`:
+
+```bash
+npx @rune-kit/rune init --platform antigravity
+npx @rune-kit/rune hooks install --platform antigravity   # beta
+```
+
+**Gemini CLI** — extension (skills). Gemini CLI is now the Gemini Code Assist (enterprise) CLI; individual users moved to Antigravity CLI, above.
 
 ```bash
 gemini extensions install https://github.com/rune-kit/rune
@@ -132,14 +144,14 @@ npx @rune-kit/rune init --platform <name>   # grok · cline · copilot · windsu
 |---|---|:-:|:-:|:-:|
 | **Claude Code** | `/plugin install rune@rune-kit` | 67 | ✅ native | ✅ |
 | **OpenAI Codex** | `.codex-plugin` + `rune setup --platform codex` | 67 | ✅ native | ✅ `spawn_agent` |
-| **Grok Build** (xAI CLI) | `grok plugin install rune-kit/rune --trust` · or `--platform grok` → `.grok/skills/` | 67 | ✅ native `.grok/hooks/` via `rune hooks install --platform grok` (beta) | ✅ (beta) |
-| **Cursor** | Cursor plugin (`.cursor-plugin/`) · or `--platform cursor` → `.cursor/skills/` | 67 | ✅ native `.cursor/hooks.json` via `rune hooks install --platform cursor` (beta) | — |
-| **Grok Bot** | Cursor plugin (Cursor Marketplace listing pending) | 67 | — | — |
-| **Gemini CLI** | `gemini extensions install …/rune` · or `--platform gemini` | 67 | ✅ native `.gemini/settings.json` via `rune hooks install --platform gemini` (beta) ¹ | — |
+| **Grok Build** (xAI) | `grok plugin install rune-kit/rune --trust` · or `--platform grok` → `.grok/skills/` | 67 | ✅ plugin hooks · or `rune hooks install --platform grok` → `.grok/hooks/` (beta) | ✅ (beta) |
+| **Cursor** (Grok Build's predecessor) | Cursor plugin (`.cursor-plugin/`) · or `--platform cursor` → `.cursor/skills/` | 67 | ✅ `.cursor/hooks.json` via `rune hooks install --platform cursor` (beta; Grok Build runs the same file) | — |
+| **Antigravity** (IDE + CLI) | `--platform antigravity` → `.agents/skills/` + `.agents/rules/` | 67 | ✅ `.agents/hooks.json` via `rune hooks install --platform antigravity` (beta) | — |
+| **Gemini CLI** (enterprise) | `gemini extensions install …/rune` · or `--platform gemini` | 67 | ✅ native `.gemini/settings.json` via `rune hooks install --platform gemini` (beta) ¹ | — |
 | **GitHub Copilot** (CLI / VS Code agent mode) | `--platform copilot` → `.github/skills/` | 67 | — | — |
 | **Cline** | `--platform cline` → `.cline/skills/` | 67 | — | — |
 | **Kiro · Amp · Goose · Factory · Junie · Trae · Roo** | `--platform agents` → `.agents/skills/` · or `npx skills add rune-kit/rune` | 67 | — | — |
-| **Windsurf · Antigravity · OpenCode · Qoder · Qwen Code** | `--platform <name>` | 67 | rules (Windsurf, Antigravity) | — |
+| **Windsurf · OpenCode · Qoder · Qwen Code** | `--platform <name>` | 67 | rules (Windsurf) | — |
 | **Aider · OpenClaw · any other** | `--platform aider` / `openclaw` / `generic` | 67 | inline constraints | — |
 | **Any Agent Plugins 1.0 client** | root [`plugin.json`](plugin.json) (skills) | 67 | — | — |
 
@@ -170,6 +182,11 @@ Outside Claude Code, pick a skill from your agent's skill or slash-command menu 
 - **Skills other agents can pick.** Every skill description now says when to use it, model examples are current, and Claude-only tool names compile to neutral wording elsewhere.
 - **Nothing lost in compilation.** Every platform now ships each skill's `references/`; the 13 largest skills were split into lean SKILL.md + references, so every skill now fits 500 lines (nothing dropped; a test checks every line).
 - **One `AGENTS.md` for every agent.** `/rune onboard --runtimes` sets up per-runtime config and hooks; native hooks for Grok Build, Cursor (`.cursor/hooks.json`) and Gemini CLI (`.gemini/settings.json`) via `rune hooks install --platform grok|cursor|gemini`; Codex subagent roles on GPT-6.x.
+- **Hooks that really gate.** `rune hook-dispatch` now runs the real preflight / sentinel / quarantine scripts (it used to be a pass-through), answers in each runtime's own format (Claude, Cursor/Grok, Gemini, Antigravity), and installed hooks pin the Rune version (`npx --yes @rune-kit/rune@2.33.0 …`).
+- **Grok Build first-class.** `.cursor/hooks.json` entries now load in Grok Build with no warnings and no double-registration; the Grok marketplace installs; CI runs the real `grok` CLI against the plugin and hooks.
+- **Antigravity hooks.** `rune hooks install --platform antigravity` writes `.agents/hooks.json` and `.agents/rules/`.
+- **Current models.** Gemini CLI hints are `gemini-3.1-pro-preview` / `gemini-3.8-flash` / `gemini-3.5-flash-lite`; Claude Fable 5.2 is the adversary oracle's frontier tier; Claude 4.x leftovers removed.
+- **Leaner triggers.** A CI budget check keeps skill descriptions short and free of ALWAYS/ANY-style shouting; `cook` no longer claims every code change.
 - **`AGENTS.md` + `llms.txt`**, a shorter README, and an honest ROADMAP.
 
 Full notes: [`CHANGELOG.md`](CHANGELOG.md#2330---2026-11-21). Older release notes: [`CHANGELOG.md`](CHANGELOG.md).
@@ -201,7 +218,7 @@ One-time payment, no subscription. Card/PayPal (Polar) or Vietnamese bank transf
 **Context Intelligence (Pro).** On Claude Code, Pulse runs as a native statusline; on Codex it runs as the Pro watcher/HUD next to Codex's own footer.
 
 ```
-◈ Opus 4.8 │ ████████░░░ 73% WARM │ ⬡ cook·L1 │ $0.91 │ 5h ██░░ 22%  7d ███░ 61%
+◈ Opus 5.5 │ ████████░░░ 73% WARM │ ⬡ cook·L1 │ $0.91 │ 5h ██░░ 22%  7d ███░ 61%
 ```
 
 A glitch-proof real %, a burn-rate ETA (*"~4m until auto-compaction"*), and what is eating your context (*"files 61% · mcp 22%"*). At 70/80/90% it writes pressure into the agent's context so `session-bridge` + `neural-memory` save state before compaction; after compaction `session-start` reloads `.rune/`.
@@ -274,12 +291,14 @@ deploy ─emit:deploy.complete───→ watchdog
 | PreToolUse(Bash) | sentinel | Before shell commands (catches `git commit`, secrets) |
 | PostToolUse(Edit\|Write) | dependency-doctor | After dependency manifest edits |
 | PostToolUse(MCP, WebFetch) | quarantine | Marks untrusted external content as data, not instructions |
-| Stop | completion-gate | End of session — checks claims against evidence |
+| Stop | completion-gate | End of session — reminds the agent about uncommitted changes and unverified claims |
 | PreToolUse(all) | context-watch | Warns at 80 / 120 tool calls; the first red warning carries a one-line Pro tip (`RUNE_PRO_HINT=0` hides it) |
+
+**What actually blocks.** Only two gates can stop a tool call: **preflight** (reading or writing private keys and certificates) and **sentinel** (a `git commit` that would add secrets). In the Claude Code and Grok Build plugins they always block; with `rune hooks install` they block under `--preset strict` and only warn under `--preset gentle` (the default). dependency-doctor, quarantine, completion-gate and context-watch are advisory everywhere — they add context for the agent but never deny a call. On runtimes without hooks, the same rules ship as written constraints the model is asked to follow; nothing enforces them.
 
 ```bash
 npx @rune-kit/rune setup                       # interactive: scope, runtime, tiers
-npx @rune-kit/rune hooks install --preset gentle   # advisory (default) · strict blocks on BLOCK · off uninstalls
+npx @rune-kit/rune hooks install --preset gentle   # advisory (default) · strict lets preflight/sentinel block · off uninstalls
 npx @rune-kit/rune hooks status
 ```
 

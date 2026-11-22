@@ -77,6 +77,8 @@ describe('cursor adapter', () => {
     'afterAgentThought',
   ]);
   const DOC_ENTRY_KEYS = new Set(['command', 'type', 'timeout', 'loop_limit', 'failClosed', 'matcher']);
+  // `hooks` is the Grok Build matcher-group view of the same entry (Cursor ignores it).
+  const HYBRID_KEYS = new Set([...DOC_ENTRY_KEYS, 'hooks']);
 
   test('emit(gentle) writes .cursor/hooks.json with version 1 and documented events/keys only', async () => {
     const plan = await cursor.emit({ preset: 'gentle', projectRoot: tmpRoot });
@@ -88,19 +90,17 @@ describe('cursor adapter', () => {
     for (const [event, entries] of Object.entries(cfg.hooks)) {
       assert.ok(DOC_EVENTS.has(event), `undocumented event ${event}`);
       for (const entry of entries) {
-        for (const key of Object.keys(entry)) assert.ok(DOC_ENTRY_KEYS.has(key), `undocumented key ${key}`);
-        assert.match(entry.command, /@rune-kit\/rune hook-dispatch \S+ --format cursor --gentle$/);
+        for (const key of Object.keys(entry)) assert.ok(HYBRID_KEYS.has(key), `undocumented key ${key}`);
+        assert.match(entry.command, /@rune-kit\/rune@\S+ hook-dispatch \S+ --format cursor --gentle$/);
         assert.strictEqual(entry.timeout, 30);
+        assert.deepStrictEqual(entry.hooks, [{ type: 'command', command: entry.command, timeout: 30 }]);
       }
     }
-    assert.deepStrictEqual(Object.keys(cfg.hooks).sort(), [
-      'afterFileEdit',
-      'beforeShellExecution',
-      'postToolUse',
-      'preToolUse',
-      'stop',
-    ]);
-    assert.strictEqual(cfg.hooks.preToolUse[0].matcher, 'Write');
+    assert.deepStrictEqual(Object.keys(cfg.hooks).sort(), ['postToolUse', 'preToolUse', 'stop']);
+    assert.deepStrictEqual(
+      cfg.hooks.preToolUse.map((e) => e.matcher),
+      ['Read|Write|StrReplace', 'Shell'],
+    );
     assert.ok(!plan.files.some((f) => f.path.endsWith('.mdc')), 'no preset .mdc rules any more');
   });
 
@@ -123,6 +123,7 @@ describe('cursor adapter', () => {
     for (const [event, entries] of Object.entries(cfg.hooks)) {
       const argv = entries[0].command.split(/\s+/).slice(entries[0].command.split(/\s+/).indexOf('hook-dispatch') + 1);
       const io = makeIO(JSON.stringify({ hook_event_name: event, tool_name: 'Write' }));
+      io.cwd = tmpRoot;
       const code = await dispatchHook(argv, io);
       assert.strictEqual(code, 0);
       const out = JSON.parse(io.out());
@@ -154,8 +155,8 @@ describe('cursor adapter', () => {
     assert.strictEqual(result.written, true);
     const cfg = JSON.parse(await readFile(path.join(tmpRoot, HOOKS), 'utf-8'));
     assert.deepStrictEqual(cfg.hooks.sessionStart, [{ command: './hi.sh' }]);
-    assert.strictEqual(cfg.hooks.afterFileEdit[0].command, './fmt.sh');
-    assert.strictEqual(cfg.hooks.afterFileEdit.length, 2);
+    assert.deepStrictEqual(cfg.hooks.afterFileEdit, [{ command: './fmt.sh' }]);
+    assert.strictEqual(cfg.hooks.postToolUse.length, 2);
   });
 
   test('idempotent re-install produces identical content', async () => {
