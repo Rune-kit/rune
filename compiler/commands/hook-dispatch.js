@@ -49,7 +49,7 @@
  */
 
 import { execFileSync, spawnSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { WIRED_SKILLS } from './hooks/presets.js';
@@ -383,10 +383,59 @@ export async function dispatchHook(argv, io = {}) {
 
   const mode = gentle ? 'advisory' : 'enforcing';
   const verdict = result.blocked ? 'BLOCK' : 'pass';
+  recordGateOutcome(cwd, {
+    gate: skill,
+    outcome: gateOutcome(skill, gate, result, gentle),
+    mode,
+    tool: event.tool_name || null,
+    event: eventName || null,
+  });
   stderr.write(`rune-hook: ${skill} [${mode}] ${verdict} — tool=${event.tool_name || 'unknown'}\n`);
   if (result.stderr) stderr.write(result.stderr);
   if (result.stdout) stdout.write(result.stdout);
   return result.code;
+}
+
+export const GATE_LOG_REL = path.join('.rune', 'metrics', 'gate-outcomes.jsonl');
+const GATE_LOG_MAX_LINES = 2000;
+
+/**
+ * Classify a dispatch for the governance log (Business Govern tab):
+ *   blocked  — strict preset stopped the tool call
+ *   bypassed — gentle preset: the gate would have blocked, the call went through
+ *   passed   — gate ran and allowed the call
+ *   error    — gate crashed / timed out (fail-open)
+ * Exported for tests.
+ */
+export function gateOutcome(skill, gate, result, gentle) {
+  if (gate.status === null || (gate.status !== 0 && gate.status !== 2)) return 'error';
+  if (result.blocked) return 'blocked';
+  if (gate.status === 2 && BLOCKING_SKILLS.has(skill) && gentle) return 'bypassed';
+  return 'passed';
+}
+
+/**
+ * Append one verdict to `.rune/metrics/gate-outcomes.jsonl` (the file
+ * governance-collector reads). Best-effort: never throws, never changes the
+ * exit code. Passes are only logged in projects that already have `.rune/`
+ * so a stray hook never litters an unrelated repo; blocks and bypasses are
+ * always logged. `RUNE_GATE_LOG=0` turns logging off.
+ */
+export function recordGateOutcome(cwd, record) {
+  try {
+    if (process.env.RUNE_GATE_LOG === '0') return false;
+    const hasRuneDir = existsSync(path.join(cwd, '.rune'));
+    if (!hasRuneDir && (record.outcome === 'passed' || record.outcome === 'error')) return false;
+    const file = path.join(cwd, GATE_LOG_REL);
+    mkdirSync(path.dirname(file), { recursive: true });
+    const line = JSON.stringify({ ts: new Date().toISOString(), source: 'hook-dispatch', ...record });
+    appendFileSync(file, `${line}\n`);
+    const lines = readFileSync(file, 'utf-8').split('\n').filter(Boolean);
+    if (lines.length > GATE_LOG_MAX_LINES) writeFileSync(file, `${lines.slice(-GATE_LOG_MAX_LINES).join('\n')}\n`);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function readStream(stream) {

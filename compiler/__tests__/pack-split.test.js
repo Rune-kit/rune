@@ -1,6 +1,6 @@
 import assert from 'node:assert';
 import { existsSync, readFileSync } from 'node:fs';
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { describe, test } from 'node:test';
@@ -252,9 +252,60 @@ describe('buildAll split pack auto-discovery', () => {
       // Should contain the pack index body
       assert.ok(packOutput.includes('Pack index body'), 'missing pack index body');
 
-      // Should contain BOTH auto-discovered skill bodies
+      // Directory adapters: short index + one file per skill (keeps every file small)
+      assert.ok(!packOutput.includes('Alpha body content here'), 'index must not inline skill bodies');
+      assert.ok(packOutput.includes('skills/alpha.md'), 'index must link alpha skill file');
+      assert.ok(packOutput.includes('skills/beta.md'), 'index must link beta skill file');
+      const packRoot = path.join(outputRoot, adapter.outputDir, 'rune-ext-test-pack');
+      const alpha = await readFile(path.join(packRoot, 'skills', 'alpha.md'), 'utf-8');
+      const beta = await readFile(path.join(packRoot, 'skills', 'beta.md'), 'utf-8');
+      assert.ok(alpha.includes('Alpha body content here'), 'missing alpha skill body');
+      assert.ok(beta.includes('Beta body content here'), 'missing beta skill body');
+    } finally {
+      await rm(tmp, { recursive: true, force: true });
+    }
+  });
+
+  test('single-file adapters still concatenate skill bodies into the pack', async () => {
+    const tmp = await createTempWithSplitPack();
+    try {
+      const outputRoot = path.join(tmp, 'out');
+      const adapter = getAdapter('aider');
+      await buildAll({ runeRoot: tmp, outputRoot, adapter });
+      const files = await readdir(path.join(outputRoot, adapter.outputDir), { recursive: true });
+      const packFile = files.find((f) => String(f).includes('test-pack'));
+      assert.ok(packFile, 'pack output missing');
+      const packOutput = await readFile(path.join(outputRoot, adapter.outputDir, String(packFile)), 'utf-8');
       assert.ok(packOutput.includes('Alpha body content here'), 'missing alpha skill body');
       assert.ok(packOutput.includes('Beta body content here'), 'missing beta skill body');
+    } finally {
+      await rm(tmp, { recursive: true, force: true });
+    }
+  });
+
+  test('split packs copy per-skill and pack-level references and rewrite links per file', async () => {
+    const tmp = await createTempWithSplitPack();
+    try {
+      const extDir = path.join(tmp, 'extensions', 'test-pack');
+      await mkdir(path.join(extDir, 'skills', 'alpha', 'references'), { recursive: true });
+      await mkdir(path.join(extDir, 'references'), { recursive: true });
+      await writeFile(path.join(extDir, 'skills', 'alpha', 'references', 'own.md'), '# own\n');
+      await writeFile(path.join(extDir, 'references', 'shared.md'), '# shared\n');
+      await writeFile(
+        path.join(extDir, 'skills', 'alpha.md'),
+        '---\nname: "alpha"\ndescription: "Alpha skill"\n---\n\n# alpha\n\nSee `references/own.md` and `references/shared.md`.\n',
+      );
+      await writeFile(path.join(extDir, 'skills', 'alpha-evals.md'), '# evals fixture\n');
+      const outputRoot = path.join(tmp, 'out');
+      const adapter = getAdapter('cursor');
+      await buildAll({ runeRoot: tmp, outputRoot, adapter });
+      const packRoot = path.join(outputRoot, adapter.outputDir, 'rune-ext-test-pack');
+      const alpha = await readFile(path.join(packRoot, 'skills', 'alpha.md'), 'utf-8');
+      assert.ok(alpha.includes('`alpha/references/own.md`'), 'own reference link not rewritten');
+      assert.ok(alpha.includes('`../references/shared.md`'), 'pack-level reference link not rewritten');
+      assert.ok(existsSync(path.join(packRoot, 'skills', 'alpha', 'references', 'own.md')), 'own reference not copied');
+      assert.ok(existsSync(path.join(packRoot, 'references', 'shared.md')), 'pack reference not copied');
+      assert.ok(!existsSync(path.join(packRoot, 'skills', 'alpha-evals.md')), 'eval fixture must not ship');
     } finally {
       await rm(tmp, { recursive: true, force: true });
     }
@@ -275,11 +326,15 @@ describe('buildAll split pack auto-discovery', () => {
     try {
       const packOutput = await readFile(path.join(tmp, adapter.outputDir, 'rune-ext-ai-ml', 'SKILL.md'), 'utf-8');
 
-      // Should be significantly longer than just the index body (~99 lines without skills)
-      const lineCount = packOutput.split('\n').length;
-      assert.ok(lineCount > 200, `ai-ml pack output too short (${lineCount} lines) — skills likely not included`);
-
-      // Should contain content from individual skill files
+      // Index stays small; every skill ships as its own file under skills/
+      assert.ok(Buffer.byteLength(packOutput) < 100_000, 'pack index must stay under the 100 KB inline limit');
+      const packRoot = path.join(tmp, adapter.outputDir, 'rune-ext-ai-ml');
+      const skillFiles = (await readdir(path.join(packRoot, 'skills'))).filter((f) => f.endsWith('.md'));
+      assert.ok(skillFiles.length >= 3, `expected per-skill files, got ${skillFiles.length}`);
+      assert.ok(!skillFiles.some((f) => f.endsWith('-evals.md')), 'eval fixtures must not ship as skills');
+      for (const f of skillFiles) {
+        assert.ok(packOutput.includes(`skills/${f}`), `index must link skills/${f}`);
+      }
       assert.ok(packOutput.includes('ai-agents') || packOutput.includes('AI agent'), 'missing ai-agents skill content');
     } finally {
       await rm(tmp, { recursive: true, force: true });

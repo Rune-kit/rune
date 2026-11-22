@@ -8,6 +8,7 @@ import { resolveTier } from '../commands/hooks/tiers.js';
 import {
   detectTiers,
   formatSetupResult,
+  installTierPacks,
   installTierSkills,
   resolveSkillInstallRoot,
   runSetup,
@@ -587,5 +588,82 @@ describe('resolveSkillInstallRoot', () => {
     const target = resolveSkillInstallRoot('/plain/rune/root', { homedir: home });
     assert.strictEqual(target.source, 'rune-root');
     assert.strictEqual(target.root, '/plain/rune/root');
+  });
+});
+
+describe('installTierPacks', () => {
+  async function seedPack(projectRoot) {
+    const packDir = path.join(projectRoot, '..', 'Pro', 'extensions', 'pro-demo');
+    await mkdir(path.join(packDir, 'skills', 'alpha', 'references'), { recursive: true });
+    await writeFile(
+      path.join(packDir, 'PACK.md'),
+      '---\nname: "@rune-pro/demo"\ndescription: "Demo pack. Use when testing pack install."\nmetadata:\n  version: "1.0.0"\n  format: split\n---\n\n# demo\n\nIndex body.\n',
+    );
+    await writeFile(
+      path.join(packDir, 'skills', 'alpha.md'),
+      '---\nname: "alpha"\ndescription: "Alpha"\n---\n\n# alpha\n\nAlpha body, see `references/own.md`.\n',
+    );
+    await writeFile(path.join(packDir, 'skills', 'alpha', 'references', 'own.md'), '# own\n');
+  }
+
+  test('compiles tier packs into Claude skill dirs with index, skill files and references', async () => {
+    const projectRoot = path.join(tmpRoot, 'project');
+    const runeRoot = await seedFakeRuneRoot(tmpRoot);
+    await seedTier(projectRoot, 'pro', { skills: ['autopilot'] });
+    await seedPack(projectRoot);
+    const manifest = await resolveTier('pro', projectRoot);
+
+    const result = await installTierPacks({ tier: 'pro', tierManifest: manifest, runeRoot });
+
+    assert.strictEqual(result.reason, null);
+    assert.deepStrictEqual(result.installed, ['ext-pro-demo']);
+    const dst = path.join(runeRoot, 'skills', 'ext-pro-demo');
+    const index = readFileSync(path.join(dst, 'SKILL.md'), 'utf-8');
+    assert.match(index, /^---\nname: ext-pro-demo\ndescription: "Demo pack/);
+    assert.ok(index.includes('skills/alpha.md'), 'index links the skill file');
+    assert.ok(!index.includes('Alpha body'), 'index does not inline skill bodies');
+    const alpha = readFileSync(path.join(dst, 'skills', 'alpha.md'), 'utf-8');
+    assert.ok(alpha.includes('`alpha/references/own.md`'));
+    assert.ok(existsSync(path.join(dst, 'skills', 'alpha', 'references', 'own.md')));
+  });
+
+  test('re-run replaces its own pack install but never a foreign directory', async () => {
+    const projectRoot = path.join(tmpRoot, 'project');
+    const runeRoot = await seedFakeRuneRoot(tmpRoot);
+    await seedTier(projectRoot, 'pro', { skills: ['autopilot'] });
+    await seedPack(projectRoot);
+    const manifest = await resolveTier('pro', projectRoot);
+    await installTierPacks({ tier: 'pro', tierManifest: manifest, runeRoot });
+    const again = await installTierPacks({ tier: 'pro', tierManifest: manifest, runeRoot });
+    assert.deepStrictEqual(again.installed, ['ext-pro-demo']);
+
+    const foreign = path.join(runeRoot, 'skills', 'ext-pro-demo');
+    await rm(foreign, { recursive: true, force: true });
+    await mkdir(foreign, { recursive: true });
+    await writeFile(path.join(foreign, 'SKILL.md'), '# hand-made');
+    const third = await installTierPacks({ tier: 'pro', tierManifest: manifest, runeRoot });
+    assert.deepStrictEqual(third.installed, []);
+    assert.strictEqual(third.skipped[0].skill, 'ext-pro-demo');
+    assert.strictEqual(readFileSync(path.join(foreign, 'SKILL.md'), 'utf-8'), '# hand-made');
+  });
+
+  test('dry run reports packs without writing', async () => {
+    const projectRoot = path.join(tmpRoot, 'project');
+    const runeRoot = await seedFakeRuneRoot(tmpRoot);
+    await seedTier(projectRoot, 'pro', { skills: ['autopilot'] });
+    await seedPack(projectRoot);
+    const manifest = await resolveTier('pro', projectRoot);
+    const result = await installTierPacks({ tier: 'pro', tierManifest: manifest, runeRoot, dry: true });
+    assert.deepStrictEqual(result.installed, ['ext-pro-demo']);
+    assert.ok(!existsSync(path.join(runeRoot, 'skills', 'ext-pro-demo')));
+  });
+
+  test('no extensions/ dir is a silent no-op', async () => {
+    const projectRoot = path.join(tmpRoot, 'project');
+    const runeRoot = await seedFakeRuneRoot(tmpRoot);
+    await seedTier(projectRoot, 'pro', { skills: ['autopilot'] });
+    const manifest = await resolveTier('pro', projectRoot);
+    const result = await installTierPacks({ tier: 'pro', tierManifest: manifest, runeRoot });
+    assert.deepStrictEqual(result, { tier: 'pro', installed: [], skipped: [], reason: null });
   });
 });

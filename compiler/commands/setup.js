@@ -21,11 +21,14 @@
  */
 
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { cp, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { createInterface } from 'node:readline';
+import { fileURLToPath } from 'node:url';
+import claudeAdapter from '../adapters/claude.js';
 import { getAdapter as getCompilerAdapter } from '../adapters/index.js';
+import { buildAll } from '../emitter.js';
 import { parseSkill } from '../parser.js';
 import { transformSkill } from '../transformer.js';
 import { resolveScriptsPath } from '../transforms/scripts-path.js';
@@ -163,7 +166,19 @@ export async function runSetup({ projectRoot, runeRoot, args = {}, skillTarget: 
           platform: skillTargetEntry.platform,
           dry: args.dry,
         });
-        skillResults.push({ platform: skillTargetEntry.platform, ...skillResult });
+        // Paid packs (extensions/pro-*) ship as compiled pack skills next to the
+        // tier's L1 skills — otherwise buyers get autopilot but none of the packs.
+        const packResult = await installTierPacks({
+          tier,
+          tierManifest,
+          runeRoot: skillTargetEntry.root,
+          platform: skillTargetEntry.platform,
+          dry: args.dry,
+        });
+        skillResult.installed.push(...packResult.installed);
+        skillResult.skipped.push(...packResult.skipped);
+        if (packResult.reason && !skillResult.reason) skillResult.reason = packResult.reason;
+        skillResults.push({ platform: skillTargetEntry.platform, packs: packResult.installed, ...skillResult });
       } catch (err) {
         skillResults.push({
           platform: skillTargetEntry.platform,
@@ -323,6 +338,120 @@ export async function installTierSkills({ tier, tierManifest, runeRoot, platform
       }
     }
     installed.push(skillName);
+  }
+  return { tier, installed, skipped, reason: null };
+}
+
+const FREE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+const PACK_MARKER = '.rune-tier-pack.json';
+
+/**
+ * Claude Code reads plugin skills as `skills/<dir>/SKILL.md` with name +
+ * description frontmatter. Packs compile through the same split emitter as the
+ * directory platforms (short index + skills/<name>.md + references/), with
+ * Claude's tool names and prose left untouched.
+ */
+const CLAUDE_PACK_ADAPTER = {
+  ...claudeAdapter,
+  name: 'claude-packs',
+  outputDir: 'skills',
+  useSkillDirectories: true,
+  skillFileName: 'SKILL.md',
+  generateHeader(skill) {
+    const desc = (skill.description || '').replace(/\s+/g, ' ').replace(/"/g, '\\"');
+    return ['---', `name: ${skill.name}`, `description: "${desc}"`, '---', '', ''].join('\n');
+  },
+};
+
+/**
+ * Compile a tier's packs (`<tierRoot>/extensions/<pack>/PACK.md`) and install
+ * them as skill directories where the platform runtime discovers skills.
+ *
+ * Re-runs replace packs this function installed earlier (marker file) so
+ * buyers pick up pack updates; a same-named directory without the marker is
+ * left alone.
+ *
+ * @param {object} opts
+ * @param {string} opts.tier
+ * @param {import('./hooks/tiers.js').TierManifest} opts.tierManifest
+ * @param {string} opts.runeRoot — Claude plugin root, or project/user root for other platforms
+ * @param {string} [opts.platform='claude']
+ * @param {boolean} [opts.dry]
+ * @param {string} [opts.freeRoot] — Free repo root used for core-skill cross-refs (tests)
+ * @returns {Promise<{tier: string, installed: string[], skipped: Array<{skill: string, reason: string}>, reason: string|null}>}
+ */
+export async function installTierPacks({
+  tier,
+  tierManifest,
+  runeRoot,
+  platform = 'claude',
+  dry,
+  freeRoot = FREE_ROOT,
+}) {
+  const none = (reason) => ({ tier, installed: [], skipped: [], reason });
+  if (!tierManifest?.source || !path.isAbsolute(tierManifest.source)) return none(null);
+  if (!runeRoot) return none(null);
+  const tierRoot = path.dirname(path.dirname(tierManifest.source));
+  const extDir = path.join(tierRoot, 'extensions');
+  if (!existsSync(extDir)) return none(null);
+  const adapter = platform === 'claude' ? CLAUDE_PACK_ADAPTER : getCompilerAdapter(platform);
+  if (!adapter.useSkillDirectories) return none(null);
+
+  const packNames = (await readdir(extDir, { withFileTypes: true }))
+    .filter((e) => e.isDirectory() && !e.isSymbolicLink() && existsSync(path.join(extDir, e.name, 'PACK.md')))
+    .map((e) => e.name)
+    .filter((n) => path.basename(n) === n && /^[a-z0-9][a-z0-9-]*$/.test(n))
+    .sort();
+  if (packNames.length === 0) return none(null);
+
+  const targetDir = path.join(runeRoot, adapter.outputDir);
+  const prefix = adapter.skillPrefix || '';
+  const installed = [];
+  const skipped = [];
+  const tmp = await mkdtemp(path.join(os.tmpdir(), `rune-${tier}-packs-`));
+  try {
+    const tierSources = { [tier]: extDir };
+    if (tier === 'business') {
+      const proRoot = process.env.RUNE_PRO_ROOT;
+      if (proRoot && existsSync(path.join(proRoot, 'extensions'))) tierSources.pro = path.join(proRoot, 'extensions');
+    }
+    // Core-skill output in tmp is discarded; only this tier's pack dirs are copied,
+    // and each one is checked for a compiled SKILL.md below.
+    await buildAll({ runeRoot: freeRoot, outputRoot: tmp, adapter, tierSources });
+    for (const pack of packNames) {
+      const dirName = `${prefix}ext-${pack}`;
+      const built = path.join(tmp, adapter.outputDir, dirName);
+      if (!existsSync(path.join(built, adapter.skillFileName || 'SKILL.md'))) {
+        skipped.push({ skill: dirName, reason: 'pack did not compile' });
+        continue;
+      }
+      const dst = path.join(targetDir, dirName);
+      if (existsSync(dst) && !existsSync(path.join(dst, PACK_MARKER))) {
+        skipped.push({ skill: dirName, reason: 'already present (not installed by rune setup)' });
+        continue;
+      }
+      if (!dry) {
+        try {
+          await mkdir(targetDir, { recursive: true });
+          await rm(dst, { recursive: true, force: true });
+          await cp(built, dst, { recursive: true, dereference: true });
+          await writeFile(
+            path.join(dst, PACK_MARKER),
+            `${JSON.stringify({ tier, pack, version: tierManifest.version || null }, null, 2)}\n`,
+            'utf-8',
+          );
+        } catch (err) {
+          await rm(dst, { recursive: true, force: true }).catch(() => {});
+          skipped.push({ skill: dirName, reason: `copy failed: ${err.message}` });
+          continue;
+        }
+      }
+      installed.push(dirName);
+    }
+  } catch (err) {
+    return { tier, installed, skipped, reason: `pack install failed: ${err.message}` };
+  } finally {
+    await rm(tmp, { recursive: true, force: true }).catch(() => {});
   }
   return { tier, installed, skipped, reason: null };
 }

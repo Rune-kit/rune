@@ -64,6 +64,19 @@ export function buildPreset(preset) {
 
   const flag = preset === 'gentle' ? ' --gentle' : '';
 
+  // strict: also gate Read so the privacy mesh stops a private key from being
+  // read into context, not just edited. Kept as its own matcher group so tier
+  // entries that join `Edit|Write` (e.g. Pro context-sense) never run on Read.
+  const readGuard =
+    preset === 'strict'
+      ? [
+          {
+            matcher: 'Read',
+            hooks: [{ type: 'command', command: `${DISPATCH_CMD} preflight`, async: false }],
+          },
+        ]
+      : [];
+
   return {
     hooks: {
       PreToolUse: [
@@ -87,6 +100,7 @@ export function buildPreset(preset) {
             },
           ],
         },
+        ...readGuard,
       ],
       PostToolUse: [
         {

@@ -9,7 +9,7 @@ import { existsSync } from 'node:fs';
 import { cp, mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { extractCrossRefs, extractToolRefs, parseOrgConfig, parsePack, parseSkill, parseTemplate } from './parser.js';
-import { transformSkill } from './transformer.js';
+import { transformBody, transformSkill } from './transformer.js';
 import { rewriteReferencePaths } from './transforms/reference-paths.js';
 import { resolveScriptsPath } from './transforms/scripts-path.js';
 
@@ -125,6 +125,86 @@ async function copySkillExtraDirs(sourceSkillDir, outputSkillDir, skip = new Set
   }
 
   return copied;
+}
+
+/**
+ * In a split pack's index, `references/x.md` usually names a file owned by
+ * exactly one skill (`skills/<name>/references/x.md`). Point it there; leave
+ * pack-level and ambiguous paths alone.
+ */
+function rewriteIndexRefs(text, splitFiles) {
+  const REF = /(^|[\s([`'"])(references\/[\w./-]+\.(?:md|json|ya?ml|py|js|mjs|cjs|sh|txt|csv))/g;
+  const SKILL_REF = /(^|[\s([`'"])([a-z0-9-]+)\/(references\/[\w./-]+\.(?:md|json|ya?ml|py|js|mjs|cjs|sh|txt|csv))/g;
+  return text
+    .replace(SKILL_REF, (match, lead, name, rel) => {
+      const f = splitFiles.find((x) => x.name === name);
+      return f && existsSync(path.join(f.sourceDir, 'skills', name, rel)) ? `${lead}skills/${name}/${rel}` : match;
+    })
+    .replace(REF, (match, lead, rel) => {
+      const owners = splitFiles.filter((f) => existsSync(path.join(f.sourceDir, 'skills', f.name, rel)));
+      if (owners.length !== 1) return match;
+      return `${lead}skills/${owners[0].name}/${rel}`;
+    });
+}
+
+/**
+ * Write a split pack's per-skill files, their references/ folders and its
+ * templates next to the compiled index SKILL.md (directory platforms only).
+ *
+ * Skill files are authored next to their references in two layouts:
+ *   - `skills/<name>.md` + `skills/<name>/references/x.md`, linked as `references/x.md`
+ *   - pack-level `references/<name>/x.md`, linked as `references/<name>/x.md`
+ * In the output each skill file lives at `skills/<name>.md`, so links are
+ * rewritten relative to that file: `<name>/references/x.md` or
+ * `../references/<name>/x.md`. Links that resolve to no file stay as written.
+ */
+async function writeSplitPackFiles({ splitFiles, packDir, outPackRoot, templates, adapter, coreSkillsDir }) {
+  const outSkills = path.join(outPackRoot, 'skills');
+  await mkdir(outSkills, { recursive: true });
+  const REF = /(^|[\s([`'"])(references\/[\w./-]+\.(?:md|json|ya?ml|py|js|mjs|cjs|sh|txt|mmd|html|css|csv))/g;
+  // `<core-skill>/references/x.md` → the compiled core skill two levels up
+  // (also the monorepo form `../../../skills/<core-skill>/references/x.md`)
+  const CORE_REF = /(^|[\s([`'"])(?:(?:\.\.\/)+skills\/)?([a-z0-9-]+)\/(references\/[\w./-]+\.(?:md|json|ya?ml|txt))/g;
+  const prefix = adapter.skillPrefix || '';
+  const rewriteCore = (text) =>
+    coreSkillsDir
+      ? text.replace(CORE_REF, (match, lead, name, rel) =>
+          existsSync(path.join(coreSkillsDir, name, rel)) ? `${lead}../../${prefix}${name}/${rel}` : match,
+        )
+      : text;
+  for (const f of splitFiles) {
+    const ownDir = path.join(f.sourceDir, 'skills', f.name);
+    let body = rewriteCore(transformBody(f.body, adapter));
+    body = body.replace(REF, (match, lead, rel) => {
+      if (existsSync(path.join(ownDir, rel))) return `${lead}${f.name}/${rel}`;
+      if (existsSync(path.join(f.sourceDir, rel)) || existsSync(path.join(packDir, rel))) return `${lead}../${rel}`;
+      return match;
+    });
+    await writeFile(path.join(outSkills, `${f.name}.md`), `${body}\n`, 'utf-8');
+    if (existsSync(ownDir)) {
+      await cp(ownDir, path.join(outSkills, f.name), {
+        recursive: true,
+        filter: (src) => !COPY_DENYLIST.has(path.basename(src)),
+      });
+    }
+    // Inherited lower-tier skills may keep pack-level references in their own pack
+    if (f.sourceDir !== packDir) {
+      const inheritedRefs = path.join(f.sourceDir, 'references', f.name);
+      if (existsSync(inheritedRefs)) {
+        await cp(inheritedRefs, path.join(outPackRoot, 'references', f.name), { recursive: true });
+      }
+    }
+  }
+  if (templates.length > 0) {
+    const outTemplates = path.join(outPackRoot, 'templates');
+    await mkdir(outTemplates, { recursive: true });
+    for (const t of templates) {
+      const tBody = rewriteCore(transformBody(t.parsed.body, adapter)).replace(REF, (match, lead, rel) =>
+        existsSync(path.join(packDir, rel)) ? `${lead}../${rel}` : match,
+      );
+      await writeFile(path.join(outTemplates, `${t.name}.md`), `${tBody}\n`, 'utf-8');
+    }
+  }
 }
 
 /**
@@ -663,14 +743,23 @@ export async function buildAll({
       if (parsed.isSplit && parsed.skillManifest.length === 0) {
         const skillsSubdir = path.join(packDir, 'skills');
         if (existsSync(skillsSubdir)) {
-          const skillFiles = (await readdir(skillsSubdir)).filter((f) => f.endsWith('.md')).sort();
+          const skillFiles = (await readdir(skillsSubdir))
+            // `<skill>-evals.md` / `evals.md` are test fixtures, not skills
+            .filter((f) => f.endsWith('.md') && !f.endsWith('-evals.md') && f !== 'evals.md')
+            .sort();
           for (const sf of skillFiles) {
             parsed.skillManifest.push({ name: sf.replace(/\.md$/, ''), file: `skills/${sf}` });
           }
         }
       }
 
-      // For split packs, load individual skill files and concatenate into body
+      // Split packs. Directory platforms (Grok Build, Cursor, Codex, Antigravity …)
+      // get a short index SKILL.md plus one file per skill under skills/ and the
+      // skills' own references/ — progressive disclosure, so a 20-skill pack
+      // doesn't land as one 600 KB SKILL.md (Grok inlines at most 100 KB) and
+      // every `references/…` link still resolves. Single-file platforms keep
+      // the concatenated body (they have no folder to put the files in).
+      const splitFiles = adapter.useSkillDirectories && parsed.isSplit ? [] : null;
       if (parsed.isSplit && parsed.skillManifest.length > 0) {
         const skillBodies = [];
         for (const skill of parsed.skillManifest) {
@@ -680,42 +769,74 @@ export async function buildAll({
           if (existsSync(skillPath)) {
             const skillContent = await readFile(skillPath, 'utf-8');
             // Strip frontmatter from skill file — we only need the body
-            const skillBodyMatch = skillContent.replace(/\r\n/g, '\n').match(/^---\n[\s\S]*?\n---\n?([\s\S]*)$/);
-            const skillBody = skillBodyMatch ? skillBodyMatch[1].trim() : skillContent.trim();
-            skillBodies.push(skillBody);
+            const normalized = skillContent.replace(/\r\n/g, '\n');
+            const skillBodyMatch = normalized.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
+            const skillBody = skillBodyMatch ? skillBodyMatch[2].trim() : skillContent.trim();
+            if (splitFiles) {
+              const desc = skillBodyMatch?.[1].match(/^description:\s*"?(.*?)"?\s*$/m)?.[1] || '';
+              splitFiles.push({ name: skill.name, file: skill.file, sourceDir, body: skillBody, description: desc });
+            } else {
+              skillBodies.push(skillBody);
+            }
           } else {
             stats.errors.push({ file: skillPath, error: `Skill file not found (listed in ${packPath} manifest)` });
           }
         }
-        // Concatenate: index body + all skill bodies
-        parsed.body = `${parsed.body}\n\n${skillBodies.join('\n\n---\n\n')}`;
-        // Re-extract refs from the full concatenated body
-        parsed.crossRefs = extractCrossRefs(parsed.body);
-        parsed.toolRefs = extractToolRefs(parsed.body);
+        if (splitFiles) {
+          const rows = splitFiles.map((f) => {
+            const short = f.description.length > 160 ? `${f.description.slice(0, 157).trimEnd()}…` : f.description;
+            return `| \`${f.name}\` | [\`skills/${f.name}.md\`](skills/${f.name}.md) | ${short.replace(/\|/g, '\\|')} |`;
+          });
+          parsed.body = [
+            parsed.body,
+            '',
+            '## Skill files',
+            '',
+            'This pack is split for progressive disclosure: read only the skill file you need, then the references it points to. Paths are relative to this folder.',
+            '',
+            '| Skill | File | What it does |',
+            '|---|---|---|',
+            ...rows,
+          ].join('\n');
+        } else {
+          // Concatenate: index body + all skill bodies
+          parsed.body = `${parsed.body}\n\n${skillBodies.join('\n\n---\n\n')}`;
+        }
+        // Re-extract refs from the full body (index + skills) so mesh stats stay complete
+        const allBodies = splitFiles ? [parsed.body, ...splitFiles.map((f) => f.body)].join('\n') : parsed.body;
+        parsed.crossRefs = extractCrossRefs(allBodies);
+        parsed.toolRefs = extractToolRefs(allBodies);
       }
 
       // Discover and append workflow templates (Pro/Business packs)
       const templates = await discoverTemplates(packDir);
       if (templates.length > 0) {
+        const tableRows = templates.map(
+          (t) =>
+            `| \`${t.name}\` | ${t.parsed.description.slice(0, 100)} | chain: ${t.parsed.chain} |${splitFiles ? ` [\`templates/${t.name}.md\`](templates/${t.name}.md) |` : ''}`,
+        );
         const templateSection = [
           '',
           '## Workflow Templates',
           '',
           'Pre-built multi-phase workflows for `cook --template <name>`:',
           '',
-          ...templates.map(
-            (t) => `| \`${t.name}\` | ${t.parsed.description.slice(0, 100)} | chain: ${t.parsed.chain} |`,
-          ),
+          ...(splitFiles ? ['| Template | Purpose | Chain | File |', '|---|---|---|---|'] : []),
+          ...tableRows,
           '',
-          ...templates.map((t) => {
-            const header = `### Template: ${t.name}`;
-            return `${header}\n\n${t.parsed.body}`;
-          }),
+          ...(splitFiles
+            ? []
+            : templates.map((t) => {
+                const header = `### Template: ${t.name}`;
+                return `${header}\n\n${t.parsed.body}`;
+              })),
         ];
         parsed.body = `${parsed.body}\n\n${templateSection.join('\n')}`;
         // Re-extract refs after template injection
-        parsed.crossRefs = extractCrossRefs(parsed.body);
-        parsed.toolRefs = extractToolRefs(parsed.body);
+        if (!splitFiles) {
+          parsed.crossRefs = extractCrossRefs(parsed.body);
+          parsed.toolRefs = extractToolRefs(parsed.body);
+        }
         stats.templateCount = (stats.templateCount || 0) + templates.length;
       }
 
@@ -728,11 +849,11 @@ export async function buildAll({
       const packRefDirs = new Map([[parsed.name, packDir]]);
       const body = rewriteReferencePaths(packBody, { skillName: parsed.name, skillDirs: packRefDirs, adapter });
       const output = [header, body, footer].filter(Boolean).join('\n');
-      await copySkillExtraDirs(
-        packDir,
-        path.join(outputDir, `${adapter.skillPrefix}ext-${packName}`),
-        PACK_CONTENT_DIRS,
-      );
+      const outPackRoot = path.join(outputDir, `${adapter.skillPrefix}ext-${packName}`);
+      await copySkillExtraDirs(packDir, outPackRoot, PACK_CONTENT_DIRS);
+      if (splitFiles) {
+        await writeSplitPackFiles({ splitFiles, packDir, outPackRoot, templates, adapter, coreSkillsDir: skillsDir });
+      }
 
       let outputPath;
       let displayName;
@@ -749,7 +870,7 @@ export async function buildAll({
         displayName = fileName;
       }
 
-      await writeFile(outputPath, output, 'utf-8');
+      await writeFile(outputPath, splitFiles ? rewriteIndexRefs(output, splitFiles) : output, 'utf-8');
 
       stats.packCount++;
       stats.files.push(displayName);

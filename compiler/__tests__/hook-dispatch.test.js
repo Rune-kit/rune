@@ -1,11 +1,11 @@
 import assert from 'node:assert';
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { PassThrough } from 'node:stream';
 import { describe, test } from 'node:test';
-import { dispatchHook, normalizeEvent, translate } from '../commands/hook-dispatch.js';
+import { dispatchHook, GATE_LOG_REL, gateOutcome, normalizeEvent, translate } from '../commands/hook-dispatch.js';
 
 // Plain (non-git) dir so completion-gate stays quiet in the contract tests.
 const QUIET_CWD = mkdtempSync(path.join(os.tmpdir(), 'rune-dispatch-'));
@@ -194,6 +194,60 @@ describe('dispatchHook', () => {
   test('preflight strict: ordinary file passes', async () => {
     const io = makeIO({ stdinData: JSON.stringify({ tool_name: 'Write', tool_input: { file_path: 'src/app.ts' } }) });
     assert.strictEqual(await dispatchHook(['preflight'], io), 0);
+  });
+
+  // ── Verdict log (.rune/metrics/gate-outcomes.jsonl → Business Govern tab) ──
+  const readLog = (dir) =>
+    readFileSync(path.join(dir, GATE_LOG_REL), 'utf-8')
+      .split('\n')
+      .filter(Boolean)
+      .map((l) => JSON.parse(l))
+      .filter((r) => r.source === 'hook-dispatch');
+
+  test('verdict log: blocked, bypassed and passed land in gate-outcomes.jsonl', async () => {
+    const dir = mkdtempSync(path.join(os.tmpdir(), 'rune-verdicts-'));
+    mkdirSync(path.join(dir, '.rune'));
+    await dispatchHook(['preflight'], makeIO({ stdinData: keyEvent({ hook_event_name: 'PreToolUse' }), cwd: dir }));
+    await dispatchHook(['preflight', '--gentle'], makeIO({ stdinData: keyEvent(), cwd: dir }));
+    await dispatchHook(
+      ['preflight'],
+      makeIO({ stdinData: JSON.stringify({ tool_name: 'Write', tool_input: { file_path: 'src/a.ts' } }), cwd: dir }),
+    );
+    const log = readLog(dir);
+    assert.deepStrictEqual(
+      log.map((r) => r.outcome),
+      ['blocked', 'bypassed', 'passed'],
+    );
+    assert.ok(log.every((r) => r.gate === 'preflight' && typeof r.ts === 'string'));
+    assert.strictEqual(log[0].mode, 'enforcing');
+    assert.strictEqual(log[1].mode, 'advisory');
+    assert.strictEqual(log[0].tool, 'Read');
+  });
+
+  test('verdict log: passes are not written outside a Rune project', async () => {
+    const dir = mkdtempSync(path.join(os.tmpdir(), 'rune-verdicts-bare-'));
+    await dispatchHook(
+      ['preflight'],
+      makeIO({ stdinData: JSON.stringify({ tool_name: 'Write', tool_input: { file_path: 'src/a.ts' } }), cwd: dir }),
+    );
+    assert.ok(!existsSync(path.join(dir, '.rune')), 'a pass must not create .rune/ in an unrelated repo');
+  });
+
+  test('verdict log: RUNE_GATE_LOG=0 disables logging', async () => {
+    const dir = mkdtempSync(path.join(os.tmpdir(), 'rune-verdicts-off-'));
+    mkdirSync(path.join(dir, '.rune'));
+    process.env.RUNE_GATE_LOG = '0';
+    try {
+      await dispatchHook(['preflight', '--gentle'], makeIO({ stdinData: keyEvent(), cwd: dir }));
+    } finally {
+      delete process.env.RUNE_GATE_LOG;
+    }
+    assert.ok(!existsSync(path.join(dir, GATE_LOG_REL)), 'no gate writes the log when disabled');
+  });
+
+  test('gateOutcome classifies crashed gates as error', () => {
+    assert.strictEqual(gateOutcome('preflight', { status: null }, {}, false), 'error');
+    assert.strictEqual(gateOutcome('dependency-doctor', { status: 2 }, {}, true), 'passed');
   });
 
   test('sentinel strict: git commit with a staged secret is BLOCKED', async () => {
