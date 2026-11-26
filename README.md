@@ -191,7 +191,9 @@ Every route ships all 67 core skills and the 14 free extension packs. Where a ru
 
 Outside Claude Code, pick a skill from your agent's skill or slash-command menu (compiled skills are named `rune-<skill>`, e.g. `$rune-cook` in Codex), or just describe the task — each skill's description tells the agent when to use it.
 
-## What's New (v2.34.0 — Serve)
+## What's New (v2.34.1 — Serve)
+
+> **v2.34.1 (2026-11-26):** Patch for `rune serve` found in a live Windows test (PowerShell, Node 24, non-TTY shell), plus a cheaper skill list and a release script.
 
 - **`rune serve`.** Install Rune once and use it from every agent on every machine. Run it on a VPS (or any box) and connect Claude Code, Grok Build, Cursor, Codex, Gemini / Antigravity CLI, Grok Bot or your own bot over MCP — no local install. Four tools (`list_skills`, `get_skill`, `get_reference`, `run_skill`), plus slash-style MCP prompts.
 - **`rune serve setup` does the wiring.** A wizard (or `--yes --json` for agents) detects PC vs VPS, creates the key (printed once, or written to a 0600 `--key-out` file so it stays out of chat), exposes the server (local, Cloudflare quick tunnel, Caddyfile, or Tailscale Funnel), keeps it running, and prints copy-paste connect steps. Follow-up commands: `status`, `doctor`, `connect <client>`, `start`, `stop`. Docs: [`docs/SERVE.md`](docs/SERVE.md).

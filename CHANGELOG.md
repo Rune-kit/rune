@@ -3,7 +3,7 @@
 All notable changes to Rune are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [2.34.1] - 2026-11-26
 
 Patch for `rune serve` found in a live Windows test (PowerShell, Node 24, non-TTY shell), plus a cheaper skill list and a release script.
 
