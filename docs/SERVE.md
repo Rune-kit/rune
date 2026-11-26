@@ -9,7 +9,7 @@ Install Rune once on a server (a VPS, a home box, a team machine). Every agent y
   Telegram bot ────────┘                      └─────────────────────────────────────┘
 ```
 
-> **Status:** new in the release after 2.33.0. The MCP server (tools, prompts, key auth) is stable; `--runner`, `--tunnel` and `serve install` are **experimental**.
+> **Status:** new in 2.34.0 (until that is on npm, run it from a git checkout: `node compiler/bin/rune.js serve`). The MCP server (tools, prompts, key auth) is stable; `--runner`, `--tunnel` and `serve install` are **experimental**.
 
 ## How it works
 

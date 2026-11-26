@@ -3,7 +3,7 @@
 All notable changes to Rune are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased] — planned 2.34.0
+## [Unreleased] - 2.34.0 (not yet published)
 
 "Serve" — install Rune once, use it from every agent on every machine.
 

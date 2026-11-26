@@ -138,7 +138,7 @@ gemini extensions install https://github.com/rune-kit/rune
 npx @rune-kit/rune init --platform <name>   # grok · cline · copilot · windsurf · agents · …
 ```
 
-**One Rune for all your agents — `rune serve`** (new). Install Rune once on a VPS and connect any MCP client to it: Claude Code, Grok Build, Cursor, Codex, Antigravity, Grok Bot, your own Telegram bot. Nothing to install on each machine, one update for all of them, Pro/Business included if they are on the server.
+**One Rune for all your agents — `rune serve`** (new in 2.34.0). Install Rune once on a VPS and connect any MCP client to it: Claude Code, Grok Build, Cursor, Codex, Antigravity, Grok Bot, your own Telegram bot. Nothing to install on each machine, one update for all of them, Pro/Business included if they are on the server.
 
 ```bash
 npx @rune-kit/rune serve            # prints a key once; MCP at http://127.0.0.1:8787/mcp

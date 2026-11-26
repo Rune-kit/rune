@@ -9,6 +9,7 @@
  * failed auth, 1 MB request body cap. No shell execution happens here.
  */
 
+import './polyfill.js';
 import http from 'node:http';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { extractKey, verifyKey } from './auth.js';

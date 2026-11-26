@@ -10,6 +10,7 @@
  *   rune serve key path           show where the key hash is stored
  */
 
+import './polyfill.js';
 import { statSync } from 'node:fs';
 import path from 'node:path';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
