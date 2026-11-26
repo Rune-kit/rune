@@ -21,6 +21,7 @@ import path from 'node:path';
 import { appendHookBlock, detectPreset, stripHooksBySkill, summarizeRuneHooks } from '../../commands/hooks/merge.js';
 import { buildPreset, SETTINGS_REL_PATH, WIRED_SKILLS } from '../../commands/hooks/presets.js';
 import { hasRuneHooks as cursorHasRuneHooks } from './cursor.js';
+import { statusLineUserNote } from './tier-emitter.js';
 
 export const id = 'grok';
 export const HOOKS_REL_PATH = '.grok/hooks/rune.json';
@@ -64,8 +65,10 @@ export async function emit({ preset, projectRoot, tierManifests = [], platforms 
   for (const manifest of tierManifests) {
     const overrideKeys = Object.keys(manifest.overrides || {});
     if (overrideKeys.length > 0) merged = stripHooksBySkill(merged, overrideKeys);
-    const tierBlock = buildGrokTierBlock(manifest);
+    const tierBlock = buildGrokTierBlock(manifest, { skipCursorCovered: cursorCovers });
     if (Object.keys(tierBlock.hooks).length > 0) merged = appendHookBlock(merged, tierBlock);
+    const userNote = statusLineUserNote(manifest, 'grok');
+    if (userNote) notes.push(userNote);
     if (tierBlock.skipped.length > 0) {
       notes.push(`${manifest.tier}: skipped Grok-unsupported entries (${tierBlock.skipped.join(', ')}).`);
     }
@@ -122,11 +125,22 @@ function normalizeCommand(entry) {
   return { ...rest, timeout: rest.timeout ?? HOOK_TIMEOUT_SECONDS };
 }
 
-function buildGrokTierBlock(manifest) {
+function buildGrokTierBlock(manifest, opts = {}) {
   const hooks = {};
   const skipped = [];
   for (const entry of manifest.entries) {
-    if (entry.event === 'statusLine' || entry.claudeOnly || entry.platforms?.grok === 'unsupported') {
+    if (
+      entry.event === 'statusLine' ||
+      entry.claudeOnly ||
+      entry.platforms?.grok === 'unsupported' ||
+      entry.platforms?.grok === 'statusLine-user'
+    ) {
+      skipped.push(entry.id || entry.skill);
+      continue;
+    }
+    // When Cursor hooks are installed, Grok Build also runs the hybrid
+    // `.cursor/hooks.json` entries. Skip the same Pro hook here so it fires once.
+    if (opts.skipCursorCovered && entry.platforms?.cursor === 'hook') {
       skipped.push(entry.id || entry.skill);
       continue;
     }

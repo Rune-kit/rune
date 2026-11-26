@@ -141,9 +141,15 @@ export function renderTierWorkflow(entry, { mode, tier }) {
   ].join('\n');
 }
 
+/** Hints that mean "install as a native hook", not a rule/workflow stand-in. */
+export const NATIVE_HOOK_HINTS = new Set(['hook']);
+
+/** Statusline that cannot live in a repo file — user-level setup only. */
+export const USER_STATUSLINE_HINTS = new Set(['statusLine-user']);
+
 /**
  * Filter which entries a platform should emit rules/workflows for.
- * Statusline + claudeOnly entries are filtered out centrally.
+ * Statusline, native hooks, and claudeOnly entries are filtered out centrally.
  */
 export function platformEntries(manifest, platformId) {
   return manifest.entries.filter((entry) => {
@@ -151,7 +157,19 @@ export function platformEntries(manifest, platformId) {
     if (entry.claudeOnly) return false;
     const hint = entry.platforms?.[platformId];
     if (hint === 'unsupported') return false;
+    if (NATIVE_HOOK_HINTS.has(hint) || USER_STATUSLINE_HINTS.has(hint) || hint === 'statusLine') return false;
     return true;
+  });
+}
+
+/**
+ * Entries a platform should emit as native hooks (platforms.<id> === "hook").
+ */
+export function hookEntries(manifest, platformId) {
+  return manifest.entries.filter((entry) => {
+    if (entry.event === 'statusLine') return false;
+    if (entry.claudeOnly) return false;
+    return entry.platforms?.[platformId] === 'hook';
   });
 }
 
@@ -163,8 +181,27 @@ export function unsupportedEntries(manifest, platformId) {
     if (entry.claudeOnly && platformId !== 'claude') return true;
     if (entry.event === 'statusLine' && platformId !== 'claude') return true;
     const hint = entry.platforms?.[platformId];
-    return hint === 'unsupported';
+    return hint === 'unsupported' || USER_STATUSLINE_HINTS.has(hint);
   });
+}
+
+/** Append `--format <fmt>` when the command does not already name one. */
+export function withHookFormat(command, format) {
+  if (!command || !format || format === 'claude') return command;
+  if (/(?:^|\s)--format(?:\s|=)/.test(command)) return command;
+  return `${command} --format ${format}`;
+}
+
+export function statusLineUserNote(manifest, platformId) {
+  const names = manifest.entries
+    .filter(
+      (e) =>
+        e.platforms?.[platformId] === 'statusLine-user' ||
+        (e.event === 'statusLine' && e.platforms?.[platformId] === 'statusLine-user'),
+    )
+    .map((e) => e.id);
+  if (names.length === 0) return null;
+  return `${platformId}: ${manifest.tier} ${names.join(', ')} is a user-level command status line — run \`node "$RUNE_PRO_ROOT/hooks/rune-pulse/index.cjs" setup --runtime ${platformId === 'cursor' ? 'cursor' : platformId}\` (a repo file cannot set it).`;
 }
 
 function defaultGlobsForEvent(event) {

@@ -27,7 +27,14 @@ import { existsSync } from 'node:fs';
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { DISPATCH_CMD } from '../../commands/hooks/presets.js';
-import { platformEntries, renderTierRule, unsupportedEntries } from './tier-emitter.js';
+import {
+  hookEntries,
+  platformEntries,
+  renderTierRule,
+  statusLineUserNote,
+  unsupportedEntries,
+  withHookFormat,
+} from './tier-emitter.js';
 
 export const id = 'antigravity';
 
@@ -51,6 +58,31 @@ export const PRESET_EVENTS = Object.freeze([
 ]);
 
 const TOOL_EVENTS = new Set(['PreToolUse', 'PostToolUse']);
+
+/** Map a Claude-shaped Pro manifest event to an Antigravity hooks.json event. */
+export function mapAntigravityTierEvent(entry) {
+  switch (entry.event) {
+    case 'UserPromptSubmit':
+      return { event: 'PreInvocation' };
+    case 'PreToolUse':
+      return { event: 'PreToolUse', matcher: FILE_WRITE };
+    case 'SessionStart':
+      return { event: 'SessionStart' };
+    default:
+      return null;
+  }
+}
+
+export function antigravityTierHookBlock(manifest, entry) {
+  const mapped = mapAntigravityTierEvent(entry);
+  if (!mapped) return null;
+  const command = withHookFormat(entry.command, 'antigravity');
+  const handler = { type: 'command', command, timeout: HOOK_TIMEOUT_SECONDS };
+  const body = TOOL_EVENTS.has(mapped.event)
+    ? { [mapped.event]: [{ matcher: mapped.matcher, hooks: [handler] }] }
+    : { [mapped.event]: [handler] };
+  return { name: `${RUNE_PREFIX}${manifest.tier}-${entry.id}`, body };
+}
 
 export function detect(projectRoot) {
   // `.agents/` alone is shared with Codex and other Agent Skills runtimes, so
@@ -103,7 +135,23 @@ export async function emit({ preset, projectRoot, tierManifests = [] }) {
       `Native Antigravity hooks written to ${HOOKS_REL_PATH} (${preset}) — App, CLI (agy) and IDE. Check them with /hooks.`,
     );
   }
-  if (preset !== 'off' || existsSync(hooksPath)) {
+  let addedTierHooks = 0;
+  for (const manifest of tierManifests) {
+    for (const entry of hookEntries(manifest, 'antigravity')) {
+      const block = antigravityTierHookBlock(manifest, entry);
+      if (!block) continue;
+      config[block.name] = block.body;
+      addedTierHooks += 1;
+    }
+    const userNote = statusLineUserNote(manifest, 'antigravity');
+    if (userNote) notes.push(userNote);
+  }
+  if (addedTierHooks > 0) {
+    notes.push(
+      `Native Antigravity hooks written for ${addedTierHooks} Pro/Business context-intelligence entr${addedTierHooks === 1 ? 'y' : 'ies'}.`,
+    );
+  }
+  if (preset !== 'off' || existsSync(hooksPath) || addedTierHooks > 0) {
     files.push({ path: hooksPath, content: `${JSON.stringify(config, null, 2)}\n` });
   }
 
