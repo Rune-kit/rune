@@ -310,6 +310,14 @@ structured logs / RED metrics / correlation ID. First incident will be blind.
 
 Skip for: static sites, config-only changes, hotfixes (flag for follow-up), non-prod deploys.
 
+## Rune skill server target
+
+When the deploy target is Rune itself — "set up `rune serve` on my VPS", "connect Grok Bot to my Rune" — do not hand-roll a server, proxy and service.
+
+<MUST-READ path="references/rune-serve.md" trigger="user asks to deploy, host or connect `rune serve`"/>
+
+`rune serve setup --yes --json` does key, HTTPS (Cloudflare quick tunnel / domain / Tailscale), service and an MCP health check in one non-interactive call; `references/rune-serve.md` lists the exact SSH commands and how to keep the key out of the transcript.
+
 ## Output Format
 
 Deploy Report with platform, status (success/failed/rollback), deployed URL, build time, and checks (tests, security, HTTP, visual, monitoring). See Step 6 Report above for full template.

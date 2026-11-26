@@ -8,6 +8,7 @@
  */
 
 import { spawn } from 'node:child_process';
+import path from 'node:path';
 import { whichSync } from './runner.js';
 
 const URL_RE = /https:\/\/[a-z0-9-]+\.trycloudflare\.com/i;
@@ -22,16 +23,39 @@ export function parseTunnelUrl(text) {
  * @param {{ target: string, command?: string, args?: string[], timeoutMs?: number, env?: NodeJS.ProcessEnv }} opts
  * @returns {Promise<{ publicUrl: string, stop: () => void }>}
  */
-export function startTunnel({ target, command = 'cloudflared', args, timeoutMs = 30_000, env = process.env }) {
-  const bin = whichSync(command, env.PATH);
+/**
+ * Find cloudflared: PATH first, then the user-space copy `rune serve setup`
+ * downloads to ~/.rune/bin (resolved from the env's HOME/USERPROFILE).
+ */
+export function findCloudflared(env = process.env, command = 'cloudflared') {
+  const onPath = whichSync(command, env.PATH || '');
+  if (onPath) return onPath;
+  const home = env.HOME || env.USERPROFILE;
+  if (!home || path.isAbsolute(command)) return null;
+  const exe = process.platform === 'win32' ? `${command}.exe` : command;
+  return whichSync(path.join(home, '.rune', 'bin', exe));
+}
+
+export async function startTunnel(opts) {
+  try {
+    return await startTunnelOnce(opts);
+  } catch (err) {
+    // QUIC (UDP 7844) is often blocked on VPS / office networks; HTTP/2 over TCP 443 usually is not.
+    if (opts.args || !/never connected/.test(err.message)) throw err;
+    return startTunnelOnce({ ...opts, protocol: 'http2' });
+  }
+}
+
+function startTunnelOnce({ target, command = 'cloudflared', args, protocol, timeoutMs = 30_000, env = process.env }) {
+  const bin = findCloudflared(env, command);
   if (!bin) {
     return Promise.reject(
       new Error(
-        '`cloudflared` not found on PATH. Install it (https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/) or drop --tunnel and use Caddy/nginx.',
+        '`cloudflared` not found on PATH. Run `rune serve setup --expose tunnel` (downloads it to ~/.rune/bin), install it yourself (https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/), or drop --tunnel and use Caddy/nginx.',
       ),
     );
   }
-  const argv = args || ['tunnel', '--no-autoupdate', '--url', target];
+  const argv = args || ['tunnel', '--no-autoupdate', ...(protocol ? ['--protocol', protocol] : []), '--url', target];
   return new Promise((resolve, reject) => {
     const child = spawn(bin, argv, { stdio: ['ignore', 'pipe', 'pipe'], env, shell: false });
     let buf = '';

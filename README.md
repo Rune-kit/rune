@@ -138,14 +138,24 @@ gemini extensions install https://github.com/rune-kit/rune
 npx @rune-kit/rune init --platform <name>   # grok · cline · copilot · windsurf · agents · …
 ```
 
-**One Rune for all your agents — `rune serve`** (new in 2.34.0). Install Rune once on a VPS and connect any MCP client to it: Claude Code, Grok Build, Cursor, Codex, Antigravity, Grok Bot, your own Telegram bot. Nothing to install on each machine, one update for all of them, Pro/Business included if they are on the server.
+### One Rune for all your agents — `rune serve`
 
-```bash
-npx @rune-kit/rune serve            # prints a key once; MCP at http://127.0.0.1:8787/mcp
-claude mcp add --transport http rune https://rune.example.com/mcp --header "Authorization: Bearer rune_sk_…"
+New in 2.34.0. Install Rune **once** on a VPS (or your PC) and connect any MCP client to it — Grok Bot, Claude Code, Grok Build, Cursor, Codex, Gemini / Antigravity, your own Telegram bot. Nothing to install on each machine, one update for all of them, Pro/Business included if they are on the server.
+
+```mermaid
+flowchart LR
+  A["Grok Bot · Claude Code · Grok Build<br/>Cursor · Codex · Gemini"] -- "HTTPS + key" --> T(("Cloudflare tunnel<br/>/ domain / Tailscale"))
+  T --> S["rune serve on your VPS"]
+  S --> K["Free + Pro + Business skills"]
 ```
 
-Then "use the Rune video skill …" or `/rune cook …` in any connected agent. HTTPS, systemd, per-agent setup and limits (hooks stay local; repo edits still run on your machine): [`docs/SERVE.md`](docs/SERVE.md).
+```bash
+npm i -g @rune-kit/rune
+rune serve setup              # wizard: key → public HTTPS → service → health check → connect steps
+rune serve connect grok-bot   # copy-paste steps for grok-bot, claude, grok, codex, cursor, gemini, antigravity
+```
+
+Agents can do the whole thing over SSH with `rune serve setup --yes --json --expose tunnel --key-out ~/.rune/serve.key`. Then "use the Rune video skill …" or `/rune cook …` in any connected agent. Step-by-step guide, diagrams and limits (hooks stay local; repo edits still run on your machine): [`docs/SERVE.md`](docs/SERVE.md).
 
 ## Platform support
 
