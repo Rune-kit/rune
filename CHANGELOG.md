@@ -3,6 +3,16 @@
 All notable changes to Rune are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Changed
+- Pro Context Intelligence hooks (`platforms.<id> = "hook"`) install natively on Cursor, Grok Build, Antigravity and Gemini CLI instead of falling back to rules. Event mapping: Cursor `beforeSubmitPrompt` / `preToolUse` / `preCompact` / `sessionStart`; Antigravity `PreInvocation` / `PreToolUse` / `SessionStart`; Gemini `BeforeAgent` / `BeforeTool` / `PreCompress` / `SessionStart` / `AfterModel`.
+- `statusLine-user` manifest entries are not written into a repo file. Install notes point at `node "$RUNE_PRO_ROOT/hooks/rune-pulse/index.cjs" setup` (Grok only reads a command status line from `~/.grok/config.toml`; Antigravity and Cursor CLI likewise use user settings).
+- Manifest validation accepts the `AfterModel` event (matcher optional) so Pro hooks v1.7.0 can load.
+- When Cursor hooks are installed, Grok Build skips the same Pro hook entries in `.grok/hooks/rune.json` so they fire once from the shared `.cursor/hooks.json`.
+
+---
+
 ## [2.33.0] - 2026-11-21
 
 "Everywhere" — Rune installs natively in the agents people actually use in late 2026, and the numbers on the box are checked by CI.

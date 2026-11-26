@@ -165,19 +165,22 @@ Installed commands pin the Rune version (`npx --yes @rune-kit/rune@<version> hoo
 
 ### Pro tier (`--tier pro`)
 
-| Entry          | Claude     | Codex     | Cursor         | Windsurf                 | Antigravity    | Notes                                      |
-|----------------|------------|-----------|----------------|--------------------------|----------------|--------------------------------------------|
-| context-inject | auto-fire  | auto-fire | rule-alwaysApply | workflow + cascade-rule | rule-alwaysApply | UserPromptSubmit event, runs per prompt   |
-| context-sense  | auto-fire  | auto-fire | rule-glob      | workflow + cascade-rule  | rule-glob      | PreToolUse edit matcher, session-keyed     |
-| loop-circuit-breaker | auto-fire | auto-fire | — | — | — | Claude/Codex tool names share one budget guard |
-| rune-pulse     | native executable `statusLine` | built-in `[tui].status_line` footer / external Pro HUD | — | — | — | Codex does not expose an arbitrary executable status-line hook |
+| Entry | Claude | Codex | Grok Build | Cursor | Antigravity | Gemini CLI | Windsurf |
+|----------------|------------|-----------|------------|------------|-------------|------------|----------|
+| context-inject | auto-fire UserPromptSubmit | auto-fire | auto-fire (additionalContext is discarded) | auto-fire `beforeSubmitPrompt` | auto-fire `PreInvocation` | auto-fire `BeforeAgent` | workflow + cascade-rule |
+| context-sense | auto-fire PreToolUse | auto-fire | auto-fire | auto-fire `preToolUse` | auto-fire `PreToolUse` | auto-fire `BeforeTool` | workflow + cascade-rule |
+| context-reset | PreCompact + SessionStart | auto-fire | auto-fire | `preCompact` + `sessionStart` | SessionStart only (no compact event) | `PreCompress` + SessionStart | — |
+| context-pulse | — | — | — | — | — | auto-fire `AfterModel` (token ingest) | — |
+| loop-circuit-breaker | auto-fire | auto-fire | — | — | — | — | — |
+| rune-pulse | project `statusLine` (real %) | built-in footer + Pro HUD | user `~/.grok/config.toml` `[ui.status_line]` (real %; a repo file cannot set this) | CLI: user `~/.cursor/cli-config.json` `statusLine`; IDE: context ring + `preCompact` | user `~/.gemini/antigravity-cli/settings.json` `statusLine` (real %) | built-in footer only (enable `ui.footer.hideContextPercentage=false`); hook % is an estimate | — |
 
 **Capability reading:**
 
 - `auto-fire` = a native lifecycle primitive with true runtime behavior.
 - Claude's executable `statusLine` can run the full Rune Pulse renderer inside the native footer.
-- Codex's `[tui].status_line` supports built-in footer items only. The full rich Rune Pulse display runs separately as the Pro watcher/HUD (`node "$RUNE_PRO_ROOT/hooks/rune-pulse-codex/index.cjs" watch`); it is not a native executable status-line hook.
-- `rule-alwaysApply` / `rule-glob` = best-effort rule injection, agent still decides.
+- Grok Build, Antigravity CLI and Cursor CLI also support a command status line, but only in **user-level** config. After `rune hooks install --tier pro`, run `node "$RUNE_PRO_ROOT/hooks/rune-pulse/index.cjs" setup`. The command never overwrites a status line you wrote.
+- Codex's `[tui].status_line` supports built-in footer items only. The full rich Rune Pulse display runs separately as the Pro watcher/HUD (`node "$RUNE_PRO_ROOT/hooks/rune-pulse-codex/index.cjs" watch`); it is not a native executable status-line hook. `setup` writes the built-in items (`context-used` included).
+- When a runtime does not expose a real percentage, the pulse labels the number `est`.
 - `workflow + cascade-rule` = user-invoked `/rune-pro-context-inject` + a cascade reminder.
 - `—` = platform can't host the entry. `rune hooks status` lists skipped entries per-tier.
 

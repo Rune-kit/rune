@@ -86,10 +86,11 @@ const VALID_EVENTS = new Set([
   'statusLine',
   'PreCompact',
   'SessionStart',
+  'AfterModel',
 ]);
 
 /** Lifecycle events where `matcher` is optional (PreCompact matches manual|auto, SessionStart matches startup|resume — both default to all when omitted). */
-const MATCHER_OPTIONAL_EVENTS = new Set(['statusLine', 'Stop', 'PreCompact', 'SessionStart']);
+const MATCHER_OPTIONAL_EVENTS = new Set(['statusLine', 'Stop', 'PreCompact', 'SessionStart', 'AfterModel']);
 
 /** Tier names must be simple lowercase identifiers. Blocks `../../etc` and similar traversal. */
 const TIER_NAME_RE = /^[a-z][a-z0-9-]{0,31}$/;

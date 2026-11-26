@@ -30,10 +30,55 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { appendHookBlock, detectPreset, stripRuneHooks, summarizeRuneHooks } from '../../commands/hooks/merge.js';
 import { DISPATCH_CMD, WIRED_SKILLS } from '../../commands/hooks/presets.js';
+import { hookEntries, statusLineUserNote, unsupportedEntries, withHookFormat } from './tier-emitter.js';
 
 export const id = 'gemini';
 export const SETTINGS_REL_PATH = '.gemini/settings.json';
 export const HOOK_TIMEOUT_MS = 30000;
+
+/** Map a Claude-shaped Pro manifest event to a Gemini CLI hook event. */
+export function mapGeminiTierEvent(entry) {
+  switch (entry.event) {
+    case 'UserPromptSubmit':
+      return { event: 'BeforeAgent' };
+    case 'PreToolUse':
+      return { event: 'BeforeTool', matcher: 'write_file|replace' };
+    case 'PreCompact':
+      return { event: 'PreCompress' };
+    case 'SessionStart':
+      return { event: 'SessionStart' };
+    case 'AfterModel':
+      return { event: 'AfterModel' };
+    default:
+      return null;
+  }
+}
+
+export function buildGeminiTierBlock(manifest) {
+  const hooks = {};
+  const skipped = [];
+  for (const entry of hookEntries(manifest, 'gemini')) {
+    const mapped = mapGeminiTierEvent(entry);
+    if (!mapped) {
+      skipped.push(entry.id);
+      continue;
+    }
+    const group = {
+      hooks: [
+        {
+          name: `rune-${manifest.tier}-${entry.id}`,
+          type: 'command',
+          command: withHookFormat(entry.command, 'gemini'),
+          timeout: HOOK_TIMEOUT_MS,
+        },
+      ],
+    };
+    if (mapped.matcher) group.matcher = mapped.matcher;
+    (hooks[mapped.event] ||= []).push(group);
+  }
+  return { hooks, skipped };
+}
+
 
 export const PRESET_EVENTS = Object.freeze([
   { event: 'BeforeTool', skill: 'preflight', matcher: 'write_file|replace' },
@@ -82,7 +127,17 @@ export async function emit({ preset, projectRoot, tierManifests = [] }) {
     );
   }
   for (const manifest of tierManifests) {
-    notes.push(`gemini: ${manifest.tier} tier entries are not mapped to Gemini CLI yet — skipped.`);
+    const tierBlock = buildGeminiTierBlock(manifest);
+    if (Object.keys(tierBlock.hooks).length > 0) {
+      merged = appendHookBlock(merged, { hooks: tierBlock.hooks });
+      notes.push(`Gemini CLI hooks written for ${manifest.tier} context-intelligence entries. Gemini asks you to trust new project hooks on first run.`);
+    }
+    const userNote = statusLineUserNote(manifest, 'gemini');
+    if (userNote) notes.push(userNote);
+    const skipped = [...tierBlock.skipped, ...unsupportedEntries(manifest, 'gemini').map((e) => e.id)];
+    if (skipped.length > 0) {
+      notes.push(`gemini: ${manifest.tier} skipped ${skipped.join(', ')}.`);
+    }
   }
   return { files: [{ path: settingsPath, content: `${JSON.stringify(merged, null, 2)}\n` }], notes };
 }
