@@ -15,7 +15,7 @@ describe('version-sync-check', () => {
       const output = execSync(`node "${SCRIPT}"`, {
         cwd: ROOT,
         encoding: 'utf8',
-        timeout: 15000,
+        timeout: 120000,
         stdio: ['pipe', 'pipe', 'pipe'],
       });
       assert.ok(output.includes('Version Sync Check'), 'Should print header');
@@ -34,7 +34,7 @@ describe('version-sync-check', () => {
       const output = execSync(`node "${SCRIPT}"`, {
         cwd: ROOT,
         encoding: 'utf8',
-        timeout: 15000,
+        timeout: 120000,
         stdio: ['pipe', 'pipe', 'pipe'],
       });
       // Should mention version check result
@@ -56,7 +56,7 @@ describe('version-sync-check', () => {
       const output = execSync(`node "${SCRIPT}"`, {
         cwd: ROOT,
         encoding: 'utf8',
-        timeout: 15000,
+        timeout: 120000,
         stdio: ['pipe', 'pipe', 'pipe'],
       });
       assert.ok(
@@ -70,5 +70,32 @@ describe('version-sync-check', () => {
         'Should validate extension packs even on failure',
       );
     }
+  });
+
+  test('fails the publish dry-run if npm would auto-correct or drop the rune bin', () => {
+    let combined = '';
+    try {
+      combined = execSync(`node "${SCRIPT}"`, {
+        cwd: ROOT,
+        encoding: 'utf8',
+        timeout: 120000,
+        stdio: ['pipe', 'pipe', 'pipe'],
+      });
+    } catch (e) {
+      combined = (e.stdout || '') + (e.stderr || '');
+    }
+    assert.ok(
+      combined.includes('npm publish --dry-run: no auto-corrections; bin.rune is present') ||
+        combined.includes('auto-corrected package.json') ||
+        combined.includes('missing bin.rune') ||
+        combined.includes('omit the ./ prefix'),
+      'Should run an npm publish dry-run and report bin / auto-correction status',
+    );
+    assert.ok(
+      !combined.includes('auto-corrected package.json') &&
+        !combined.includes('omit the ./ prefix') &&
+        !combined.includes('missing bin.rune'),
+      combined,
+    );
   });
 });

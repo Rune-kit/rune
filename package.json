@@ -1,10 +1,10 @@
 {
   "name": "@rune-kit/rune",
-  "version": "2.33.0",
+  "version": "2.34.0",
   "description": "67-skill mesh for AI coding assistants — native lifecycle hooks for Claude Code and Codex, 5-layer architecture, 248 connections + 46 signals, and a 16-platform compiler.",
   "type": "module",
   "bin": {
-    "rune": "./compiler/bin/rune.js"
+    "rune": "compiler/bin/rune.js"
   },
   "scripts": {
     "build": "node compiler/bin/rune.js build",
@@ -42,7 +42,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/rune-kit/rune"
+    "url": "git+https://github.com/rune-kit/rune.git"
   },
   "engines": {
     "node": ">=18"
