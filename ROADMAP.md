@@ -1,6 +1,6 @@
 # Rune Roadmap
 
-> Last updated: November 2026 | Version: 2.33.0
+> Last updated: November 2026 | Version: 2.34.0
 
 ---
 
@@ -16,7 +16,7 @@ Rune is a **mesh**, not a plugin store. Every addition must deepen connections, 
 
 ---
 
-## Current State (v2.33.0 — "Everywhere")
+## Current State (v2.34.0 — "Serve")
 
 | Area | Count | Status |
 |-------|-------|--------|
@@ -53,7 +53,21 @@ Full detail: [`CHANGELOG.md`](CHANGELOG.md).
 
 ---
 
-## v2.33 — "Everywhere" · Q4 2026 (this release)
+## v2.34 — "Serve" · November 2026 (this release)
+
+**Theme:** Install Rune once, use it from every agent on every machine — and stop agents quietly hollowing out tests.
+
+- ✅ `rune serve` — Rune as an MCP server (Streamable HTTP or `--stdio`); Free + Pro/Business skills; locked down by default (localhost, hashed bearer key, path confinement)
+- ✅ `rune serve setup` — wizard or `--yes --json` for agents; tunnel / domain / Tailscale / local expose; `status`, `doctor`, `connect`, `start`, `stop`; agent runbook in `deploy/references/rune-serve.md`; docs and site section with diagrams
+- ✅ Test-integrity gate — `rune verify --integrity` plus hook-dispatch preflight (Edit/Write of test files) and sentinel (`git commit`); frozen `tests/char/**` and `tests/holdout/**`; auditable override
+- ✅ Pro Context Intelligence hooks install natively on Cursor, Grok Build, Antigravity and Gemini CLI
+- ✅ 2026 model-tier refresh — `fable`/`opus`/`sonnet`/`haiku`; stable-GA Gemini CLI hints; Antigravity haiku → Gemini 4 Hydrogen (Low); Codex `rune_frontier`; Grok 4.7 + effort
+
+Full detail: [`CHANGELOG.md`](CHANGELOG.md#2340---2026-11-26).
+
+---
+
+## v2.33 — "Everywhere" · Q4 2026
 
 **Theme:** Rune installs natively in every major agent, and the Free → Pro path stops leaking.
 
@@ -88,16 +102,16 @@ Full detail: [`CHANGELOG.md`](CHANGELOG.md).
 
 ---
 
-## Next — v2.34+ · Q1 2027
+## Next — v2.35+ · Q1 2027
 
 ### Hooks everywhere
 - ⬚ Gemini extension: ship Gemini-format lifecycle hooks and move the Claude ones out of `hooks/hooks.json`, so Gemini stops logging skipped events
-- ⬚ Pro/Business tier hook entries on Cursor (native events) and Gemini CLI
+- ✅ Pro/Business tier hook entries on Cursor, Grok Build, Antigravity and Gemini CLI (shipped in v2.34)
 - ⬚ Copilot and Kiro hook adapters
 - ⬚ CI job that installs Rune into each runtime that has a headless validator (`claude plugin validate`, `gemini extensions validate`, `grok plugin validate`)
 
 ### Reach
-- ⬚ Rune MCP server — expose the skill router to claude.ai, ChatGPT and any MCP client
+- ✅ `rune serve` MCP server — expose skills to any MCP client (shipped in v2.34; claude.ai / ChatGPT connectors still open)
 - ⬚ Standalone "starter" skills on skills.sh (cook, sentinel, rescue) that lead to the full mesh
 - ⬚ Pro on every native runtime (Cursor, Grok Build, Gemini), not just Claude Code and Codex
 

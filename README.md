@@ -191,24 +191,15 @@ Every route ships all 67 core skills and the 14 free extension packs. Where a ru
 
 Outside Claude Code, pick a skill from your agent's skill or slash-command menu (compiled skills are named `rune-<skill>`, e.g. `$rune-cook` in Codex), or just describe the task — each skill's description tells the agent when to use it.
 
-## What's New (v2.33.0 — Everywhere)
+## What's New (v2.34.0 — Serve)
 
-- **Native installs beyond Claude Code.** Cursor plugin, Grok Build plugin + marketplace, Gemini CLI extension and an Agent Plugins 1.0 manifest — plus `npx skills add rune-kit/rune` for any of ~80 agents.
-- **16 compile targets** (was 13): new `grok` (`.grok/skills`), `cline` (`.cline/skills`) and universal `agents` (`.agents/skills` — Kiro, Amp, Goose, Factory, Junie, Trae …).
-- **Claude marketplace fixed.** Pack ids were invalid (`@rune/ui`); they are now `rune-ui` etc. and `claude plugin validate` passes.
-- **`rune doctor` works on every directory-per-skill platform** (it crashed with EISDIR on Codex, Cursor, Gemini …).
-- **Numbers you can trust.** CI now fails if any README, doc or manifest quotes a stale skill / signal / connection / platform count.
-- **Skills other agents can pick.** Every skill description now says when to use it, model examples are current, and Claude-only tool names compile to neutral wording elsewhere.
-- **Nothing lost in compilation.** Every platform now ships each skill's `references/`; the 13 largest skills were split into lean SKILL.md + references, so every skill now fits 500 lines (nothing dropped; a test checks every line).
-- **One `AGENTS.md` for every agent.** `/rune onboard --runtimes` sets up per-runtime config and hooks; native hooks for Grok Build, Cursor (`.cursor/hooks.json`) and Gemini CLI (`.gemini/settings.json`) via `rune hooks install --platform grok|cursor|gemini`; Codex subagent roles on GPT-6.x.
-- **Hooks that really gate.** `rune hook-dispatch` now runs the real preflight / sentinel / quarantine scripts (it used to be a pass-through), answers in each runtime's own format (Claude, Cursor/Grok, Gemini, Antigravity), and installed hooks pin the Rune version (`npx --yes @rune-kit/rune@2.33.0 …`).
-- **Grok Build first-class.** `.cursor/hooks.json` entries now load in Grok Build with no warnings and no double-registration; the Grok marketplace installs; CI runs the real `grok` CLI against the plugin and hooks.
-- **Antigravity hooks.** `rune hooks install --platform antigravity` writes `.agents/hooks.json` and `.agents/rules/`.
-- **Current models.** Authoring tiers are `fable` / `opus` / `sonnet` / `haiku` (Fable is optional frontier, not a new default). Gemini CLI hints use stable-GA ids (`gemini-3.1-pro-preview` or `gemini-2.5-pro` / `gemini-3.5-flash` / `gemini-3.1-flash-lite`). Antigravity haiku hints Gemini 4 Hydrogen (Low) because 3.8 Flash leaves 2026-11-30. Codex gains a `rune_frontier` role (Astra at xhigh). Grok hints name grok-4.7 plus effort.
-- **Leaner triggers.** A CI budget check keeps skill descriptions short and free of ALWAYS/ANY-style shouting; `cook` no longer claims every code change.
-- **`AGENTS.md` + `llms.txt`**, a shorter README, and an honest ROADMAP.
+- **`rune serve`.** Install Rune once and use it from every agent on every machine. Run it on a VPS (or any box) and connect Claude Code, Grok Build, Cursor, Codex, Gemini / Antigravity CLI, Grok Bot or your own bot over MCP — no local install. Four tools (`list_skills`, `get_skill`, `get_reference`, `run_skill`), plus slash-style MCP prompts.
+- **`rune serve setup` does the wiring.** A wizard (or `--yes --json` for agents) detects PC vs VPS, creates the key (printed once, or written to a 0600 `--key-out` file so it stays out of chat), exposes the server (local, Cloudflare quick tunnel, Caddyfile, or Tailscale Funnel), keeps it running, and prints copy-paste connect steps. Follow-up commands: `status`, `doctor`, `connect <client>`, `start`, `stop`. Docs: [`docs/SERVE.md`](docs/SERVE.md).
+- **Test-integrity gate.** `rune verify --integrity` (and the same check in hook-dispatch preflight + commit sentinel) flags hollowed-out tests: deleted or loosened assertions, new skips, changed expected literals, and edits to frozen `tests/char/**` and `tests/holdout/**`. Strict blocks; gentle warns; an auditable `Test-Change-Approved` override is logged.
+- **Context monitoring on more runtimes.** Pro Context Intelligence hooks install natively on Cursor, Grok Build, Antigravity and Gemini CLI instead of falling back to rules.
+- **Current model tiers.** Authoring tiers are `fable` / `opus` / `sonnet` / `haiku` (Fable is optional frontier, not a new default). Gemini CLI hints use stable-GA ids; Antigravity haiku hints Gemini 4 Hydrogen (Low); Codex gains `rune_frontier`; Grok hints name grok-4.7 plus effort.
 
-Full notes: [`CHANGELOG.md`](CHANGELOG.md#2330---2026-11-21). Older release notes: [`CHANGELOG.md`](CHANGELOG.md).
+Full notes: [`CHANGELOG.md`](CHANGELOG.md#2340---2026-11-26). Older release notes: [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Free, Pro and Business
 
