@@ -1,6 +1,6 @@
 import assert from 'node:assert';
 import { execFile } from 'node:child_process';
-import { statSync } from 'node:fs';
+import { existsSync, statSync } from 'node:fs';
 import { chmod, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import net from 'node:net';
 import { platform as osPlatform, tmpdir } from 'node:os';
@@ -9,16 +9,18 @@ import { after, before, describe, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { readServeConfig } from '../serve/auth.js';
-import { startServe } from '../serve/index.js';
+import { deliverKey, startServe, USAGE, wantsHelp } from '../serve/index.js';
 import {
   CLIENTS,
   caddySnippet,
   checkEndpoint,
   cloudflaredAsset,
   connectInstructions,
+  defaultKeyOutPath,
   detectEnvironment,
   ensureCloudflared,
   formatConnect,
+  keyEnvHint,
   resolveProfile,
   runSetup,
   serveArgsFromProfile,
@@ -322,10 +324,14 @@ describe('serve setup CLI end-to-end (background server)', { skip: isWin }, () =
     assert.strictEqual(r.code, 0, r.stderr);
     const rep = JSON.parse(r.stdout);
     assert.strictEqual(rep.ok, true);
-    assert.match(rep.key.value, KEY_RE);
+    // stdout is a pipe here (non-TTY): the key goes to ~/.rune/serve.key, never into the output.
+    assert.strictEqual(rep.key.value, undefined);
+    assert.strictEqual(rep.key.file, path.join(home, '.rune', 'serve.key'));
+    assert.doesNotMatch(r.stdout + r.stderr, KEY_RE);
     assert.strictEqual(rep.service.mode, 'background');
     assert.strictEqual(rep.health.local.handshake.ok, true);
-    const key = rep.key.value;
+    const key = (await readFile(rep.key.file, 'utf-8')).trim();
+    assert.match(key, KEY_RE);
 
     const st = JSON.parse((await cli(['status', '--json'], env)).stdout);
     assert.strictEqual(st.running, true);
@@ -371,5 +377,144 @@ describe('serve setup CLI end-to-end (background server)', { skip: isWin }, () =
     const conn = await cli(['connect', 'grok-bot'], env);
     assert.match(conn.stdout, /URL https:\/\/fake-e2e-1\.trycloudflare\.com\/mcp/);
     await cli(['stop'], env);
+  });
+});
+
+describe('serve CLI: help, non-TTY safety, Windows hints', () => {
+  let home;
+  let env;
+  before(async () => {
+    home = await mkdtemp(path.join(tmpdir(), 'rune-nontty-'));
+    env = { ...process.env, HOME: home, USERPROFILE: home };
+    delete env.RUNE_SERVE_KEY;
+    delete env.RUNE_SERVE_CONFIG;
+    delete env.RUNE_KEY;
+  });
+  after(async () => {
+    await cli(['stop'], env);
+    await rm(home, { recursive: true, force: true });
+  });
+
+  const helpCases = [
+    ['--help'],
+    ['-h'],
+    ['help'],
+    ['setup', '--help'],
+    ['setup', '-h'],
+    ['setup', '--yes', '--json', '--help'],
+    ['start', '--help'],
+    ['stop', '-h'],
+    ['status', '--help'],
+    ['doctor', '-h'],
+    ['connect', '--help'],
+    ['connect', 'claude', '-h'],
+    ['install', '--help'],
+    ['key', 'rotate', '--help'],
+    ['key', 'path', '-h'],
+    ['--stdio', '--help'],
+    ['--tunnel', '-h'],
+  ];
+  for (const args of helpCases) {
+    test(`rune serve ${args.join(' ')} prints help and does nothing else`, async () => {
+      const r = await cli(args, env);
+      assert.strictEqual(r.code, 0, r.stderr);
+      assert.ok(r.stdout.includes(USAGE.trim().split('\n')[0].trim()), 'usage on stdout');
+      assert.match(r.stdout, /rune serve setup/);
+      assert.strictEqual(r.stderr, '');
+      assert.doesNotMatch(r.stdout, KEY_RE);
+      assert.ok(!existsSync(path.join(home, '.rune')), 'no config, key, state or log written');
+    });
+  }
+
+  test('wantsHelp recognises --help, -h and help anywhere after `serve`', () => {
+    assert.strictEqual(wantsHelp({ help: true }, ['serve', 'setup']), true);
+    assert.strictEqual(wantsHelp({ help: '--yes' }, ['serve']), true);
+    assert.strictEqual(wantsHelp({}, ['serve', 'key', 'rotate', '-h']), true);
+    assert.strictEqual(wantsHelp({}, ['serve', 'help']), true);
+    assert.strictEqual(wantsHelp({ yes: true }, ['serve', 'setup']), false);
+  });
+
+  test('non-TTY setup without --yes refuses (exit 2) and changes nothing', async () => {
+    const r = await cli(['setup', '--expose', 'local', '--no-tiers'], env);
+    assert.strictEqual(r.code, 2);
+    assert.match(r.stderr, /not an interactive terminal/);
+    assert.match(r.stderr, /--yes/);
+    assert.doesNotMatch(r.stdout + r.stderr, KEY_RE);
+    assert.ok(!existsSync(path.join(home, '.rune')), 'nothing written');
+
+    const j = await cli(['setup', '--json'], env);
+    assert.strictEqual(j.code, 2);
+    assert.deepStrictEqual(JSON.parse(j.stdout), { ok: false, error: 'non-interactive: pass --yes' });
+    assert.ok(!existsSync(path.join(home, '.rune')), 'nothing written');
+  });
+
+  test('non-TTY setup --yes writes the new key to ~/.rune/serve.key (0600) and never prints it', async () => {
+    const r = await cli(['setup', '--yes', '--expose', 'local', '--no-tiers', '--no-start'], env);
+    assert.strictEqual(r.code, 0, r.stderr);
+    const file = path.join(home, '.rune', 'serve.key');
+    assert.doesNotMatch(r.stdout + r.stderr, KEY_RE);
+    assert.match(r.stdout, /stdout is not a terminal, so the new key is NOT printed/);
+    assert.ok(r.stdout.includes(file), 'prints the path');
+    assert.match(await readFile(file, 'utf-8'), KEY_RE);
+    if (!isWin) assert.strictEqual(statSync(file).mode & 0o777, 0o600);
+  });
+
+  test('non-TTY key rotate writes the key to a file (or --key-out) and never prints it', async () => {
+    const r = await cli(['key', 'rotate'], env);
+    assert.strictEqual(r.code ?? 0, 0, r.stderr);
+    assert.doesNotMatch(r.stdout + r.stderr, KEY_RE);
+    const file = path.join(home, '.rune', 'serve.key');
+    assert.ok(r.stderr.includes(file));
+    assert.match(await readFile(file, 'utf-8'), KEY_RE);
+
+    const custom = path.join(home, 'k', 'rotated.key');
+    const c = await cli(['key', 'rotate', '--key-out', custom], env);
+    assert.doesNotMatch(c.stdout + c.stderr, KEY_RE);
+    assert.match(await readFile(custom, 'utf-8'), KEY_RE);
+    if (!isWin) assert.strictEqual(statSync(custom).mode & 0o777, 0o600);
+  });
+
+  test('runSetup({ printKey: false }) defaults the key file next to the config', async () => {
+    const config = path.join(home, 'p', 'serve.json');
+    const r = await runSetup({
+      runeRoot: RUNE_ROOT,
+      args: { yes: true, config, expose: 'local', 'no-tiers': true, 'no-start': true },
+      deps: { envInfo: VPS },
+      printKey: false,
+    });
+    assert.strictEqual(r.key.file, defaultKeyOutPath(config));
+    assert.strictEqual(r.key.value, undefined);
+    assert.doesNotMatch(JSON.stringify(r), KEY_RE);
+  });
+
+  test('deliverKey prints on a TTY, files it otherwise', async () => {
+    const lines = [];
+    const config = path.join(home, 'd', 'serve.json');
+    const res = deliverKey('rune_sk_TESTTESTTESTTESTTESTTEST', {
+      configPath: config,
+      isTTY: false,
+      out: (l) => lines.push(l),
+    });
+    assert.strictEqual(res.file, defaultKeyOutPath(config));
+    assert.doesNotMatch(lines.join('\n'), KEY_RE);
+  });
+
+  test('Windows connect hints use PowerShell ($env:RUNE_KEY), others use export', () => {
+    const url = 'https://quiet-river.trycloudflare.com/mcp';
+    const win = formatConnect(url, CLIENTS, { platform: 'win32' });
+    assert.match(win, /\$env:RUNE_KEY = "rune_sk_…"/);
+    assert.match(win, /setx RUNE_KEY/);
+    assert.doesNotMatch(win, /export RUNE_KEY/);
+    assert.doesNotMatch(win, /Bearer \$RUNE_KEY/);
+    assert.match(
+      connectInstructions('claude', url, { platform: 'win32' }).text,
+      /"Authorization: Bearer \$env:RUNE_KEY"/,
+    );
+    assert.match(connectInstructions('codex', url, { platform: 'win32' }).text, /setx RUNE_KEY/);
+    const nix = formatConnect(url, CLIENTS, { platform: 'linux' });
+    assert.match(nix, /export RUNE_KEY=rune_sk_…/);
+    assert.doesNotMatch(nix, /\$env:/);
+    assert.match(keyEnvHint('win32'), /PowerShell/);
+    assert.match(keyEnvHint('darwin'), /export/);
   });
 });

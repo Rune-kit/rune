@@ -21,7 +21,7 @@ import { createHttpHandler, listen } from './http.js';
 import { installService } from './install.js';
 import { createRuneMcpServer } from './mcp.js';
 import { createRunner } from './runner.js';
-import { clearState, cmdServeSetup, statePathFor, writeState } from './setup.js';
+import { clearState, cmdServeSetup, defaultKeyOutPath, statePathFor, writeKeyFile, writeState } from './setup.js';
 import { startTunnel } from './tunnel.js';
 
 /**
@@ -203,19 +203,50 @@ function fmtCounts(c) {
     .join(', ');
 }
 
+/** True for `--help`, `-h` or `help` anywhere after `rune serve` — help never runs anything. */
+export function wantsHelp(args = {}, positional = []) {
+  if (args.help !== undefined || args.h !== undefined) return true;
+  return positional.slice(1).some((p) => p === '-h' || p === '-?' || p === '/?' || p === 'help');
+}
+
+/**
+ * Hand a freshly minted key to the operator. On a terminal it is printed once; when stdout is
+ * not a TTY (agents, CI, logs capture it) it goes to a 0600 file and only the path is printed.
+ */
+export function deliverKey(key, { configPath, args = {}, isTTY = Boolean(process.stdout.isTTY), out }) {
+  if (typeof args['key-out'] === 'string' || !isTTY) {
+    const file = writeKeyFile(
+      typeof args['key-out'] === 'string' ? args['key-out'] : defaultKeyOutPath(configPath),
+      key,
+    );
+    if (!isTTY) out('  stdout is not a terminal, so the key is NOT printed.');
+    out(`  New key written to ${file} (0600). Move it to your password manager, then delete the file.`);
+    return { file };
+  }
+  out('  New Rune server key (shown ONCE — store it in your password manager):');
+  process.stdout.write(`  ${key}\n`);
+  return { printed: true };
+}
+
 /** CLI entry: `rune serve ...` */
 export async function cmdServe({ runeRoot, projectRoot, args, positional = [], version }) {
   const sub = positional[1];
   const out = (line) => process.stderr.write(`${line}\n`);
   const configPath = typeof args.config === 'string' ? path.resolve(args.config) : defaultConfigPath();
 
+  // Help first: `rune serve <anything> --help` must print usage and do nothing else.
+  if (wantsHelp(args, positional)) {
+    process.stdout.write(`${USAGE}\n`);
+    return;
+  }
+
   if (sub === 'key') {
     const action = positional[2];
     if (action === 'rotate') {
       const { key } = rotateKey(configPath);
       out('');
-      out('  New Rune server key (shown ONCE). The old key stops working on the next request:');
-      process.stdout.write(`  ${key}\n`);
+      out('  Key rotated. The old key stops working on the next request.');
+      deliverKey(key, { configPath, args, out });
       out(`  Hash saved to ${configPath}. A running \`rune serve\` picks it up on the next request.`);
       out('');
       return;
@@ -244,8 +275,8 @@ export async function cmdServe({ runeRoot, projectRoot, args, positional = [], v
     if (res.unitPath) out(`\n  ✓ Wrote ${res.unitPath} (EXPERIMENTAL)`);
     else process.stdout.write(res.unit);
     if (keyInfo.created) {
-      out('\n  New server key (shown ONCE — store it in your password manager):');
-      out(`    ${keyInfo.key}`);
+      out('');
+      deliverKey(keyInfo.key, { configPath, args, out });
     }
     out('\n  Next:');
     for (const line of res.next) out(`    ${line}`);
@@ -254,10 +285,6 @@ export async function cmdServe({ runeRoot, projectRoot, args, positional = [], v
   }
   if (['setup', 'start', 'stop', 'status', 'doctor', 'connect'].includes(sub)) {
     await cmdServeSetup({ sub, runeRoot, projectRoot, args, positional, configPath });
-    return;
-  }
-  if (sub === 'help' || args.help) {
-    out(USAGE);
     return;
   }
   if (sub) {
@@ -321,13 +348,17 @@ export const USAGE = `
              [--yes] [--json]                     no questions (agents / scripts), JSON report
              [--expose local|tunnel|domain|tailscale] [--domain <host>]
              [--service|--no-service] [--no-start] [--rotate-key] [--key-out <file>] [--no-download]
+                                                  no terminal (agent/CI/pipe)? --yes is required, and a new
+                                                  key goes to ~/.rune/serve.key (0600), never to stdout
   rune serve start | stop                         start (background or service) / stop with the saved setup
   rune serve status | doctor [--json]             running? URLs, skills; doctor also probes local + public
   rune serve connect [client|all] [--url <url>]   copy-paste connect steps: grok-bot claude grok codex
                                                   cursor gemini antigravity (never prints the key)
   rune serve install [--print] [serve flags]      EXPERIMENTAL: systemd unit (user unit, or --print)
-  rune serve key rotate                           mint a new key, print it once
+  rune serve key rotate [--key-out <file>]        mint a new key, print it once (to a 0600 file when
+                                                  stdout is not a terminal)
   rune serve key path                             where the key hash lives
 
+  Every subcommand accepts --help / -h (prints this, does nothing else).
   Docs: docs/SERVE.md
 `;
