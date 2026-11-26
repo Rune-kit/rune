@@ -26,6 +26,7 @@ import { hookStatus } from '../commands/hooks/status.js';
 import { uninstallHooks } from '../commands/hooks/uninstall.js';
 import { formatSetupResult, runSetup } from '../commands/setup.js';
 import { formatUpdateResult, runUpdate } from '../commands/update.js';
+import { runVerify } from '../commands/verify.js';
 import { generateComprehensionHTML } from '../comprehension.js';
 import { generateDashboardHTML } from '../dashboard.js';
 import { checkMeshIntegrity, formatDoctorResults, formatMeshResults, runDoctor } from '../doctor.js';
@@ -791,7 +792,7 @@ async function cmdHooks(projectRoot, args, subcommand) {
 // ─── Arg Parsing ───
 
 // Flags that require a string value (not boolean)
-const VALUE_REQUIRED_FLAGS = new Set(['platform', 'output', 'disable', 'extensions', 'days', 'preset', 'tier']);
+const VALUE_REQUIRED_FLAGS = new Set(['platform', 'output', 'disable', 'extensions', 'days', 'preset', 'tier', 'base']);
 
 function parseTierFlag(raw) {
   if (!raw) return undefined;
@@ -894,6 +895,11 @@ async function main() {
       await cmdServe({ runeRoot: RUNE_ROOT, projectRoot, args, positional, version: pkg.version });
       break;
     }
+    case 'verify': {
+      const code = runVerify(projectRoot, args);
+      if (code) process.exit(code);
+      break;
+    }
     case 'version':
     case '--version':
     case '-v': {
@@ -934,6 +940,11 @@ async function main() {
       log('               hooks status [--platform <name>|all]');
       log("    serve      Host this machine's skills (Free + Pro/Business) over MCP for any agent");
       log('               serve setup | status | connect <client> | key rotate  (docs/SERVE.md)');
+      log('    verify    Test-integrity gate — weakened assertions, skipped tests, frozen paths');
+      log('               --integrity        required (only mode today)');
+      log('               --staged           compare the index to HEAD (what a commit would land)');
+      log('               --base <ref>       compare the worktree and index to <ref>');
+      log('               --json             machine-readable fingerprints');
       log('');
       log('  Options:');
       log(

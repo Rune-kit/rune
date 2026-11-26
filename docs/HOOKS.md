@@ -1,6 +1,6 @@
 # Rune Hooks — Multi-Platform Auto-Discipline
 
-Rune skills are libraries by default. `rune hooks install` turns them into a **runtime**: your IDE auto-invokes `preflight`, `sentinel`, `dependency-doctor`, `completion-gate`, and `quarantine` at the right moments — before you commit insecure code, before you forget to run tests, before you ship a half-finished change, before you trust an untrusted external content blob.
+Rune skills are libraries by default. `rune hooks install` turns them into a **runtime**: your IDE auto-invokes `preflight`, `sentinel`, `dependency-doctor`, `completion-gate`, and `quarantine` at the right moments — before you commit insecure code, before you weaken the tests that were supposed to protect a rewrite, before you forget to run tests, before you ship a half-finished change, before you trust an untrusted external content blob.
 
 Different AI IDEs expose different primitives. This doc explains what "auto-fire" actually means on each platform so you know what you're getting.
 
@@ -137,8 +137,8 @@ Presets:
 
 | Gate | Script | Can block? |
 |---|---|---|
-| preflight | `pre-tool-guard` — private keys / certificates (`*.pem`, `id_rsa`, `id_ed25519`, …) | **yes, under `strict`** |
-| sentinel | `secrets-scan` — secrets in a `git commit` | **yes, under `strict`** |
+| preflight | `pre-tool-guard` — private keys / certificates (`*.pem`, `id_rsa`, `id_ed25519`, …). Also **test-integrity** on Edit/Write of test files (assertion removal, new skips, changed expected literals, frozen-path edits). | **yes, under `strict`** |
+| sentinel | `secrets-scan` — secrets in a `git commit`. Also **test-integrity** on the staged test-file diff. | **yes, under `strict`** |
 | quarantine | `quarantine` — marks fetched / MCP content as data | no (advisory context) |
 | dependency-doctor | built in — notes a manifest edit (`package.json`, `requirements.txt`, …) | no |
 | completion-gate | built in — notes uncommitted changes at the end of a turn | no |
@@ -150,6 +150,40 @@ Every verdict is appended to `.rune/metrics/gate-outcomes.jsonl` (`blocked`, `by
 Under `gentle` a would-be block is printed as `would block (strict preset)` and the call goes through. If a script crashes or takes longer than 20 s the dispatcher allows the call (fail-open) — a broken hook must never wedge the agent. Hooks only enforce on runtimes that run them; on Windsurf (and anywhere Rune compiles to rules) the same checks are guidance the model may ignore.
 
 Installed commands pin the Rune version (`npx --yes @rune-kit/rune@<version> hook-dispatch …`, e.g. `@2.33.0`), so a hook never silently picks up a newer release; `rune doctor --hooks` reports drift after an upgrade.
+
+## Test-integrity gate
+
+The same analyzer runs from the CLI and from the preflight / sentinel hooks:
+
+```bash
+rune verify --integrity              # worktree + index vs HEAD
+rune verify --integrity --staged     # what a commit would land
+rune verify --integrity --base main  # vs a branch or tag
+rune verify --integrity --json       # machine-readable fingerprints
+```
+
+It inspects diffs of test files (Jest/Vitest/Mocha, pytest/unittest, Go, Rust, JUnit) and flags deleted or commented assertions, loosened matchers, added skip/only/xfail/todo, snapshot updates, changed expected literals, deleted tests, a net assertion-count drop, and mocks that replace a previously real call. Each finding is a fingerprint `{file, line, rule, before, after}`.
+
+**Strict blocks** on `assert-removed`, `skip-added`, `expected-changed`, and any edit under a frozen path. **Gentle** warns. Adding tests or assertions, renaming a test, and formatting-only changes are designed to stay clean.
+
+Frozen paths default to `tests/char/**` (characterization tests from `safeguard`) and `tests/holdout/**` (a suite the implementer does not own). Override the list in `.rune/test-integrity.json`:
+
+```json
+{ "frozenPaths": ["tests/char/**", "tests/holdout/**"] }
+```
+
+An intentional test change (safeguard re-baseline, a human-approved new expectation) needs an auditable override. The reason must be at least three characters. The hook logs `outcome: overridden` plus the reason to `.rune/metrics/gate-outcomes.jsonl`.
+
+```bash
+# environment, for a single hook invocation
+RUNE_TEST_CHANGE_APPROVED="safeguard rebase of billing characterization"
+
+# or a git commit trailer
+git commit -m "test(char): rebase billing" \
+  -m "Test-Change-Approved: safeguard rebase of billing characterization"
+```
+
+The hook message tells the agent to fix the code, not the tests, or to get that human approval. A broken integrity check fails open (the call runs) like the other gates.
 
 ## Platform capability matrix
 
