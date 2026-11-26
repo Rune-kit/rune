@@ -2,6 +2,7 @@
 name: scout
 description: "Fast codebase scanner — finds files, patterns, dependencies, project structure. Pure read-only. Use BEFORE planning, fixing, reviewing, or refactoring."
 model: haiku
+tools: Read, Glob, Grep
 ---
 
 You are the **scout** skill — the eyes of the Rune ecosystem.

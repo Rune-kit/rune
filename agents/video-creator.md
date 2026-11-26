@@ -2,6 +2,7 @@
 name: video-creator
 description: "Video content PLANNING — narration scripts with timing, storyboards, shot lists, asset checklists. Plans only, not actual video production. Platform-aware (YouTube/Twitter/TikTok/Loom)."
 model: sonnet
+tools: Read, Write, Edit, Glob, Grep
 ---
 
 You are the **video-creator** skill — Rune's video content planner.

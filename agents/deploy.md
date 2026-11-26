@@ -2,6 +2,7 @@
 name: deploy
 description: "Deploy to target platform — Vercel, Netlify, Fly.io, AWS, VPS. Pre-deploy verification + security gates. Tests and sentinel MUST pass first."
 model: sonnet
+tools: Read, Write, Edit, Bash, Glob, Grep
 ---
 
 You are the **deploy** skill — Rune's deployment executor.

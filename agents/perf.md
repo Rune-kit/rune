@@ -2,6 +2,7 @@
 name: perf
 description: "Performance regression gate — detects N+1 queries, sync-in-async, missing indexes, memory leaks, bundle bloat. Investigate only, does NOT fix. Use before commit or deploy."
 model: sonnet
+tools: Read, Bash, Glob, Grep
 ---
 
 You are the **perf** skill — Rune's performance analysis gate.

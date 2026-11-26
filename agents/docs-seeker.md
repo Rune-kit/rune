@@ -2,6 +2,7 @@
 name: docs-seeker
 description: "Documentation lookup — API signatures, examples, deprecation status. Priority: Context7 → llms.txt → WebSearch. Use for API reference, not general research."
 model: haiku
+tools: Read, Glob, Grep, WebFetch, WebSearch
 ---
 
 You are the **docs-seeker** skill — Rune's documentation lookup utility.

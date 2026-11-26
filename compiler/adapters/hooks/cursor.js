@@ -50,7 +50,14 @@ import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { summarizeRuneHooks } from '../../commands/hooks/merge.js';
 import { DISPATCH_CMD, isRuneManaged, SETTINGS_REL_PATH, WIRED_SKILLS } from '../../commands/hooks/presets.js';
-import { platformEntries, renderTierRule, unsupportedEntries } from './tier-emitter.js';
+import {
+  hookEntries,
+  platformEntries,
+  renderTierRule,
+  statusLineUserNote,
+  unsupportedEntries,
+  withHookFormat,
+} from './tier-emitter.js';
 
 export const id = 'cursor';
 export const HOOKS_REL_PATH = '.cursor/hooks.json';
@@ -73,6 +80,32 @@ export const PRESET_EVENTS = Object.freeze([
 
 /** Events earlier Rune versions wrote to; their Rune entries are migrated away. */
 export const LEGACY_EVENTS = Object.freeze(['beforeShellExecution', 'afterFileEdit']);
+
+/** Map a Claude-shaped Pro manifest event to a Cursor hooks.json event. */
+export function mapCursorTierEvent(entry) {
+  switch (entry.event) {
+    case 'UserPromptSubmit':
+      return { event: 'beforeSubmitPrompt' };
+    case 'PreToolUse':
+      return { event: 'preToolUse', matcher: 'Write|StrReplace' };
+    case 'PreCompact':
+      return { event: 'preCompact' };
+    case 'SessionStart':
+      return { event: 'sessionStart' };
+    default:
+      return null;
+  }
+}
+
+export function cursorTierHookItem(entry) {
+  const mapped = mapCursorTierEvent(entry);
+  if (!mapped) return null;
+  const command = withHookFormat(entry.command, 'cursor');
+  const item = { command, timeout: HOOK_TIMEOUT_SECONDS };
+  if (mapped.matcher) item.matcher = mapped.matcher;
+  item.hooks = [{ type: 'command', command, timeout: HOOK_TIMEOUT_SECONDS }];
+  return { event: mapped.event, item };
+}
 
 export function detect(projectRoot) {
   return existsSync(path.join(projectRoot, '.cursor'));
@@ -144,7 +177,26 @@ export async function emit({ preset, projectRoot, tierManifests = [] }) {
       );
     }
   }
-  if (existsSync(hooksPath) || preset !== 'off') {
+
+  const hooks = { ...(config.hooks || {}) };
+  let addedTierHooks = 0;
+  for (const manifest of tierManifests) {
+    for (const entry of hookEntries(manifest, 'cursor')) {
+      const mapped = cursorTierHookItem(entry);
+      if (!mapped) continue;
+      hooks[mapped.event] = [...(hooks[mapped.event] || []), mapped.item];
+      addedTierHooks += 1;
+    }
+    const userNote = statusLineUserNote(manifest, 'cursor');
+    if (userNote) notes.push(userNote);
+  }
+  if (addedTierHooks > 0) {
+    config = { ...config, hooks };
+    notes.push(
+      `Native Cursor hooks written for ${addedTierHooks} Pro/Business context-intelligence entr${addedTierHooks === 1 ? 'y' : 'ies'}.`,
+    );
+  }
+  if (existsSync(hooksPath) || preset !== 'off' || addedTierHooks > 0) {
     files.push({ path: hooksPath, content: `${JSON.stringify(config, null, 2)}\n` });
   }
 

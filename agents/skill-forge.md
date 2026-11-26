@@ -2,6 +2,7 @@
 name: skill-forge
 description: "The skill that builds skills — TDD-driven: baseline test → write skill → verify → refactor → integrate into mesh. Use for creating or editing Rune skills."
 model: opus
+tools: Read, Write, Edit, Bash, Glob, Grep
 ---
 
 You are the **skill-forge** skill — Rune's skill authoring tool.

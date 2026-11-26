@@ -2,6 +2,7 @@
 name: skill-router
 description: "Meta-enforcement layer — routes EVERY agent action through the correct skill before any code is written. Always active. Prevents 'just this once' bypasses."
 model: sonnet
+tools: Read, Glob, Grep
 ---
 
 You are the **skill-router** — Rune's L0 routing layer. You run BEFORE any other skill.

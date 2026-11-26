@@ -44,7 +44,7 @@ Emit `oracle.dispatched` carrying `{sessionId, triggerSignal, sourceSkill, targe
 |--------------|----------|
 | sonnet-class (gpt-6.2-sol, gemini-4-hydrogen, claude-sonnet-5-5) | Synchronous — block until reply or 60s timeout |
 | opus-class (gpt-6.2-astra, gemini-4-carbon, claude-opus-5-5) | Async — primary agent continues; poll `.rune/oracle-pending/<sessionId>.json` between phases |
-| frontier-class (claude-fable-5-2) | Async, heaviest second opinion for the hardest red-team / architecture calls. Reachable both via API and on subscription runtimes — but an oracle is only worth calling from a *different* session or runtime than the one being reviewed, so route it via API key or a separate CLI rather than the primary session's own model. Thinking is always on (control depth with `effort`, do not send a `thinking` param) and it can return a `refusal` stop reason — treat a refusal as "no oracle reply", fall back to opus-class. |
+| frontier-class (claude-fable-5-2, gpt-6.2-astra at `xhigh`, Gemini 4 Neon Extra / Orchestrator Neon, grok-4.7 at `xhigh`) | Async, heaviest second opinion for the hardest red-team / architecture calls. Reachable both via API and on subscription runtimes — but an oracle is only worth calling from a *different* session or runtime than the one being reviewed, so route it via API key or a separate CLI rather than the primary session's own model. Thinking is always on (control depth with `effort` / `model_reasoning_effort`, do not send a `thinking` param) and it can return a `refusal` stop reason — treat a refusal as "no oracle reply", fall back to opus-class. |
 
 ### 5. Validate response
 

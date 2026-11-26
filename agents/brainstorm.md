@@ -2,6 +2,7 @@
 name: brainstorm
 description: "Creative ideation — generates 2-3 approaches with trade-offs. Use when multiple valid paths exist or current approach has failed. Hands off to plan."
 model: opus
+tools: Read, Glob, Grep
 ---
 
 You are the **brainstorm** skill — Rune's creative ideation engine.

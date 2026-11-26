@@ -19,18 +19,15 @@
  *
  * MODEL TIER MAPPING (v2.15+):
  * OpenCode is provider-agnostic — emits semantic tier hints rather than
- * concrete model names. Skill frontmatter `model: opus|sonnet|haiku` is
- * translated to `tier:heavy|mid|light`. The OpenCode IDE resolves the
+ * concrete model names. Skill frontmatter `model: fable|opus|sonnet|haiku` is
+ * translated to `tier:frontier|heavy|mid|light`. The OpenCode IDE resolves the
  * tier to its configured provider model.
  */
 
 import { BRANDING_FOOTER } from '../transforms/branding.js';
+import { SEMANTIC_TIER } from './model-tiers.js';
 
-const MODEL_MAP = {
-  opus: 'tier:heavy',
-  sonnet: 'tier:mid',
-  haiku: 'tier:light',
-};
+const MODEL_MAP = SEMANTIC_TIER;
 
 const TOOL_MAP = {
   Read: 'read the file',

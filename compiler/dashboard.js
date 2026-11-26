@@ -279,7 +279,7 @@ const DATA = ${dataJson};
 const COLORS = {
   bars: ['#3b82f6','#6366f1','#8b5cf6','#a855f7','#d946ef','#ec4899','#f43f5e','#f97316','#eab308','#22c55e','#14b8a6','#06b6d4','#0ea5e9','#2563eb','#4f46e5'],
   donut: ['#3b82f6','#10b981','#f59e0b','#a855f7','#ef4444','#06b6d4','#ec4899','#f97316'],
-  models: { opus: '#a855f7', sonnet: '#3b82f6', haiku: '#10b981' },
+  models: { fable: '#f59e0b', opus: '#a855f7', sonnet: '#3b82f6', haiku: '#10b981' },
   heatmap: ['var(--bg-elevated)', '#1a3a5c', '#1d5a8a', '#2176b8', '#3b9fe6']
 };
 

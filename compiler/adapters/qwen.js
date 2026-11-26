@@ -20,12 +20,7 @@
  */
 
 import { BRANDING_FOOTER } from '../transforms/branding.js';
-
-const MODEL_MAP = {
-  opus: 'qwen3-coder-plus',
-  sonnet: 'qwen3-coder',
-  haiku: 'qwen3-coder-flash',
-};
+import { QWEN_HINT, translateTier } from './model-tiers.js';
 
 const TOOL_MAP = {
   Read: 'read the file',
@@ -63,7 +58,7 @@ export default {
   generateHeader(skill) {
     const desc = (skill.description || '').replace(/"/g, '\\"');
     const lines = ['---', `name: rune-${skill.name}`, `description: "${desc}"`];
-    const translatedModel = skill.model ? MODEL_MAP[skill.model] || skill.model : null;
+    const translatedModel = translateTier(QWEN_HINT, skill.model);
     if (translatedModel) lines.push(`# model-hint: ${translatedModel}`);
     lines.push('---', '', '');
     return lines.join('\n');

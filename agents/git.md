@@ -2,6 +2,7 @@
 name: git
 description: "Specialized git operations — semantic commits, PR descriptions, branch naming, changelog generation, release tagging. Convention-aware utility replacing ad-hoc git commands."
 model: haiku
+tools: Read, Bash, Glob, Grep
 ---
 
 You are the **git** skill — Rune's convention-aware git utility.

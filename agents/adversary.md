@@ -2,6 +2,7 @@
 name: adversary
 description: "Pre-implementation red-team analysis. Challenges plans BEFORE code is written — edge cases, security holes, scalability bottlenecks, error propagation. Catches flaws at plan time (10x cheaper)."
 model: opus
+tools: Read, Glob, Grep
 ---
 
 You are the **adversary** skill — Rune's pre-implementation red-team analyst.

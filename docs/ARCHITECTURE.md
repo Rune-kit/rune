@@ -104,33 +104,43 @@ Mode discovery is automatic via signals + input pattern matching. Cook / team / 
 
 ### Cross-Provider Model Mapping (v2.15+)
 
-SKILL.md frontmatter uses Anthropic-native tier names (`opus`/`sonnet`/`haiku`) as the canonical authoring vocabulary. Adapters translate this hint to provider-correct model names so the field is meaningful in every compiled output:
+SKILL.md frontmatter uses Anthropic-native tier names (`fable`/`opus`/`sonnet`/`haiku`) as the canonical authoring vocabulary. Adapters translate this hint to provider-correct model names so the field is meaningful in every compiled output. Most skills stay on `opus` for heavy work; `fable` is the optional frontier step above Opus, not a new default.
 
-| Tier | claude / cursor / windsurf | codex (`.codex/agents` roles) | antigravity (body hint) | opencode / openclaw / generic / qoder | qwen | gemini | aider / copilot |
-|------|---------------------------|-------|-------------|---------------------------------------|------|--------|------------------|
-| opus | `opus` (no-op → Claude Opus 5.5) | gpt-6.2-astra · effort high | Gemini 4 Neon (High) / Orchestrator | tier:heavy | qwen3-coder-plus | gemini-3.1-pro-preview | tier-hint inline |
-| sonnet | `sonnet` (no-op → Claude Sonnet 5.5) | gpt-6.2-sol · effort medium | Gemini 4 Hydrogen | tier:mid | qwen3-coder | gemini-3.8-flash | tier-hint inline |
-| haiku | `haiku` (no-op → Claude Haiku 5.5) | gpt-6-luna · effort high | Gemini 3.8 Flash | tier:light | qwen3-coder-flash | gemini-3.5-flash-lite | tier-hint inline |
+| Tier | claude / cursor / windsurf | codex (`.codex/agents` roles) | antigravity (body hint) | opencode / openclaw / generic / qoder | qwen | gemini | grok (hint only) | aider / copilot |
+|------|---------------------------|-------|-------------|---------------------------------------|------|--------|------------------|------------------|
+| fable | `fable` (no-op → Claude Fable 5.2) | gpt-6.2-astra · effort xhigh (`rune_frontier`) | Gemini 4 Neon (Extra) / Orchestrator (Neon) | tier:frontier | qwen3-coder-plus | gemini-3.1-pro-preview (or gemini-2.5-pro) | grok-4.7 · effort xhigh | tier-hint inline |
+| opus | `opus` (no-op → Claude Opus 5.5) | gpt-6.2-astra · effort high (`rune_heavy`) | Gemini 4 Neon (High) / Orchestrator | tier:heavy | qwen3-coder-plus | gemini-3.1-pro-preview (or gemini-2.5-pro) | grok-4.7 · effort high | tier-hint inline |
+| sonnet | `sonnet` (no-op → Claude Sonnet 5.5) | gpt-6.2-sol · effort medium (`rune_standard`) | Gemini 4 Hydrogen | tier:mid | qwen3-coder | gemini-3.5-flash | grok-4.7 · effort medium | tier-hint inline |
+| haiku | `haiku` (no-op → Claude Haiku 5.5) | gpt-6-luna · effort high (`rune_fast`) | Gemini 4 Hydrogen (Low) | tier:light | qwen3-coder-flash | gemini-3.1-flash-lite | grok-4.7 · effort low | tier-hint inline |
 
-> **Verified at source 2026-11-21.** **Codex**: developers.openai.com/codex/models
-> ("Recommended models": GPT-6.2 Astra for demanding work, GPT-6.2 Sol for everyday
-> work, Luna for focused repeatable tasks) and /codex/subagents ("If you select GPT-6
-> Luna explicitly, start with `high`"). GPT-6.1 Terra is skipped because it needs Codex
+> **Verified at source 2026-11-26.** **Codex**: developers.openai.com and
+> learn.chatgpt.com/docs/models (GPT-6.2 Astra for demanding work, GPT-6.2 Sol for
+> everyday work, Luna for focused repeatable tasks; "If you select GPT-6 Luna
+> explicitly, start with `high`"). GPT-6.1 Terra is skipped because it needs Codex
 > CLI ≥ 0.159.0. `model_reasoning_effort` accepts `low|medium|high|xhigh|max|ultra`
 > depending on the model; Rune emits it only in `.codex/agents/*.toml` roles and the
-> generated `AGENTS.md`, never as per-skill frontmatter.
+> generated `AGENTS.md`, never as per-skill frontmatter. `rune_frontier` is Astra at
+> `xhigh` for the optional fable tier.
 > **Antigravity**: SKILL.md frontmatter supports only `name` and `description`
-> (antigravity.google/docs/skills), so the adapter no longer writes a `model:` field
-> (it used to emit `gemini-3-*`, which Antigravity ignored and no longer lists); a
-> one-line "Suggested Antigravity model" hint follows the frontmatter instead, using
-> the display names from antigravity.google/docs/models.
-> **Gemini** column re-verified 2026-11-22 against the Gemini CLI 0.70.0 model catalog
-> (`packages/core/src/config/models.ts`): it has no `gemini-4-*` id — Gemini 4 (Argon,
-> Carbon, Neon, Hydrogen) is only in Antigravity and the Gemini API — so the hints are
-> 3.1 Pro (preview) / 3.8 Flash / 3.5 Flash-Lite.
-> **Claude**: the top tier above Opus 5.5 is **Claude Fable 5.2** (`claude-fable-5-2`,
-> Nov 9 2026) — Rune keeps `opus` as the authoring tier and names Fable in the
-> adversary oracle's frontier class. Older Claude 4.x ids are gone from Rune (Sonnet 4.5 retires 2026-11-30).
+> (antigravity.google/docs/models, checked 2026-11-26). Gemini 3.8 Flash, Gemini 4
+> Argon, GPT-OSS-120b and Claude 4.6 leave on 2026-11-30, so haiku now hints
+> Gemini 4 Hydrogen (Low) — Hydrogen is the only Gemini model on every plan.
+> **Gemini CLI** re-checked against 0.70.0 `packages/core/src/config/models.ts` and a
+> live `gemini models` run: stable-GA ids are gemini-3.5-flash and
+> gemini-3.1-flash-lite; 3.8 Flash / 3.5 Flash-Lite are experiment-gated "latest"
+> aliases, not what an unauthenticated CLI listed. Heavy tiers name
+> gemini-3.1-pro-preview with a gemini-2.5-pro fallback. There is still no
+> `gemini-4-*` id in Gemini CLI — Gemini 4 stays in Antigravity.
+> **Grok Build**: skills accept `model` but do not apply it (docs.x.ai). Hints name
+> grok-4.7 plus a reasoning-effort level. An unauthenticated `grok models` on
+> 1.0.92 still listed grok-4.6 / grok-4.5, so the hint tells the agent to use the
+> latest grok-4.x the account lists. Agent files keep Claude aliases; Grok
+> subagents inherit the parent model unless a concrete Grok id or `inherit` is set.
+> **Claude**: `model: fable|opus|sonnet|haiku|inherit` is valid in subagent
+> frontmatter (code.claude.com/docs/en/sub-agents). Fable 5.2 (`claude-fable-5-2`)
+> is the frontier tier above Opus 5.5; Rune keeps `opus` as the default heavy
+> authoring tier and does not mass-promote skills to fable. Sonnet 4.5 retires
+> 2026-11-30; older Claude 4.x ids are gone from Rune.
 > **Still pending verification:**
 > qwen provider IDs. Note: **Gemini CLI moved to enterprise (Gemini Code Assist)
 > on 2026-06-18; individual users moved to Antigravity CLI**, so the `gemini`
@@ -138,7 +148,7 @@ SKILL.md frontmatter uses Anthropic-native tier names (`opus`/`sonnet`/`haiku`) 
 > `.devin/rules/` (with `.windsurf/rules/` fallback), skills to `.devin/skills/`.
 
 Rules:
-- Anthropic-backed adapters (claude/cursor/windsurf) understand the native names — adapter is no-op
+- Anthropic-backed adapters (claude/cursor/windsurf) understand the native names including `fable` — adapter is no-op
 - Concrete-provider adapters (codex/antigravity/qwen/gemini) emit recognizable provider model names
 - Provider-agnostic adapters (opencode/openclaw/generic/qoder) emit `tier:heavy|mid|light` semantic hints — the consuming runtime resolves to its configured provider model
 - Hint-only adapters (aider/copilot) embed the tier as a comment / inline text — those CLIs read model from their own config, not from rule files

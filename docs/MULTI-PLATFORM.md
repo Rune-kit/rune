@@ -50,7 +50,7 @@ interface ParsedSkill {
   name: string;                    // from frontmatter
   description: string;             // from frontmatter
   layer: "L0" | "L1" | "L2" | "L3";
-  model: "haiku" | "sonnet" | "opus";
+  model: "haiku" | "sonnet" | "opus" | "fable";
   group: string;
   contextFork: boolean;            // context: fork present?
   agentType: string | null;        // agent: general-purpose, etc.

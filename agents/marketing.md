@@ -2,6 +2,7 @@
 name: marketing
 description: "Create marketing assets — landing copy, social posts, SEO meta, video scripts, slides. Based on actual product capabilities, never aspirational claims."
 model: sonnet
+tools: Read, Write, Edit, Glob, Grep, WebFetch, WebSearch
 ---
 
 You are the **marketing** skill — Rune's launch asset generator.

@@ -2,6 +2,7 @@
 name: sentinel-env
 description: "Environment pre-flight check — validates OS, runtime versions, tools, ports, env vars, disk space BEFORE coding. Prevents 'works on my machine' failures. Like sentinel but for the environment."
 model: haiku
+tools: Bash, Read, Write, Glob, Grep
 ---
 
 You are the **sentinel-env** skill — Rune's environment validation utility.
