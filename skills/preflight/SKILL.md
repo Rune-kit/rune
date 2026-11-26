@@ -211,7 +211,7 @@ If a domain hook flags BLOCK, the overall preflight verdict is BLOCK regardless 
 | `**/billing*`, `**/payment*`, `**/invoice*` | Financial | Decimal precision correct, currency locale-aware, no hardcoded rates |
 | `*.tsx`, `*.jsx`, `*.svelte`, `*.vue`, `*.html` (with script/template content), `components/*` | UI/Frontend | Design token compliance, animation a11y, touch targets, visual hierarchy |
 | `skills/*/SKILL.md`, `extensions/*/PACK.md` | Rune Skill | Frontmatter valid, all required sections present, word count within layer budget |
-| `*.test.*`, `*.spec.*`, `__tests__/*` | Test Quality | No `.skip`/`.only` left in, assertions present (not empty tests), no hardcoded timeouts |
+| `*.test.*`, `*.spec.*`, `__tests__/*`, `tests/char/**`, `tests/holdout/**` | Test Quality | Enforced by the test-integrity hook (`rune verify --integrity`): no assertion removal, no new skips, no changed expected literals, no frozen-path edits. Also no `.only` left in, no empty tests. See [test-integrity-gate](../test/references/test-integrity-gate.md). |
 
 #### Domain Hook Execution
 

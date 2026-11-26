@@ -160,6 +160,7 @@ Safe to proceed with: `rune:surgeon` targeting [module]
 2. MUST NOT proceed to surgery if characterization tests fail — the safety net is broken
 3. MUST cover critical paths identified by autopsy — not just easy-to-test functions
 4. MUST verify tests are meaningful — tests that always pass regardless of code are useless
+5. MUST write characterization tests under `tests/char/` (or a path listed in `.rune/test-integrity.json`). The test-integrity hook freezes that tree — `fix` / `surgeon` cannot edit it. Re-baseline only with human approval (`Test-Change-Approved: <reason>` trailer or `RUNE_TEST_CHANGE_APPROVED`). Prefer a `tests/holdout/` suite the implementer does not own. See [test-integrity-gate](../test/references/test-integrity-gate.md).
 
 ## Sharp Edges
 

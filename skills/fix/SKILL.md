@@ -20,6 +20,7 @@ Apply code changes. Fix receives a plan, debug finding, or review finding and wr
 
 <HARD-GATE>
 Never change test files to make tests pass unless the tests themselves are provably wrong (wrong expected value, wrong test setup, testing a removed API). The rule: fix the CODE, not the TESTS.
+The test-integrity hook (preflight on Edit/Write, sentinel on `git commit`) will BLOCK assertion removal, new skips, changed expected literals, and any edit under `tests/char/**` or `tests/holdout/**`. Do not work around it. If a human has approved the test change, retry with `RUNE_TEST_CHANGE_APPROVED="<reason>"` or a `Test-Change-Approved: <reason>` commit trailer — see [test-integrity-gate](../test/references/test-integrity-gate.md).
 If unsure whether the test is wrong or the implementation is wrong → call `rune:debug` to investigate.
 </HARD-GATE>
 

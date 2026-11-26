@@ -41,6 +41,7 @@ VERTICAL SLICING (Iron Law extension): one test → GREEN → one test → GREEN
 - Horizontal slicing produces tests-of-imagination, not tests-of-behavior. See [references/vertical-tdd.md](references/vertical-tdd.md).
 - Emit signal `tdd.horizontal.violation` when triggered; preflight blocks merge until cycles are unwound.
 Exceptions (narrow, must be documented in test header): retrofitting characterization tests for legacy untested code; spec-driven scaffolding where the contract is external (OpenAPI, wire protocol).
+Characterization tests go under `tests/char/` and stay frozen after safeguard; holdout tests go under `tests/holdout/` and are not authored by the implementer. See [references/test-integrity-gate.md](references/test-integrity-gate.md).
 </HARD-GATE>
 
 ## Instructions
@@ -313,6 +314,7 @@ If you catch yourself with ANY of these, delete implementation code and restart 
 | RED Gate | All new tests FAIL before implementation | If any pass, rewrite stricter tests |
 | GREEN Gate | All tests PASS after implementation | Fix code, not tests |
 | Coverage Gate | 80%+ coverage verified via verification | Write additional tests for gaps |
+| Integrity Gate | `rune verify --integrity` (also preflight / sentinel hooks) is clean, or an auditable override is present | Do not weaken, skip, or retarget tests to get green — see [references/test-integrity-gate.md](references/test-integrity-gate.md) |
 
 ## Output Format
 
