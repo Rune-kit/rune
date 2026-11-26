@@ -9,7 +9,9 @@
  *
  * Skill → gate:
  *   preflight         → hooks/pre-tool-guard   (privacy mesh: BLOCK private keys/certs, WARN .env/credentials)
+ *                       + test-integrity       (BLOCK weakened/skipped/expected-changed tests and frozen-path edits)
  *   sentinel          → hooks/secrets-scan     (BLOCK `git commit` when staged files hold high-confidence secrets)
+ *                       + test-integrity       (same check on the staged test-file diff)
  *   quarantine        → hooks/quarantine       (advisory: untrusted MCP / web / upload content)
  *   dependency-doctor → built-in               (advisory: a dependency manifest was edited)
  *   completion-gate   → built-in               (advisory: uncommitted changes at turn end — verify first)
@@ -52,6 +54,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { runIntegrityForEvent } from '../lib/test-integrity.js';
 import { WIRED_SKILLS } from './hooks/presets.js';
 
 const ALLOWLIST = new Set(WIRED_SKILLS);
@@ -249,7 +252,51 @@ function completionGate(event, cwd) {
   );
 }
 
+function crash(gate) {
+  return !gate || (gate.status !== 0 && gate.status !== 2);
+}
+
+/**
+ * Combine two gate results. A BLOCK from either wins; advisories are
+ * concatenated. A crash in one gate does not discard a real verdict from the
+ * other; only when both crash do we fail open.
+ */
+export function mergeGates(a, b) {
+  const aCrash = crash(a);
+  const bCrash = crash(b);
+  if (aCrash && bCrash) {
+    return a || b || { status: null, stdout: '', stderr: '', error: 'gate failed' };
+  }
+  const usable = [a, b].filter((g) => g && !crash(g));
+  const blocks = usable.filter((g) => g.status === 2);
+  const chosen = blocks.length ? blocks : usable;
+  const messages = [];
+  const stderrs = [];
+  for (const g of chosen) {
+    if (g.stderr?.trim()) stderrs.push(g.stderr.trim());
+    const text = envelopeText(g.stdout);
+    if (text) messages.push(text);
+  }
+  const lead = blocks[0] || usable[0] || a || b;
+  return {
+    status: blocks.length ? 2 : 0,
+    stdout: messages.length
+      ? `${JSON.stringify({ systemMessage: messages.join('\n'), hookSpecificOutput: { hookEventName: 'PreToolUse' } })}\n`
+      : lead?.stdout || '',
+    stderr: stderrs.join('\n'),
+    override: b?.override || a?.override,
+    result: b?.result || a?.result,
+    error: aCrash ? a?.error : bCrash ? b?.error : undefined,
+  };
+}
+
 function runGate(skill, event, cwd) {
+  if (skill === 'preflight') {
+    return mergeGates(runScriptGate(SKILL_SCRIPTS.preflight, event, cwd), runIntegrityForEvent(event, cwd));
+  }
+  if (skill === 'sentinel') {
+    return mergeGates(runScriptGate(SKILL_SCRIPTS.sentinel, event, cwd), runIntegrityForEvent(event, cwd));
+  }
   if (SKILL_SCRIPTS[skill]) return runScriptGate(SKILL_SCRIPTS[skill], event, cwd);
   if (skill === 'dependency-doctor') return dependencyGate(event);
   if (skill === 'completion-gate') return completionGate(event, cwd);
@@ -383,12 +430,16 @@ export async function dispatchHook(argv, io = {}) {
 
   const mode = gentle ? 'advisory' : 'enforcing';
   const verdict = result.blocked ? 'BLOCK' : 'pass';
+  const outcome =
+    gate.override && gate.result?.blocked && !result.blocked ? 'overridden' : gateOutcome(skill, gate, result, gentle);
   recordGateOutcome(cwd, {
     gate: skill,
-    outcome: gateOutcome(skill, gate, result, gentle),
+    outcome,
     mode,
     tool: event.tool_name || null,
     event: eventName || null,
+    ...(gate.override ? { override: gate.override } : {}),
+    ...(gate.result?.blocked ? { rules: [...new Set((gate.result.high || []).map((f) => f.rule))] } : {}),
   });
   stderr.write(`rune-hook: ${skill} [${mode}] ${verdict} — tool=${event.tool_name || 'unknown'}\n`);
   if (result.stderr) stderr.write(result.stderr);

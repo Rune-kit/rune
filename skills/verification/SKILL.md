@@ -365,6 +365,7 @@ When any skill calls verification and then reports results upstream:
 | "0 tests failed" | A non-zero collected/ran count in the same output | REJECTED — a run that collected 0 tests also reports 0 failures |
 | "Clean scan / no findings" | The count of files, rules, or rows actually examined | REJECTED — an empty target set is indistinguishable from a clean one |
 | "No diff / no change detected" | Evidence the probe can report a difference at all | REJECTED — show it non-zero on a case known to differ |
+| "Tests pass" after this diff changed test files | `rune verify --integrity` clean (or a recorded `Test-Change-Approved` / `RUNE_TEST_CHANGE_APPROVED` override) | REJECTED — a green suite that was weakened is not evidence. See [test-integrity-gate](../test/references/test-integrity-gate.md) |
 
 ## Constraints
 
