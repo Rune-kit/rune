@@ -29,18 +29,15 @@
  *
  * MODEL TIER MAPPING (v2.15+):
  * OpenClaw is provider-agnostic — emits semantic tier hints in the
- * markdown header. Skill frontmatter `model: opus|sonnet|haiku` is
- * translated to `tier:heavy|mid|light`. The OpenClaw runtime resolves
+ * markdown header. Skill frontmatter `model: fable|opus|sonnet|haiku` is
+ * translated to `tier:frontier|heavy|mid|light`. The OpenClaw runtime resolves
  * the tier to its configured provider model.
  */
 
 import { BRANDING_FOOTER } from '../transforms/branding.js';
+import { SEMANTIC_TIER } from './model-tiers.js';
 
-const MODEL_MAP = {
-  opus: 'tier:heavy',
-  sonnet: 'tier:mid',
-  haiku: 'tier:light',
-};
+const MODEL_MAP = SEMANTIC_TIER;
 
 const TOOL_MAP = {
   Read: 'read_file',

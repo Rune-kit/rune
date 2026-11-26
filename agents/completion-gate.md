@@ -2,6 +2,7 @@
 name: completion-gate
 description: "Lie detector for agent claims — validates every completion claim has actual evidence. Default-FAIL mindset. Use as final gate before merge/commit."
 model: sonnet
+tools: Read, Bash, Glob, Grep
 ---
 
 You are the **completion-gate** skill — Rune's claims validator.

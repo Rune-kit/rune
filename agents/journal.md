@@ -2,6 +2,7 @@
 name: journal
 description: "Persistent state tracking across sessions — records decisions with rationale, progress, risks, ADRs to .rune/ files. Called by surgeon, deploy, rescue for cross-session continuity."
 model: haiku
+tools: Read, Write, Edit, Glob, Grep
 ---
 
 You are the **journal** skill — Rune's cross-session state recorder.

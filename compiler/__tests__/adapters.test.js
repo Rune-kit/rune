@@ -189,9 +189,11 @@ test('codex AGENTS.md documents the tier→model + reasoning-effort mapping', as
   const agents = extras.find((e) => e.path === 'AGENTS.md');
   assert.ok(agents, 'codex emits AGENTS.md');
   // Guards against a MODEL_MAP / REASONING_EFFORT_MAP interpolation swap.
+  assert.match(agents.content, /fable → `gpt-6\.2-astra` \(`model_reasoning_effort = "xhigh"`\)/);
   assert.match(agents.content, /opus → `gpt-6\.2-astra` \(`model_reasoning_effort = "high"`\)/);
   assert.match(agents.content, /sonnet → `gpt-6\.2-sol` \(`model_reasoning_effort = "medium"`\)/);
   assert.match(agents.content, /haiku → `gpt-6-luna` \(`model_reasoning_effort = "high"`\)/);
+  assert.ok(extras.some((e) => e.path === '.codex/agents/rune-frontier.toml'));
   assert.ok(extras.some((e) => e.path === '.codex/agents/rune-heavy.toml'));
   assert.ok(extras.some((e) => e.path === '.codex/agents/rune-standard.toml'));
   assert.ok(extras.some((e) => e.path === '.codex/agents/rune-fast.toml'));
@@ -325,7 +327,13 @@ for (const [name, dir] of [
     });
     // Agent Skills: name must equal the directory name the emitter creates.
     assert.ok(header.startsWith('---\nname: rune-fix\ndescription: "Fix code"\n'));
-    assert.ok(header.includes('# model-hint: tier:heavy'), 'tier travels as a comment, not a runtime key');
+    const hint = header.match(/^# model-hint: (.+)$/m)?.[1];
+    assert.ok(hint, 'tier travels as a comment, not a runtime key');
+    if (name === 'grok') {
+      assert.match(hint, /grok-4\.7/);
+    } else {
+      assert.strictEqual(hint, 'tier:heavy');
+    }
     assert.ok(!/^model:/m.test(header), 'no runtime-specific model key');
     assert.strictEqual(adapter.transformReference('plan', '`rune:plan`'), '`the rune-plan skill`');
   });

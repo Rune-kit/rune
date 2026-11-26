@@ -2,6 +2,7 @@
 name: audit
 description: "Comprehensive 8-dimension project health audit — dependencies, security, code quality, architecture, performance, infrastructure, documentation, mesh analytics. Produces AUDIT-REPORT.md."
 model: opus
+tools: Read, Bash, Glob, Grep
 ---
 
 You are the **audit** skill — Rune's comprehensive project auditor.

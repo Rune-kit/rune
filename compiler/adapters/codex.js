@@ -13,40 +13,28 @@
  * only (config.toml). Repo skills MUST live in .agents/skills/ to be
  * auto-discovered. @see https://developers.openai.com/codex/skills
  *
- * MODEL TIER MAPPING (v2.15+, lineup refreshed 2026-11):
- * Skill frontmatter `model: opus|sonnet|haiku` (Anthropic naming) is
- * translated to Codex/OpenAI provider-correct model names so the field
- * is meaningful in the compiled output. Unknown tier values pass through.
+ * MODEL TIER MAPPING (v2.15+, lineup re-checked 2026-11-26):
+ * Skill frontmatter `model: fable|opus|sonnet|haiku` is translated in
+ * `.codex/agents/*.toml` roles and AGENTS.md, not in SKILL.md frontmatter
+ * (Codex skills have no per-skill model field). Unknown tiers pass through.
  *
- * Codex GPT-6.x tiers (verified 2026-11-21 against developers.openai.com/codex/models
- * "Recommended models" and /codex/subagents "Model choice"):
- *   gpt-6.2-astra = demanding end-to-end work → opus
- *   gpt-6.2-sol   = everyday agents that plan, use tools, check work → sonnet
- *   gpt-6-luna    = fast, narrowly scoped, repeatable work → haiku
- *                   (docs: "If you select GPT-6 Luna explicitly, start with `high`")
+ *   fable  → gpt-6.2-astra · effort xhigh  — hardest long-horizon work
+ *   opus   → gpt-6.2-astra · effort high   — demanding end-to-end work
+ *   sonnet → gpt-6.2-sol   · effort medium — everyday agents
+ *   haiku  → gpt-6-luna    · effort high   — official Luna starting point
  * gpt-6.1-terra is skipped on purpose: it needs Codex CLI >= 0.159.0.
  * `model_reasoning_effort` (low|medium|high|xhigh|max|ultra, model-dependent)
- * is a config.toml / custom-agent key, not per-skill frontmatter — Rune emits it
- * in `.codex/agents/*.toml` roles and documents it in AGENTS.md.
+ * is a config.toml / custom-agent key — Rune emits it only in roles + AGENTS.md.
  */
 
 import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { BRANDING_FOOTER } from '../transforms/branding.js';
+import { CODEX_EFFORT, CODEX_MODEL } from './model-tiers.js';
 
-const MODEL_MAP = {
-  opus: 'gpt-6.2-astra',
-  sonnet: 'gpt-6.2-sol',
-  haiku: 'gpt-6-luna',
-};
-
-// Suggested config.toml `model_reasoning_effort` per tier (global key, documented in AGENTS.md).
-const REASONING_EFFORT_MAP = {
-  opus: 'high',
-  sonnet: 'medium',
-  haiku: 'high', // Luna: official starting point is `high`
-};
+const MODEL_MAP = CODEX_MODEL;
+const REASONING_EFFORT_MAP = CODEX_EFFORT;
 
 const TOOL_MAP = {
   Read: 'read the file',
@@ -134,13 +122,14 @@ export default {
       '',
       '## Model Tiers',
       '',
-      'Rune skills carry a tier hint (`opus`/`sonnet`/`haiku`). Suggested Codex mapping:',
+      'Rune skills carry a tier hint (`fable`/`opus`/`sonnet`/`haiku`). Suggested Codex mapping:',
       '',
+      `- fable → \`${MODEL_MAP.fable}\` (\`model_reasoning_effort = "${REASONING_EFFORT_MAP.fable}"\`) — long-horizon / frontier reasoning`,
       `- opus → \`${MODEL_MAP.opus}\` (\`model_reasoning_effort = "${REASONING_EFFORT_MAP.opus}"\`) — architecture / security / planning`,
       `- sonnet → \`${MODEL_MAP.sonnet}\` (\`model_reasoning_effort = "${REASONING_EFFORT_MAP.sonnet}"\`) — code / edit / review`,
       `- haiku → \`${MODEL_MAP.haiku}\` (\`model_reasoning_effort = "${REASONING_EFFORT_MAP.haiku}"\`) — scan / read-only`,
       '',
-      'Generated project-scoped roles live in `.codex/agents/` (`rune_heavy`, `rune_standard`, `rune_fast`) so spawned agents apply these settings natively. Codex loads a project `.codex/` folder only when the project is trusted.',
+      'Generated project-scoped roles live in `.codex/agents/` (`rune_frontier`, `rune_heavy`, `rune_standard`, `rune_fast`) so spawned agents apply these settings natively. Codex loads a project `.codex/` folder only when the project is trusted.',
       '',
       '---',
       '> Rune Skill Mesh — https://github.com/rune-kit/rune',
@@ -151,6 +140,17 @@ export default {
     const agentsMd = await mergeAgentsMd(outputRoot, runeBlock);
     return [
       { path: 'AGENTS.md', content: agentsMd },
+      {
+        path: '.codex/agents/rune-frontier.toml',
+        content: renderAgentRole({
+          name: 'rune_frontier',
+          description: 'Rune worker for demanding long-horizon reasoning when the heavy role is not enough.',
+          model: MODEL_MAP.fable,
+          effort: REASONING_EFFORT_MAP.fable,
+          instructions:
+            'Follow the applicable Rune skill exactly. Use this role only for work that still falls short on rune_heavy. Prioritize deep analysis, explicit assumptions, and complete verification.',
+        }),
+      },
       {
         path: '.codex/agents/rune-heavy.toml',
         content: renderAgentRole({

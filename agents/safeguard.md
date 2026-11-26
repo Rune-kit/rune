@@ -2,6 +2,7 @@
 name: safeguard
 description: "Build safety nets BEFORE refactoring — characterization tests capturing current behavior, boundary markers, config freeze, rollback tags. MUST run before surgeon."
 model: sonnet
+tools: Read, Write, Edit, Bash, Glob, Grep
 ---
 
 You are the **safeguard** skill — Rune's pre-refactoring safety net builder.

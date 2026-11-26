@@ -17,14 +17,17 @@
  *
  * MODEL TIER MAPPING: Grok Build honors a per-skill `model` frontmatter key
  * (08-skills.md: "Model override for running the skill"), but Rune does not
- * write one — `opus`/`sonnet`/`haiku` are not Grok model ids, and pinning a
+ * write one — `fable`/`opus`/`sonnet`/`haiku` are not Grok model ids, and pinning a
  * concrete model would override the model the user picked (and break for
- * accounts without it). The tier travels as a `# model-hint` comment instead.
+ * accounts without it). The tier travels as a `# model-hint` naming grok-4.7
+ * and a reasoning-effort level (accounts may still list grok-4.6 / 4.5).
  */
 
 import { createAgentSkillsAdapter } from './agent-skills-base.js';
+import { GROK_HINT } from './model-tiers.js';
 
 export default createAgentSkillsAdapter({
   name: 'grok',
   outputDir: '.grok/skills',
+  modelMap: GROK_HINT,
 });

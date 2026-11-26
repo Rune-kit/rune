@@ -15,7 +15,7 @@
  * hook context. Only skill emission moved to .cursor/skills/.
  *
  * MODEL TIER MAPPING (v2.15+):
- * No-op. Cursor's Anthropic API integration understands `model: opus|sonnet|haiku`
+ * No-op. Cursor's Anthropic API integration understands `model: fable|opus|sonnet|haiku`
  * natively. No translation required.
  */
 

@@ -22,7 +22,7 @@
  * hook context. Only skill emission moved to .windsurf/skills/.
  *
  * MODEL TIER MAPPING (v2.15+):
- * No-op. Windsurf's Anthropic API integration understands `model: opus|sonnet|haiku`
+ * No-op. Windsurf's Anthropic API integration understands `model: fable|opus|sonnet|haiku`
  * natively. No translation required.
  */
 

@@ -2,6 +2,7 @@
 name: rescue
 description: "Legacy refactoring orchestrator for messy codebases (health <40). Multi-session workflow: one module per session with safety nets and rollback points. Use for modernization, not features."
 model: opus
+tools: Read, Write, Edit, Bash, Glob, Grep
 ---
 
 You are the **rescue** skill — Rune's legacy code modernization orchestrator.

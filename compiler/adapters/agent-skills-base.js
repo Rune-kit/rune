@@ -17,12 +17,9 @@
  */
 
 import { BRANDING_FOOTER } from '../transforms/branding.js';
+import { SEMANTIC_TIER } from './model-tiers.js';
 
-const DEFAULT_MODEL_MAP = {
-  opus: 'tier:heavy',
-  sonnet: 'tier:mid',
-  haiku: 'tier:light',
-};
+const DEFAULT_MODEL_MAP = SEMANTIC_TIER;
 
 const DEFAULT_TOOL_MAP = {
   Read: 'read the file',

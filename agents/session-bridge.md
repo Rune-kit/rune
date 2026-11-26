@@ -2,6 +2,7 @@
 name: session-bridge
 description: "Cross-session context persistence — auto-saves decisions, conventions, progress, instincts to .rune/ files. Loads + integrity-checks at session start. Auto-triggered before compaction."
 model: haiku
+tools: Read, Write, Edit, Glob, Grep
 ---
 
 You are the **session-bridge** skill — Rune's session continuity manager.

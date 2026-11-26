@@ -14,22 +14,18 @@
  * @see https://geminicli.com/docs/cli/skills/
  * @see https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/skills.md
  *
- * MODEL TIER MAPPING (re-checked 2026-11-22 against the Gemini CLI 0.70.0
- * model catalog): Gemini CLI is now the Gemini Code Assist (enterprise)
- * terminal agent and ships no Gemini 4 models — Gemini 4 lives in Antigravity
- * (see the antigravity adapter). Tier names translate to Gemini CLI model ids
- * as a hint comment; Gemini CLI reads the model from --model / config, not
- * from the skill body.
- *   opus → gemini-3.1-pro-preview · sonnet → gemini-3.8-flash · haiku → gemini-3.5-flash-lite
+ * MODEL TIER MAPPING (re-checked 2026-11-26 against Gemini CLI 0.70.0
+ * packages/core/src/config/models.ts and a live `gemini models` run):
+ * Gemini CLI is the Gemini Code Assist (enterprise) terminal agent and ships
+ * no Gemini 4 models — Gemini 4 lives in Antigravity. Hints use stable-GA ids
+ * (3.5 Flash / 3.1 Flash-Lite) rather than the experiment-gated latest ids
+ * (3.8 Flash / 3.5 Flash-Lite). Heavy tiers name the 3.1 Pro preview with a
+ * fallback to gemini-2.5-pro. Gemini CLI reads the model from --model / config,
+ * not from the skill body.
  */
 
 import { BRANDING_FOOTER } from '../transforms/branding.js';
-
-const MODEL_MAP = {
-  opus: 'gemini-3.1-pro-preview',
-  sonnet: 'gemini-3.8-flash',
-  haiku: 'gemini-3.5-flash-lite',
-};
+import { GEMINI_CLI_HINT, translateTier } from './model-tiers.js';
 
 const TOOL_MAP = {
   Read: 'read the file',
@@ -67,7 +63,7 @@ export default {
   generateHeader(skill) {
     const desc = (skill.description || '').replace(/"/g, '\\"');
     const lines = ['---', `name: rune-${skill.name}`, `description: "${desc}"`];
-    const translatedModel = skill.model ? MODEL_MAP[skill.model] || skill.model : null;
+    const translatedModel = translateTier(GEMINI_CLI_HINT, skill.model);
     if (translatedModel) lines.push(`# model-hint: ${translatedModel}`);
     lines.push('---', '', '');
     return lines.join('\n');

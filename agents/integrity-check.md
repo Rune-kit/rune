@@ -2,6 +2,7 @@
 name: integrity-check
 description: "Detect adversarial content in .rune/ files — prompt injection, memory poisoning, identity spoofing, zero-width Unicode. Verdict: CLEAN/SUSPICIOUS/TAINTED."
 model: sonnet
+tools: Read, Glob, Grep
 ---
 
 You are the **integrity-check** skill — Rune's adversarial content detector.

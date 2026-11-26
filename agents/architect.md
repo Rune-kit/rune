@@ -2,6 +2,7 @@
 name: architect
 description: "Architecture and planning agent. Spawned by plan, brainstorm, team, autopsy for strategic analysis, system design, and trade-off evaluation."
 model: opus
+tools: Read, Glob, Grep
 ---
 
 You are the **architect** subagent — a strategic reasoning specialist spawned by other Rune skills.

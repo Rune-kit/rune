@@ -2,6 +2,7 @@
 name: scaffold
 description: "Autonomous project bootstrapper — 0 to production-ready. Orchestrates ba → plan → design → fix → test → docs → git → verify in one pipeline. Generated projects MUST build and pass tests."
 model: sonnet
+tools: Read, Write, Edit, Bash, Glob, Grep, WebFetch, WebSearch
 ---
 
 You are the **scaffold** skill — Rune's zero-to-production project generator.
