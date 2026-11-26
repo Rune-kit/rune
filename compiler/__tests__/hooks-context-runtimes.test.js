@@ -33,7 +33,7 @@ const MANIFEST = {
       skill: 'context-inject',
       event: 'UserPromptSubmit',
       matcher: '.*',
-      command: 'node "${RUNE_PRO_ROOT}/hooks/run-hook.cjs" context-inject',
+      command: `node "\${RUNE_PRO_ROOT}/hooks/run-hook.cjs" context-inject`,
       platforms: { ...HOOK },
     },
     {
@@ -41,14 +41,14 @@ const MANIFEST = {
       skill: 'context-sense',
       event: 'PreToolUse',
       matcher: 'Edit|Write',
-      command: 'node "${RUNE_PRO_ROOT}/hooks/run-hook.cjs" context-sense',
+      command: `node "\${RUNE_PRO_ROOT}/hooks/run-hook.cjs" context-sense`,
       platforms: { ...HOOK },
     },
     {
       id: 'context-pulse-gemini',
       skill: 'context-pulse',
       event: 'AfterModel',
-      command: 'node "${RUNE_PRO_ROOT}/hooks/run-hook.cjs" context-pulse --format gemini',
+      command: `node "\${RUNE_PRO_ROOT}/hooks/run-hook.cjs" context-pulse --format gemini`,
       platforms: {
         gemini: 'hook',
         claude: 'unsupported',
@@ -63,7 +63,7 @@ const MANIFEST = {
       id: 'context-reset-precompact',
       skill: 'context-reset',
       event: 'PreCompact',
-      command: 'node "${RUNE_PRO_ROOT}/hooks/run-hook.cjs" context-reset',
+      command: `node "\${RUNE_PRO_ROOT}/hooks/run-hook.cjs" context-reset`,
       platforms: {
         claude: 'hook',
         codex: 'hook',
@@ -78,14 +78,14 @@ const MANIFEST = {
       id: 'context-reset-sessionstart',
       skill: 'context-reset',
       event: 'SessionStart',
-      command: 'node "${RUNE_PRO_ROOT}/hooks/run-hook.cjs" context-reset',
+      command: `node "\${RUNE_PRO_ROOT}/hooks/run-hook.cjs" context-reset`,
       platforms: { ...HOOK, windsurf: 'unsupported' },
     },
     {
       id: 'rune-pulse',
       skill: 'rune-pulse',
       event: 'statusLine',
-      command: 'node "${RUNE_PRO_ROOT}/hooks/rune-pulse/index.cjs"',
+      command: `node "\${RUNE_PRO_ROOT}/hooks/rune-pulse/index.cjs"`,
       padding: 0,
       platforms: {
         claude: 'statusLine',

@@ -27,7 +27,14 @@ import { existsSync } from 'node:fs';
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { DISPATCH_CMD } from '../../commands/hooks/presets.js';
-import { hookEntries, platformEntries, renderTierRule, statusLineUserNote, unsupportedEntries, withHookFormat } from './tier-emitter.js';
+import {
+  hookEntries,
+  platformEntries,
+  renderTierRule,
+  statusLineUserNote,
+  unsupportedEntries,
+  withHookFormat,
+} from './tier-emitter.js';
 
 export const id = 'antigravity';
 
@@ -76,7 +83,6 @@ export function antigravityTierHookBlock(manifest, entry) {
     : { [mapped.event]: [handler] };
   return { name: `${RUNE_PREFIX}${manifest.tier}-${entry.id}`, body };
 }
-
 
 export function detect(projectRoot) {
   // `.agents/` alone is shared with Codex and other Agent Skills runtimes, so
@@ -141,7 +147,9 @@ export async function emit({ preset, projectRoot, tierManifests = [] }) {
     if (userNote) notes.push(userNote);
   }
   if (addedTierHooks > 0) {
-    notes.push(`Native Antigravity hooks written for ${addedTierHooks} Pro/Business context-intelligence entr${addedTierHooks === 1 ? 'y' : 'ies'}.`);
+    notes.push(
+      `Native Antigravity hooks written for ${addedTierHooks} Pro/Business context-intelligence entr${addedTierHooks === 1 ? 'y' : 'ies'}.`,
+    );
   }
   if (preset !== 'off' || existsSync(hooksPath) || addedTierHooks > 0) {
     files.push({ path: hooksPath, content: `${JSON.stringify(config, null, 2)}\n` });

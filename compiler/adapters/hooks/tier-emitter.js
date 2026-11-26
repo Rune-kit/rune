@@ -194,7 +194,11 @@ export function withHookFormat(command, format) {
 
 export function statusLineUserNote(manifest, platformId) {
   const names = manifest.entries
-    .filter((e) => e.platforms?.[platformId] === 'statusLine-user' || (e.event === 'statusLine' && e.platforms?.[platformId] === 'statusLine-user'))
+    .filter(
+      (e) =>
+        e.platforms?.[platformId] === 'statusLine-user' ||
+        (e.event === 'statusLine' && e.platforms?.[platformId] === 'statusLine-user'),
+    )
     .map((e) => e.id);
   if (names.length === 0) return null;
   return `${platformId}: ${manifest.tier} ${names.join(', ')} is a user-level command status line — run \`node "$RUNE_PRO_ROOT/hooks/rune-pulse/index.cjs" setup --runtime ${platformId === 'cursor' ? 'cursor' : platformId}\` (a repo file cannot set it).`;

@@ -79,7 +79,6 @@ export function buildGeminiTierBlock(manifest) {
   return { hooks, skipped };
 }
 
-
 export const PRESET_EVENTS = Object.freeze([
   { event: 'BeforeTool', skill: 'preflight', matcher: 'write_file|replace' },
   { event: 'BeforeTool', skill: 'sentinel', matcher: 'run_shell_command' },
@@ -130,7 +129,9 @@ export async function emit({ preset, projectRoot, tierManifests = [] }) {
     const tierBlock = buildGeminiTierBlock(manifest);
     if (Object.keys(tierBlock.hooks).length > 0) {
       merged = appendHookBlock(merged, { hooks: tierBlock.hooks });
-      notes.push(`Gemini CLI hooks written for ${manifest.tier} context-intelligence entries. Gemini asks you to trust new project hooks on first run.`);
+      notes.push(
+        `Gemini CLI hooks written for ${manifest.tier} context-intelligence entries. Gemini asks you to trust new project hooks on first run.`,
+      );
     }
     const userNote = statusLineUserNote(manifest, 'gemini');
     if (userNote) notes.push(userNote);
