@@ -69,7 +69,10 @@ export function checkDescriptions(skillsDir, limits = {}) {
   return { skills, total, errors, limits: { perSkillMax, totalMax } };
 }
 
-export const WHEN_RE = /\bUse (when|after|before|on|for)\b|\bauto-?(fires|triggered)\b|\bALWAYS use\b/i;
+// Any natural trigger wording counts ("Use when…" is not required): when/whenever/
+// before/after/during/if, "Use at/for/on…", or an auto-fire note.
+export const WHEN_RE =
+  /\b(when|whenever|before|after|during|if)\b|\bUse (at|for|on|to)\b|\bauto-?(fires|triggered)\b|\bALWAYS use\b/i;
 
 function checkOne(label, desc, perSkillMax, errors) {
   if (desc == null) {
@@ -87,7 +90,7 @@ function checkOne(label, desc, perSkillMax, errors) {
 /**
  * Check a paid tier repo (rune-pro / rune-business layout).
  * Entry skills and pack descriptions count toward the session budget and get a
- * `warnings` entry when they lack a when-to-use phrase.
+ * `warnings` entry when they do not say when to use them (natural wording is fine).
  */
 export function checkTierRepo(root, limits = {}) {
   const perSkillMax = limits.perSkillMax ?? PER_SKILL_MAX;
@@ -100,7 +103,7 @@ export function checkTierRepo(root, limits = {}) {
     const length = checkOne(label, desc, perSkillMax, errors);
     if (length == null) return;
     skills.push({ name: label, length });
-    if (!WHEN_RE.test(desc)) warnings.push(`${label}: entry description has no "Use when…" phrase`);
+    if (!WHEN_RE.test(desc)) warnings.push(`${label}: entry description does not say when to use it`);
   };
   const skillsDir = join(root, 'skills');
   if (existsSync(skillsDir)) {

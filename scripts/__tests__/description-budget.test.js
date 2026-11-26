@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { describe, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { checkDescriptions, checkTierRepo, readDescription } from '../description-budget-check.js';
+import { checkDescriptions, checkTierRepo, readDescription, WHEN_RE } from '../description-budget-check.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -58,6 +58,17 @@ describe('description budget --root (tier repos)', () => {
     return root;
   }
 
+  test('natural trigger wording counts as when-to-use', () => {
+    for (const desc of [
+      'Quarterly review. Use at quarter close or before a board update.',
+      'Contract review to run before you sign anything.',
+      'Opens a PR whenever the plan is approved.',
+    ]) {
+      assert.ok(WHEN_RE.test(desc), desc);
+    }
+    assert.ok(!WHEN_RE.test('Demo pack without a trigger phrase.'));
+  });
+
   test('counts entry skills + pack descriptions, checks pack skill files, skips evals', () => {
     const root = tierFixture();
     try {
@@ -71,7 +82,7 @@ describe('description budget --root (tier repos)', () => {
         ['extensions/pro-demo/skills/alpha'],
       );
       assert.ok(result.errors.some((e) => e.includes('pro-demo/skills/alpha') && e.includes('ALL')));
-      assert.deepEqual(result.warnings, ['extensions/pro-demo: entry description has no "Use when…" phrase']);
+      assert.deepEqual(result.warnings, ['extensions/pro-demo: entry description does not say when to use it']);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
