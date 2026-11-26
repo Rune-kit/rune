@@ -107,7 +107,7 @@ When the user's intent matches a skill, invoke it BEFORE writing any code or ana
 
 ## Current Wave
 
-67 core skills built. Current release **v2.34.0 "Serve"** — see `CHANGELOG.md` for the full history; the sections below describe the layers that are live.
+67 core skills built. Current release **v2.34.1 "Serve"** — see `CHANGELOG.md` for the full history; the sections below describe the layers that are live.
 
 **Reasoning + output layer (v2.27.0–v2.28.0)**: `context-engine` owns an output-mode layer (`references/output-modes.md`) — a mode registry, one shared activation contract, and a precedence rule for when two modes conflict: **shape is negotiable, substance is not** (calibration > evidence > a skill's `## Output Format` > safety > actionability > economy). Modes: `caveman` (token economy) and `actionable` (distance-to-doing). `completion-gate` owns claim discipline (`references/claim-discipline.md`) — every load-bearing claim is typed OBSERVED / DERIVED / PRIOR / ASSUMED, because hallucination is an unverified claim wearing the grammar of an observation; an honest hedge is a `DECLARED` open item, never a failure. `problem-solver` checks the model's own failure modes alongside human bias, `verification` runs the Constraint Loop for surface-form constraints, and `design` marks visual checklist items 👁 (ticked from a render, or marked ASSUMED).
 
