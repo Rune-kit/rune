@@ -159,6 +159,21 @@ Limits to know:
 - **No server, no skills.** If the VPS is down, agents lose Rune until it is back. Keep a local install where that matters.
 - **Your license still applies.** Pro and Business are licensed to you (or your team). Serve them to your own agents, not to the public.
 
+## Experimental: run skills on the server (`--runner`)
+
+```bash
+rune serve --runner claude      # or codex | grok — the CLI must be installed and signed in on the server
+           [--runner-timeout 600] [--runner-concurrency 2]
+```
+
+`run_skill` gains `mode: "execute"`: the server pipes the framed skill to the CLI (`claude -p`, `codex exec -`, `grok --prompt-file`), waits up to the timeout, and returns the output plus a list of files it wrote. Each run gets its own folder under `~/.rune/serve-runs/`. The default stays `mode: "instructions"`, and the agent picks `execute` only for self-contained deliverables — this is the "send `/rune video abc` from a chat bot, get the result back" setup.
+
+- No shell: the CLI is spawned with a fixed argv; the prompt goes over stdin or a file.
+- The CLI runs with `acceptEdits` (Claude, Grok) or `--sandbox workspace-write` (Codex) inside the run folder. Anyone with the key can make it work there — treat the key like an SSH key.
+- `RUNE_SERVE_KEY` is removed from the CLI's environment.
+- User-invoked-only skills (`launch`, `deploy`, `incident`) are never executed server-side.
+- Output is capped at 1 MB; at most `--runner-concurrency` runs at once (others get a "busy" answer).
+
 ## Security
 
 - Bearer key on every `/mcp` request (constant-time compare against the stored hash); `X-Rune-Key` is accepted too.
@@ -176,6 +191,7 @@ rune serve [--port 8787] [--host 127.0.0.1]     Streamable HTTP at /mcp (bearer 
            [--pro-root <dir>] [--business-root <dir>] [--no-tiers]
            [--rate-limit 120] [--max-bytes 262144] [--trust-proxy]
            [--allow-query-key] [--config <file>] [--name rune]
+           [--runner claude|codex|grok] [--runner-timeout 600] [--runner-concurrency 2]   (experimental)
 rune serve --stdio                              MCP over stdio (local or via ssh)
 rune serve key rotate                           mint a new key, print it once
 rune serve key path                             where the key hash lives

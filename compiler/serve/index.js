@@ -18,6 +18,7 @@ import { defaultConfigPath, ensureKey, readServeConfig, rotateKey } from './auth
 import { createCatalog, DEFAULT_MAX_BYTES } from './catalog.js';
 import { createHttpHandler, listen } from './http.js';
 import { createRuneMcpServer } from './mcp.js';
+import { createRunner } from './runner.js';
 
 /**
  * Work out which roots to serve.
@@ -70,6 +71,13 @@ export async function startServe({
   detect,
   runner = null,
 }) {
+  if (!runner && typeof args.runner === 'string') {
+    runner = createRunner({
+      name: args.runner,
+      timeoutMs: intFlag(args['runner-timeout'], 600, { min: 5, max: 3600 }) * 1000,
+      concurrency: intFlag(args['runner-concurrency'], 2, { min: 1, max: 16 }),
+    });
+  }
   const roots = resolveServeRoots({ runeRoot, projectRoot, args, detect });
   const catalog = createCatalog({ roots, maxBytes: intFlag(args['max-bytes'], DEFAULT_MAX_BYTES, { min: 1024 }) });
   const serverName = typeof args.name === 'string' ? args.name : 'rune';
@@ -135,6 +143,10 @@ export async function startServe({
   out(`  Connect: claude mcp add --transport http rune ${url} --header "Authorization: Bearer <key>"`);
   if (!LOOPBACK.has(host)) {
     out('  ⚠ Listening beyond localhost over plain HTTP — put it behind HTTPS (Caddy/nginx/Cloudflare Tunnel).');
+  }
+  if (runner) {
+    out(`  ⚠ EXPERIMENTAL runner: run_skill(mode "execute") runs ${runner.name} on this server (${runner.command}).`);
+    out('    Anyone holding the key can make it work in ~/.rune/serve-runs/ with edit permissions.');
   }
   if (args['allow-query-key']) out('  ⚠ ?key= in the URL is accepted — URLs end up in logs; prefer the header.');
   out('');
@@ -211,6 +223,9 @@ export const USAGE = `
              [--max-bytes 262144]                 max bytes returned per file
              [--trust-proxy]                      rate-limit by X-Forwarded-For
              [--allow-query-key]                  accept ?key= (clients without headers)
+             [--runner claude|codex|grok]         EXPERIMENTAL: run_skill mode "execute" runs the
+                                                  skill on this server via that CLI
+             [--runner-timeout 600] [--runner-concurrency 2]
              [--config <file>]                    key file (default ~/.rune/serve.json)
   rune serve --stdio                              MCP over stdio (local or via ssh)
   rune serve key rotate                           mint a new key, print it once
