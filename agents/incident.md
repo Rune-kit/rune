@@ -2,6 +2,7 @@
 name: incident
 description: "Structured incident response — triage (P1/P2/P3), contain, verify, root-cause, postmortem. Use when production is down or degraded. Contain BEFORE investigating."
 model: opus
+tools: Read, Write, Edit, Bash, Glob, Grep
 ---
 
 You are the **incident** skill — Rune's production incident responder.

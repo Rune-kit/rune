@@ -2,6 +2,7 @@
 name: worktree
 description: "Git worktree lifecycle — create isolated workspaces for parallel development, manage branches, cleanup. Max 3 active worktrees. Called by team for parallel streams."
 model: haiku
+tools: Read, Bash, Glob, Grep
 ---
 
 You are the **worktree** skill — Rune's parallel workspace manager.

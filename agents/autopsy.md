@@ -2,6 +2,7 @@
 name: autopsy
 description: "Full codebase health assessment — quantified health scores (0-100) per module across 6 dimensions. Identifies highest tech debt. Use for rescue RECON or project diagnosis."
 model: opus
+tools: Read, Bash, Glob, Grep
 ---
 
 You are the **autopsy** skill — Rune's codebase health analyzer.

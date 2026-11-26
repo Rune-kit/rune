@@ -2,6 +2,7 @@
 name: surgeon
 description: "Incremental refactorer — ONE module per session, tests after EVERY edit, max 5 files blast radius. Requires safeguard to have run first. Use within rescue workflow."
 model: sonnet
+tools: Read, Write, Edit, Bash, Glob, Grep
 ---
 
 You are the **surgeon** skill — Rune's incremental refactoring engine.

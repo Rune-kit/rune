@@ -6,17 +6,14 @@
  *
  * MODEL TIER MAPPING (v2.15+):
  * Provider-agnostic — emits semantic tier hints in the markdown header.
- * Skill frontmatter `model: opus|sonnet|haiku` is translated to
- * `tier:heavy|mid|light`. The consuming platform resolves the tier.
+ * Skill frontmatter `model: fable|opus|sonnet|haiku` is translated to
+ * `tier:frontier|heavy|mid|light`. The consuming platform resolves the tier.
  */
 
 import { BRANDING_FOOTER } from '../transforms/branding.js';
+import { SEMANTIC_TIER } from './model-tiers.js';
 
-const MODEL_MAP = {
-  opus: 'tier:heavy',
-  sonnet: 'tier:mid',
-  haiku: 'tier:light',
-};
+const MODEL_MAP = SEMANTIC_TIER;
 
 const TOOL_MAP = {
   Read: 'read the file',

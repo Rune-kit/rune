@@ -185,7 +185,7 @@ Outside Claude Code, pick a skill from your agent's skill or slash-command menu 
 - **Hooks that really gate.** `rune hook-dispatch` now runs the real preflight / sentinel / quarantine scripts (it used to be a pass-through), answers in each runtime's own format (Claude, Cursor/Grok, Gemini, Antigravity), and installed hooks pin the Rune version (`npx --yes @rune-kit/rune@2.33.0 …`).
 - **Grok Build first-class.** `.cursor/hooks.json` entries now load in Grok Build with no warnings and no double-registration; the Grok marketplace installs; CI runs the real `grok` CLI against the plugin and hooks.
 - **Antigravity hooks.** `rune hooks install --platform antigravity` writes `.agents/hooks.json` and `.agents/rules/`.
-- **Current models.** Gemini CLI hints are `gemini-3.1-pro-preview` / `gemini-3.8-flash` / `gemini-3.5-flash-lite`; Claude Fable 5.2 is the adversary oracle's frontier tier; Claude 4.x leftovers removed.
+- **Current models.** Authoring tiers are `fable` / `opus` / `sonnet` / `haiku` (Fable is optional frontier, not a new default). Gemini CLI hints use stable-GA ids (`gemini-3.1-pro-preview` or `gemini-2.5-pro` / `gemini-3.5-flash` / `gemini-3.1-flash-lite`). Antigravity haiku hints Gemini 4 Hydrogen (Low) because 3.8 Flash leaves 2026-11-30. Codex gains a `rune_frontier` role (Astra at xhigh). Grok hints name grok-4.7 plus effort.
 - **Leaner triggers.** A CI budget check keeps skill descriptions short and free of ALWAYS/ANY-style shouting; `cook` no longer claims every code change.
 - **`AGENTS.md` + `llms.txt`**, a shorter README, and an honest ROADMAP.
 

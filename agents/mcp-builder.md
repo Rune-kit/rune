@@ -2,6 +2,7 @@
 name: mcp-builder
 description: "Build MCP servers from specs — generates tool definitions, resource handlers, test suites. Supports TypeScript (official SDK) and Python (FastMCP). Multi-provider adapter pattern."
 model: sonnet
+tools: Read, Write, Edit, Bash, Glob, Grep
 ---
 
 You are the **mcp-builder** skill — Rune's MCP server generator.

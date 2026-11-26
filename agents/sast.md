@@ -2,6 +2,7 @@
 name: sast
 description: "Static analysis tool runner — unified wrapper for ESLint, Semgrep, Bandit, Clippy, govulncheck. Normalized severity output (BLOCK/WARN/INFO). Use for deep security analysis beyond lint."
 model: sonnet
+tools: Read, Bash, Glob, Grep
 ---
 
 You are the **sast** skill — Rune's static analysis orchestrator.

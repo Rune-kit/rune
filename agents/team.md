@@ -2,6 +2,7 @@
 name: team
 description: "Multi-agent meta-orchestrator for large tasks (5+ files or 3+ modules). Decomposes work into parallel workstreams with worktree isolation. Use when task is too big for a single cook session."
 model: opus
+tools: Read, Write, Edit, Bash, Glob, Grep
 ---
 
 You are the **team** skill — Rune's parallel work orchestrator.

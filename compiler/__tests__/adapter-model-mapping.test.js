@@ -1,6 +1,6 @@
 /**
  * Adapter model tier mapping (v2.15+) — verify non-Anthropic adapters
- * translate `model: opus|sonnet|haiku` to provider-correct names while
+ * translate `model: fable|opus|sonnet|haiku` to provider-correct names while
  * Anthropic-backed adapters (claude/cursor/windsurf) remain no-op.
  *
  * Validates:
@@ -27,7 +27,7 @@ describe('codex adapter model mapping', () => {
   const codex = getAdapter('codex');
 
   test('SKILL.md frontmatter omits unsupported per-skill model fields', () => {
-    for (const model of ['opus', 'sonnet', 'haiku', 'custom-fine-tune', undefined]) {
+    for (const model of ['fable', 'opus', 'sonnet', 'haiku', 'custom-fine-tune', undefined]) {
       const header = codex.generateHeader({ ...baseSkill, model });
       assert.doesNotMatch(header, /^model:/m);
     }
@@ -37,9 +37,12 @@ describe('codex adapter model mapping', () => {
     const extras = await codex.generateExtraFiles({
       stats: { skillCount: 65, crossRefsResolved: 204, packCount: 14, files: [] },
     });
+    const frontier = extras.find((entry) => entry.path === '.codex/agents/rune-frontier.toml');
     const heavy = extras.find((entry) => entry.path === '.codex/agents/rune-heavy.toml');
     const standard = extras.find((entry) => entry.path === '.codex/agents/rune-standard.toml');
     const fast = extras.find((entry) => entry.path === '.codex/agents/rune-fast.toml');
+    assert.match(frontier.content, /model = "gpt-6\.2-astra"/);
+    assert.match(frontier.content, /model_reasoning_effort = "xhigh"/);
     assert.match(heavy.content, /model = "gpt-6\.2-astra"/);
     assert.match(heavy.content, /model_reasoning_effort = "high"/);
     assert.match(standard.content, /model = "gpt-6\.2-sol"/);
@@ -73,7 +76,7 @@ describe('antigravity adapter model mapping', () => {
   // Antigravity SKILL.md frontmatter supports only name + description
   // (antigravity.google/docs/skills), so no model field may be emitted.
   test('never emits a model field in frontmatter', () => {
-    for (const model of ['opus', 'sonnet', 'haiku', 'custom-fine-tune', undefined]) {
+    for (const model of ['fable', 'opus', 'sonnet', 'haiku', 'custom-fine-tune', undefined]) {
       const header = antigravity.generateHeader({ ...baseSkill, model });
       const fm = header.split('---')[1];
       assert.deepStrictEqual(
@@ -100,10 +103,16 @@ describe('antigravity adapter model mapping', () => {
     );
   });
 
-  test('haiku hints Gemini 3.8 Flash', () => {
+  test('haiku hints Gemini 4 Hydrogen (Low), not retiring Gemini 3.8 Flash', () => {
+    const header = antigravity.generateHeader({ ...baseSkill, model: 'haiku' });
+    assert.match(header, /Suggested Antigravity model: Gemini 4 Hydrogen \(Low\)/);
+    assert.doesNotMatch(header, /3\.8 Flash/);
+  });
+
+  test('fable hints Gemini 4 Neon (Extra) or Orchestrator (Neon)', () => {
     assert.match(
-      antigravity.generateHeader({ ...baseSkill, model: 'haiku' }),
-      /Suggested Antigravity model: Gemini 3\.8 Flash/,
+      antigravity.generateHeader({ ...baseSkill, model: 'fable' }),
+      /Suggested Antigravity model: Gemini 4 Neon \(Extra\)/,
     );
   });
 
@@ -128,6 +137,11 @@ describe('opencode adapter model mapping (provider-agnostic)', () => {
   test('haiku translates to tier:light', () => {
     const header = opencode.generateHeader({ ...baseSkill, model: 'haiku' });
     assert.match(header, /model: tier:light/);
+  });
+
+  test('fable translates to tier:frontier', () => {
+    const header = opencode.generateHeader({ ...baseSkill, model: 'fable' });
+    assert.match(header, /model: tier:frontier/);
   });
 });
 
@@ -237,19 +251,27 @@ describe('qwen adapter model mapping (Qwen family)', () => {
 describe('gemini adapter model mapping (Gemini family)', () => {
   const gemini = getAdapter('gemini');
 
-  test('opus translates to gemini-3.1-pro-preview', () => {
+  test('opus hints gemini-3.1-pro-preview with a gemini-2.5-pro fallback', () => {
     const header = gemini.generateHeader({ ...baseSkill, model: 'opus' });
     assert.match(header, /gemini-3\.1-pro-preview/);
+    assert.match(header, /gemini-2\.5-pro/);
   });
 
-  test('sonnet translates to gemini-3.8-flash', () => {
+  test('sonnet hints stable-GA gemini-3.5-flash, not experiment-gated 3.8-flash', () => {
     const header = gemini.generateHeader({ ...baseSkill, model: 'sonnet' });
-    assert.match(header, /gemini-3\.8-flash/);
+    assert.match(header, /gemini-3\.5-flash/);
+    assert.doesNotMatch(header, /gemini-3\.8-flash/);
   });
 
-  test('haiku translates to gemini-3.5-flash-lite', () => {
+  test('haiku hints stable-GA gemini-3.1-flash-lite, not experiment-gated 3.5-flash-lite', () => {
     const header = gemini.generateHeader({ ...baseSkill, model: 'haiku' });
-    assert.match(header, /gemini-3\.5-flash-lite/);
+    assert.match(header, /gemini-3\.1-flash-lite/);
+    assert.doesNotMatch(header, /gemini-3\.5-flash-lite/);
+  });
+
+  test('fable uses the same heavy preview hint as opus', () => {
+    const header = gemini.generateHeader({ ...baseSkill, model: 'fable' });
+    assert.match(header, /gemini-3\.1-pro-preview/);
   });
 });
 
@@ -269,6 +291,38 @@ describe('cross-adapter consistency', () => {
       const adapter = getAdapter(name);
       const header = adapter.generateHeader({ ...baseSkill });
       assert.doesNotMatch(header, /model:/, `${name} should NOT emit a model line for skill without model`);
+    }
+  });
+});
+
+describe('grok adapter model hints', () => {
+  const grok = getAdapter('grok');
+
+  test('hints grok-4.7 with an effort level, and does not pin a model: field', () => {
+    const header = grok.generateHeader({ ...baseSkill, model: 'opus' });
+    assert.match(header, /# model-hint: grok-4\.7/);
+    assert.match(header, /reasoning effort high/);
+    assert.doesNotMatch(header, /^model:/m);
+  });
+
+  test('fable asks for xhigh effort', () => {
+    const header = grok.generateHeader({ ...baseSkill, model: 'fable' });
+    assert.match(header, /reasoning effort xhigh/);
+  });
+});
+
+describe('retired or experiment-gated ids stay out of recommended hints', () => {
+  test('no adapter recommends Gemini 3.8 Flash (leaves Antigravity 2026-11-30)', () => {
+    for (const name of ['antigravity', 'gemini', 'grok', 'codex', 'opencode']) {
+      const adapter = getAdapter(name);
+      for (const model of ['fable', 'opus', 'sonnet', 'haiku']) {
+        const header = adapter.generateHeader({ ...baseSkill, model });
+        assert.doesNotMatch(
+          header,
+          /gemini-3\.8-flash|Gemini 3\.8 Flash/,
+          `${name} ${model} still recommends Gemini 3.8 Flash`,
+        );
+      }
     }
   });
 });

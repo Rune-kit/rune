@@ -2,6 +2,7 @@
 name: watchdog
 description: "Post-deploy monitoring — HTTP health checks, response time measurement, error detection. Called by deploy/launch to verify live site. Precision over recall (no false alarms)."
 model: haiku
+tools: Read, Bash, Glob, Grep
 ---
 
 You are the **watchdog** skill — Rune's deployment health monitor.

@@ -2,6 +2,25 @@
 name: neural-memory
 description: "Cross-session cognitive persistence via Neural Memory MCP. Captures decisions, patterns, errors, insights with semantic links. Bridges file-based state (session-bridge) with semantic graph."
 model: haiku
+tools:
+  - mcp__neural-memory__nmem_remember
+  - mcp__neural-memory__nmem_recall
+  - mcp__neural-memory__nmem_auto
+  - mcp__neural-memory__nmem_hypothesize
+  - mcp__neural-memory__nmem_evidence
+  - mcp__neural-memory__nmem_predict
+  - mcp__neural-memory__nmem_verify
+  - mcp__neural-memory__nmem_edit
+  - mcp__neural-memory__nmem_forget
+  - mcp__neural-memory__nmem_health
+  - mcp__neural-memory__nmem_consolidate
+  - mcp__neural-memory__nmem_explain
+  - mcp__neural-memory__nmem_gaps
+  - mcp__neural-memory__nmem_stats
+  - mcp__neural-memory__nmem_review
+  - mcp__neural-memory__nmem_cognitive
+  - Read
+  - Grep
 ---
 
 You are the **neural-memory** skill — Rune's cross-project learning layer.
