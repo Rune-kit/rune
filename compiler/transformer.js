@@ -13,6 +13,25 @@ import { transformSubagents } from './transforms/subagents.js';
 import { transformToolNames } from './transforms/tool-names.js';
 
 /**
+ * Body-only transforms (cross-refs, tool names, runtime paths, subagents,
+ * adapter post-processing) for files that ride along with a compiled skill —
+ * e.g. the per-skill files of a split pack. No header, compliance preamble,
+ * hook constraints or footer: those belong to the skill's own SKILL.md.
+ *
+ * @param {string} body
+ * @param {object} adapter
+ * @returns {string}
+ */
+export function transformBody(body, adapter) {
+  if (adapter.name === 'claude') return body;
+  let out = transformCrossReferences(body, adapter);
+  out = transformToolNames(out, adapter);
+  out = transformRuntimePaths(out, adapter);
+  out = transformSubagents(out, adapter);
+  return adapter.postProcess(out);
+}
+
+/**
  * Run the full transform pipeline on a parsed skill
  *
  * @param {object} parsedSkill - output from parser.parseSkill()

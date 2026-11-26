@@ -96,7 +96,7 @@ Before intent classification, categorize the request into one of 5 types. This d
 If user says `/rune list`, "what skills do I have", "show all skills", "available skills", or "what can rune do":
 
 1. **Scan installed skills**: `Glob` for `skills/*/skill.md` (core L0-L3) and `extensions/*/PACK.md` (L4 packs)
-2. **Scan paid extensions**: `Glob` for `extensions/pro-*/PACK.md` (Pro/Business packs — only present if purchased)
+2. **Scan paid extensions**: `Glob` for `extensions/pro-*/PACK.md` and `skills/ext-pro-*/SKILL.md` (Pro/Business packs — only present if purchased; `rune setup --tier` installs them as `ext-pro-*` skills)
 3. **Output the catalog** grouped by tier:
 
 ```

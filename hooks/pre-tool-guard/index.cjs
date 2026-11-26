@@ -33,6 +33,7 @@ captureConsole('PreToolUse');
  */
 function appendGateOutcome(gate, outcome, detail) {
   try {
+    if (process.env.RUNE_GATE_LOG === '0') return;
     const outDir = path.join(process.cwd(), '.rune', 'metrics');
     fs.mkdirSync(outDir, { recursive: true });
     const outFile = path.join(outDir, 'gate-outcomes.jsonl');
@@ -44,13 +45,13 @@ function appendGateOutcome(gate, outcome, detail) {
     });
     fs.appendFileSync(outFile, entry + '\n');
 
-    // Bound file to last 500 lines so it never grows unbounded.
+    // Bound file to last 2000 lines (shared with hook-dispatch verdicts) so it never grows unbounded.
     // Synchronous read-trim-write, fully inside this try/catch — NEVER throws,
     // NEVER affects the BLOCK decision or exit code.
     const raw = fs.readFileSync(outFile, 'utf-8');
     const lines = raw.split('\n').filter(Boolean);
-    if (lines.length > 500) {
-      fs.writeFileSync(outFile, lines.slice(-500).join('\n') + '\n');
+    if (lines.length > 2000) {
+      fs.writeFileSync(outFile, lines.slice(-2000).join('\n') + '\n');
     }
   } catch {
     // Capture is best-effort. NEVER throw, NEVER affect exit code.

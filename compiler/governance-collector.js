@@ -8,23 +8,16 @@
  *
  * Phase-3 known capture gaps (updated from Phase 1):
  *
- *   GAP-1  Gate outcomes (passed / bypassed / blocked) — PARTIALLY FILLED in Phase 3.
- *            pre-tool-guard now appends a structured record to
- *            .rune/metrics/gate-outcomes.jsonl when it decides to BLOCK (exit code 2).
- *            This file is read here and populates the `blocked` count + most-recent `ts`
- *            for the "privacy-mesh" gate.
- *            STILL uncaptured: `passed` and `bypassed` outcomes remain 0 because they
- *            are not observable at the hook layer without instrumenting every allow/pass
- *            path — which would add noise without signal value.
+ *   GAP-1  Gate outcomes (passed / bypassed / blocked) — FILLED for hook-wired gates (v2.33).
+ *            hook-dispatch appends every verdict (blocked / bypassed / passed / error)
+ *            to .rune/metrics/gate-outcomes.jsonl; pre-tool-guard still appends its
+ *            own "privacy-mesh" blocks. Gates that only run inside a skill (no hook)
+ *            still report passed/bypassed = 0.
  *
- *   GAP-2  Gate timestamps — no PER-INVOCATION timestamp is captured.  Best-effort:
- *            the `ts` field carries the date-only `last_used` from skills.json when
- *            available, else null.  A gate-outcome hook would provide real per-fire ts.
+ *   GAP-2  Gate timestamps — per-fire ts now comes from gate-outcomes.jsonl for
+ *            hook-wired gates; others fall back to the date-only `last_used`.
  *
- *   GAP-6  `fired` is an INVOCATION count (cumulative total_invocations from
- *            skills.json, or windowed session-PRESENCE as fallback) — NOT a count of
- *            gate pass/fail events, and not strictly windowed when sourced from the
- *            cumulative totals file.  Pair with GAP-1: outcomes remain uncaptured.
+ *   GAP-6  `fired` = max(skills.json invocations / session presence, logged verdicts).
  *
  *   GAP-3  Signal runtime counts — collectGraphData() returns static mesh
  *            definitions (emit / listen pairs) from the INSTALLED RUNE mesh
@@ -138,11 +131,13 @@ function extractSection(content, heading) {
  * Read .rune/metrics/gate-outcomes.jsonl and return a map of
  *   gate → { blocked: number, latestTs: string|null }
  *
- * Only "blocked" outcomes are currently captured (pre-tool-guard Phase 3).
- * passed/bypassed remain uncaptured — see GAP-1.
+ * pre-tool-guard writes "blocked" (gate "privacy-mesh"); hook-dispatch (v2.33+)
+ * writes every verdict — blocked / bypassed / passed / error — per wired skill.
  *
  * Never throws — degrades to empty map on any error.
  */
+const OUTCOME_COUNTERS = Object.freeze({ blocked: 'blocked', passed: 'passed', bypassed: 'bypassed', error: 'errors' });
+
 async function loadGateOutcomes(runeRoot) {
   const outFile = path.join(runeRoot, '.rune', 'metrics', 'gate-outcomes.jsonl');
   const result = new Map(); // gate → { blocked, latestTs }
@@ -153,10 +148,11 @@ async function loadGateOutcomes(runeRoot) {
     for (const record of readJsonl(raw)) {
       if (!record || typeof record.gate !== 'string') continue;
       const gate = record.gate;
-      const existing = result.get(gate) || { blocked: 0, latestTs: null };
+      const existing = result.get(gate) || { blocked: 0, passed: 0, bypassed: 0, errors: 0, latestTs: null };
 
-      if (record.outcome === 'blocked') {
-        existing.blocked += 1;
+      const counter = OUTCOME_COUNTERS[record.outcome];
+      if (counter) {
+        existing[counter] += 1;
         // Keep the most-recent ts (ISO string compare works lexicographically)
         if (record.ts && (!existing.latestTs || record.ts > existing.latestTs)) {
           existing.latestTs = record.ts;
@@ -221,17 +217,18 @@ async function assembleGates(runeRoot, days) {
   if (allGateNames.size === 0) return [];
 
   return Array.from(allGateNames).map((name) => {
-    const outcomes = gateOutcomes.get(name) || { blocked: 0, latestTs: null };
+    const outcomes = gateOutcomes.get(name) || { blocked: 0, passed: 0, bypassed: 0, errors: 0, latestTs: null };
+    const logged = outcomes.blocked + outcomes.passed + outcomes.bypassed + outcomes.errors;
     // Prefer outcome ts over skills.json date when a real block event was recorded
     const ts = outcomes.latestTs || lastUsedTs(name);
     return {
       name,
       // Cumulative true fire count; windowed session-presence as fallback (GAP-6).
-      fired: totalFires(name) || sessionPresence[name] || 0,
-      // GAP-1 (Phase 3 partial fill): blocked IS now captured from gate-outcomes.jsonl.
-      // passed/bypassed remain 0 — not observable at the hook layer.
-      passed: 0,
-      bypassed: 0,
+      fired: Math.max(totalFires(name) || sessionPresence[name] || 0, logged),
+      // GAP-1: hook-dispatch (v2.33+) logs every verdict, so passed / bypassed /
+      // blocked are real per-fire counts for hook-wired gates.
+      passed: outcomes.passed,
+      bypassed: outcomes.bypassed,
       blocked: outcomes.blocked,
       // Best-effort ts: real block event ts when available, else last_used from skills.json.
       ts,

@@ -46,6 +46,22 @@ describe('buildPreset', () => {
     assert.ok(!editGroup.hooks[0].command.includes('--gentle'));
   });
 
+  test('strict gates Read with preflight only, in its own matcher group', () => {
+    const preset = buildPreset('strict');
+    const readGroups = preset.hooks.PreToolUse.filter((g) => g.matcher === 'Read');
+    assert.strictEqual(readGroups.length, 1);
+    assert.strictEqual(readGroups[0].hooks.length, 1);
+    assert.match(readGroups[0].hooks[0].command, /hook-dispatch preflight$/);
+    assert.strictEqual(readGroups[0].hooks[0].async, false, 'Read guard must be able to block');
+    const editGroup = preset.hooks.PreToolUse.find((g) => g.matcher === 'Edit|Write');
+    assert.ok(editGroup, 'Edit|Write group unchanged');
+  });
+
+  test('gentle does not gate Read', () => {
+    const preset = buildPreset('gentle');
+    assert.ok(!preset.hooks.PreToolUse.some((g) => g.matcher === 'Read'));
+  });
+
   test('rejects unknown preset', () => {
     assert.throws(() => buildPreset('loose'), /Unknown preset/);
   });

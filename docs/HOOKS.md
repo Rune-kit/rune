@@ -143,6 +143,10 @@ Presets:
 | dependency-doctor | built in — notes a manifest edit (`package.json`, `requirements.txt`, …) | no |
 | completion-gate | built in — notes uncommitted changes at the end of a turn | no |
 
+On Claude Code (and runtimes that read its settings), `strict` also adds a separate `Read` matcher group that runs only preflight, so a private key is stopped before it is read into context, not just before it is edited. Tier hooks that join `Edit|Write` never run on reads.
+
+Every verdict is appended to `.rune/metrics/gate-outcomes.jsonl` (`blocked`, `bypassed` = gentle would-block, `passed`, `error`), which Business's Govern tab reads. Passes are only logged in projects that already have a `.rune/` folder; set `RUNE_GATE_LOG=0` to turn the log off.
+
 Under `gentle` a would-be block is printed as `would block (strict preset)` and the call goes through. If a script crashes or takes longer than 20 s the dispatcher allows the call (fail-open) — a broken hook must never wedge the agent. Hooks only enforce on runtimes that run them; on Windsurf (and anywhere Rune compiles to rules) the same checks are guidance the model may ignore.
 
 Installed commands pin the Rune version (`npx --yes @rune-kit/rune@<version> hook-dispatch …`, e.g. `@2.33.0`), so a hook never silently picks up a newer release; `rune doctor --hooks` reports drift after an upgrade.

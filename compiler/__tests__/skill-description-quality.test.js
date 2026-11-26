@@ -112,8 +112,8 @@ describe('Ambiguous-name skills include "Use when…" routing hint', () => {
         violations.push(`${name}: description not parseable`);
         continue;
       }
-      if (!/Use when/i.test(val)) {
-        violations.push(`${name}: missing "Use when…" clause`);
+      if (!WHEN_TO_USE.test(val)) {
+        violations.push(`${name}: missing a when-to-use trigger`);
       }
     }
     assert.strictEqual(violations.length, 0, `Ambiguous-name skills missing "Use when…":\n${violations.join('\n')}`);
@@ -124,7 +124,9 @@ describe('Ambiguous-name skills include "Use when…" routing hint', () => {
 // choose a skill from its description alone, so every description must say
 // WHEN to use it, not only what it does (agentskills.io spec + Anthropic
 // skill-authoring guidance).
-const WHEN_TO_USE = /\bUse (when|after|before|on|for)\b|\bauto-?(fires|triggered)\b|\bALWAYS use\b/i;
+// Natural wording is fine; the literal phrase "Use when" is not required.
+const WHEN_TO_USE =
+  /\b(when|whenever|before|after|during|if)\b|\bUse (at|for|on|to)\b|\bauto-?(fires|triggered)\b|\bALWAYS use\b/i;
 
 describe('Every skill description carries a when-to-use trigger', () => {
   test('all core skills state when to use them', () => {

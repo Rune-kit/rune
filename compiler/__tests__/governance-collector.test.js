@@ -162,9 +162,9 @@ describe('assembleGovernance — gate skill counting', () => {
     assert.ok(Object.hasOwn(gate, 'bypassed'));
     assert.ok(Object.hasOwn(gate, 'blocked'));
     assert.equal(typeof gate.fired, 'number');
-    // passed/bypassed remain 0 — not observable at the hook layer (GAP-1)
-    assert.equal(gate.passed, 0, 'passed must be 0 (GAP-1: no outcome capture)');
-    assert.equal(gate.bypassed, 0, 'bypassed must be 0 (GAP-1: no outcome capture)');
+    // No gate-outcomes.jsonl fixture → no logged verdicts
+    assert.equal(gate.passed, 0, 'passed must be 0 without logged verdicts');
+    assert.equal(gate.bypassed, 0, 'bypassed must be 0 without logged verdicts');
     // blocked IS captured when gate-outcomes.jsonl is present (Phase 3).
     // In this test there is no fixture, so blocked === 0.
     assert.equal(gate.blocked, 0, 'blocked must be 0 when no gate-outcomes.jsonl fixture is present');
@@ -196,8 +196,30 @@ describe('assembleGovernance — gate skill counting', () => {
     assert.equal(pmGate.blocked, 3, 'blocked must equal the number of blocked outcome records');
     assert.ok(pmGate.ts !== null && typeof pmGate.ts === 'string', 'ts must be non-null when blocked events exist');
     assert.equal(pmGate.ts, ts3, 'ts must be the most-recent blocked event timestamp');
-    // fired and passed/bypassed are 0 — no sessions or skills.json for this gate
-    assert.equal(pmGate.fired, 0, 'fired must be 0 when gate has no session/skills.json data');
+    // No sessions / skills.json: each logged verdict is one fire
+    assert.equal(pmGate.fired, 3, 'fired must count logged verdicts when no session data exists');
+  });
+
+  it('counts hook-dispatch verdicts as passed / bypassed / blocked', async () => {
+    const metricsDir = path.join(tmpDir, '.rune', 'metrics');
+    await mkdir(metricsDir, { recursive: true });
+    const rec = (outcome, ts) => JSON.stringify({ ts, source: 'hook-dispatch', gate: 'preflight', outcome });
+    const lines = [
+      rec('passed', '2026-11-01T00:00:00.000Z'),
+      rec('passed', '2026-11-02T00:00:00.000Z'),
+      rec('bypassed', '2026-11-03T00:00:00.000Z'),
+      rec('blocked', '2026-11-04T00:00:00.000Z'),
+      rec('error', '2026-11-05T00:00:00.000Z'),
+    ];
+    await writeFile(path.join(metricsDir, 'gate-outcomes.jsonl'), `${lines.join('\n')}\n`);
+    const result = await assembleGovernance(tmpDir, 30);
+    const gate = result.gates.find((g) => g.name === 'preflight');
+    assert.ok(gate);
+    assert.equal(gate.passed, 2);
+    assert.equal(gate.bypassed, 1);
+    assert.equal(gate.blocked, 1);
+    assert.equal(gate.fired, 5);
+    assert.equal(gate.ts, '2026-11-05T00:00:00.000Z');
   });
 
   it('reads gate counts from skills.json totals when no windowed sessions', async () => {
