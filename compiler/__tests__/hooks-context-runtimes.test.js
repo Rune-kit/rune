@@ -4,6 +4,7 @@
  * statusLine-user entries stay out of the repo with a setup note.
  */
 import assert from 'node:assert';
+import { existsSync } from 'node:fs';
 import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -135,10 +136,13 @@ describe('validateManifest accepts AfterModel and the live Pro 1.7.0 manifest', 
     assert.strictEqual(m.entries[0].matcher, null);
   });
 
-  test('the real rune-pro hooks manifest (feat/context-all-runtimes) validates', async () => {
-    const live = path.resolve(fileURLToPath(import.meta.url), '../../../../rune-pro/hooks/manifest.json');
-    const raw = JSON.parse(await readFile(live, 'utf-8'));
-    const m = validateManifest(raw, live);
+  const liveProManifest = path.resolve(fileURLToPath(import.meta.url), '../../../../rune-pro/hooks/manifest.json');
+  // CI checks out rune alone; skip instead of ENOENT so lint-test-build stays green.
+  test('the real rune-pro hooks manifest validates when the sibling repo is present', {
+    skip: !existsSync(liveProManifest),
+  }, async () => {
+    const raw = JSON.parse(await readFile(liveProManifest, 'utf-8'));
+    const m = validateManifest(raw, liveProManifest);
     assert.strictEqual(m.version, '1.7.0');
     assert.ok(m.entries.some((e) => e.event === 'AfterModel'));
     assert.strictEqual(m.entries.find((e) => e.id === 'context-inject').platforms.cursor, 'hook');
