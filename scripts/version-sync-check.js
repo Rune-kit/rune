@@ -9,12 +9,14 @@
  * 3. Extensions on disk match what npm would pack (no missing packs)
  * 4. Split skill files exist for packs that declare format: split
  * 5. Public product facts match the live source inventory
+ * 6. npm publish --dry-run --ignore-scripts does not auto-correct package.json
+ *    or drop the rune bin (npm 11+ treats "./path" bin values as invalid)
  *
  * Usage: node scripts/version-sync-check.js
  * Hook: runs via doctor command or pre-publish
  */
 
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -417,6 +419,66 @@ if (existsSync(extDir)) {
     } else {
       pass(`Split pack "${packName}": ${skillFiles.length} skill files`);
     }
+  }
+}
+
+// 6. npm publish metadata: the 2.34.0 publish was aborted because npm 11
+// auto-corrected package.json and dropped bin.rune ("./compiler/bin/rune.js"
+// is an invalid script name). Catch that before a real publish.
+{
+  const bins = typeof pkg.bin === 'string' ? { [pkg.name]: pkg.bin } : { ...(pkg.bin || {}) };
+  const binRel = bins.rune;
+  if (!binRel) {
+    fail('package.json is missing bin.rune — the published package would have no `rune` CLI');
+  } else if (binRel.startsWith('./') || binRel.startsWith('.\\')) {
+    fail(`package.json bin.rune is "${binRel}" — omit the ./ prefix; npm 11+ drops the bin as an invalid script name`);
+  } else if (!existsSync(join(ROOT, binRel))) {
+    fail(`package.json bin.rune points at missing file ${binRel}`);
+  } else {
+    pass(`package.json bin.rune is ${binRel}`);
+    try {
+      const indexed = execFileSync('git', ['ls-files', '-s', binRel], {
+        cwd: ROOT,
+        encoding: 'utf8',
+        stdio: ['pipe', 'pipe', 'pipe'],
+      }).trim();
+      if (indexed) {
+        const mode = indexed.split(/\s+/)[0];
+        if (mode !== '100755') {
+          fail(`git mode for ${binRel} is ${mode}, expected 100755 (executable)`);
+        } else {
+          pass(`${binRel} is executable in git (100755)`);
+        }
+      }
+    } catch {
+      warn(`Could not read git mode for ${binRel}`);
+    }
+  }
+
+  const result = spawnSync('npm', ['publish', '--dry-run', '--ignore-scripts'], {
+    cwd: ROOT,
+    encoding: 'utf8',
+    timeout: 120000,
+    env: { ...process.env },
+  });
+  const combined = `${result.stdout || ''}\n${result.stderr || ''}`;
+  const warningLines = combined
+    .split('\n')
+    .map((line) => line.trimEnd())
+    .filter((line) => /auto-corrected|errors corrected|was invalid and removed|was normalized to/i.test(line));
+  if (result.error) {
+    fail(`npm publish --dry-run failed to start (${result.error.message})`);
+  } else if (result.status !== 0) {
+    const tail = combined.trim().split('\n').slice(-8).join('\n    ');
+    fail(`npm publish --dry-run --ignore-scripts exited ${result.status}:\n    ${tail}`);
+  } else if (warningLines.length > 0) {
+    fail(
+      `npm publish --dry-run auto-corrected package.json (the rune bin may be dropped). Run "npm pkg fix" and commit the result.\n    ${warningLines.join('\n    ')}`,
+    );
+  } else if (!bins.rune) {
+    // already failed above; skip the tarball mention
+  } else {
+    pass('npm publish --dry-run: no auto-corrections; bin.rune is present');
   }
 }
 

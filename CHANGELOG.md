@@ -29,6 +29,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Manifest validation accepts the `AfterModel` event (matcher optional) so Pro hooks v1.7.0 can load.
 - When Cursor hooks are installed, Grok Build skips the same Pro hook entries in `.grok/hooks/rune.json` so they fire once from the shared `.cursor/hooks.json`.
 
+### Fixed
+- `npm publish` on npm 11.21.1 was auto-correcting `package.json` and dropping the `rune` bin (`"./compiler/bin/rune.js"` is treated as an invalid script name). The bin path is now `compiler/bin/rune.js` (no `./`), `repository.url` is `git+https://github.com/rune-kit/rune.git`, and `compiler/bin/rune.js` is marked executable. `version-sync-check` (and therefore `npm run doctor` / `prepublishOnly`) fails if a publish dry-run reports auto-corrected errors or a missing `rune` bin.
+
 ## [2.33.0] - 2026-11-21
 
 "Everywhere" — Rune installs natively in the agents people actually use in late 2026, and the numbers on the box are checked by CI.
