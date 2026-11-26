@@ -817,7 +817,7 @@ function parseArgs(argv) {
     if (arg.startsWith('--')) {
       const key = arg.slice(2);
       const next = argv[i + 1];
-      if (next && !next.startsWith('--')) {
+      if (next && !next.startsWith('--') && next !== '-h') {
         args[key] = next;
         i++;
       } else if (VALUE_REQUIRED_FLAGS.has(key)) {

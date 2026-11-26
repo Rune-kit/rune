@@ -324,6 +324,20 @@ describe('serve: end-to-end over Streamable HTTP', () => {
     assert.match(all.content[0].text, /video-creator \[free/);
   });
 
+  test('list_skills without filter is compact (names only); detail "full" restores descriptions', async () => {
+    const compact = (await client.callTool({ name: 'list_skills', arguments: {} })).content[0].text;
+    assert.match(compact, /names only/);
+    assert.match(compact, /free skills: .*\bcook\b/);
+    assert.match(compact, /pro packs: .*pro-media \([^)]*image-generator/);
+    assert.doesNotMatch(compact, / — /, 'no descriptions');
+    const full = (await client.callTool({ name: 'list_skills', arguments: { detail: 'full' } })).content[0].text;
+    assert.match(full, /- cook \[free, L1\] — /);
+    assert.ok(compact.length * 3 < full.length, `compact ${compact.length} vs full ${full.length}`);
+    const narrowed = (await client.callTool({ name: 'list_skills', arguments: { filter: 'video', detail: 'compact' } }))
+      .content[0].text;
+    assert.match(narrowed, /names only/);
+  });
+
   test('get_skill returns SKILL.md and references', async () => {
     const res = await client.callTool({ name: 'get_skill', arguments: { name: 'rune:autopilot' } });
     const text = res.content[0].text;

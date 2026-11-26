@@ -3,6 +3,24 @@
 All notable changes to Rune are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+Patch for `rune serve` found in a live Windows test (PowerShell, Node 24, non-TTY shell), plus a cheaper skill list and a release script.
+
+### Fixed
+- **`rune serve <anything> --help` / `-h` only prints the usage.** `rune serve setup --help` used to run the whole setup (start a server, handshake, print connect info). Help is now checked before any subcommand runs, for `setup`, `start`, `stop`, `status`, `doctor`, `connect`, `install`, `key rotate|path`, `--stdio` and `--tunnel`; a value flag no longer swallows a following `-h`.
+- **The server key is never printed when stdout is not a terminal.** Agents, CI and logs capture non-TTY output, so `rune serve setup`, `rune serve key rotate` and `rune serve install` now write a new key to `--key-out <file>` or, by default, `~/.rune/serve.key` (0600, next to `serve.json`) and print only the path. The `--json` report carries `key.file` instead of `key.value` there.
+- **Non-interactive `rune serve setup` needs `--yes`.** Without a terminal and without `--yes` it now stops with exit code 2 and a message showing the `--yes` command, and changes nothing — it no longer starts a server on defaults by accident.
+- **Windows connect hints use PowerShell.** On win32, `rune serve connect` and the setup report print `$env:RUNE_KEY = "rune_sk_…"` / `setx RUNE_KEY …` and `"Bearer $env:RUNE_KEY"` headers instead of `export RUNE_KEY=…` and `$RUNE_KEY`.
+
+- **`version-sync-check` passes after a release.** Once a version is on npm, `npm publish --dry-run` refuses at the end with "cannot publish over the previously published version"; the check now still inspects the packed tarball for auto-corrections and the `rune` bin instead of failing CI on master.
+
+### Changed
+- **`list_skills` is compact by default.** With no `filter` or `tier` it returns skill and pack names grouped by tier (about 1.2k tokens for 100 skills instead of 6.5k); `detail: "full"` brings back every description, and a filtered call still returns descriptions.
+
+### Added
+- **`npm run release -- <version>` and `npm run release:publish`** (`scripts/release.mjs`). `release` bumps every synced manifest, renames the CHANGELOG `[Unreleased]` heading, updates the README "What's New" heading and runs `npm run ci` on a `release/v<version>` branch. `release:publish` checks the tree is clean and `master` equals `origin/master`, runs `npm publish --dry-run` and refuses on any npm warning, then publishes with `--auth-type=web` (2FA in the browser), waits for the registry, and creates the git tag and GitHub release from the CHANGELOG notes. `--dry-run` stops before the real publish.
+
 ## [2.34.0] - 2026-11-26
 
 "Serve" — install Rune once, use it from every agent on every machine.

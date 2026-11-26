@@ -466,9 +466,12 @@ if (existsSync(extDir)) {
     .split('\n')
     .map((line) => line.trimEnd())
     .filter((line) => /auto-corrected|errors corrected|was invalid and removed|was normalized to/i.test(line));
+  // After a release the registry already has this version, so npm refuses the dry run at the very
+  // end — but it has packed the tarball and printed any auto-corrections by then. Judge those.
+  const alreadyPublished = /cannot publish over the previously published versions?/i.test(combined);
   if (result.error) {
     fail(`npm publish --dry-run failed to start (${result.error.message})`);
-  } else if (result.status !== 0) {
+  } else if (result.status !== 0 && !alreadyPublished) {
     const tail = combined.trim().split('\n').slice(-8).join('\n    ');
     fail(`npm publish --dry-run --ignore-scripts exited ${result.status}:\n    ${tail}`);
   } else if (warningLines.length > 0) {
@@ -478,7 +481,9 @@ if (existsSync(extDir)) {
   } else if (!bins.rune) {
     // already failed above; skip the tarball mention
   } else {
-    pass('npm publish --dry-run: no auto-corrections; bin.rune is present');
+    pass(
+      `npm publish --dry-run: no auto-corrections; bin.rune is present${alreadyPublished ? ` (v${pkg.version} is already on npm)` : ''}`,
+    );
   }
 }
 

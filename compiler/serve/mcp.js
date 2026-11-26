@@ -40,6 +40,32 @@ function notFound(catalog, name) {
   );
 }
 
+/**
+ * Names only, grouped by tier — a few hundred tokens instead of every description.
+ * `*` marks user-invoked-only skills; packs list the sub-skills they include.
+ */
+export function compactList(catalog, rows) {
+  const byTier = new Map();
+  for (const e of rows) {
+    if (!byTier.has(e.tier)) byTier.set(e.tier, { skills: [], packs: [] });
+    const g = byTier.get(e.tier);
+    const id = `${e.id}${e.modelInvocable ? '' : '*'}`;
+    if (e.kind === 'pack') {
+      const subs = catalog.aliasesFor(e.id);
+      g.packs.push(subs.length ? `${id} (${subs.join(', ')})` : id);
+    } else g.skills.push(id);
+  }
+  const lines = [
+    `${rows.length} Rune skill(s), names only. For descriptions call list_skills(filter: "<keywords>") (cheap) or list_skills(detail: "full"). Use run_skill(name, input) to use one; a pack sub-skill name works too. * = user-invoked only.`,
+  ];
+  for (const [tier, g] of byTier) {
+    lines.push('');
+    if (g.skills.length) lines.push(`${tier} skills: ${g.skills.join(', ')}`);
+    if (g.packs.length) lines.push(`${tier} packs: ${g.packs.join('; ')}`);
+  }
+  return lines.join('\n');
+}
+
 export function buildInstructions(catalog, { runner } = {}) {
   const counts = catalog.counts();
   const tierLine = Object.entries(counts)
@@ -132,21 +158,29 @@ export function createRuneMcpServer({ catalog, version, serverName = 'rune', run
     {
       title: 'List Rune skills',
       description:
-        'List the Rune skills available on this server (Free core, extension packs, and any installed Pro/Business tiers). Rune skills are NOT installed locally — this server is where they live. Optional filter does a keyword match over names and descriptions (e.g. "video", "deploy", "gdpr").',
+        'List the Rune skills available on this server (Free core, extension packs, and any installed Pro/Business tiers). Rune skills are NOT installed locally — this server is where they live. Optional filter does a keyword match over names and descriptions (e.g. "video", "deploy", "gdpr"). Without filter or tier you get a compact list of names; pass a filter (cheap) or detail "full" for descriptions.',
       inputSchema: {
         filter: z.string().max(200).optional().describe('Keywords to match against skill names and descriptions'),
         tier: z.string().max(32).optional().describe('Only this tier: free, pro, business, custom'),
         kind: z.enum(['skill', 'pack']).optional().describe('Only core skills or only extension packs'),
+        detail: z
+          .enum(['compact', 'full'])
+          .optional()
+          .describe(
+            '"compact": names only. "full": names + descriptions. Default: full with filter/tier, else compact',
+          ),
       },
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
-    async ({ filter, tier, kind }) => {
+    async ({ filter, tier, kind, detail }) => {
       const rows = catalog.search({ filter, tier, kind });
       if (rows.length === 0) {
         return textResult(
           `No skills matched${filter ? ` "${filter}"` : ''}. ${catalog.size} skills are available in total.`,
         );
       }
+      if ((detail || (filter || tier ? 'full' : 'compact')) === 'compact')
+        return textResult(compactList(catalog, rows));
       const lines = rows.map((e) => {
         const tags = [e.tier, e.kind === 'pack' ? 'pack' : e.layer, e.modelInvocable ? null : 'user-invoked only']
           .filter(Boolean)

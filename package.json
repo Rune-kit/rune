@@ -18,6 +18,8 @@
     "eval": "node scripts/run-evals.js",
     "version-check": "node scripts/version-sync-check.js",
     "version-bump": "node scripts/bump-version.js",
+    "release": "node scripts/release.mjs prepare",
+    "release:publish": "node scripts/release.mjs publish",
     "prepublishOnly": "node scripts/version-sync-check.js",
     "description-check": "node scripts/description-budget-check.js"
   },

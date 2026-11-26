@@ -24,6 +24,8 @@ Node.js ≥ 18, no build step for the source. Install dev deps with `npm install
 | Validate the Claude plugin | `claude plugin validate .` |
 | Validate the Gemini extension | `gemini extensions validate .` |
 | Bump version everywhere | `node scripts/bump-version.js <x.y.z> --title "<wave name>"` |
+| Cut a release (bump + CHANGELOG `[Unreleased]` → version + ci + commit on `release/v<x.y.z>`) | `npm run release -- <x.y.z> [--title "<wave>"] [--pr]` |
+| Publish after the release PR merged (checks, warning-free dry run, `--auth-type=web`, tag + GH release) | `npm run release:publish` (`-- --dry-run` to stop before publishing) |
 
 Platform ids: `claude codex cursor windsurf antigravity opencode openclaw generic aider copilot gemini qoder qwen grok cline agents`.
 
@@ -56,7 +58,7 @@ plugin.json                Agent Plugins 1.0 manifest
 - New platform adapter: add `compiler/adapters/<id>.js` (directory-per-skill runtimes can use `agent-skills-base.js`), register it in `adapters/index.js`, add it to `adapters.test.js` and `scripts-bundling.test.js`, and update the platform count.
 - Keep the Free compiler tier-agnostic. Pro/Business packs live in separate private repos and stack via `--tier`.
 - Hooks are CommonJS (`hooks/**/index.cjs`), must exit 0 on any error, and print a JSON envelope (Codex discards anything else).
-- `CHANGELOG.md` gets a user-facing entry for every release.
+- `CHANGELOG.md` gets a user-facing entry for every release — write it under `## [Unreleased]`; `npm run release` renames the heading.
 
 ## Don't
 

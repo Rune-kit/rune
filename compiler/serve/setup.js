@@ -30,6 +30,29 @@ import { findCloudflared } from './tunnel.js';
 export const EXPOSE_MODES = ['local', 'tunnel', 'domain', 'tailscale'];
 export const CLIENTS = ['grok-bot', 'claude', 'grok', 'codex', 'cursor', 'gemini', 'antigravity'];
 const KEY_PLACEHOLDER = '$RUNE_KEY';
+// PowerShell reads environment variables as $env:NAME ($RUNE_KEY would be an empty PS variable).
+const KEY_PLACEHOLDER_PS = '$env:RUNE_KEY';
+
+/** Where a new key goes when it must not be printed (non-TTY stdout, agents, logs). */
+export function defaultKeyOutPath(configPath = defaultConfigPath()) {
+  return path.join(path.dirname(configPath), 'serve.key');
+}
+
+/** Write a key to a 0600 file (created or replaced). Returns the absolute path. */
+export function writeKeyFile(file, key) {
+  const abs = path.resolve(file);
+  mkdirSync(path.dirname(abs), { recursive: true, mode: 0o700 });
+  writeFileSync(abs, `${key}\n`, { mode: 0o600 });
+  safe(() => chmodSync(abs, 0o600));
+  return abs;
+}
+
+/** How to set RUNE_KEY in the user's shell, per OS. */
+export function keyEnvHint(platform = process.platform) {
+  return platform === 'win32'
+    ? 'In PowerShell, first: $env:RUNE_KEY = "rune_sk_…"   (all new windows: setx RUNE_KEY "rune_sk_…")'
+    : 'In a terminal, first: export RUNE_KEY=rune_sk_…';
+}
 // Cursor expands ${env:NAME} inside mcp.json, so the key stays out of the file.
 // biome-ignore lint/suspicious/noTemplateCurlyInString: literal Cursor interpolation syntax
 const CURSOR_KEY_REF = 'Bearer ${env:RUNE_KEY}';
@@ -309,8 +332,9 @@ function initParams() {
 /**
  * @returns {{ id: string, name: string, needsPublic: boolean, text: string }}
  */
-export function connectInstructions(client, url) {
-  const k = KEY_PLACEHOLDER;
+export function connectInstructions(client, url, { platform = process.platform } = {}) {
+  const win = platform === 'win32';
+  const k = win ? KEY_PLACEHOLDER_PS : KEY_PLACEHOLDER;
   const map = {
     'grok-bot': {
       name: 'Grok Bot',
@@ -335,12 +359,16 @@ export function connectInstructions(client, url) {
     codex: {
       name: 'OpenAI Codex',
       needsPublic: false,
-      text: `codex mcp add rune --url ${url} --bearer-token-env-var RUNE_KEY\n# keep "export RUNE_KEY=…" in your shell profile — Codex reads it at start`,
+      text: `codex mcp add rune --url ${url} --bearer-token-env-var RUNE_KEY\n${
+        win
+          ? '# run once: setx RUNE_KEY "rune_sk_…"  then open a new terminal — Codex reads it at start'
+          : '# keep "export RUNE_KEY=…" in your shell profile — Codex reads it at start'
+      }`,
     },
     cursor: {
       name: 'Cursor',
       needsPublic: false,
-      text: `# ~/.cursor/mcp.json  (RUNE_KEY must be set in the environment Cursor starts from)\n${JSON.stringify(
+      text: `# ${win ? '%USERPROFILE%\\.cursor\\mcp.json  (setx RUNE_KEY "rune_sk_…", then restart Cursor)' : '~/.cursor/mcp.json  (RUNE_KEY must be set in the environment Cursor starts from)'}\n${JSON.stringify(
         { mcpServers: { rune: { url, headers: { Authorization: CURSOR_KEY_REF } } } },
         null,
         2,
@@ -366,14 +394,14 @@ export function isPublicUrl(url) {
   return /^https:\/\//.test(url || '') && !/\/\/(127\.|localhost|\[::1\])/.test(url);
 }
 
-export function formatConnect(url, clients = CLIENTS) {
+export function formatConnect(url, clients = CLIENTS, { platform = process.platform } = {}) {
   const lines = [
-    'Your key is the rune_sk_… value shown once at setup (password manager). Lost it? `rune serve key rotate`',
-    'then update each client. In a terminal, first: export RUNE_KEY=rune_sk_…',
+    'Your key is the rune_sk_… value from setup (password manager). Lost it? `rune serve key rotate`',
+    `then update each client. ${keyEnvHint(platform)}`,
     '',
   ];
   for (const id of clients) {
-    const c = connectInstructions(id, url);
+    const c = connectInstructions(id, url, { platform });
     lines.push(`── ${c.name} ${'─'.repeat(Math.max(2, 50 - c.name.length))}`);
     if (c.needsPublic && !isPublicUrl(url)) {
       lines.push(`  ⚠ ${c.name} runs in the cloud and cannot reach ${url}.`);
@@ -584,6 +612,7 @@ export async function runSetup({
   log = () => {},
   rl = null,
   deps = {},
+  printKey = true,
 }) {
   const configPath = typeof args.config === 'string' ? path.resolve(args.config) : defaultConfigPath();
   const runeBin = path.join(runeRoot, 'compiler', 'bin', 'rune.js');
@@ -612,11 +641,11 @@ export async function runSetup({
   report.key = { created: keyInfo.created, source: keyInfo.source, hint: cfg.keyHint || null, hashFile: configPath };
   if (keyInfo.created) {
     if (typeof args['key-out'] === 'string') {
-      const file = path.resolve(args['key-out']);
-      mkdirSync(path.dirname(file), { recursive: true });
-      writeFileSync(file, `${keyInfo.key}\n`, { mode: 0o600 });
-      safe(() => chmodSync(file, 0o600));
-      report.key.file = file;
+      report.key.file = writeKeyFile(args['key-out'], keyInfo.key);
+    } else if (!printKey) {
+      // stdout is not a terminal (agent, CI, log capture): never print the raw key.
+      report.key.file = writeKeyFile(defaultKeyOutPath(configPath), keyInfo.key);
+      report.key.fileReason = 'stdout is not a terminal';
     } else {
       report.key.value = keyInfo.key;
     }
@@ -739,7 +768,12 @@ export async function serveStatus({ configPath, deep = false, deps = {} }) {
       else if (h.authEnforced === false) st.problems.push(`${where} endpoint answered without a key — check the proxy`);
       else if (h.handshake && !h.handshake.ok) st.problems.push(`${where} handshake failed: ${h.handshake.error}`);
     }
-    if (!key) st.hints.push('Set RUNE_KEY=<your key> before `rune serve doctor` to also test a full MCP handshake.');
+    if (!key)
+      st.hints.push(
+        `Set RUNE_KEY before \`rune serve doctor\` to also test a full MCP handshake (${
+          process.platform === 'win32' ? '$env:RUNE_KEY = "rune_sk_…"' : 'export RUNE_KEY=rune_sk_…'
+        }).`,
+      );
   }
   return st;
 }
@@ -775,7 +809,25 @@ function printStatus(st, out, { doctor }) {
 
 // ─── CLI ───
 
-export async function cmdServeSetup({ sub, runeRoot, projectRoot, args, positional, configPath }) {
+export const NON_TTY_SETUP_MESSAGE = [
+  '✗ rune serve setup asks questions, but this shell is not an interactive terminal',
+  '  (an agent, CI job, ssh without -t, or a pipe). Nothing was changed.',
+  '  Re-run with --yes to accept the defaults, e.g.:',
+  '    rune serve setup --yes --expose tunnel      (or local | domain --domain <host> | tailscale)',
+  '  Without a terminal the new key is written to a 0600 file (default ~/.rune/serve.key,',
+  '  or --key-out <file>) and only its path is printed — never the key itself.',
+].join('\n');
+
+export async function cmdServeSetup({
+  sub,
+  runeRoot,
+  projectRoot,
+  args,
+  positional,
+  configPath,
+  tty = { stdin: Boolean(process.stdin.isTTY), stdout: Boolean(process.stdout.isTTY) },
+  platform = process.platform,
+}) {
   const json = Boolean(args.json);
   const write = (s) => process.stdout.write(s);
   const out = (l) => (json ? process.stderr : process.stdout).write(`${l}\n`);
@@ -803,8 +855,11 @@ export async function cmdServeSetup({ sub, runeRoot, projectRoot, args, position
       process.exitCode = 1;
       return;
     }
-    if (json) write(`${JSON.stringify({ url, clients: clients.map((c) => connectInstructions(c, url)) }, null, 2)}\n`);
-    else out(`\n  Rune MCP URL: ${url}\n\n${formatConnect(url, clients).replace(/^(?=.)/gm, '  ')}`);
+    if (json)
+      write(
+        `${JSON.stringify({ url, clients: clients.map((c) => connectInstructions(c, url, { platform })) }, null, 2)}\n`,
+      );
+    else out(`\n  Rune MCP URL: ${url}\n\n${formatConnect(url, clients, { platform }).replace(/^(?=.)/gm, '  ')}`);
     return;
   }
 
@@ -831,12 +886,20 @@ export async function cmdServeSetup({ sub, runeRoot, projectRoot, args, position
     else args['no-service'] = true;
   }
 
-  const interactive = !args.yes && !json && sub !== 'start' && process.stdin.isTTY && process.stdout.isTTY;
+  // Non-interactive shells must opt in to the defaults: setup starts a server, may download
+  // cloudflared and mints a key, so it never runs "by accident" (e.g. a flag it did not know).
+  if (sub === 'setup' && !args.yes && !(tty.stdin && tty.stdout)) {
+    if (json) write(`${JSON.stringify({ ok: false, error: 'non-interactive: pass --yes' }, null, 2)}\n`);
+    process.stderr.write(`${NON_TTY_SETUP_MESSAGE}\n`);
+    process.exitCode = 2;
+    return;
+  }
+  const interactive = !args.yes && !json && sub !== 'start' && tty.stdin && tty.stdout;
   const rl = interactive ? createInterface({ input: process.stdin, output: process.stderr }) : null;
   if (interactive) out('\n  Rune serve setup — Enter accepts the [default]. Ctrl+C to quit.');
   let report;
   try {
-    report = await runSetup({ runeRoot, projectRoot, args, rl, log: (l) => out(`  · ${l}`) });
+    report = await runSetup({ runeRoot, projectRoot, args, rl, printKey: tty.stdout, log: (l) => out(`  · ${l}`) });
   } catch (err) {
     if (json) write(`${JSON.stringify({ ok: false, error: err.message }, null, 2)}\n`);
     else out(`  ✗ ${err.message}`);
@@ -848,12 +911,12 @@ export async function cmdServeSetup({ sub, runeRoot, projectRoot, args, position
   if (json) {
     write(`${JSON.stringify(report, null, 2)}\n`);
   } else {
-    printReport(report, out);
+    printReport(report, out, { platform });
   }
   if (!report.ok) process.exitCode = 1;
 }
 
-function printReport(r, out) {
+function printReport(r, out, { platform = process.platform } = {}) {
   const e = r.exposure;
   out('');
   out(
@@ -871,6 +934,7 @@ function printReport(r, out) {
     out(`    ${r.key.value}`);
     out('  └────────────────────────────────────────────────────────────────────────┘');
   } else if (r.key.file) {
+    if (r.key.fileReason) out(`\n  ${r.key.fileReason}, so the new key is NOT printed.`);
     out(`\n  New key written to ${r.key.file} (0600). Move it to your password manager, then delete the file.`);
   } else {
     out(`\n  Key: unchanged (${r.key.hint || 'stored'}). Lost it? rune serve key rotate`);
@@ -878,7 +942,7 @@ function printReport(r, out) {
   if (e.caddyfile) out(`\n  Caddyfile:\n${e.caddyfile.replace(/^(?=.)/gm, '    ')}`);
   for (const w of r.warnings) out(`\n  ⚠ ${w}`);
   out('\n  Connect your agents:\n');
-  out(formatConnect(r.connectUrl).replace(/^(?=.)/gm, '  '));
+  out(formatConnect(r.connectUrl, CLIENTS, { platform }).replace(/^(?=.)/gm, '  '));
   if (r.next.length) {
     out('  Next:');
     for (const n of r.next) out(`    ${n}`);

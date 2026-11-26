@@ -93,7 +93,7 @@ The output ends like this:
 | **Gemini CLI** | `gemini mcp add --transport http --scope user rune https://…/mcp -H "Authorization: Bearer $RUNE_KEY"` |
 | **Antigravity** | Settings → MCP servers → remote server, same URL and `Authorization` header |
 
-(`export RUNE_KEY=rune_sk_…` first, in the shell you run those commands from.)
+(`export RUNE_KEY=rune_sk_…` first, in the shell you run those commands from. **Windows PowerShell:** `$env:RUNE_KEY = "rune_sk_…"` for this window, `setx RUNE_KEY "rune_sk_…"` for new ones — and use `"Bearer $env:RUNE_KEY"` in the headers. `rune serve connect` prints the PowerShell form automatically on Windows.)
 
 Then just ask: *"use the Rune video skill to plan a 30-second teaser"*, `/rune cook add rate limiting`, *"which Rune skills help with GDPR?"*.
 
@@ -110,7 +110,13 @@ ssh me@my-vps 'RUNE_KEY=$(cat ~/.rune/serve.key) rune serve doctor'   # exit 0 =
 
 Then you copy `~/.rune/serve.key` into your password manager and delete the file. Tell your agent *"set up rune serve on my VPS `me@my-vps` and connect Grok Bot"* — Rune's `deploy` skill carries the exact runbook (`skills/deploy/references/rune-serve.md`).
 
-The JSON report has `ok`, `exposure.publicUrl`, `health.local` / `health.public` (reachable, auth enforced, handshake + tool list), `service`, `connect.<client>.text`, `warnings[]` and `next[]`. `key.value` appears only when a key was just created and no `--key-out` was given.
+The JSON report has `ok`, `exposure.publicUrl`, `health.local` / `health.public` (reachable, auth enforced, handshake + tool list), `service`, `connect.<client>.text`, `warnings[]` and `next[]`. When a key was just created, `key.file` is where it was written; `key.value` appears only when stdout is a real terminal and no `--key-out` was given.
+
+### Without a terminal (agents, CI, `ssh host 'cmd'`, pipes)
+
+- `rune serve setup` **refuses without `--yes`** (exit 2, nothing changed) — it starts a server and mints a key, so it never runs on defaults by accident. Add `--yes` (and `--expose …`) to run it.
+- A new key is **never printed** when stdout is not a terminal (agent transcripts and logs capture it). It goes to `--key-out <file>`, or by default `~/.rune/serve.key` (0600, next to `serve.json`), and only the path is printed. Same for `rune serve key rotate` and `rune serve install`.
+- `rune serve <anything> --help` / `-h` only prints the usage — it never starts, stops or writes anything.
 
 ## Day-to-day commands
 
@@ -150,7 +156,7 @@ Keeping it running: on Linux with a systemd user session (most VPSes) setup writ
 
 | Tool | What it does |
 |---|---|
-| `list_skills(filter?, tier?, kind?)` | Discover skills — keyword search over names and descriptions |
+| `list_skills(filter?, tier?, kind?, detail?)` | Discover skills — keyword search over names and descriptions. With no filter/tier it returns a compact names-only list (~1k tokens for 100 skills instead of ~6.5k); `detail: "full"` adds every description |
 | `get_skill(name)` | The skill's `SKILL.md` (or a pack's `PACK.md`) plus its list of reference files |
 | `get_reference(skill, path)` | One file from the skill's folder, e.g. `references/phase-3.md` |
 | `run_skill(name, input?)` | The skill's instructions with your request framed for the calling agent to execute now |
