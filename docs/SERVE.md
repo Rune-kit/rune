@@ -66,9 +66,22 @@ caddy reverse-proxy --from rune.example.com --to 127.0.0.1:8787
 cloudflared tunnel --url http://127.0.0.1:8787
 ```
 
+Or let Rune start the quick tunnel for you (**experimental**; needs `cloudflared` on PATH, the URL changes on every start, and Rune waits until the tunnel is actually connected before printing it):
+
+```bash
+rune serve --tunnel
+#   Public HTTPS (Cloudflare quick tunnel, EXPERIMENTAL — changes each start): https://<random>.trycloudflare.com/mcp
+```
+
+For a stable hostname, create a named tunnel in Cloudflare and point it at `http://127.0.0.1:8787`.
+
 Behind a proxy, add `--trust-proxy` so the rate limit counts real client IPs (`X-Forwarded-For` / `CF-Connecting-IP`).
 
 ### Keep it running
+
+**Experimental:** `rune serve install [serve flags]` writes a systemd **user** unit (`~/.config/systemd/user/rune-serve.service`) with the same flags, mints the key in your terminal if there is none yet, and prints the `systemctl --user enable --now rune-serve` / `loginctl enable-linger` commands to run. `rune serve install --print` prints a unit for `/etc/systemd/system` instead. It never runs `systemctl` for you. Install Rune globally first (`npm i -g`), not through `npx`, so the unit points at a path that stays.
+
+Or by hand:
 
 ```ini
 # /etc/systemd/system/rune-serve.service
@@ -192,6 +205,8 @@ rune serve [--port 8787] [--host 127.0.0.1]     Streamable HTTP at /mcp (bearer 
            [--rate-limit 120] [--max-bytes 262144] [--trust-proxy]
            [--allow-query-key] [--config <file>] [--name rune]
            [--runner claude|codex|grok] [--runner-timeout 600] [--runner-concurrency 2]   (experimental)
+           [--tunnel]                                                                    (experimental)
+rune serve install [--print] [serve flags]      systemd unit (experimental)
 rune serve --stdio                              MCP over stdio (local or via ssh)
 rune serve key rotate                           mint a new key, print it once
 rune serve key path                             where the key hash lives

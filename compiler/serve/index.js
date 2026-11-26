@@ -17,8 +17,10 @@ import { detectTiers } from '../commands/setup.js';
 import { defaultConfigPath, ensureKey, readServeConfig, rotateKey } from './auth.js';
 import { createCatalog, DEFAULT_MAX_BYTES } from './catalog.js';
 import { createHttpHandler, listen } from './http.js';
+import { installService } from './install.js';
 import { createRuneMcpServer } from './mcp.js';
 import { createRunner } from './runner.js';
+import { startTunnel } from './tunnel.js';
 
 /**
  * Work out which roots to serve.
@@ -70,6 +72,7 @@ export async function startServe({
   out = (line) => process.stderr.write(`${line}\n`),
   detect,
   runner = null,
+  ...opts
 }) {
   if (!runner && typeof args.runner === 'string') {
     runner = createRunner({
@@ -125,10 +128,22 @@ export async function startServe({
   const shownHost = host.includes(':') ? `[${host}]` : host;
   const url = `http://${shownHost}:${bound.port}/mcp`;
 
+  let tunnel = null;
+  if (args.tunnel) {
+    const target = `http://${host === '0.0.0.0' || host === '::' ? '127.0.0.1' : shownHost}:${bound.port}`;
+    try {
+      tunnel = await (opts.startTunnel || startTunnel)({ target });
+    } catch (err) {
+      out(`  ⚠ --tunnel: ${err.message}`);
+    }
+  }
+
   out('');
   out(`  Rune skill server — ${catalog.size} skills (${fmtCounts(catalog.counts())})`);
   for (const r of roots) out(`    · ${r.tier.padEnd(8)} ${r.root}  (${r.source})`);
   out(`  MCP endpoint: ${url}`);
+  if (tunnel)
+    out(`  Public HTTPS (Cloudflare quick tunnel, EXPERIMENTAL — changes each start): ${tunnel.publicUrl}/mcp`);
   if (keyInfo.created) {
     out('');
     out('  New server key (shown ONCE — store it in your password manager):');
@@ -140,7 +155,9 @@ export async function startServe({
     );
   }
   out('');
-  out(`  Connect: claude mcp add --transport http rune ${url} --header "Authorization: Bearer <key>"`);
+  out(
+    `  Connect: claude mcp add --transport http rune ${tunnel ? `${tunnel.publicUrl}/mcp` : url} --header "Authorization: Bearer <key>"`,
+  );
   if (!LOOPBACK.has(host)) {
     out('  ⚠ Listening beyond localhost over plain HTTP — put it behind HTTPS (Caddy/nginx/Cloudflare Tunnel).');
   }
@@ -151,7 +168,20 @@ export async function startServe({
   if (args['allow-query-key']) out('  ⚠ ?key= in the URL is accepted — URLs end up in logs; prefer the header.');
   out('');
 
-  return { url, port: bound.port, host, catalog, key: keyInfo.key, close: bound.close, httpServer: bound.server };
+  const close = async () => {
+    tunnel?.stop();
+    await bound.close();
+  };
+  return {
+    url,
+    publicUrl: tunnel ? `${tunnel.publicUrl}/mcp` : null,
+    port: bound.port,
+    host,
+    catalog,
+    key: keyInfo.key,
+    close,
+    httpServer: bound.server,
+  };
 }
 
 function mtimeOf(file) {
@@ -193,6 +223,30 @@ export async function cmdServe({ runeRoot, projectRoot, args, positional = [], v
     process.exitCode = 1;
     return;
   }
+  if (sub === 'install') {
+    // Mint the key HERE, in the operator's terminal, so it never lands in the journal.
+    const keyInfo = ensureKey(configPath);
+    const res = installService({
+      nodePath: process.execPath,
+      runeBin: path.join(runeRoot, 'compiler', 'bin', 'rune.js'),
+      args,
+    });
+    if (/[\\/]_npx[\\/]/.test(runeRoot)) {
+      out(
+        '  ⚠ Running from the npx cache, which gets cleaned up. Install first: npm i -g @rune-kit/rune && rune serve install',
+      );
+    }
+    if (res.unitPath) out(`\n  ✓ Wrote ${res.unitPath} (EXPERIMENTAL)`);
+    else process.stdout.write(res.unit);
+    if (keyInfo.created) {
+      out('\n  New server key (shown ONCE — store it in your password manager):');
+      out(`    ${keyInfo.key}`);
+    }
+    out('\n  Next:');
+    for (const line of res.next) out(`    ${line}`);
+    out('');
+    return;
+  }
   if (sub === 'help' || args.help) {
     out(USAGE);
     return;
@@ -228,6 +282,8 @@ export const USAGE = `
              [--runner-timeout 600] [--runner-concurrency 2]
              [--config <file>]                    key file (default ~/.rune/serve.json)
   rune serve --stdio                              MCP over stdio (local or via ssh)
+             [--tunnel]                           EXPERIMENTAL: public https via cloudflared quick tunnel
+  rune serve install [--print] [serve flags]      EXPERIMENTAL: systemd unit (user unit, or --print)
   rune serve key rotate                           mint a new key, print it once
   rune serve key path                             where the key hash lives
 
