@@ -132,6 +132,12 @@ export function prepare(argv) {
   console.log(`  ✓ CHANGELOG.md: [Unreleased] → [${version}] - ${date}`);
   write('README.md', updateReadme(read('README.md'), { from: old, to: version, date, summary }));
   console.log(`  ✓ README.md: What's New (v${version} — ${title})`);
+  const claude = read('CLAUDE.md');
+  const releaseLine = new RegExp(`Current release \\*\\*v${old.replace(/\./g, '\\.')}\\b`);
+  if (releaseLine.test(claude)) {
+    write('CLAUDE.md', claude.replace(releaseLine, `Current release **v${version}`));
+    console.log(`  ✓ CLAUDE.md: current release v${version}`);
+  }
   run(process.execPath, [join(ROOT, 'scripts', 'bump-version.js'), version, '--title', title]);
   if (!argv.includes('--no-ci')) run(npm, ['run', 'ci']);
   sh('git', ['add', '-A']);
@@ -144,6 +150,8 @@ export function prepare(argv) {
       'create',
       '--base',
       'master',
+      '--head',
+      `release/v${version}`,
       '--title',
       `chore(release): ${version}`,
       '--body',
