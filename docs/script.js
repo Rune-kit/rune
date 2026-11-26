@@ -494,19 +494,67 @@ function showSuccessForProduct(product, github) {
   }
 }
 
-// Rune serve — client connect tabs
+// Rune serve — connect tabs (roving tabindex), copy buttons, diagram motion
 (function () {
-  const tabs = document.querySelectorAll('.sv-tab');
-  const panels = document.querySelectorAll('.sv-panel');
-  tabs.forEach((tab) => {
-    tab.addEventListener('click', () => {
-      const id = tab.dataset.sv;
-      tabs.forEach((t) => {
-        const on = t === tab;
-        t.classList.toggle('active', on);
-        t.setAttribute('aria-selected', on ? 'true' : 'false');
-      });
-      panels.forEach((p) => { p.hidden = p.dataset.sv !== id; });
+  const root = document.getElementById('serve');
+  if (!root) return;
+  const live = root.querySelector('[data-sv-live]');
+  const say = (msg) => { if (live) { live.textContent = ''; setTimeout(() => { live.textContent = msg; }, 30); } };
+
+  const tabs = Array.from(root.querySelectorAll('.sv-tab'));
+  const select = (tab, focus) => {
+    tabs.forEach((t) => {
+      const on = t === tab;
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+      t.tabIndex = on ? 0 : -1;
+      const panel = document.getElementById(t.getAttribute('aria-controls'));
+      if (panel) panel.hidden = !on;
+    });
+    if (focus) tab.focus();
+  };
+  tabs.forEach((tab, i) => {
+    tab.addEventListener('click', () => select(tab, false));
+    tab.addEventListener('keydown', (e) => {
+      const keys = { ArrowRight: i + 1, ArrowDown: i + 1, ArrowLeft: i - 1, ArrowUp: i - 1, Home: 0, End: tabs.length - 1 };
+      if (!(e.key in keys)) return;
+      e.preventDefault();
+      select(tabs[(keys[e.key] + tabs.length) % tabs.length], true);
     });
   });
+
+  root.querySelectorAll('[data-copy]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const code = btn.parentElement.querySelector('code');
+      if (!code) return;
+      try {
+        await navigator.clipboard.writeText(code.innerText.replace(/\u00a0/g, ' '));
+        btn.classList.add('is-copied');
+        const t = btn.querySelector('.sv-copy-t');
+        if (t) t.textContent = 'Copied';
+        say('Copied to clipboard');
+        setTimeout(() => { btn.classList.remove('is-copied'); if (t) t.textContent = 'Copy'; }, 1600);
+      } catch (e) {
+        say('Copy failed — select the text instead');
+      }
+    });
+  });
+
+  // Packets run only while the diagram is on screen; the pause button covers WCAG 2.2.2.
+  const map = root.querySelector('[data-sv-map]');
+  const pause = root.querySelector('[data-sv-pause]');
+  if (map && 'IntersectionObserver' in window) {
+    new IntersectionObserver((entries) => {
+      entries.forEach((en) => map.classList.toggle('is-live', en.isIntersecting));
+    }, { threshold: 0.2 }).observe(map);
+  } else if (map) {
+    map.classList.add('is-live');
+  }
+  if (map && pause) {
+    pause.addEventListener('click', () => {
+      const paused = pause.getAttribute('aria-pressed') !== 'true';
+      pause.setAttribute('aria-pressed', paused ? 'true' : 'false');
+      pause.querySelector('span').textContent = paused ? 'Play motion' : 'Pause motion';
+      map.classList.toggle('is-paused', paused);
+    });
+  }
 })();
