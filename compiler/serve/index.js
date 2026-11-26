@@ -21,6 +21,7 @@ import { createHttpHandler, listen } from './http.js';
 import { installService } from './install.js';
 import { createRuneMcpServer } from './mcp.js';
 import { createRunner } from './runner.js';
+import { clearState, cmdServeSetup, statePathFor, writeState } from './setup.js';
 import { startTunnel } from './tunnel.js';
 
 /**
@@ -130,11 +131,13 @@ export async function startServe({
   const url = `http://${shownHost}:${bound.port}/mcp`;
 
   let tunnel = null;
+  let tunnelError = null;
   if (args.tunnel) {
     const target = `http://${host === '0.0.0.0' || host === '::' ? '127.0.0.1' : shownHost}:${bound.port}`;
     try {
       tunnel = await (opts.startTunnel || startTunnel)({ target });
     } catch (err) {
+      tunnelError = err.message;
       out(`  ⚠ --tunnel: ${err.message}`);
     }
   }
@@ -176,6 +179,7 @@ export async function startServe({
   return {
     url,
     publicUrl: tunnel ? `${tunnel.publicUrl}/mcp` : null,
+    tunnelError,
     port: bound.port,
     host,
     catalog,
@@ -248,6 +252,10 @@ export async function cmdServe({ runeRoot, projectRoot, args, positional = [], v
     out('');
     return;
   }
+  if (['setup', 'start', 'stop', 'status', 'doctor', 'connect'].includes(sub)) {
+    await cmdServeSetup({ sub, runeRoot, projectRoot, args, positional, configPath });
+    return;
+  }
   if (sub === 'help' || args.help) {
     out(USAGE);
     return;
@@ -261,7 +269,32 @@ export async function cmdServe({ runeRoot, projectRoot, args, positional = [], v
   const running = await startServe({ runeRoot, projectRoot, args, version, out });
   if (running.url === 'stdio') return; // transport keeps the process alive
 
+  // Let `rune serve status|connect|setup` find this server (and its tunnel URL).
+  const writeRunState = () =>
+    writeState(
+      {
+        ready: true,
+        pid: process.pid,
+        url: running.url,
+        publicUrl: running.publicUrl,
+        tunnelError: running.tunnelError,
+        version,
+        skills: running.catalog.size,
+        startedAt: new Date().toISOString(),
+      },
+      configPath,
+    );
+  try {
+    writeRunState();
+  } catch (err) {
+    out(`  ⚠ could not write ${statePathFor(configPath)}: ${err.message}`);
+  }
   const shutdown = () => {
+    try {
+      clearState(configPath);
+    } catch {
+      /* best effort */
+    }
     running.close().then(() => process.exit(0));
   };
   process.on('SIGINT', shutdown);
@@ -284,6 +317,14 @@ export const USAGE = `
              [--config <file>]                    key file (default ~/.rune/serve.json)
   rune serve --stdio                              MCP over stdio (local or via ssh)
              [--tunnel]                           EXPERIMENTAL: public https via cloudflared quick tunnel
+  rune serve setup                                guided setup: key, HTTPS, service, health check, connect
+             [--yes] [--json]                     no questions (agents / scripts), JSON report
+             [--expose local|tunnel|domain|tailscale] [--domain <host>]
+             [--service|--no-service] [--no-start] [--rotate-key] [--key-out <file>] [--no-download]
+  rune serve start | stop                         start (background or service) / stop with the saved setup
+  rune serve status | doctor [--json]             running? URLs, skills; doctor also probes local + public
+  rune serve connect [client|all] [--url <url>]   copy-paste connect steps: grok-bot claude grok codex
+                                                  cursor gemini antigravity (never prints the key)
   rune serve install [--print] [serve flags]      EXPERIMENTAL: systemd unit (user unit, or --print)
   rune serve key rotate                           mint a new key, print it once
   rune serve key path                             where the key hash lives

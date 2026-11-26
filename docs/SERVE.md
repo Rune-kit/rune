@@ -1,15 +1,148 @@
 # `rune serve` — one Rune for every agent and every machine
 
-Install Rune once on a server (a VPS, a home box, a team machine). Every agent you use — Claude Code, Grok Build / Cursor, Codex, Antigravity / Gemini CLI, Grok Bot, a Telegram bot — connects to it over [MCP](https://modelcontextprotocol.io) and uses Rune skills **without installing Rune locally**. Update Rune on the server and every agent gets the new skills on its next call.
+Install Rune **once** on a server (a VPS, a home box, your desktop). Every agent you use — Grok Bot, Claude Code, Grok Build, Cursor, Codex, Gemini / Antigravity, a Telegram bot — connects to it over [MCP](https://modelcontextprotocol.io) and gets your Free + Pro + Business skills **without installing Rune locally**. Update Rune on the server and every agent sees the new skills on its next call.
 
-```
-  laptop: Claude Code ─┐
-  desktop: Grok Build ─┤  MCP (HTTPS + key)   ┌──────────────── VPS ────────────────┐
-  phone: Grok Bot ─────┼────────────────────▶ │ rune serve → Free + Pro + Business │
-  Telegram bot ────────┘                      └─────────────────────────────────────┘
+```mermaid
+flowchart LR
+  subgraph clients["Your agents — anywhere"]
+    GB["Grok Bot<br/>(phone / web)"]
+    CC["Claude Code"]
+    GK["Grok Build / Cursor"]
+    CX["Codex · Gemini · Antigravity"]
+  end
+  subgraph server["Your server (VPS, home box or PC)"]
+    RS["rune serve<br/>MCP · /mcp · bearer key"]
+    F["Free — 67 skills + 14 packs"]
+    P["Pro — rune-pro/"]
+    B["Business — rune-business/"]
+    RS --- F
+    RS --- P
+    RS --- B
+  end
+  GB -- "HTTPS + key" --> T(("Cloudflare tunnel<br/>/ your domain<br/>/ Tailscale"))
+  CC -- "HTTPS + key" --> T
+  GK -- "HTTPS + key" --> T
+  CX -- "HTTPS + key" --> T
+  T --> RS
 ```
 
-> **Status:** new in 2.34.0 (until that is on npm, run it from a git checkout: `node compiler/bin/rune.js serve`). The MCP server (tools, prompts, key auth) is stable; `--runner`, `--tunnel` and `serve install` are **experimental**.
+> **Status:** new in 2.34.0. Until that is on npm, run it from a git checkout: `node compiler/bin/rune.js serve setup`.
+
+## Quick start — 3 steps
+
+**1. Install Rune on the server**
+
+```bash
+npm i -g @rune-kit/rune                                              # Node 18+
+git clone https://github.com/rune-kit/rune-pro ~/rune-pro            # optional — if you bought Pro
+git clone https://github.com/rune-kit/rune-business ~/rune-business  # optional — Business
+```
+
+**2. Run the setup wizard**
+
+```bash
+rune serve setup
+```
+
+It asks three questions (Pro/Business folders, how agents reach it, run as a service?) and then does everything else:
+
+```mermaid
+flowchart TD
+  A["rune serve setup"] --> B{"Where am I?<br/>PC or VPS / SSH"}
+  B --> C["Find Pro / Business<br/>(~/rune-pro, $RUNE_PRO_ROOT …)"]
+  C --> D["Create the server key<br/>shown ONCE · only its hash is saved"]
+  D --> E{"How do agents reach it?"}
+  E -- "tunnel (default on VPS)" --> E1["download cloudflared → ~/.rune/bin<br/>public https://….trycloudflare.com"]
+  E -- "local" --> E2["http://127.0.0.1:8787 — this machine only"]
+  E -- "domain" --> E3["prints a Caddyfile for rune.example.com"]
+  E -- "tailscale" --> E4["tailscale funnel → https://host.ts.net"]
+  E1 & E2 & E3 & E4 --> F["Start it: systemd user service<br/>or a background process"]
+  F --> G["Health check: /health, auth, MCP handshake"]
+  G --> H["Print copy-paste connect steps<br/>for every client"]
+```
+
+The output ends like this:
+
+```text
+  ✓ Rune serve is running (systemd-user, pid 41872)
+    local   http://127.0.0.1:8787/mcp
+    public  https://quiet-river-1234.trycloudflare.com/mcp
+    ✓ MCP handshake OK — 4 tools · Free + Pro + Business
+
+  ┌─ Your server key — shown ONCE. Save it in your password manager now. ─┐
+    rune_sk_…
+  └────────────────────────────────────────────────────────────────────────┘
+
+  Connect your agents:
+  ── Grok Bot ──────────────────────────────────
+    Say this to Grok Bot: "Add an MCP connector named rune: URL https://…/mcp, …"
+  ── Claude Code ───────────────────────────────
+    claude mcp add --transport http --scope user rune https://…/mcp --header "Authorization: Bearer $RUNE_KEY"
+  …
+```
+
+**3. Connect your agents** — copy the line for each client (`rune serve connect <client>` prints it again at any time):
+
+| Client | What to do |
+|---|---|
+| **Grok Bot** | Say: *"Add an MCP connector named rune: URL `https://…/mcp`, header `Authorization: Bearer <my rune key>`. Ask me for the key with a secure form."* Paste the key **only** into the secure form. Needs the public https URL. |
+| **Claude Code** | `claude mcp add --transport http --scope user rune https://…/mcp --header "Authorization: Bearer $RUNE_KEY"` |
+| **Grok Build** | `grok mcp add rune https://…/mcp -H "Authorization: Bearer $RUNE_KEY"` then `grok mcp doctor rune` |
+| **Codex** | `codex mcp add rune --url https://…/mcp --bearer-token-env-var RUNE_KEY` |
+| **Cursor** | `~/.cursor/mcp.json`: `{"mcpServers":{"rune":{"url":"https://…/mcp","headers":{"Authorization":"Bearer ${env:RUNE_KEY}"}}}}` |
+| **Gemini CLI** | `gemini mcp add --transport http --scope user rune https://…/mcp -H "Authorization: Bearer $RUNE_KEY"` |
+| **Antigravity** | Settings → MCP servers → remote server, same URL and `Authorization` header |
+
+(`export RUNE_KEY=rune_sk_…` first, in the shell you run those commands from.)
+
+Then just ask: *"use the Rune video skill to plan a 30-second teaser"*, `/rune cook add rate limiting`, *"which Rune skills help with GDPR?"*.
+
+## Let your agent do it (no wizard)
+
+Every step has a flag, so an agent can set up your VPS over SSH end to end. `--yes` skips the questions, `--json` prints a machine-readable report, `--key-out` keeps the key out of the agent's transcript:
+
+```bash
+ssh me@my-vps 'npm i -g @rune-kit/rune'
+ssh me@my-vps 'rune serve setup --yes --json --expose tunnel --key-out ~/.rune/serve.key'
+ssh me@my-vps 'rune serve connect all'
+ssh me@my-vps 'RUNE_KEY=$(cat ~/.rune/serve.key) rune serve doctor'   # exit 0 = healthy end to end
+```
+
+Then you copy `~/.rune/serve.key` into your password manager and delete the file. Tell your agent *"set up rune serve on my VPS `me@my-vps` and connect Grok Bot"* — Rune's `deploy` skill carries the exact runbook (`skills/deploy/references/rune-serve.md`).
+
+The JSON report has `ok`, `exposure.publicUrl`, `health.local` / `health.public` (reachable, auth enforced, handshake + tool list), `service`, `connect.<client>.text`, `warnings[]` and `next[]`. `key.value` appears only when a key was just created and no `--key-out` was given.
+
+## Day-to-day commands
+
+```bash
+rune serve status            # running? pid, version, skills, local + public URL
+rune serve doctor            # status + probes local and public endpoints (set RUNE_KEY for a full MCP handshake); exit 1 on problems
+rune serve connect grok-bot  # reprint connect steps: grok-bot claude grok codex cursor gemini antigravity | all
+rune serve start             # start again with the saved setup (after a reboot without a service)
+rune serve stop
+rune serve key rotate        # lost the key? mint a new one (old one stops working) — then update each client
+```
+
+The key is **never** printed again after setup — not by `status`, `connect` or `doctor`. Lost it? `rune serve key rotate`.
+
+## Setup options
+
+```text
+rune serve setup [--yes] [--json]
+                 [--expose local|tunnel|domain|tailscale] [--domain rune.example.com]
+                 [--port 8787] [--pro-root <dir>] [--business-root <dir>] [--no-tiers] [--skills-dir a,b]
+                 [--service | --no-service] [--no-start]
+                 [--rotate-key] [--key-out <file>] [--no-download] [--config <file>]
+```
+
+| Exposure | Good for | Notes |
+|---|---|---|
+| `tunnel` (default on a VPS / over SSH) | Grok Bot and any remote agent, no domain | Cloudflare quick tunnel. `cloudflared` is downloaded from Cloudflare's GitHub releases into `~/.rune/bin` if missing (no root). Tries QUIC, falls back to HTTP/2 on TCP 443. **The URL changes when the server restarts** — run `rune serve connect grok-bot` and update the connector, or use `domain`. |
+| `local` (default on a desktop) | agents on the same machine | `http://127.0.0.1:8787/mcp`. Grok Bot cannot reach it. |
+| `domain` | a fixed URL | Needs DNS → this server and a reverse proxy. Setup prints the Caddyfile block: `rune.example.com { reverse_proxy 127.0.0.1:8787 }` (Caddy gets the certificate). |
+| `tailscale` | your tailnet / Funnel | Runs `tailscale funnel --bg 8787` and uses `https://<machine>.<tailnet>.ts.net/mcp`. Funnel must be enabled for the node. |
+
+Keeping it running: on Linux with a systemd user session (most VPSes) setup writes `~/.config/systemd/user/rune-serve.service`, enables and starts it, and tries `loginctl enable-linger` so it survives logout and reboots (`--no-service` to skip). Elsewhere it starts a background process (log: `~/.rune/serve.log`) and tells you how to start it at login. Install Rune globally first (`npm i -g`), not through `npx`, so the service points at a path that stays.
 
 ## How it works
 
@@ -34,54 +167,20 @@ What gets served:
 
 The catalog is re-scanned every 30 s, so a `git pull` in a tier repo shows up without a restart.
 
-## 1. Set up the server
+## Advanced: manual setup
+
+Everything `setup` does can be done by hand.
 
 ```bash
-# on the VPS (Node 18+)
-npm i -g @rune-kit/rune
-git clone https://github.com/rune-kit/rune-pro ~/rune-pro            # optional, if you bought Pro
-git clone https://github.com/rune-kit/rune-business ~/rune-business  # optional, Business
-
-rune serve                       # http://127.0.0.1:8787/mcp
+rune serve                       # http://127.0.0.1:8787/mcp — first run prints the key once
+rune serve --tunnel              # + Cloudflare quick tunnel (needs cloudflared)
+caddy reverse-proxy --from rune.example.com --to 127.0.0.1:8787     # or Caddy in front
+rune serve install [serve flags] # write a systemd user unit (prints the systemctl commands; --print for /etc/systemd/system)
 ```
 
-The first run prints a key **once**:
+Behind a proxy add `--trust-proxy` so the rate limit counts real client IPs (`X-Forwarded-For` / `CF-Connecting-IP`). For containers, set `RUNE_SERVE_KEY` and nothing is written to disk. For a stable Cloudflare hostname, create a named tunnel and point it at `http://127.0.0.1:8787`.
 
-```
-  New server key (shown ONCE — store it in your password manager):
-    rune_sk_…
-```
-
-Only its SHA-256 hash is stored, in `~/.rune/serve.json` (mode `0600`). Lost it? `rune serve key rotate` prints a new one; the running server accepts the new key (and rejects the old one) on the next request. For containers, set `RUNE_SERVE_KEY` instead and nothing is written to disk.
-
-### Put it behind HTTPS
-
-`rune serve` binds to `127.0.0.1` by default and speaks plain HTTP. Do not expose it directly. Pick one:
-
-```bash
-# Caddy — automatic Let's Encrypt certificate
-caddy reverse-proxy --from rune.example.com --to 127.0.0.1:8787
-
-# Cloudflare Tunnel — no open port, no certificate to manage
-cloudflared tunnel --url http://127.0.0.1:8787
-```
-
-Or let Rune start the quick tunnel for you (**experimental**; needs `cloudflared` on PATH, the URL changes on every start, and Rune waits until the tunnel is actually connected before printing it):
-
-```bash
-rune serve --tunnel
-#   Public HTTPS (Cloudflare quick tunnel, EXPERIMENTAL — changes each start): https://<random>.trycloudflare.com/mcp
-```
-
-For a stable hostname, create a named tunnel in Cloudflare and point it at `http://127.0.0.1:8787`.
-
-Behind a proxy, add `--trust-proxy` so the rate limit counts real client IPs (`X-Forwarded-For` / `CF-Connecting-IP`).
-
-### Keep it running
-
-**Experimental:** `rune serve install [serve flags]` writes a systemd **user** unit (`~/.config/systemd/user/rune-serve.service`) with the same flags, mints the key in your terminal if there is none yet, and prints the `systemctl --user enable --now rune-serve` / `loginctl enable-linger` commands to run. `rune serve install --print` prints a unit for `/etc/systemd/system` instead. It never runs `systemctl` for you. Install Rune globally first (`npm i -g`), not through `npx`, so the unit points at a path that stays.
-
-Or by hand:
+A system-wide unit by hand:
 
 ```ini
 # /etc/systemd/system/rune-serve.service
@@ -98,67 +197,11 @@ Restart=on-failure
 WantedBy=multi-user.target
 ```
 
-`sudo systemctl enable --now rune-serve`. Run `rune serve` once by hand first so the key is printed to your terminal and not to the journal.
+**Other clients**
 
-## 2. Connect your agents
-
-Below, `URL` is `https://rune.example.com/mcp` and `KEY` is your `rune_sk_…` key.
-
-**Claude Code**
-
-```bash
-claude mcp add --transport http rune https://rune.example.com/mcp \
-  --header "Authorization: Bearer $KEY" --scope user
-```
-
-**Grok Build** (and Cursor, which Grok Build reads)
-
-```bash
-grok mcp add rune https://rune.example.com/mcp -H "Authorization: Bearer $KEY"
-grok mcp doctor rune     # ✓ handshake OK, 4 tools discovered
-```
-
-For Cursor on its own, add to `~/.cursor/mcp.json`:
-
-```json
-{ "mcpServers": { "rune": { "url": "https://rune.example.com/mcp", "headers": { "Authorization": "Bearer rune_sk_…" } } } }
-```
-
-**OpenAI Codex**
-
-```bash
-export RUNE_KEY=rune_sk_…
-codex mcp add rune --url https://rune.example.com/mcp --bearer-token-env-var RUNE_KEY
-```
-
-**Gemini CLI / Antigravity CLI**
-
-```bash
-gemini mcp add --transport http --scope user rune https://rune.example.com/mcp -H "Authorization: Bearer $KEY"
-```
-
-Antigravity IDE — add a remote MCP server with the same URL and `Authorization` header in its MCP settings.
-
-**Grok Bot** — ask it: *"Add an MCP connector: URL `https://rune.example.com/mcp`, header `Authorization: Bearer <key>`."* Grok Bot adds remote MCP servers with a URL and headers; give it the key through its secure form rather than pasting it in chat. Grok Bot runs in the cloud, so the server must be reachable over public HTTPS (Caddy or Cloudflare Tunnel above), not `127.0.0.1`. After that, "use the Rune video skill to plan a teaser" works from any chat, including your phone.
-
-**Telegram / custom bots** — use any MCP client SDK (TypeScript, Python, Go) with the Streamable HTTP transport and the `Authorization` header; call `run_skill` with the user's message.
-
-**Clients without custom headers** — start the server with `--allow-query-key` and use `https://rune.example.com/mcp?key=…`. URLs end up in proxy and client logs, so prefer the header whenever the client supports one.
-
-**No HTTP at all (stdio over SSH)** — `rune serve --stdio` speaks MCP on stdin/stdout with no key (SSH is the auth):
-
-```bash
-claude mcp add rune -- ssh my-vps rune serve --stdio
-```
-
-## 3. Use it
-
-```
-> use the rune video skill to plan a 30-second teaser for our launch
-> /rune cook add rate limiting to the API
-> /mcp__rune__rune-pro-media hero image for the pricing page      (Claude Code prompt syntax)
-> which Rune skills help with GDPR?
-```
+- **Telegram / custom bots** — any MCP client SDK (TypeScript, Python, Go) with the Streamable HTTP transport and the `Authorization` header; call `run_skill` with the user's message.
+- **Clients without custom headers** — start the server with `--allow-query-key` and use `https://…/mcp?key=…`. URLs end up in proxy and client logs, so prefer the header whenever the client supports one.
+- **No HTTP at all (stdio over SSH)** — `rune serve --stdio` speaks MCP on stdin/stdout with no key (SSH is the auth): `claude mcp add rune -- ssh my-vps rune serve --stdio`.
 
 ## What runs where
 
@@ -198,20 +241,27 @@ rune serve --runner claude      # or codex | grok — the CLI must be installed 
 
 ## Reference
 
-```
-rune serve [--port 8787] [--host 127.0.0.1]     Streamable HTTP at /mcp (bearer key)
+```text
+rune serve setup [--yes] [--json] [--expose local|tunnel|domain|tailscale] [--domain <host>]
+                 [--service|--no-service] [--no-start] [--rotate-key] [--key-out <file>] [--no-download]
+rune serve start | stop                         start with the saved setup / stop it
+rune serve status | doctor [--json]             state; doctor also probes local + public (RUNE_KEY → full handshake)
+rune serve connect [client|all] [--url <url>]   connect steps, never the key
+rune serve [--port 8787] [--host 127.0.0.1]     run in the foreground: Streamable HTTP at /mcp (bearer key)
            [--skills-dir <dir>[,<dir>]]         extra skill folders (tier "custom")
            [--pro-root <dir>] [--business-root <dir>] [--no-tiers]
            [--rate-limit 120] [--max-bytes 262144] [--trust-proxy]
            [--allow-query-key] [--config <file>] [--name rune]
            [--runner claude|codex|grok] [--runner-timeout 600] [--runner-concurrency 2]   (experimental)
-           [--tunnel]                                                                    (experimental)
+           [--tunnel]                                                                    (cloudflared quick tunnel)
 rune serve install [--print] [serve flags]      systemd unit (experimental)
 rune serve --stdio                              MCP over stdio (local or via ssh)
 rune serve key rotate                           mint a new key, print it once
 rune serve key path                             where the key hash lives
 ```
 
-Environment: `RUNE_SERVE_KEY` (fixed key, nothing stored), `RUNE_SERVE_CONFIG` (key file path), `RUNE_PRO_ROOT`, `RUNE_BUSINESS_ROOT`.
+Files: `~/.rune/serve.json` (key hash + saved setup, 0600), `~/.rune/serve-state.json` (running pid, URLs), `~/.rune/serve.log` (background process log), `~/.rune/bin/cloudflared` (if setup downloaded it).
+
+Environment: `RUNE_SERVE_KEY` (fixed key, nothing stored), `RUNE_SERVE_CONFIG` (key file path), `RUNE_KEY` (used by `doctor` for the handshake), `RUNE_PRO_ROOT`, `RUNE_BUSINESS_ROOT`.
 
 The server is stateless Streamable HTTP (JSON responses, no sessions), so it works behind any reverse proxy or load balancer.

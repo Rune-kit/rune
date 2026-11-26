@@ -939,7 +939,7 @@ async function main() {
       log('               hooks uninstall [--platform <name>|all]');
       log('               hooks status [--platform <name>|all]');
       log("    serve      Host this machine's skills (Free + Pro/Business) over MCP for any agent");
-      log('               serve [--port 8787] [--host 127.0.0.1] [--stdio] | serve key rotate  (docs/SERVE.md)');
+      log('               serve setup | status | connect <client> | key rotate  (docs/SERVE.md)');
       log('    verify    Test-integrity gate — weakened assertions, skipped tests, frozen paths');
       log('               --integrity        required (only mode today)');
       log('               --staged           compare the index to HEAD (what a commit would land)');

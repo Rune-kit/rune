@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=2.7.0">
+  <link rel="stylesheet" href="style.css?v=2.8.0">
 </head>
 <body>
   <!-- NAV -->
@@ -26,6 +26,7 @@
         <a href="#benchmark">Benchmark</a>
         <a href="#architecture">Architecture</a>
         <a href="#workflows">Workflows</a>
+        <a href="#serve">Serve</a>
         <a href="guides/">Guides</a>
         <a href="#mesh">Mesh</a>
         <a href="#autopilot">Autopilot</a>
@@ -392,6 +393,163 @@ npx @rune-kit/rune hooks install --platform antigravity</code></pre>
     </div>
   </section>
 
+  <!-- RUNE SERVE -->
+  <section class="section section-dark" id="serve">
+    <div class="container">
+      <span class="section-badge sv-badge">NEW &middot; FREE &middot; 2.34</span>
+      <h2>One Rune. Every agent. Every machine.</h2>
+      <p class="section-sub"><strong>rune serve</strong> puts your skills on one server &mdash; a VPS, a home box, your PC. Grok Bot on your phone, Claude Code on your laptop, Grok Build, Cursor, Codex and Gemini all connect over MCP and get Free + Pro + Business, with nothing to install on each machine.</p>
+
+      <figure class="sv-diagram" aria-label="Agents connect over HTTPS with a key to rune serve on your server, which serves Free, Pro and Business skills">
+        <svg viewBox="0 0 960 380" role="img" xmlns="http://www.w3.org/2000/svg">
+          <title>rune serve architecture</title>
+          <g class="sv-wires">
+            <path d="M246 58 C 330 58, 330 190, 404 190"/>
+            <path d="M246 143 C 330 143, 330 190, 404 190"/>
+            <path d="M246 228 C 330 228, 330 190, 404 190"/>
+            <path d="M246 313 C 330 313, 330 190, 404 190"/>
+            <path d="M556 190 L 644 190"/>
+          </g>
+          <g class="sv-flow">
+            <path d="M246 58 C 330 58, 330 190, 404 190"/>
+            <path d="M246 143 C 330 143, 330 190, 404 190"/>
+            <path d="M246 228 C 330 228, 330 190, 404 190"/>
+            <path d="M246 313 C 330 313, 330 190, 404 190"/>
+            <path d="M556 190 L 644 190"/>
+          </g>
+          <g class="sv-client">
+            <rect x="20" y="30" width="226" height="56" rx="10"/><text x="40" y="54" class="sv-t">Grok Bot</text><text x="40" y="73" class="sv-s">phone &middot; web &middot; any chat</text>
+            <rect x="20" y="115" width="226" height="56" rx="10"/><text x="40" y="139" class="sv-t">Claude Code</text><text x="40" y="158" class="sv-s">laptop</text>
+            <rect x="20" y="200" width="226" height="56" rx="10"/><text x="40" y="224" class="sv-t">Grok Build &middot; Cursor</text><text x="40" y="243" class="sv-s">desktop</text>
+            <rect x="20" y="285" width="226" height="56" rx="10"/><text x="40" y="309" class="sv-t">Codex &middot; Gemini &middot; Antigravity</text><text x="40" y="328" class="sv-s">any MCP client</text>
+          </g>
+          <text x="325" y="112" class="sv-wire-label" text-anchor="middle">HTTPS + key</text>
+          <g class="sv-hub">
+            <circle cx="480" cy="190" r="76"/>
+            <path class="sv-lock" d="M468 170 v-9 a12 12 0 0 1 24 0 v9 M462 170 h36 v26 h-36 z"/>
+            <text x="480" y="219" text-anchor="middle" class="sv-t">Public HTTPS</text>
+            <text x="480" y="237" text-anchor="middle" class="sv-s">tunnel &middot; domain &middot; Tailscale</text>
+          </g>
+          <g class="sv-server">
+            <rect x="644" y="22" width="296" height="336" rx="14" class="sv-box"/>
+            <text x="664" y="50" class="sv-s sv-caps">YOUR SERVER</text>
+            <rect x="664" y="64" width="256" height="76" rx="10" class="sv-core"/>
+            <text x="684" y="94" class="sv-t sv-mono">rune serve</text>
+            <text x="684" y="116" class="sv-s">MCP &middot; /mcp &middot; bearer key &middot; :8787</text>
+            <rect x="664" y="160" width="256" height="50" rx="10" class="sv-tier sv-free"/><text x="684" y="190" class="sv-t">Free</text><text x="900" y="190" class="sv-s" text-anchor="end">67 skills + 14 packs</text>
+            <rect x="664" y="222" width="256" height="50" rx="10" class="sv-tier sv-pro"/><text x="684" y="252" class="sv-t">Pro</text><text x="900" y="252" class="sv-s" text-anchor="end">~/rune-pro</text>
+            <rect x="664" y="284" width="256" height="50" rx="10" class="sv-tier sv-biz"/><text x="684" y="314" class="sv-t">Business</text><text x="900" y="314" class="sv-s" text-anchor="end">~/rune-business</text>
+          </g>
+        </svg>
+      </figure>
+
+      <div class="sv-steps">
+        <div class="sv-step">
+          <span class="sv-num">1</span>
+          <h3>Install on the server</h3>
+          <pre class="code-block"><code>npm i -g @rune-kit/rune
+# optional, if you own them:
+git clone …/rune-pro ~/rune-pro</code></pre>
+          <p>Node 18+. Any Linux VPS, a Mac mini at home, or your Windows PC.</p>
+        </div>
+        <div class="sv-step">
+          <span class="sv-num">2</span>
+          <h3>Run the wizard</h3>
+          <pre class="code-block"><code>rune serve setup</code></pre>
+          <p>Creates your key (shown once), opens public HTTPS through a Cloudflare tunnel &mdash; it even downloads <code>cloudflared</code> for you &mdash; starts a service, and runs an MCP handshake to prove it works.</p>
+        </div>
+        <div class="sv-step">
+          <span class="sv-num">3</span>
+          <h3>Connect your agents</h3>
+          <pre class="code-block"><code>rune serve connect grok-bot</code></pre>
+          <p>Copy-paste steps for every client below. Then: <em>&ldquo;use the Rune video skill to plan a teaser&rdquo;</em>.</p>
+        </div>
+      </div>
+
+      <div class="cc-term sv-term">
+        <div class="cc-term-bar"><span class="cc-dot r"></span><span class="cc-dot y"></span><span class="cc-dot g"></span><span class="cc-term-title">me@my-vps &mdash; rune serve setup</span></div>
+<pre class="sv-term-body"><span class="sv-dim">  · Environment: server / headless (VPS) · linux/x64</span>
+<span class="sv-dim">  · Downloading cloudflared (cloudflared-linux-amd64) → ~/.rune/bin/cloudflared</span>
+<span class="sv-dim">  · Starting systemd user service rune-serve…</span>
+
+  <span class="sv-ok">✓</span> Rune serve is running (systemd-user, pid 41872)
+    local   http://127.0.0.1:8787/mcp
+    public  <span class="sv-url">https://quiet-river-1234.trycloudflare.com/mcp</span>
+    <span class="sv-ok">✓ MCP handshake OK — 4 tools · Free + Pro + Business</span>
+
+  ┌─ Your server key — shown ONCE. Save it in your password manager now. ─┐
+    <span class="sv-key">rune_sk_••••••••••••••••••••••••••••••••••••••</span>
+  └────────────────────────────────────────────────────────────────────────┘</pre>
+      </div>
+
+      <h3 class="sv-h3">Connect a client</h3>
+      <div class="sv-tabs" role="tablist" aria-label="Connect a client">
+        <button class="sv-tab active" role="tab" aria-selected="true" data-sv="grok-bot">Grok Bot</button>
+        <button class="sv-tab" role="tab" aria-selected="false" data-sv="claude">Claude Code</button>
+        <button class="sv-tab" role="tab" aria-selected="false" data-sv="grok">Grok Build</button>
+        <button class="sv-tab" role="tab" aria-selected="false" data-sv="codex">Codex</button>
+        <button class="sv-tab" role="tab" aria-selected="false" data-sv="cursor">Cursor</button>
+        <button class="sv-tab" role="tab" aria-selected="false" data-sv="gemini">Gemini / Antigravity</button>
+      </div>
+      <div class="sv-panels">
+        <div class="sv-panel" data-sv="grok-bot" role="tabpanel">
+          <p>Say to Grok Bot, in any chat:</p>
+          <pre class="code-block"><code>Add an MCP connector named rune: URL https://…trycloudflare.com/mcp,
+header Authorization: Bearer &lt;my rune key&gt;. Ask me for the key with a secure form.</code></pre>
+          <p class="sv-note">Paste the key only into the secure form &mdash; never into the chat. Grok Bot runs in the cloud, so it needs the public https URL.</p>
+        </div>
+        <div class="sv-panel" data-sv="claude" role="tabpanel" hidden>
+          <pre class="code-block"><code>export RUNE_KEY=rune_sk_…
+claude mcp add --transport http --scope user rune https://…/mcp \
+  --header "Authorization: Bearer $RUNE_KEY"
+claude mcp list        # rune: ✓ Connected</code></pre>
+        </div>
+        <div class="sv-panel" data-sv="grok" role="tabpanel" hidden>
+          <pre class="code-block"><code>export RUNE_KEY=rune_sk_…
+grok mcp add rune https://…/mcp -H "Authorization: Bearer $RUNE_KEY"
+grok mcp doctor rune   # ✓ handshake OK</code></pre>
+        </div>
+        <div class="sv-panel" data-sv="codex" role="tabpanel" hidden>
+          <pre class="code-block"><code>export RUNE_KEY=rune_sk_…        # keep it in your shell profile
+codex mcp add rune --url https://…/mcp --bearer-token-env-var RUNE_KEY</code></pre>
+        </div>
+        <div class="sv-panel" data-sv="cursor" role="tabpanel" hidden>
+          <pre class="code-block"><code>// ~/.cursor/mcp.json  (RUNE_KEY set in the environment Cursor starts from)
+{ "mcpServers": { "rune": {
+    "url": "https://…/mcp",
+    "headers": { "Authorization": "Bearer ${env:RUNE_KEY}" } } } }</code></pre>
+        </div>
+        <div class="sv-panel" data-sv="gemini" role="tabpanel" hidden>
+          <pre class="code-block"><code>gemini mcp add --transport http --scope user rune https://…/mcp \
+  -H "Authorization: Bearer $RUNE_KEY"
+# Antigravity: Settings → MCP servers → remote server, same URL + header</code></pre>
+        </div>
+      </div>
+
+      <div class="sv-agent">
+        <div>
+          <h3>Or let your agent do all of it</h3>
+          <p>Every step has a flag. Ask your agent <em>&ldquo;set up rune serve on my VPS and connect Grok Bot&rdquo;</em> &mdash; it runs this over SSH, reads the JSON report, and the key lands in a 0600 file instead of the chat.</p>
+        </div>
+        <pre class="code-block"><code>ssh me@my-vps 'npm i -g @rune-kit/rune'
+ssh me@my-vps 'rune serve setup --yes --json \
+    --expose tunnel --key-out ~/.rune/serve.key'
+ssh me@my-vps 'rune serve doctor'
+ssh me@my-vps 'rune serve connect all'</code></pre>
+      </div>
+
+      <div class="sv-facts">
+        <span>&#128273; Key printed once, stored as a hash</span>
+        <span>&#128274; Localhost by default, HTTPS outside</span>
+        <span>&#8635; <code>git pull</code> on the server &rarr; every agent updated</span>
+        <span>&#9881; Repo edits still run on your machine</span>
+      </div>
+      <div style="text-align:center;margin-top:28px">
+        <a href="https://github.com/rune-kit/rune/blob/master/docs/SERVE.md" class="btn btn-ghost" target="_blank" rel="noopener">Full rune serve guide &rarr;</a>
+      </div>
+    </div>
+  </section>
+
   <!-- GUIDES DIRECTORY -->
   <section class="section section-dark" id="learn">
     <div class="container">
@@ -431,6 +589,13 @@ npx @rune-kit/rune hooks install --platform antigravity</code></pre>
           <div>
             <strong>Extension Packs</strong>
             <span>14 domain packs + create your own</span>
+          </div>
+        </a>
+        <a href="#serve" class="guide-link">
+          <span class="guide-icon">&#127760;</span>
+          <div>
+            <strong>Rune serve</strong>
+            <span>One server, every agent &mdash; set up in 3 steps</span>
           </div>
         </a>
         <a href="guides/#faq" class="guide-link">
@@ -1551,7 +1716,7 @@ Context is mostly files 61% &middot; mcp 22% &mdash; trim the largest to free ro
     </div>
   </div>
 
-  <script src="script.js"></script>
+  <script src="script.js?v=2.8.0"></script>
 
   <!-- Theme toggle -->
   <script>

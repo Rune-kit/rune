@@ -493,3 +493,20 @@ function showSuccessForProduct(product, github) {
     installEl.textContent = 'Follow the setup guide in the repo README';
   }
 }
+
+// Rune serve — client connect tabs
+(function () {
+  const tabs = document.querySelectorAll('.sv-tab');
+  const panels = document.querySelectorAll('.sv-panel');
+  tabs.forEach((tab) => {
+    tab.addEventListener('click', () => {
+      const id = tab.dataset.sv;
+      tabs.forEach((t) => {
+        const on = t === tab;
+        t.classList.toggle('active', on);
+        t.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
+      panels.forEach((p) => { p.hidden = p.dataset.sv !== id; });
+    });
+  });
+})();
