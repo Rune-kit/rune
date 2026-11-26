@@ -156,6 +156,19 @@ On Codex, if `.codex/hooks.json` changed, the summary reminds you to open `/hook
 
 ---
 
+### `rune serve`
+
+Host this machine's Rune skills (Free + any Pro/Business tier it has) as an MCP server, so agents on other machines use them without installing Rune.
+
+```bash
+rune serve                          # Streamable HTTP at http://127.0.0.1:8787/mcp, bearer key printed once
+rune serve --host 0.0.0.0 --port 8787 --trust-proxy
+rune serve --stdio                  # stdin/stdout (local, or `ssh my-vps rune serve --stdio`)
+rune serve key rotate               # new key; the running server picks it up
+```
+
+Setup, HTTPS, per-agent connection and limits: [`docs/SERVE.md`](../SERVE.md).
+
 ### `rune help`
 
 Show available commands and flags.

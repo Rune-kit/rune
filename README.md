@@ -138,6 +138,15 @@ gemini extensions install https://github.com/rune-kit/rune
 npx @rune-kit/rune init --platform <name>   # grok · cline · copilot · windsurf · agents · …
 ```
 
+**One Rune for all your agents — `rune serve`** (new in 2.34.0). Install Rune once on a VPS and connect any MCP client to it: Claude Code, Grok Build, Cursor, Codex, Antigravity, Grok Bot, your own Telegram bot. Nothing to install on each machine, one update for all of them, Pro/Business included if they are on the server.
+
+```bash
+npx @rune-kit/rune serve            # prints a key once; MCP at http://127.0.0.1:8787/mcp
+claude mcp add --transport http rune https://rune.example.com/mcp --header "Authorization: Bearer rune_sk_…"
+```
+
+Then "use the Rune video skill …" or `/rune cook …` in any connected agent. HTTPS, systemd, per-agent setup and limits (hooks stay local; repo edits still run on your machine): [`docs/SERVE.md`](docs/SERVE.md).
+
 ## Platform support
 
 | Platform | How to install | Skills | Lifecycle hooks | Subagents |
@@ -327,6 +336,7 @@ Claude Code: `claude plugin update rune`, restart, then `npx @rune-kit/rune@late
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | 5-layer mesh and adapter coverage |
 | [`docs/SIGNALS.md`](docs/SIGNALS.md) | Signal inventory and emit/listen graph |
 | [`docs/HOOKS.md`](docs/HOOKS.md) | Auto-discipline hooks per platform |
+| [`docs/SERVE.md`](docs/SERVE.md) | `rune serve` — host Rune on a server, connect any agent over MCP |
 | [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md) | Common issues and fixes |
 | [`AGENTS.md`](AGENTS.md) · [`llms.txt`](llms.txt) | Context for AI agents working on or with Rune |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) · [`CHANGELOG.md`](CHANGELOG.md) · [`ROADMAP.md`](ROADMAP.md) | Contribute, history, what's next |
