@@ -844,7 +844,7 @@ async function main() {
     process.exit(exitCode);
   }
 
-  const { command, subcommand, args } = parseArgs(rawArgv);
+  const { command, subcommand, args, positional } = parseArgs(rawArgv);
   const projectRoot = process.cwd();
 
   // Handle --version / -v as flag (not positional command)
@@ -887,6 +887,13 @@ async function main() {
     case 'hooks':
       await cmdHooks(projectRoot, args, subcommand);
       break;
+    case 'serve': {
+      // Lazy import — keeps the MCP SDK off the hot path for hook-dispatch & build.
+      const { cmdServe } = await import('../serve/index.js');
+      const pkg = JSON.parse(await readFile(path.join(RUNE_ROOT, 'package.json'), 'utf-8'));
+      await cmdServe({ runeRoot: RUNE_ROOT, projectRoot, args, positional, version: pkg.version });
+      break;
+    }
     case 'version':
     case '--version':
     case '-v': {
@@ -925,6 +932,8 @@ async function main() {
       );
       log('               hooks uninstall [--platform <name>|all]');
       log('               hooks status [--platform <name>|all]');
+      log("    serve      Host this machine's skills (Free + Pro/Business) over MCP for any agent");
+      log('               serve [--port 8787] [--host 127.0.0.1] [--stdio] | serve key rotate  (docs/SERVE.md)');
       log('');
       log('  Options:');
       log(

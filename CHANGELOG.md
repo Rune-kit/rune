@@ -3,6 +3,17 @@
 All notable changes to Rune are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased] — planned 2.34.0
+
+"Serve" — install Rune once, use it from every agent on every machine.
+
+### What you get
+
+- **`rune serve`: Rune as an MCP server.** Run it on a VPS (or any box) and connect Claude Code, Grok Build, Cursor, Codex, Gemini / Antigravity CLI, Grok Bot or your own bot over MCP Streamable HTTP — no local install. Four tools (`list_skills`, `get_skill`, `get_reference`, `run_skill`), a `rune` prompt plus one `rune-<skill>` prompt per user-invocable skill (slash commands in clients that show MCP prompts), and server instructions that tell agents the skills live there, so "use the video skill" or `/rune video …` just works. Serves Free core + packs and any Pro / Business tier the machine has (same detection as `rune setup`), plus `--skills-dir` folders. `--stdio` mode for local or SSH use.
+- **Locked down by default.** Binds to `127.0.0.1`; a `rune_sk_…` bearer key is generated on first run, printed once, and stored only as a SHA-256 hash in `~/.rune/serve.json` (0600); `rune serve key rotate` takes effect without a restart. Per-IP rate limit, failed-auth limit, 1 MB request cap, 256 KB read cap, reads confined to the skill folder (no `..`, absolute paths or escaping symlinks), text files only, no shell execution.
+- **Docs:** [`docs/SERVE.md`](docs/SERVE.md) — VPS setup, HTTPS (Caddy / Cloudflare Tunnel), systemd, per-agent connection commands, and what does not run remotely (hooks, scripts; repo edits still happen on the client).
+- New runtime dependency: `@modelcontextprotocol/sdk` (+ `zod`), loaded only by `rune serve`.
+
 ## [2.33.0] - 2026-11-21
 
 "Everywhere" — Rune installs natively in the agents people actually use in late 2026, and the numbers on the box are checked by CI.
