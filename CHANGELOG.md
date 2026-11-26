@@ -3,7 +3,7 @@
 All notable changes to Rune are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased] - 2.34.0 (not yet published)
+## [2.34.0] - 2026-11-26
 
 "Serve" — install Rune once, use it from every agent on every machine.
 
@@ -20,9 +20,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - New runtime dependency: `@modelcontextprotocol/sdk` (+ `zod`), loaded only by `rune serve`.
 
 ### Added
-- **Test-integrity gate (2.34.0, unreleased).** `rune verify --integrity [--staged|--base <ref>] [--json]` inspects a test-file diff (Jest/Vitest/Mocha, pytest/unittest, Go, Rust, JUnit) and fingerprints assertion weakening: deleted or commented asserts, loosened matchers, added skip/xfail, snapshot updates, changed expected literals, deleted tests, assertion-count drops, and mocks that replace a previously real call. The same check is wired into `hook-dispatch` — preflight on Edit/Write of test files, sentinel on `git commit`. Under `strict`, `assert-removed`, `skip-added`, `expected-changed`, and edits to frozen paths (`tests/char/**`, `tests/holdout/**`, configurable in `.rune/test-integrity.json`) BLOCK, with a reason that tells the agent to fix the code, not the tests, or to get human approval. Under `gentle`, they warn. An auditable override (`Test-Change-Approved: <reason>` commit trailer or `RUNE_TEST_CHANGE_APPROVED`) is logged to `.rune/metrics/gate-outcomes.jsonl` as `overridden`. `safeguard`, `test`, `preflight`, `fix`, and `verification` now point at the real gate and the holdout convention.
+- **Test-integrity gate.** `rune verify --integrity [--staged|--base <ref>] [--json]` inspects a test-file diff (Jest/Vitest/Mocha, pytest/unittest, Go, Rust, JUnit) and fingerprints assertion weakening: deleted or commented asserts, loosened matchers, added skip/xfail, snapshot updates, changed expected literals, deleted tests, assertion-count drops, and mocks that replace a previously real call. The same check is wired into `hook-dispatch` — preflight on Edit/Write of test files, sentinel on `git commit`. Under `strict`, `assert-removed`, `skip-added`, `expected-changed`, and edits to frozen paths (`tests/char/**`, `tests/holdout/**`, configurable in `.rune/test-integrity.json`) BLOCK, with a reason that tells the agent to fix the code, not the tests, or to get human approval. Under `gentle`, they warn. An auditable override (`Test-Change-Approved: <reason>` commit trailer or `RUNE_TEST_CHANGE_APPROVED`) is logged to `.rune/metrics/gate-outcomes.jsonl` as `overridden`. `safeguard`, `test`, `preflight`, `fix`, and `verification` now point at the real gate and the holdout convention.
 
 ### Changed
+- Authoring tiers and adapter hints refreshed (2026-11-26). `fable` is an optional frontier tier above `opus` (not a new default). Gemini CLI hints use stable-GA ids (`gemini-3.1-pro-preview` or `gemini-2.5-pro` / `gemini-3.5-flash` / `gemini-3.1-flash-lite`). Antigravity haiku hints Gemini 4 Hydrogen (Low) because 3.8 Flash leaves 2026-11-30. Codex gains a `rune_frontier` role (Astra at xhigh); Grok hints name grok-4.7 plus effort. Shared `compiler/adapters/model-tiers.js` is the source of truth; agent files carry a `tools:` list so subagents no longer inherit every tool by default.
 - Pro Context Intelligence hooks (`platforms.<id> = "hook"`) install natively on Cursor, Grok Build, Antigravity and Gemini CLI instead of falling back to rules. Event mapping: Cursor `beforeSubmitPrompt` / `preToolUse` / `preCompact` / `sessionStart`; Antigravity `PreInvocation` / `PreToolUse` / `SessionStart`; Gemini `BeforeAgent` / `BeforeTool` / `PreCompress` / `SessionStart` / `AfterModel`.
 - `statusLine-user` manifest entries are not written into a repo file. Install notes point at `node "$RUNE_PRO_ROOT/hooks/rune-pulse/index.cjs" setup` (Grok only reads a command status line from `~/.grok/config.toml`; Antigravity and Cursor CLI likewise use user settings).
 - Manifest validation accepts the `AfterModel` event (matcher optional) so Pro hooks v1.7.0 can load.
