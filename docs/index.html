@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=2.8.0">
+  <link rel="stylesheet" href="style.css?v=2.9.0">
 </head>
 <body>
   <!-- NAV -->
@@ -394,159 +394,348 @@ npx @rune-kit/rune hooks install --platform antigravity</code></pre>
   </section>
 
   <!-- RUNE SERVE -->
-  <section class="section section-dark" id="serve">
+  <section class="section section-dark sv" id="serve" aria-labelledby="sv-heading">
+    <svg class="sv-sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+          <symbol id="ph-mobile" viewBox="0 0 256 256"><path d="M176,16H80A24,24,0,0,0,56,40V216a24,24,0,0,0,24,24h96a24,24,0,0,0,24-24V40A24,24,0,0,0,176,16ZM72,64H184V192H72Zm8-32h96a8,8,0,0,1,8,8v8H72V40A8,8,0,0,1,80,32Zm96,192H80a8,8,0,0,1-8-8v-8H184v8A8,8,0,0,1,176,224Z"/></symbol>
+          <symbol id="ph-terminal" viewBox="0 0 256 256"><path d="M128,128a8,8,0,0,1-3,6.25l-40,32a8,8,0,1,1-10-12.5L107.19,128,75,102.25a8,8,0,1,1,10-12.5l40,32A8,8,0,0,1,128,128Zm48,24H136a8,8,0,0,0,0,16h40a8,8,0,0,0,0-16Zm56-96V200a16,16,0,0,1-16,16H40a16,16,0,0,1-16-16V56A16,16,0,0,1,40,40H216A16,16,0,0,1,232,56ZM216,200V56H40V200H216Z"/></symbol>
+          <symbol id="ph-code" viewBox="0 0 256 256"><path d="M69.12,94.15,28.5,128l40.62,33.85a8,8,0,1,1-10.24,12.29l-48-40a8,8,0,0,1,0-12.29l48-40a8,8,0,0,1,10.24,12.3Zm176,27.7-48-40a8,8,0,1,0-10.24,12.3L227.5,128l-40.62,33.85a8,8,0,1,0,10.24,12.29l48-40a8,8,0,0,0,0-12.29ZM162.73,32.48a8,8,0,0,0-10.25,4.79l-64,176a8,8,0,0,0,4.79,10.26A8.14,8.14,0,0,0,96,224a8,8,0,0,0,7.52-5.27l64-176A8,8,0,0,0,162.73,32.48Z"/></symbol>
+          <symbol id="ph-plugs" viewBox="0 0 256 256"><path d="M237.66,18.34a8,8,0,0,0-11.32,0l-52.4,52.41-5.37-5.38a32.05,32.05,0,0,0-45.26,0L100,88.69l-6.34-6.35A8,8,0,0,0,82.34,93.66L88.69,100,65.37,123.31a32,32,0,0,0,0,45.26l5.38,5.37-52.41,52.4a8,8,0,0,0,11.32,11.32l52.4-52.41,5.37,5.38a32,32,0,0,0,45.26,0L156,167.31l6.34,6.35a8,8,0,0,0,11.32-11.32L167.31,156l23.32-23.31a32,32,0,0,0,0-45.26l-5.38-5.37,52.41-52.4A8,8,0,0,0,237.66,18.34Zm-116.29,161a16,16,0,0,1-22.62,0L76.69,157.25a16,16,0,0,1,0-22.62L100,111.31,144.69,156Zm57.94-57.94L156,144.69,111.31,100l23.32-23.31a16,16,0,0,1,22.62,0l22.06,22A16,16,0,0,1,179.31,121.37ZM88.57,35A8,8,0,0,1,103.43,29l8,20A8,8,0,0,1,96.57,55ZM24.57,93A8,8,0,0,1,35,88.57l20,8A8,8,0,0,1,49,111.43l-20-8A8,8,0,0,1,24.57,93ZM231.43,163a8,8,0,0,1-10.4,4.46l-20-8A8,8,0,1,1,207,144.57l20,8A8,8,0,0,1,231.43,163Zm-64,58.06A8,8,0,0,1,152.57,227l-8-20A8,8,0,0,1,159.43,201Z"/></symbol>
+          <symbol id="ph-lock" viewBox="0 0 256 256"><path d="M128,112a28,28,0,0,0-8,54.83V184a8,8,0,0,0,16,0V166.83A28,28,0,0,0,128,112Zm0,40a12,12,0,1,1,12-12A12,12,0,0,1,128,152Zm80-72H176V56a48,48,0,0,0-96,0V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80ZM96,56a32,32,0,0,1,64,0V80H96ZM208,208H48V96H208V208Z"/></symbol>
+          <symbol id="ph-server" viewBox="0 0 256 256"><path d="M208,136H48a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V152A16,16,0,0,0,208,136Zm0,64H48V152H208v48Zm0-160H48A16,16,0,0,0,32,56v48a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V56A16,16,0,0,0,208,40Zm0,64H48V56H208v48ZM192,80a12,12,0,1,1-12-12A12,12,0,0,1,192,80Zm0,96a12,12,0,1,1-12-12A12,12,0,0,1,192,176Z"/></symbol>
+          <symbol id="ph-stack" viewBox="0 0 256 256"><path d="M230.91,172A8,8,0,0,1,228,182.91l-96,56a8,8,0,0,1-8.06,0l-96-56A8,8,0,0,1,36,169.09l92,53.65,92-53.65A8,8,0,0,1,230.91,172ZM220,121.09l-92,53.65L36,121.09A8,8,0,0,0,28,134.91l96,56a8,8,0,0,0,8.06,0l96-56A8,8,0,1,0,220,121.09ZM24,80a8,8,0,0,1,4-6.91l96-56a8,8,0,0,1,8.06,0l96,56a8,8,0,0,1,0,13.82l-96,56a8,8,0,0,1-8.06,0l-96-56A8,8,0,0,1,24,80Zm23.88,0L128,126.74,208.12,80,128,33.26Z"/></symbol>
+          <symbol id="ph-copy" viewBox="0 0 256 256"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32ZM160,208H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></symbol>
+          <symbol id="ph-check" viewBox="0 0 256 256"><path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z"/></symbol>
+          <symbol id="ph-key" viewBox="0 0 256 256"><path d="M216.57,39.43A80,80,0,0,0,83.91,120.78L28.69,176A15.86,15.86,0,0,0,24,187.31V216a16,16,0,0,0,16,16H72a8,8,0,0,0,8-8V208H96a8,8,0,0,0,8-8V184h16a8,8,0,0,0,5.66-2.34l9.56-9.57A79.73,79.73,0,0,0,160,176h.1A80,80,0,0,0,216.57,39.43ZM224,98.1c-1.09,34.09-29.75,61.86-63.89,61.9H160a63.7,63.7,0,0,1-23.65-4.51,8,8,0,0,0-8.84,1.68L116.69,168H96a8,8,0,0,0-8,8v16H72a8,8,0,0,0-8,8v16H40V187.31l58.83-58.82a8,8,0,0,0,1.68-8.84A63.72,63.72,0,0,1,96,95.92c0-34.14,27.81-62.8,61.9-63.89A64,64,0,0,1,224,98.1ZM192,76a12,12,0,1,1-12-12A12,12,0,0,1,192,76Z"/></symbol>
+          <symbol id="ph-sync" viewBox="0 0 256 256"><path d="M224,48V96a8,8,0,0,1-8,8H168a8,8,0,0,1,0-16h28.69L182.06,73.37a79.56,79.56,0,0,0-56.13-23.43h-.45A79.52,79.52,0,0,0,69.59,72.71,8,8,0,0,1,58.41,61.27a96,96,0,0,1,135,.79L208,76.69V48a8,8,0,0,1,16,0ZM186.41,183.29a80,80,0,0,1-112.47-.66L59.31,168H88a8,8,0,0,0,0-16H40a8,8,0,0,0-8,8v48a8,8,0,0,0,16,0V179.31l14.63,14.63A95.43,95.43,0,0,0,130,222.06h.53a95.36,95.36,0,0,0,67.07-27.33,8,8,0,0,0-11.18-11.44Z"/></symbol>
+          <symbol id="ph-shield" viewBox="0 0 256 256"><path d="M208,40H48A16,16,0,0,0,32,56v56c0,52.72,25.52,84.67,46.93,102.19,23.06,18.86,46,25.26,47,25.53a8,8,0,0,0,4.2,0c1-.27,23.91-6.67,47-25.53C198.48,196.67,224,164.72,224,112V56A16,16,0,0,0,208,40Zm0,72c0,37.07-13.66,67.16-40.6,89.42A129.3,129.3,0,0,1,128,223.62a128.25,128.25,0,0,1-38.92-21.81C61.82,179.51,48,149.3,48,112l0-56,160,0ZM82.34,141.66a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35a8,8,0,0,1,11.32,11.32l-56,56a8,8,0,0,1-11.32,0Z"/></symbol>
+          <symbol id="ph-pause" viewBox="0 0 256 256"><path d="M200,32H160a16,16,0,0,0-16,16V208a16,16,0,0,0,16,16h40a16,16,0,0,0,16-16V48A16,16,0,0,0,200,32Zm0,176H160V48h40ZM96,32H56A16,16,0,0,0,40,48V208a16,16,0,0,0,16,16H96a16,16,0,0,0,16-16V48A16,16,0,0,0,96,32Zm0,176H56V48H96Z"/></symbol>
+          <symbol id="ph-play" viewBox="0 0 256 256"><path d="M232.4,114.49,88.32,26.35a16,16,0,0,0-16.2-.3A15.86,15.86,0,0,0,64,39.87V216.13A15.94,15.94,0,0,0,80,232a16.07,16.07,0,0,0,8.36-2.35L232.4,141.51a15.81,15.81,0,0,0,0-27ZM80,215.94V40l143.83,88Z"/></symbol>
+          <symbol id="ph-robot" viewBox="0 0 256 256"><path d="M200,48H136V16a8,8,0,0,0-16,0V48H56A32,32,0,0,0,24,80V192a32,32,0,0,0,32,32H200a32,32,0,0,0,32-32V80A32,32,0,0,0,200,48Zm16,144a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V80A16,16,0,0,1,56,64H200a16,16,0,0,1,16,16Zm-52-56H92a28,28,0,0,0,0,56h72a28,28,0,0,0,0-56Zm-24,16v24H116V152ZM80,164a12,12,0,0,1,12-12h8v24H92A12,12,0,0,1,80,164Zm84,12h-8V152h8a12,12,0,0,1,0,24ZM72,108a12,12,0,1,1,12,12A12,12,0,0,1,72,108Zm88,0a12,12,0,1,1,12,12A12,12,0,0,1,160,108Z"/></symbol>
+          <symbol id="ph-laptop" viewBox="0 0 256 256"><path d="M232,168h-8V72a24,24,0,0,0-24-24H56A24,24,0,0,0,32,72v96H24a8,8,0,0,0-8,8v16a24,24,0,0,0,24,24H216a24,24,0,0,0,24-24V176A8,8,0,0,0,232,168ZM48,72a8,8,0,0,1,8-8H200a8,8,0,0,1,8,8v96H48ZM224,192a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8v-8H224ZM152,88a8,8,0,0,1-8,8H112a8,8,0,0,1,0-16h32A8,8,0,0,1,152,88Z"/></symbol>
+          <symbol id="ph-arrow" viewBox="0 0 256 256"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/></symbol>
+      </defs>
+    </svg>
     <div class="container">
-      <span class="section-badge sv-badge">NEW &middot; FREE &middot; 2.34</span>
-      <h2>One Rune. Every agent. Every machine.</h2>
-      <p class="section-sub"><strong>rune serve</strong> puts your skills on one server &mdash; a VPS, a home box, your PC. Grok Bot on your phone, Claude Code on your laptop, Grok Build, Cursor, Codex and Gemini all connect over MCP and get Free + Pro + Business, with nothing to install on each machine.</p>
+      <div class="sv-head">
+        <div>
+          <span class="sv-eyebrow-pill">New in 2.34 · Free core</span>
+          <h2 id="sv-heading">One Rune.<br><span>Every agent, every machine.</span></h2>
+          <p class="sv-lead"><code>rune serve</code> puts your skills on one server. Grok Bot on your phone, Claude Code on your laptop, Grok Build, Cursor, Codex and Gemini all connect over MCP — Free, Pro and Business, with nothing installed on each device.</p>
+        </div>
+        <ul class="sv-facts">
+          <li><svg class="sv-i" aria-hidden="true" focusable="false"><use href="#ph-key"/></svg><div><strong>Key shown once</strong><span>Only its SHA-256 hash is stored, 0600.</span></div></li>
+          <li><svg class="sv-i" aria-hidden="true" focusable="false"><use href="#ph-shield"/></svg><div><strong>Private by default</strong><span>Binds to localhost; HTTPS outside.</span></div></li>
+          <li><svg class="sv-i" aria-hidden="true" focusable="false"><use href="#ph-sync"/></svg><div><strong>Update once</strong><span><code>git pull</code> on the server → every agent has it.</span></div></li>
+        </ul>
+      </div>
 
-      <figure class="sv-diagram" aria-label="Agents connect over HTTPS with a key to rune serve on your server, which serves Free, Pro and Business skills">
-        <svg viewBox="0 0 960 380" role="img" xmlns="http://www.w3.org/2000/svg">
-          <title>rune serve architecture</title>
-          <g class="sv-wires">
-            <path d="M246 58 C 330 58, 330 190, 404 190"/>
-            <path d="M246 143 C 330 143, 330 190, 404 190"/>
-            <path d="M246 228 C 330 228, 330 190, 404 190"/>
-            <path d="M246 313 C 330 313, 330 190, 404 190"/>
-            <path d="M556 190 L 644 190"/>
-          </g>
-          <g class="sv-flow">
-            <path d="M246 58 C 330 58, 330 190, 404 190"/>
-            <path d="M246 143 C 330 143, 330 190, 404 190"/>
-            <path d="M246 228 C 330 228, 330 190, 404 190"/>
-            <path d="M246 313 C 330 313, 330 190, 404 190"/>
-            <path d="M556 190 L 644 190"/>
-          </g>
-          <g class="sv-client">
-            <rect x="20" y="30" width="226" height="56" rx="10"/><text x="40" y="54" class="sv-t">Grok Bot</text><text x="40" y="73" class="sv-s">phone &middot; web &middot; any chat</text>
-            <rect x="20" y="115" width="226" height="56" rx="10"/><text x="40" y="139" class="sv-t">Claude Code</text><text x="40" y="158" class="sv-s">laptop</text>
-            <rect x="20" y="200" width="226" height="56" rx="10"/><text x="40" y="224" class="sv-t">Grok Build &middot; Cursor</text><text x="40" y="243" class="sv-s">desktop</text>
-            <rect x="20" y="285" width="226" height="56" rx="10"/><text x="40" y="309" class="sv-t">Codex &middot; Gemini &middot; Antigravity</text><text x="40" y="328" class="sv-s">any MCP client</text>
-          </g>
-          <text x="325" y="112" class="sv-wire-label" text-anchor="middle">HTTPS + key</text>
-          <g class="sv-hub">
-            <circle cx="480" cy="190" r="76"/>
-            <path class="sv-lock" d="M468 170 v-9 a12 12 0 0 1 24 0 v9 M462 170 h36 v26 h-36 z"/>
-            <text x="480" y="219" text-anchor="middle" class="sv-t">Public HTTPS</text>
-            <text x="480" y="237" text-anchor="middle" class="sv-s">tunnel &middot; domain &middot; Tailscale</text>
-          </g>
-          <g class="sv-server">
-            <rect x="644" y="22" width="296" height="336" rx="14" class="sv-box"/>
-            <text x="664" y="50" class="sv-s sv-caps">YOUR SERVER</text>
-            <rect x="664" y="64" width="256" height="76" rx="10" class="sv-core"/>
-            <text x="684" y="94" class="sv-t sv-mono">rune serve</text>
-            <text x="684" y="116" class="sv-s">MCP &middot; /mcp &middot; bearer key &middot; :8787</text>
-            <rect x="664" y="160" width="256" height="50" rx="10" class="sv-tier sv-free"/><text x="684" y="190" class="sv-t">Free</text><text x="900" y="190" class="sv-s" text-anchor="end">67 skills + 14 packs</text>
-            <rect x="664" y="222" width="256" height="50" rx="10" class="sv-tier sv-pro"/><text x="684" y="252" class="sv-t">Pro</text><text x="900" y="252" class="sv-s" text-anchor="end">~/rune-pro</text>
-            <rect x="664" y="284" width="256" height="50" rx="10" class="sv-tier sv-biz"/><text x="684" y="314" class="sv-t">Business</text><text x="900" y="314" class="sv-s" text-anchor="end">~/rune-business</text>
-          </g>
-        </svg>
+      <figure class="sv-map" data-sv-map>
+        <figcaption class="sv-map-cap">
+          <span class="sv-map-steps"><strong>Every request</strong> your agent <svg class="sv-i sv-i-sep" aria-hidden="true" focusable="false"><use href="#ph-arrow"/></svg> HTTPS + key <svg class="sv-i sv-i-sep" aria-hidden="true" focusable="false"><use href="#ph-arrow"/></svg> rune serve <svg class="sv-i sv-i-sep" aria-hidden="true" focusable="false"><use href="#ph-arrow"/></svg> the skill comes back to your agent</span>
+          <button type="button" class="sv-pause" data-sv-pause aria-pressed="false"><svg class="sv-i sv-i-pause" aria-hidden="true" focusable="false"><use href="#ph-pause"/></svg><svg class="sv-i sv-i-play" aria-hidden="true" focusable="false"><use href="#ph-play"/></svg><span>Pause motion</span></button>
+        </figcaption>
+        <div class="sv-canvas">
+          <svg class="sv-svg sv-svg-wide" viewBox="0 0 1056 448" role="img" aria-labelledby="sv-d-title sv-d-desc" xmlns="http://www.w3.org/2000/svg">
+            <title id="sv-d-title">diagram: how rune serve connects your agents</title>
+            <desc id="sv-d-desc">Four kinds of agents on your devices — Grok Bot, Claude Code, Grok Build and Cursor, Codex Gemini and Antigravity — connect over one secure channel (HTTPS plus a bearer key, through a Cloudflare tunnel, your own domain or Tailscale) to rune serve on your server, which serves a stack of Free, Pro and Business skills.</desc>
+            <defs>
+              <marker id="sv-arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><polygon class="sv-arrowhead" points="0,0 8,4 0,8"/></marker>
+              <marker id="sv-arrow-accent" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><polygon class="sv-arrowhead-accent" points="0,0 8,4 0,8"/></marker>
+            </defs>
+            <!-- zones -->
+            <rect class="sv-zone" x="16" y="24" width="320" height="400" rx="16"/>
+            <text x="40" y="60" class="sv-eyebrow">YOUR DEVICES</text>
+            <rect class="sv-zone" x="720" y="24" width="320" height="400" rx="16"/>
+            <text x="744" y="60" class="sv-eyebrow">YOUR SERVER</text>
+            <text x="1016" y="60" text-anchor="end" class="sv-mono-sm sv-soft">VPS · home box · PC</text>
+            <!-- connectors -->
+            <path class="sv-wire" d="M312 120 H394" marker-end="url(#sv-arrow)"/>
+            <path class="sv-wire" d="M312 200 H394" marker-end="url(#sv-arrow)"/>
+            <path class="sv-wire" d="M312 280 H394" marker-end="url(#sv-arrow)"/>
+            <path class="sv-wire" d="M312 360 H394" marker-end="url(#sv-arrow)"/>
+            <path class="sv-wire sv-wire-accent" d="M640 136 H738" marker-end="url(#sv-arrow-accent)"/>
+            <path class="sv-wire" d="M880 184 V202" marker-end="url(#sv-arrow)"/>
+            <!-- packets -->
+            <circle class="sv-pkt sv-pkt-h" style="--d:0.00s" cx="312" cy="120" r="4"/>
+            <circle class="sv-pkt sv-pkt-h" style="--d:0.45s" cx="312" cy="200" r="4"/>
+            <circle class="sv-pkt sv-pkt-h" style="--d:0.90s" cx="312" cy="280" r="4"/>
+            <circle class="sv-pkt sv-pkt-h" style="--d:1.35s" cx="312" cy="360" r="4"/>
+            <circle class="sv-pkt sv-pkt-core" style="--d:0.9s" cx="640" cy="136" r="4.5"/>
+            <!-- devices -->
+            <g class="sv-node">
+              <rect class="sv-card" x="40" y="88" width="272" height="64" rx="12"/>
+              <rect class="sv-tile" x="56" y="100" width="40" height="40" rx="10"/>
+              <use href="#ph-mobile" x="64" y="108" width="24" height="24" class="sv-ico"/>
+              <text x="112" y="117" class="sv-name">Grok Bot</text>
+              <text x="112" y="136" class="sv-sub">phone · web · any chat</text>
+            </g>
+            <g class="sv-node">
+              <rect class="sv-card" x="40" y="168" width="272" height="64" rx="12"/>
+              <rect class="sv-tile" x="56" y="180" width="40" height="40" rx="10"/>
+              <use href="#ph-terminal" x="64" y="188" width="24" height="24" class="sv-ico"/>
+              <text x="112" y="197" class="sv-name">Claude Code</text>
+              <text x="112" y="216" class="sv-sub">terminal · laptop</text>
+            </g>
+            <g class="sv-node">
+              <rect class="sv-card" x="40" y="248" width="272" height="64" rx="12"/>
+              <rect class="sv-tile" x="56" y="260" width="40" height="40" rx="10"/>
+              <use href="#ph-code" x="64" y="268" width="24" height="24" class="sv-ico"/>
+              <text x="112" y="277" class="sv-name">Grok Build · Cursor</text>
+              <text x="112" y="296" class="sv-sub">desktop IDE &amp; CLI</text>
+            </g>
+            <g class="sv-node">
+              <rect class="sv-card" x="40" y="328" width="272" height="64" rx="12"/>
+              <rect class="sv-tile" x="56" y="340" width="40" height="40" rx="10"/>
+              <use href="#ph-plugs" x="64" y="348" width="24" height="24" class="sv-ico"/>
+              <text x="112" y="357" class="sv-name">Codex · Gemini</text>
+              <text x="112" y="376" class="sv-sub">Antigravity · any MCP</text>
+            </g>
+            <!-- secure channel (focal 1) -->
+            <g class="sv-gate">
+              <rect class="sv-gate-box" x="400" y="88" width="240" height="304" rx="20"/>
+              <circle class="sv-gate-ring" cx="520" cy="140" r="28"/>
+              <use href="#ph-lock" x="506" y="126" width="28" height="28" class="sv-ico-accent"/>
+              <text x="520" y="196" text-anchor="middle" class="sv-title">Secure channel</text>
+              <text x="520" y="218" text-anchor="middle" class="sv-mono">HTTPS · bearer key</text>
+              <text x="520" y="254" text-anchor="middle" class="sv-eyebrow">PICK ONE</text>
+              <rect class="sv-chip" x="428" y="266" width="184" height="32" rx="16"/><text x="520" y="287" text-anchor="middle" class="sv-chip-t">Cloudflare tunnel</text>
+              <rect class="sv-chip" x="428" y="306" width="184" height="32" rx="16"/><text x="520" y="327" text-anchor="middle" class="sv-chip-t">Your domain + Caddy</text>
+              <rect class="sv-chip" x="428" y="346" width="184" height="32" rx="16"/><text x="520" y="367" text-anchor="middle" class="sv-chip-t">Tailscale Funnel</text>
+            </g>
+            <!-- rune serve (focal 2) -->
+            <g class="sv-core">
+              <rect class="sv-core-box" x="744" y="88" width="272" height="96" rx="14"/>
+              <rect class="sv-tile sv-tile-accent" x="760" y="108" width="40" height="40" rx="10"/>
+              <use href="#ph-server" x="768" y="116" width="24" height="24" class="sv-ico-accent"/>
+              <text x="816" y="124" class="sv-core-name">rune serve</text>
+              <text x="816" y="146" class="sv-mono-sm">/mcp · :8787 · 4 tools</text>
+              <text x="816" y="166" class="sv-sub">live skill catalog</text>
+            </g>
+            <!-- skill stack -->
+            <rect class="sv-card" x="744" y="208" width="272" height="200" rx="14"/>
+            <use href="#ph-stack" x="760" y="222" width="20" height="20" class="sv-ico"/>
+            <text x="788" y="237" class="sv-eyebrow">SKILL STACK</text>
+            <g class="sv-tier sv-biz">
+              <rect class="sv-tier-row" x="760" y="256" width="240" height="40" rx="8"/>
+              <circle class="sv-tier-dot" cx="780" cy="276" r="5"/>
+              <text x="794" y="281" class="sv-tier-name">Business</text>
+              <text x="986" y="281" text-anchor="end" class="sv-mono-sm">~/rune-business</text>
+            </g>
+            <g class="sv-tier sv-pro">
+              <rect class="sv-tier-row" x="760" y="304" width="240" height="40" rx="8"/>
+              <circle class="sv-tier-dot" cx="780" cy="324" r="5"/>
+              <text x="794" y="329" class="sv-tier-name">Pro</text>
+              <text x="986" y="329" text-anchor="end" class="sv-mono-sm">~/rune-pro</text>
+            </g>
+            <g class="sv-tier sv-free">
+              <rect class="sv-tier-row" x="760" y="352" width="240" height="40" rx="8"/>
+              <circle class="sv-tier-dot" cx="780" cy="372" r="5"/>
+              <text x="794" y="377" class="sv-tier-name">Free</text>
+              <text x="986" y="377" text-anchor="end" class="sv-mono-sm">67 skills · 14 packs</text>
+            </g>
+          </svg>
+          <svg class="sv-svg sv-svg-tall" viewBox="0 0 360 832" role="img" aria-labelledby="sv-m-title sv-m-desc" xmlns="http://www.w3.org/2000/svg">
+            <title id="sv-m-title">diagram: how rune serve connects your agents</title>
+            <desc id="sv-m-desc">Your devices connect over one secure channel — HTTPS plus a bearer key through a Cloudflare tunnel, your domain or Tailscale — to rune serve on your server, which serves Free, Pro and Business skills.</desc>
+            <rect class="sv-zone" x="8" y="8" width="344" height="248" rx="16"/>
+            <text x="28" y="40" class="sv-eyebrow">YOUR DEVICES</text>
+            <rect class="sv-zone" x="8" y="544" width="344" height="280" rx="16"/>
+            <text x="28" y="576" class="sv-eyebrow">YOUR SERVER</text>
+            <path class="sv-wire" d="M180 256 V296" marker-end="url(#sv-arrow)"/>
+            <rect class="sv-label-mask" x="192" y="265" width="100" height="22" rx="4"/>
+            <text x="198" y="281" class="sv-mono-sm sv-m">HTTPS + key</text>
+            <path class="sv-wire sv-wire-accent" d="M180 496 V582" marker-end="url(#sv-arrow-accent)"/>
+            <path class="sv-wire" d="M180 664 V682" marker-end="url(#sv-arrow)"/>
+            <circle class="sv-pkt sv-pkt-v1" style="--d:0s" cx="180" cy="256" r="4"/>
+            <circle class="sv-pkt sv-pkt-v2" style="--d:0.8s" cx="180" cy="496" r="4.5"/>
+            <g class="sv-node">
+              <rect class="sv-card" x="24" y="56" width="152" height="88" rx="12"/>
+              <rect class="sv-tile" x="36" y="68" width="32" height="32" rx="8"/>
+              <use href="#ph-mobile" x="42" y="74" width="20" height="20" class="sv-ico"/>
+              <text x="36" y="118" class="sv-name sv-m">Grok Bot</text>
+              <text x="36" y="135" class="sv-sub sv-m">phone · web</text>
+            </g>
+            <g class="sv-node">
+              <rect class="sv-card" x="184" y="56" width="152" height="88" rx="12"/>
+              <rect class="sv-tile" x="196" y="68" width="32" height="32" rx="8"/>
+              <use href="#ph-terminal" x="202" y="74" width="20" height="20" class="sv-ico"/>
+              <text x="196" y="118" class="sv-name sv-m">Claude Code</text>
+              <text x="196" y="135" class="sv-sub sv-m">terminal</text>
+            </g>
+            <g class="sv-node">
+              <rect class="sv-card" x="24" y="152" width="152" height="88" rx="12"/>
+              <rect class="sv-tile" x="36" y="164" width="32" height="32" rx="8"/>
+              <use href="#ph-code" x="42" y="170" width="20" height="20" class="sv-ico"/>
+              <text x="36" y="214" class="sv-name sv-m">Grok Build</text>
+              <text x="36" y="231" class="sv-sub sv-m">&amp; Cursor</text>
+            </g>
+            <g class="sv-node">
+              <rect class="sv-card" x="184" y="152" width="152" height="88" rx="12"/>
+              <rect class="sv-tile" x="196" y="164" width="32" height="32" rx="8"/>
+              <use href="#ph-plugs" x="202" y="170" width="20" height="20" class="sv-ico"/>
+              <text x="196" y="214" class="sv-name sv-m">Codex · Gemini</text>
+              <text x="196" y="231" class="sv-sub sv-m">any MCP client</text>
+            </g>
+            <g class="sv-gate">
+              <rect class="sv-gate-box" x="8" y="304" width="344" height="192" rx="20"/>
+              <circle class="sv-gate-ring" cx="52" cy="350" r="24"/>
+              <use href="#ph-lock" x="40" y="338" width="24" height="24" class="sv-ico-accent"/>
+              <text x="88" y="346" class="sv-title">Secure channel</text>
+              <text x="88" y="368" class="sv-mono-sm sv-m">HTTPS · bearer key</text>
+              <text x="20" y="402" class="sv-eyebrow">PICK ONE</text>
+              <rect class="sv-chip" x="20" y="414" width="156" height="36" rx="18"/><text x="98" y="437" text-anchor="middle" class="sv-chip-t sv-m">Cloudflare tunnel</text>
+              <rect class="sv-chip" x="184" y="414" width="156" height="36" rx="18"/><text x="262" y="437" text-anchor="middle" class="sv-chip-t sv-m">domain + Caddy</text>
+              <rect class="sv-chip" x="20" y="456" width="156" height="36" rx="18"/><text x="98" y="479" text-anchor="middle" class="sv-chip-t sv-m">Tailscale Funnel</text>
+            </g>
+            <g class="sv-core">
+              <rect class="sv-core-box" x="24" y="592" width="312" height="72" rx="14"/>
+              <rect class="sv-tile sv-tile-accent" x="40" y="608" width="40" height="40" rx="10"/>
+              <use href="#ph-server" x="48" y="616" width="24" height="24" class="sv-ico-accent"/>
+              <text x="96" y="624" class="sv-core-name">rune serve</text>
+              <text x="96" y="647" class="sv-mono-sm sv-m">/mcp · :8787 · 4 tools</text>
+            </g>
+            <g class="sv-tier sv-biz">
+              <rect class="sv-tier-row" x="24" y="688" width="312" height="36" rx="8"/>
+              <circle class="sv-tier-dot" cx="42" cy="706" r="5"/>
+              <text x="56" y="712" class="sv-tier-name">Business</text>
+              <text x="324" y="711" text-anchor="end" class="sv-mono-sm">~/rune-business</text>
+            </g>
+            <g class="sv-tier sv-pro">
+              <rect class="sv-tier-row" x="24" y="732" width="312" height="36" rx="8"/>
+              <circle class="sv-tier-dot" cx="42" cy="750" r="5"/>
+              <text x="56" y="756" class="sv-tier-name">Pro</text>
+              <text x="324" y="755" text-anchor="end" class="sv-mono-sm">~/rune-pro</text>
+            </g>
+            <g class="sv-tier sv-free">
+              <rect class="sv-tier-row" x="24" y="776" width="312" height="36" rx="8"/>
+              <circle class="sv-tier-dot" cx="42" cy="794" r="5"/>
+              <text x="56" y="800" class="sv-tier-name">Free</text>
+              <text x="324" y="799" text-anchor="end" class="sv-mono-sm">67 skills · 14 packs</text>
+            </g>
+          </svg>
+        </div>
       </figure>
 
-      <div class="sv-steps">
-        <div class="sv-step">
-          <span class="sv-num">1</span>
-          <h3>Install on the server</h3>
-          <pre class="code-block"><code>npm i -g @rune-kit/rune
-# optional, if you own them:
-git clone …/rune-pro ~/rune-pro</code></pre>
-          <p>Node 18+. Any Linux VPS, a Mac mini at home, or your Windows PC.</p>
-        </div>
-        <div class="sv-step">
-          <span class="sv-num">2</span>
+      <ol class="sv-steps">
+        <li class="sv-step">
+          <span class="sv-num" aria-hidden="true">1</span>
+          <p class="sv-step-eyebrow">On the server</p>
+          <h3>Install Rune</h3>
+          <p>Node 18+ on any Linux VPS, a home Mac mini or your Windows PC. Clone Pro or Business next to it if you own them.</p>
+          <div class="sv-code "><pre><code>npm i -g @rune-kit/rune</code></pre><button type="button" class="sv-copy" data-copy aria-label="Copy install command"><svg class="sv-i" aria-hidden="true" focusable="false"><use href="#ph-copy"/></svg><span class="sv-copy-t">Copy</span></button></div>
+        </li>
+        <li class="sv-step">
+          <span class="sv-num" aria-hidden="true">2</span>
+          <p class="sv-step-eyebrow">One command</p>
           <h3>Run the wizard</h3>
-          <pre class="code-block"><code>rune serve setup</code></pre>
-          <p>Creates your key (shown once), opens public HTTPS through a Cloudflare tunnel &mdash; it even downloads <code>cloudflared</code> for you &mdash; starts a service, and runs an MCP handshake to prove it works.</p>
+          <p>Three questions. It mints your key, opens public HTTPS (it fetches <code>cloudflared</code> for you), starts a service and proves it with an MCP handshake.</p>
+          <div class="sv-code "><pre><code>rune serve setup</code></pre><button type="button" class="sv-copy" data-copy aria-label="Copy setup command"><svg class="sv-i" aria-hidden="true" focusable="false"><use href="#ph-copy"/></svg><span class="sv-copy-t">Copy</span></button></div>
+        </li>
+        <li class="sv-step">
+          <span class="sv-num" aria-hidden="true">3</span>
+          <p class="sv-step-eyebrow">Any agent</p>
+          <h3>Connect and ask</h3>
+          <p>Paste one line per client, then just ask: <em>“use the Rune video skill to plan a teaser.”</em></p>
+          <div class="sv-code "><pre><code>rune serve connect grok-bot</code></pre><button type="button" class="sv-copy" data-copy aria-label="Copy connect command"><svg class="sv-i" aria-hidden="true" focusable="false"><use href="#ph-copy"/></svg><span class="sv-copy-t">Copy</span></button></div>
+        </li>
+      </ol>
+
+      <div class="sv-duo">
+        <div class="sv-term" role="img" aria-label="Example terminal output of rune serve setup: questions answered, cloudflared downloaded, service started, MCP handshake OK, key shown once">
+          <div class="sv-term-bar" aria-hidden="true"><span class="cc-dot r"></span><span class="cc-dot y"></span><span class="cc-dot g"></span><span class="sv-term-title">me@my-vps — rune serve setup</span></div>
+<pre class="sv-term-body" aria-hidden="true"><span class="sv-t-prompt">$</span> rune serve setup
+<span class="sv-t-dim">  Serve Rune Pro from ~/rune-pro?</span> <span class="sv-t-ans">Y</span>
+<span class="sv-t-dim">  How should agents reach it?</span>
+<span class="sv-t-dim">    1) Cloudflare quick tunnel  (default)</span>
+<span class="sv-t-dim">  Choose [1]:</span> <span class="sv-t-ans">1</span>
+<span class="sv-t-dim">  · Downloading cloudflared → ~/.rune/bin</span>
+<span class="sv-t-dim">  · Starting systemd user service rune-serve…</span>
+
+  <span class="sv-t-ok">✓</span> Rune serve is running <span class="sv-t-dim">(systemd-user)</span>
+    public  <span class="sv-t-url">https://quiet-river-1234.trycloudflare.com/mcp</span>
+    <span class="sv-t-ok">✓ MCP handshake OK — 4 tools</span>
+
+  <span class="sv-t-keylabel">Your server key — shown once</span>
+  <span class="sv-t-key">rune_sk_<span class="sv-t-mask">••••••••••••••••••••••••</span></span></pre>
         </div>
-        <div class="sv-step">
-          <span class="sv-num">3</span>
-          <h3>Connect your agents</h3>
-          <pre class="code-block"><code>rune serve connect grok-bot</code></pre>
-          <p>Copy-paste steps for every client below. Then: <em>&ldquo;use the Rune video skill to plan a teaser&rdquo;</em>.</p>
-        </div>
-      </div>
 
-      <div class="cc-term sv-term">
-        <div class="cc-term-bar"><span class="cc-dot r"></span><span class="cc-dot y"></span><span class="cc-dot g"></span><span class="cc-term-title">me@my-vps &mdash; rune serve setup</span></div>
-<pre class="sv-term-body"><span class="sv-dim">  · Environment: server / headless (VPS) · linux/x64</span>
-<span class="sv-dim">  · Downloading cloudflared (cloudflared-linux-amd64) → ~/.rune/bin/cloudflared</span>
-<span class="sv-dim">  · Starting systemd user service rune-serve…</span>
-
-  <span class="sv-ok">✓</span> Rune serve is running (systemd-user, pid 41872)
-    local   http://127.0.0.1:8787/mcp
-    public  <span class="sv-url">https://quiet-river-1234.trycloudflare.com/mcp</span>
-    <span class="sv-ok">✓ MCP handshake OK — 4 tools · Free + Pro + Business</span>
-
-  ┌─ Your server key — shown ONCE. Save it in your password manager now. ─┐
-    <span class="sv-key">rune_sk_••••••••••••••••••••••••••••••••••••••</span>
-  └────────────────────────────────────────────────────────────────────────┘</pre>
-      </div>
-
-      <h3 class="sv-h3">Connect a client</h3>
-      <div class="sv-tabs" role="tablist" aria-label="Connect a client">
-        <button class="sv-tab active" role="tab" aria-selected="true" data-sv="grok-bot">Grok Bot</button>
-        <button class="sv-tab" role="tab" aria-selected="false" data-sv="claude">Claude Code</button>
-        <button class="sv-tab" role="tab" aria-selected="false" data-sv="grok">Grok Build</button>
-        <button class="sv-tab" role="tab" aria-selected="false" data-sv="codex">Codex</button>
-        <button class="sv-tab" role="tab" aria-selected="false" data-sv="cursor">Cursor</button>
-        <button class="sv-tab" role="tab" aria-selected="false" data-sv="gemini">Gemini / Antigravity</button>
-      </div>
-      <div class="sv-panels">
-        <div class="sv-panel" data-sv="grok-bot" role="tabpanel">
-          <p>Say to Grok Bot, in any chat:</p>
-          <pre class="code-block"><code>Add an MCP connector named rune: URL https://…trycloudflare.com/mcp,
-header Authorization: Bearer &lt;my rune key&gt;. Ask me for the key with a secure form.</code></pre>
-          <p class="sv-note">Paste the key only into the secure form &mdash; never into the chat. Grok Bot runs in the cloud, so it needs the public https URL.</p>
-        </div>
-        <div class="sv-panel" data-sv="claude" role="tabpanel" hidden>
-          <pre class="code-block"><code>export RUNE_KEY=rune_sk_…
-claude mcp add --transport http --scope user rune https://…/mcp \
+        <div class="sv-connect">
+          <h3 class="sv-connect-h">Connect a client</h3>
+          <div class="sv-tabs" role="tablist" aria-label="Choose a client">
+              <button type="button" class="sv-tab" role="tab" id="sv-tab-grok-bot" aria-controls="sv-panel-grok-bot" aria-selected="true" tabindex="0" data-sv="grok-bot"><svg class="sv-i" aria-hidden="true" focusable="false"><use href="#ph-mobile"/></svg><span>Grok Bot</span></button>
+              <button type="button" class="sv-tab" role="tab" id="sv-tab-claude" aria-controls="sv-panel-claude" aria-selected="false" tabindex="-1" data-sv="claude"><svg class="sv-i" aria-hidden="true" focusable="false"><use href="#ph-terminal"/></svg><span>Claude Code</span></button>
+              <button type="button" class="sv-tab" role="tab" id="sv-tab-grok" aria-controls="sv-panel-grok" aria-selected="false" tabindex="-1" data-sv="grok"><svg class="sv-i" aria-hidden="true" focusable="false"><use href="#ph-code"/></svg><span>Grok Build</span></button>
+              <button type="button" class="sv-tab" role="tab" id="sv-tab-codex" aria-controls="sv-panel-codex" aria-selected="false" tabindex="-1" data-sv="codex"><svg class="sv-i" aria-hidden="true" focusable="false"><use href="#ph-plugs"/></svg><span>Codex</span></button>
+              <button type="button" class="sv-tab" role="tab" id="sv-tab-cursor" aria-controls="sv-panel-cursor" aria-selected="false" tabindex="-1" data-sv="cursor"><svg class="sv-i" aria-hidden="true" focusable="false"><use href="#ph-code"/></svg><span>Cursor</span></button>
+              <button type="button" class="sv-tab" role="tab" id="sv-tab-gemini" aria-controls="sv-panel-gemini" aria-selected="false" tabindex="-1" data-sv="gemini"><svg class="sv-i" aria-hidden="true" focusable="false"><use href="#ph-plugs"/></svg><span>Gemini</span></button>
+          </div>
+          <div class="sv-panels">
+            <div class="sv-panel" role="tabpanel" id="sv-panel-grok-bot" aria-labelledby="sv-tab-grok-bot" tabindex="0">
+                <p class="sv-panel-lead">Grok Bot lives in the cloud, so give it the <strong>public</strong> URL. Just ask it in any chat:</p>
+                <div class="sv-chat">
+                  <div class="sv-bubble"><span class="sv-who">You</span>Add an MCP connector named <code>rune</code>: URL <code>https://quiet-river-1234.trycloudflare.com/mcp</code>, header <code>Authorization: Bearer &lt;my rune key&gt;</code>. Ask me for the key with a secure form.</div>
+                  <div class="sv-secure"><svg class="sv-i" aria-hidden="true" focusable="false"><use href="#ph-lock"/></svg><div><strong>Secure form</strong><span>Paste <code>rune_sk_…</code> here — never into the chat.</span></div></div>
+                </div>
+            </div>
+            <div class="sv-panel" role="tabpanel" id="sv-panel-claude" aria-labelledby="sv-tab-claude" tabindex="0" hidden>
+                <div class="sv-code "><pre><code>export RUNE_KEY=rune_sk_…
+claude mcp add --transport http --scope user rune \
+  https://quiet-river-1234.trycloudflare.com/mcp \
   --header "Authorization: Bearer $RUNE_KEY"
-claude mcp list        # rune: ✓ Connected</code></pre>
-        </div>
-        <div class="sv-panel" data-sv="grok" role="tabpanel" hidden>
-          <pre class="code-block"><code>export RUNE_KEY=rune_sk_…
-grok mcp add rune https://…/mcp -H "Authorization: Bearer $RUNE_KEY"
-grok mcp doctor rune   # ✓ handshake OK</code></pre>
-        </div>
-        <div class="sv-panel" data-sv="codex" role="tabpanel" hidden>
-          <pre class="code-block"><code>export RUNE_KEY=rune_sk_…        # keep it in your shell profile
-codex mcp add rune --url https://…/mcp --bearer-token-env-var RUNE_KEY</code></pre>
-        </div>
-        <div class="sv-panel" data-sv="cursor" role="tabpanel" hidden>
-          <pre class="code-block"><code>// ~/.cursor/mcp.json  (RUNE_KEY set in the environment Cursor starts from)
-{ "mcpServers": { "rune": {
-    "url": "https://…/mcp",
-    "headers": { "Authorization": "Bearer ${env:RUNE_KEY}" } } } }</code></pre>
-        </div>
-        <div class="sv-panel" data-sv="gemini" role="tabpanel" hidden>
-          <pre class="code-block"><code>gemini mcp add --transport http --scope user rune https://…/mcp \
+claude mcp list   <span class="sv-c"># rune: ✓ Connected</span></code></pre><button type="button" class="sv-copy" data-copy aria-label="Copy Claude Code commands"><svg class="sv-i" aria-hidden="true" focusable="false"><use href="#ph-copy"/></svg><span class="sv-copy-t">Copy</span></button></div>
+            </div>
+            <div class="sv-panel" role="tabpanel" id="sv-panel-grok" aria-labelledby="sv-tab-grok" tabindex="0" hidden>
+                <div class="sv-code "><pre><code>export RUNE_KEY=rune_sk_…
+grok mcp add rune https://quiet-river-1234.trycloudflare.com/mcp \
   -H "Authorization: Bearer $RUNE_KEY"
-# Antigravity: Settings → MCP servers → remote server, same URL + header</code></pre>
+grok mcp doctor rune   <span class="sv-c"># ✓ handshake OK</span></code></pre><button type="button" class="sv-copy" data-copy aria-label="Copy Grok Build commands"><svg class="sv-i" aria-hidden="true" focusable="false"><use href="#ph-copy"/></svg><span class="sv-copy-t">Copy</span></button></div>
+            </div>
+            <div class="sv-panel" role="tabpanel" id="sv-panel-codex" aria-labelledby="sv-tab-codex" tabindex="0" hidden>
+                <div class="sv-code "><pre><code>export RUNE_KEY=rune_sk_…   <span class="sv-c"># keep it in your shell profile</span>
+codex mcp add rune \
+  --url https://quiet-river-1234.trycloudflare.com/mcp \
+  --bearer-token-env-var RUNE_KEY</code></pre><button type="button" class="sv-copy" data-copy aria-label="Copy Codex commands"><svg class="sv-i" aria-hidden="true" focusable="false"><use href="#ph-copy"/></svg><span class="sv-copy-t">Copy</span></button></div>
+            </div>
+            <div class="sv-panel" role="tabpanel" id="sv-panel-cursor" aria-labelledby="sv-tab-cursor" tabindex="0" hidden>
+                <div class="sv-code "><pre><code><span class="sv-c">// ~/.cursor/mcp.json — RUNE_KEY must be set where Cursor starts</span>
+{
+  "mcpServers": {
+    "rune": {
+      "url": "https://quiet-river-1234.trycloudflare.com/mcp",
+      "headers": { "Authorization": "Bearer ${env:RUNE_KEY}" }
+    }
+  }
+}</code></pre><button type="button" class="sv-copy" data-copy aria-label="Copy Cursor mcp.json"><svg class="sv-i" aria-hidden="true" focusable="false"><use href="#ph-copy"/></svg><span class="sv-copy-t">Copy</span></button></div>
+            </div>
+            <div class="sv-panel" role="tabpanel" id="sv-panel-gemini" aria-labelledby="sv-tab-gemini" tabindex="0" hidden>
+                <div class="sv-code "><pre><code>gemini mcp add --transport http --scope user rune \
+  https://quiet-river-1234.trycloudflare.com/mcp \
+  -H "Authorization: Bearer $RUNE_KEY"
+<span class="sv-c"># Antigravity: Settings → MCP servers → same URL + header</span></code></pre><button type="button" class="sv-copy" data-copy aria-label="Copy Gemini CLI commands"><svg class="sv-i" aria-hidden="true" focusable="false"><use href="#ph-copy"/></svg><span class="sv-copy-t">Copy</span></button></div>
+            </div>
+          </div>
         </div>
       </div>
 
       <div class="sv-agent">
-        <div>
+        <div class="sv-agent-copy">
+          <span class="sv-agent-ico"><svg class="sv-i" aria-hidden="true" focusable="false"><use href="#ph-robot"/></svg></span>
           <h3>Or let your agent do all of it</h3>
-          <p>Every step has a flag. Ask your agent <em>&ldquo;set up rune serve on my VPS and connect Grok Bot&rdquo;</em> &mdash; it runs this over SSH, reads the JSON report, and the key lands in a 0600 file instead of the chat.</p>
+          <p>Every step has a flag. Ask <em>“set up rune serve on my VPS and connect Grok Bot”</em> — your agent runs this over SSH, reads the JSON report, and the key goes to a 0600 file instead of the chat.</p>
         </div>
-        <pre class="code-block"><code>ssh me@my-vps 'npm i -g @rune-kit/rune'
+        <div class="sv-code sv-code-wide"><pre><code>ssh me@my-vps 'npm i -g @rune-kit/rune'
 ssh me@my-vps 'rune serve setup --yes --json \
     --expose tunnel --key-out ~/.rune/serve.key'
 ssh me@my-vps 'rune serve doctor'
-ssh me@my-vps 'rune serve connect all'</code></pre>
+ssh me@my-vps 'rune serve connect all'</code></pre><button type="button" class="sv-copy" data-copy aria-label="Copy agent commands"><svg class="sv-i" aria-hidden="true" focusable="false"><use href="#ph-copy"/></svg><span class="sv-copy-t">Copy</span></button></div>
       </div>
 
-      <div class="sv-facts">
-        <span>&#128273; Key printed once, stored as a hash</span>
-        <span>&#128274; Localhost by default, HTTPS outside</span>
-        <span>&#8635; <code>git pull</code> on the server &rarr; every agent updated</span>
-        <span>&#9881; Repo edits still run on your machine</span>
-      </div>
-      <div style="text-align:center;margin-top:28px">
-        <a href="https://github.com/rune-kit/rune/blob/master/docs/SERVE.md" class="btn btn-ghost" target="_blank" rel="noopener">Full rune serve guide &rarr;</a>
-      </div>
+      <p class="sv-cta">
+        <a href="https://github.com/rune-kit/rune/blob/master/docs/SERVE.md" class="btn btn-primary" target="_blank" rel="noopener">Read the rune serve guide</a>
+        <span>Repo edits still run on your machine — the server only supplies the playbook.</span>
+      </p>
+      <p class="sv-live" aria-live="polite" data-sv-live></p>
     </div>
   </section>
 
@@ -1716,7 +1905,7 @@ Context is mostly files 61% &middot; mcp 22% &mdash; trim the largest to free ro
     </div>
   </div>
 
-  <script src="script.js?v=2.8.0"></script>
+  <script src="script.js?v=2.9.0"></script>
 
   <!-- Theme toggle -->
   <script>
