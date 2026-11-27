@@ -283,7 +283,14 @@ a:hover { opacity: 0.85; }
 .feature-card p { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
 
 /* ─── INSTALL ─── */
-.install-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; max-width: 960px; margin: 0 auto; }
+.install-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 20px; max-width: 960px; margin: 0 auto; }
+/* Grid items default to min-width:auto, so a long <pre> line widened the whole page on phones. */
+.install-card { min-width: 0; }
+.install-card .code-block { max-width: 100%; overflow-x: auto; }
+@media (max-width: 600px) {
+  .install-card { padding: 24px 18px; }
+  .install-card .code-block { font-size: 12.5px; padding: 12px 14px; }
+}
 .install-card {
   background: var(--bg-card); border: 1px solid var(--border);
   border-radius: var(--radius-lg); padding: 32px; text-align: center;
@@ -571,7 +578,7 @@ a:hover { opacity: 0.85; }
   .bench-stat { min-width: 100px; padding: 16px 20px; }
   .bench-delta { font-size: 22px; }
   .ext-grid { grid-template-columns: repeat(2, 1fr); }
-  .install-grid, .pricing-grid, .pricing-grid-3 { grid-template-columns: 1fr; }
+  .install-grid, .pricing-grid, .pricing-grid-3 { grid-template-columns: minmax(0, 1fr); }
   .pricing-personas { grid-template-columns: 1fr; }
   .compare-table { font-size: 12px; }
   .compare-table thead th, .compare-table tbody td { padding: 8px 10px; }
