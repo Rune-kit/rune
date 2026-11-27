@@ -391,6 +391,10 @@ Review commit: abc123 → Code changed to def456 → Review is STALE, re-review 
 When `cook` or `ship` checks review status: compare review commit hash with current HEAD. If different → WARN: "Review is stale — code changed since last review."
 
 
+### Junk-match and ship-worthiness
+
+After the suite is green, run `rune verify --junk` (and `--integrity` if tests changed) on this diff. HIGH findings are blocking. Then do the judgment pass in [junk-match](references/junk-match.md): special-case `if`s that only exist for the test’s inputs, golden files copied into runtime paths, production reads of fixtures/snapshots. A match that is junk is not APPROVE. Recurring findings go in `.rune/review-findings.jsonl` for `rune verify --reflect`.
+
 ## Constraints
 
 1. MUST read the full diff — not just the files the user pointed at
@@ -468,6 +472,7 @@ chain_metadata:
 - Test coverage gaps identified and documented
 - UI anti-pattern checks ran for any frontend files in diff (or confirmed not applicable)
 - Structured report emitted with APPROVE / REQUEST CHANGES / NEEDS DISCUSSION verdict
+- `rune verify --junk` ran (HIGH findings are REQUEST CHANGES); ship-worthiness judgment recorded when tests were green
 - (council) If blast radius 50+ with HIGH severity: council invoked on the diff, decorrelation stamp reported plainly, consensus/dissent folded into findings
 
 ## Cost Profile

@@ -115,6 +115,8 @@ grep -r "functionName" --include="*.{ts,tsx,js,jsx}" src/
 # Zero results? → "This isn't called anywhere. Remove it (YAGNI)?"
 ```
 
+If the same class of comment has now been raised twice (this review, or this review + a prior session), append a JSONL line to `.rune/review-findings.jsonl` (`title`, `pattern`, `message`, `files`, `severity`, `count`) and tell the author to run `rune verify --reflect`. That writes a convention and a lint the next agent cannot ignore. Do not auto-commit those files.
+
 ### Phase 5 — RESPOND
 
 **What to say:**

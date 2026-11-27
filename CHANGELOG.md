@@ -3,6 +3,13 @@
 All notable changes to Rune are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Added
+- **Junk-match pass** (`rune verify --junk`). Scans a test/production diff for checks that pass trivially or match on noise: tautological asserts (`expect(true)`, `expect(value).toBe(value)`), catch-all regex (`/^.*$/`), empty snapshots, mocks that are only asserted to return what they were told, status-code-only behavior tests, and production code that imports test fixtures or snapshots. High findings BLOCK under `strict` hook-dispatch (preflight + sentinel); `gentle` warns. False-positive guards: `expect(isValid(x)).toBe(true)`, specific regexes, mocks plus a real SUT assert, status tests that are actually about status, adding/renaming real asserts, and pre-existing junk on untouched lines.
+- **`rune verify --oracle <cmd|url|fixtures-dir>`**. Compares a candidate (`--candidate <cmd|url>`) against a reference oracle on a corpus: old binary, production URL, or recorded fixtures. Fingerprints each mismatch as `{input, expected, actual, diffKind}`, aggregates by fingerprint, writes `.rune/oracle/run-<id>.jsonl`, and exits 2 on *new* divergences. Known ones go in `--baseline` / `.rune/oracle/baseline.json`. JSON bodies are canonicalized; UUIDs and timestamps are redacted in fingerprint ids.
+- **Reflect / generated lints** (`rune verify --reflect` / `--lints`). Recurring review findings (`.rune/review-findings.jsonl`, count ≥ 2 or `"promote": true`) are deduped into `.rune/lints/rules.json`, a dated `.rune/conventions.md` entry, and a pointer block in `AGENTS.md` / `CLAUDE.md` when those files exist. Nothing is committed — the command lists paths to stage. The same regex lints run in hook-dispatch. `review`, `verification`, `review-intake`, `safeguard`, and `rescue` point at the real CLI. Docs: [`docs/VERIFY.md`](docs/VERIFY.md).
+
 ## [2.34.1] - 2026-11-27
 
 Patch for `rune serve` found in a live Windows test (PowerShell, Node 24, non-TTY shell), plus a cheaper skill list and a release script.

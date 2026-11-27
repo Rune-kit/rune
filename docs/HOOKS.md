@@ -185,6 +185,13 @@ git commit -m "test(char): rebase billing" \
 
 The hook message tells the agent to fix the code, not the tests, or to get that human approval. A broken integrity check fails open (the call runs) like the other gates.
 
+The same preflight / sentinel dispatch also runs:
+
+- **junk-match** (`rune verify --junk`) — BLOCK under `strict` on tautological asserts and empty snapshots; warn on catch-all regex, mock-echo, status-only tests, and production code that reads test fixtures.
+- **project lints** (`rune verify --lints`) — regex rules from `.rune/lints/rules.json`, produced by `rune verify --reflect`. Absent rules file: no-op. High-severity rules BLOCK under `strict`.
+
+Full CLI, oracle mode, corpus / baseline format, and the review→rules→lint loop: [`docs/VERIFY.md`](VERIFY.md).
+
 ## Platform capability matrix
 
 | Platform    | Maturity     | Pre-edit  | Pre-Bash   | Post-edit | Stop (completion-gate) | Native artifact                     |

@@ -366,6 +366,7 @@ When any skill calls verification and then reports results upstream:
 | "Clean scan / no findings" | The count of files, rules, or rows actually examined | REJECTED — an empty target set is indistinguishable from a clean one |
 | "No diff / no change detected" | Evidence the probe can report a difference at all | REJECTED — show it non-zero on a case known to differ |
 | "Tests pass" after this diff changed test files | `rune verify --integrity` clean (or a recorded `Test-Change-Approved` / `RUNE_TEST_CHANGE_APPROVED` override) | REJECTED — a green suite that was weakened is not evidence. See [test-integrity-gate](../test/references/test-integrity-gate.md) |
+| "Tests pass" / "matches the reference" | `rune verify --junk` clean of HIGH findings; for a rewrite, `rune verify --oracle` with no *new* divergences (or a human-approved baseline entry) | REJECTED — a vacuous test or a junk match is not evidence. See [verify-cli](references/verify-cli.md) |
 
 ## Constraints
 
@@ -406,6 +407,8 @@ Known failure modes for this skill. Check these before declaring done.
 - Failures include specific file:line references (not just counts)
 - 3-Level check run on all created/modified files; Level 3.5 INTERACTION WIRED run on all UI files in the diff (or "n/a — no UI files" noted)
 - `integration.verified` emitted when the diff spans UI+data and all 3.5 checks pass
+- `rune verify --junk` (and `--integrity` if tests changed) ran; HIGH junk-match findings mean Overall cannot be PASS
+- For a rewrite, `rune verify --oracle` ran against an independent reference (or an explicit waiver is recorded)
 - Verification Report emitted with Overall PASS/FAIL verdict
 
 ## Cost Profile

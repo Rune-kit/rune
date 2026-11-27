@@ -10,8 +10,11 @@
  * Skill → gate:
  *   preflight         → hooks/pre-tool-guard   (privacy mesh: BLOCK private keys/certs, WARN .env/credentials)
  *                       + test-integrity       (BLOCK weakened/skipped/expected-changed tests and frozen-path edits)
+ *                       + junk-match           (BLOCK tautological / empty-snapshot tests; warn on mock-echo / catch-all / status-only)
+ *                       + project lints        (`.rune/lints/rules.json` from `rune verify --reflect`)
  *   sentinel          → hooks/secrets-scan     (BLOCK `git commit` when staged files hold high-confidence secrets)
  *                       + test-integrity       (same check on the staged test-file diff)
+ *                       + junk-match + lints   (same checks on the staged diff)
  *   quarantine        → hooks/quarantine       (advisory: untrusted MCP / web / upload content)
  *   dependency-doctor → built-in               (advisory: a dependency manifest was edited)
  *   completion-gate   → built-in               (advisory: uncommitted changes at turn end — verify first)
@@ -54,7 +57,9 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { runJunkForEvent } from '../lib/junk-match.js';
 import { runIntegrityForEvent } from '../lib/test-integrity.js';
+import { runLintsForEvent } from '../lib/verify-lints.js';
 import { WIRED_SKILLS } from './hooks/presets.js';
 
 const ALLOWLIST = new Set(WIRED_SKILLS);
@@ -284,18 +289,25 @@ export function mergeGates(a, b) {
       ? `${JSON.stringify({ systemMessage: messages.join('\n'), hookSpecificOutput: { hookEventName: 'PreToolUse' } })}\n`
       : lead?.stdout || '',
     stderr: stderrs.join('\n'),
-    override: b?.override || a?.override,
-    result: b?.result || a?.result,
+    override: a?.override || b?.override,
+    result: [a, b].find((g) => g?.result?.blocked)?.result || a?.result || b?.result,
     error: aCrash ? a?.error : bCrash ? b?.error : undefined,
   };
 }
 
+function runVerifyGates(event, cwd) {
+  return mergeGates(
+    mergeGates(runIntegrityForEvent(event, cwd), runJunkForEvent(event, cwd)),
+    runLintsForEvent(event, cwd),
+  );
+}
+
 function runGate(skill, event, cwd) {
   if (skill === 'preflight') {
-    return mergeGates(runScriptGate(SKILL_SCRIPTS.preflight, event, cwd), runIntegrityForEvent(event, cwd));
+    return mergeGates(runScriptGate(SKILL_SCRIPTS.preflight, event, cwd), runVerifyGates(event, cwd));
   }
   if (skill === 'sentinel') {
-    return mergeGates(runScriptGate(SKILL_SCRIPTS.sentinel, event, cwd), runIntegrityForEvent(event, cwd));
+    return mergeGates(runScriptGate(SKILL_SCRIPTS.sentinel, event, cwd), runVerifyGates(event, cwd));
   }
   if (SKILL_SCRIPTS[skill]) return runScriptGate(SKILL_SCRIPTS[skill], event, cwd);
   if (skill === 'dependency-doctor') return dependencyGate(event);
