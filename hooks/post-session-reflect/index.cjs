@@ -229,6 +229,8 @@ console.log(`
 │  □ No hardcoded secrets introduced?                 │
 │  □ If schema changed: migration + rollback exist?   │
 │  □ Verification ran (lint + types + build)?         │
+│  □ Recurring review findings reflected to lints?    │
+│    (rune verify --reflect — stage, do not auto-commit) │
 │                                                     │
 │  If any item is unclear → address it now.           │
 └─────────────────────────────────────────────────────┘

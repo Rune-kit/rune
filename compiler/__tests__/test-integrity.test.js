@@ -460,7 +460,7 @@ function gitInit(dir) {
 }
 
 describe('git --staged / --base and CLI', () => {
-  test('analyzeGit --staged catches a weakened assertion and the CLI exits 2', () => {
+  test('analyzeGit --staged catches a weakened assertion and the CLI exits 2', async () => {
     const dir = mkdtempSync(path.join(os.tmpdir(), 'rune-ti-git-'));
     const git = gitInit(dir);
     writeFileSync(path.join(dir, 'pay.test.ts'), JS_BEFORE);
@@ -485,14 +485,14 @@ describe('git --staged / --base and CLI', () => {
         return true;
       },
     };
-    const code = runVerify(dir, { integrity: true, staged: true }, { stdout: buf, stderr: err });
+    const code = await runVerify(dir, { integrity: true, staged: true }, { stdout: buf, stderr: err });
     assert.strictEqual(code, 2);
     const text = stdout.chunks.join('');
     assert.match(text, /assert-removed/);
     assert.match(formatReport(r, { json: true }), /"rule": "assert-removed"/);
   });
 
-  test('CLI --base sees unstaged changes; adding asserts exits 0', () => {
+  test('CLI --base sees unstaged changes; adding asserts exits 0', async () => {
     const dir = mkdtempSync(path.join(os.tmpdir(), 'rune-ti-base-'));
     const git = gitInit(dir);
     writeFileSync(path.join(dir, 'pay.test.ts'), JS_BEFORE);
@@ -514,7 +514,7 @@ describe('git --staged / --base and CLI', () => {
         return true;
       },
     };
-    const code = runVerify(dir, { integrity: true, base: 'HEAD' }, { stdout, stderr });
+    const code = await runVerify(dir, { integrity: true, base: 'HEAD' }, { stdout, stderr });
     assert.strictEqual(code, 0);
   });
 
@@ -569,7 +569,7 @@ describe('mergeGates', () => {
 });
 
 describe('usage', () => {
-  test('rune verify without --integrity exits 1', () => {
+  test('rune verify without a mode exits 1', async () => {
     const stderr = {
       chunks: [],
       write(c) {
@@ -577,7 +577,7 @@ describe('usage', () => {
         return true;
       },
     };
-    const code = runVerify(
+    const code = await runVerify(
       process.cwd(),
       {},
       {

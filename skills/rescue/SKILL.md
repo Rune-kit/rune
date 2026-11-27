@@ -147,7 +147,7 @@ Mark todo[1] `in_progress`. This phase runs once before any surgery.
 REQUIRED SUB-SKILL: rune:safeguard
 → Invoke `safeguard` with action: "characterize".
 → safeguard writes tests that capture CURRENT behavior (even buggy behavior).
-→ These tests are the rollback oracle — if they break, surgery went wrong.
+→ These tests are the rollback oracle — if they break, surgery went wrong. Also run `rune verify --oracle` against the pre-surgery binary or recorded fixtures when they exist (see [verify-cli](../verification/references/verify-cli.md)).
 → Capture: test file paths, test count.
 ```
 

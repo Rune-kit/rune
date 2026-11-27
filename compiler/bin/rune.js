@@ -792,7 +792,21 @@ async function cmdHooks(projectRoot, args, subcommand) {
 // ─── Arg Parsing ───
 
 // Flags that require a string value (not boolean)
-const VALUE_REQUIRED_FLAGS = new Set(['platform', 'output', 'disable', 'extensions', 'days', 'preset', 'tier', 'base']);
+const VALUE_REQUIRED_FLAGS = new Set([
+  'platform',
+  'output',
+  'disable',
+  'extensions',
+  'days',
+  'preset',
+  'tier',
+  'base',
+  'oracle',
+  'candidate',
+  'corpus',
+  'baseline',
+  'findings',
+]);
 
 function parseTierFlag(raw) {
   if (!raw) return undefined;
@@ -896,7 +910,7 @@ async function main() {
       break;
     }
     case 'verify': {
-      const code = runVerify(projectRoot, args);
+      const code = await runVerify(projectRoot, args);
       if (code) process.exit(code);
       break;
     }
@@ -940,11 +954,24 @@ async function main() {
       log('               hooks status [--platform <name>|all]');
       log("    serve      Host this machine's skills (Free + Pro/Business) over MCP for any agent");
       log('               serve setup | status | connect <client> | key rotate  (docs/SERVE.md)');
-      log('    verify    Test-integrity gate — weakened assertions, skipped tests, frozen paths');
-      log('               --integrity        required (only mode today)');
+      log('    verify    Mechanical verification — integrity, junk-match, oracle, reflect/lints');
+      log('               --integrity        test-diff weakening (deleted/loosened asserts, skips, frozen paths)');
+      log(
+        '               --junk             tautological asserts, mock-echo, catch-all regex, empty snapshots, status-only',
+      );
+      log('               --lints            run .rune/lints/rules.json');
+      log(
+        '               --reflect          promote recurring review findings to rules + AGENTS.md/CLAUDE.md, then lint',
+      );
+      log('               --findings <file>  findings JSON/JSONL for --reflect (default .rune/review-findings.jsonl)');
+      log('               --oracle <cmd|url|dir>  compare a candidate against a reference on a corpus');
+      log('               --candidate <cmd|url>   new implementation (required unless --oracle is a fixture dir)');
+      log('               --corpus <dir>     oracle inputs (default .rune/oracle/corpus, or the fixture dir)');
+      log('               --baseline <file>  accepted divergence fingerprints (default .rune/oracle/baseline.json)');
       log('               --staged           compare the index to HEAD (what a commit would land)');
       log('               --base <ref>       compare the worktree and index to <ref>');
       log('               --json             machine-readable fingerprints');
+      log('               docs/VERIFY.md');
       log('');
       log('  Options:');
       log(
