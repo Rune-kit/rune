@@ -245,6 +245,16 @@ rune serve --runner claude      # or codex | grok — the CLI must be installed 
 - Reads are confined to the skill's own folder: absolute paths, `..` and symlinks that leave the folder are rejected, and only text files are served.
 - The MCP server never runs shell commands. (The experimental `--runner` below is the one opt-in exception.)
 
+## Test it yourself (no VPS)
+
+```bash
+npm run e2e:serve                         # local: install the packed CLI, drive setup, MCP client, rotate, stop/start
+npm run e2e:serve -- --expose tunnel      # same, through a real public trycloudflare.com URL
+gh workflow run e2e-serve.yml             # CI: Linux, Linux + systemd + tunnel, Windows, macOS
+```
+
+It uses a temp `HOME` (your real `~/.rune` is untouched), never prints the key, and stops everything it started. Not covered: Tailscale Funnel and your own domain behind Caddy (they need an account / a domain).
+
 ## Reference
 
 ```text
