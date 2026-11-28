@@ -13,7 +13,7 @@
         "source": "url",
         "url": "https://github.com/rune-kit/rune.git"
       },
-      "version": "2.34.1",
+      "version": "2.35.0",
       "homepage": "https://rune-kit.github.io/rune",
       "keywords": [
         "skills",

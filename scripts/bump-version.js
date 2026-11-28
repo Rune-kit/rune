@@ -17,7 +17,8 @@
  *   - Reads current version from package.json
  *   - Aborts if any target file does NOT contain the OLD version (manual edits expected first)
  *   - Aborts if --title is omitted but ROADMAP "Current State" still references the old wave
- *   - On success, runs version-sync-check.js to verify no drift remains
+ *   - On success, runs site-gen.mjs (changelog page, what's-new chips/CLI data)
+ *     then version-sync-check.js to verify no drift remains
  *
  * Does NOT touch: CHANGELOG.md body (narrative requires human authoring),
  * README.md "What's New" content (same), or skill counts (use validate-signals.js).
@@ -172,6 +173,8 @@ console.log(`    2. Add "## What's New (v${newVersion} — ...)" section to READ
 console.log(`    3. Run: node scripts/version-sync-check.js`);
 
 if (!dryRun) {
+  console.log(`\n  Running site-gen.mjs...\n`);
+  execFileSync('node', [join(__dirname, 'site-gen.mjs')], { stdio: 'inherit', cwd: ROOT });
   console.log(`\n  Running version-sync-check.js...\n`);
   try {
     execFileSync('node', [join(__dirname, 'version-sync-check.js')], { stdio: 'inherit', cwd: ROOT });

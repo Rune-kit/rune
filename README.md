@@ -191,7 +191,9 @@ Every route ships all 67 core skills and the 14 free extension packs. Where a ru
 
 Outside Claude Code, pick a skill from your agent's skill or slash-command menu (compiled skills are named `rune-<skill>`, e.g. `$rune-cook` in Codex), or just describe the task — each skill's description tells the agent when to use it.
 
-## What's New (v2.34.1 — Serve)
+## What's New (v2.35.0 — Serve)
+
+> **v2.35.0 (2026-11-28):** "Proof" — Catch junk tests, read what's new after every upgrade, and zoom the skill mesh until the names are readable. `rune serve` is tested end-to-end through a real public tunnel (including a macOS DNS fix), with no VPS required.
 
 > **v2.34.1 (2026-11-27):** Patch for `rune serve` found in a live Windows test (PowerShell, Node 24, non-TTY shell), plus a cheaper skill list and a release script.
 
