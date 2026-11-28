@@ -5,6 +5,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+"Proof" — Catch junk tests, read what's new after every upgrade, and zoom the skill mesh until the names are readable. `rune serve` is tested end-to-end through a real public tunnel (including a macOS DNS fix), with no VPS required.
+
 ### Added
 - **Junk-match pass** (`rune verify --junk`). Scans a test/production diff for checks that pass trivially or match on noise: tautological asserts (`expect(true)`, `expect(value).toBe(value)`), catch-all regex (`/^.*$/`), empty snapshots, mocks that are only asserted to return what they were told, status-code-only behavior tests, and production code that imports test fixtures or snapshots. High findings BLOCK under `strict` hook-dispatch (preflight + sentinel); `gentle` warns. False-positive guards: `expect(isValid(x)).toBe(true)`, specific regexes, mocks plus a real SUT assert, status tests that are actually about status, adding/renaming real asserts, and pre-existing junk on untouched lines.
 - **`rune verify --oracle <cmd|url|fixtures-dir>`**. Compares a candidate (`--candidate <cmd|url>`) against a reference oracle on a corpus: old binary, production URL, or recorded fixtures. Fingerprints each mismatch as `{input, expected, actual, diffKind}`, aggregates by fingerprint, writes `.rune/oracle/run-<id>.jsonl`, and exits 2 on *new* divergences. Known ones go in `--baseline` / `.rune/oracle/baseline.json`. JSON bodies are canonicalized; UUIDs and timestamps are redacted in fingerprint ids.
