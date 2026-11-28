@@ -339,7 +339,7 @@
 
     /* ─── MESH EMBED ─── */
     .mesh-embed {
-      width: 100%; height: 500px; border: 1px solid var(--border);
+      width: 100%; height: 580px; border: 1px solid var(--border); position: relative;
       border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 24px;
     }
     .mesh-embed iframe { width: 100%; height: 100%; border: none; }
@@ -477,7 +477,7 @@
       .sidebar-toggle { display: block; }
       .main { margin-left: 0; padding: 32px 20px 80px; }
       .before-after { grid-template-columns: 1fr; }
-      .mesh-embed { height: 350px; }
+      .mesh-embed { height: 500px; }
       .nav-links a:not(.btn):not(.active) { display: none; }
       .zone-map { grid-template-columns: minmax(0, 1fr); }
       .zone-wire { flex-direction: row; }
@@ -863,6 +863,7 @@
       <div class="mesh-embed">
         <iframe src="../assets/mesh-diagram.html" title="Rune Mesh Architecture — Interactive Diagram" loading="lazy"></iframe>
       </div>
+      <p><a href="../assets/mesh-diagram.html" target="_blank" rel="noopener">Open the mesh fullscreen</a> to zoom, search and inspect a skill's calls.</p>
 
       <p>
         248 connections + 46 signals across 67 skills. When <code>debug</code> can't find the cause,
