@@ -1,0 +1,11 @@
+{
+  "version": "2.34.1",
+  "date": "2026-11-27",
+  "summary": "Patch for rune serve found in a live Windows test (PowerShell, Node 24, non-TTY shell), plus a cheaper skill…",
+  "highlights": [
+    "npm run release -- <version> and npm run release:publish",
+    "list_skills is compact by default",
+    "rune serve <anything> --help / -h only prints the usage"
+  ],
+  "url": "https://rune-kit.github.io/rune/changelog.html#v2-34-1"
+}

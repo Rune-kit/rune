@@ -22,6 +22,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { listPlatforms } from '../compiler/adapters/index.js';
 import { collectStats } from '../compiler/status.js';
+import { buildOutputs } from './site-gen.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
@@ -160,6 +161,8 @@ if (existsSync(skillsDir2)) {
     { path: 'README.md', pattern: /Rune is a \*\*mesh\*\* — (\d+) skills/ },
     { path: 'CLAUDE.md', pattern: /(\d+) core skills built/ },
     { path: 'docs/VISION.md', pattern: /Rune = (\d+) skills × \d+\+ bidirectional/ },
+    { path: 'docs/skills/index.html', pattern: /stat-value">(\d+)<\/span>\s*<span class="stat-label">Total Skills/ },
+    { path: 'docs/assets/mesh-diagram.html', pattern: /<b>(\d+)<\/b><span>skills<\/span>/ },
     // dashboard.html lives at workspace root, not Free root — checked separately below
   ];
 
@@ -248,6 +251,7 @@ const DRIFT_FILES = [
   'docs/index.html',
   'docs/guides/index.html',
   'docs/skills/index.html',
+  'docs/assets/mesh-diagram.html',
   'docs/guides/cli.md',
   'docs/GETTING_STARTED.md',
   'docs/SKILLS.md',
@@ -258,7 +262,13 @@ const DRIFT_FILES = [
   'compiler/adapters/openclaw.js',
 ];
 const DRIFT_RULES = [
-  { label: 'skills', re: /\b(\d{2})(?:-skill\b| (?:core )?skills\b)/g, min: 60, max: 99, live: liveStats.skillCount },
+  {
+    label: 'skills',
+    re: /\b(\d{2})(?:-skill\b| (?:core |interconnected |connected )?skills\b)/gi,
+    min: 60,
+    max: 99,
+    live: liveStats.skillCount,
+  },
   { label: 'signals', re: /\b(\d{2}) (?:mesh |async )?signals\b/g, min: 40, max: 69, live: liveStats.signalCount },
   {
     label: 'connections',
@@ -267,7 +277,13 @@ const DRIFT_RULES = [
     max: 399,
     live: liveStats.totalConnections,
   },
-  { label: 'platforms', re: /\b(\d{1,2})(?:-platform\b| platforms\b)/g, min: 8, max: 40, live: platformCount },
+  {
+    label: 'platforms',
+    re: /\b(\d{1,2})(?:-platform\b| (?:AI coding |coding |compile )?platforms\b)/g,
+    min: 8,
+    max: 40,
+    live: platformCount,
+  },
 ];
 let driftHits = 0;
 for (const rel of DRIFT_FILES) {
@@ -285,6 +301,25 @@ for (const rel of DRIFT_FILES) {
   }
 }
 if (driftHits === 0) pass(`No stale skill/signal/connection/platform counts in ${DRIFT_FILES.length} public files`);
+
+// 1g. Generated site artifacts (scripts/site-gen.mjs) must be current: changelog page,
+// What's-new chips, CLI notice data, mesh diagram counts, /skills/ badge + stats, Guide
+// layer table. A hand edit or a forgotten regen fails here, not on the live site.
+try {
+  const outputs = await buildOutputs(ROOT);
+  const stale = Object.entries(outputs)
+    .filter(([rel, content]) => !existsSync(join(ROOT, rel)) || readFileSync(join(ROOT, rel), 'utf8') !== content)
+    .map(([rel]) => rel);
+  if (stale.length) fail(`generated files are stale — run \`node scripts/site-gen.mjs\`: ${stale.join(', ')}`);
+  else pass(`site-gen: ${Object.keys(outputs).length} generated files up to date`);
+} catch (err) {
+  fail(`site-gen failed: ${err.message}`);
+}
+const skillsBadge = readFileSync(join(ROOT, 'docs/skills/index.html'), 'utf8').match(
+  /v(\d+\.\d+\.\d+)<!-- \/rune:gen:version -->/,
+)?.[1];
+if (skillsBadge === pkg.version) pass(`docs/skills/index.html: badge v${skillsBadge}`);
+else fail(`docs/skills/index.html: badge shows v${skillsBadge ?? '?'}, expected v${pkg.version}`);
 
 const forbiddenClaims = [
   { path: 'README.md', value: '209 connections' },

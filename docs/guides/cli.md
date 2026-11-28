@@ -156,6 +156,17 @@ On Codex, if `.codex/hooks.json` changed, the summary reminds you to open `/hook
 
 ---
 
+### `rune whats-new`
+
+Highlights of the installed release and a link to the [changelog](https://rune-kit.github.io/rune/changelog.html):
+
+```bash
+rune whats-new          # human-readable
+rune whats-new --json   # { version, date, summary, highlights[], url }
+```
+
+After an upgrade, the first interactive command (`rune update`, `setup`, `status`, `doctor`, …) prints the same once. It stays quiet on a non-TTY, with `--json`, in CI, and for `hook-dispatch` / `serve` / `verify`. Turn it off with `RUNE_NO_WHATS_NEW=1`.
+
 ### `rune serve`
 
 Host this machine's Rune skills (Free + any Pro/Business tier it has) as an MCP server, so agents on other machines use them without installing Rune.

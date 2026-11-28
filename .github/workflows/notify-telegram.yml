@@ -13,29 +13,28 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Get release info
-        id: release
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build message from CHANGELOG.md
         run: |
           TAG="${GITHUB_REF#refs/tags/}"
-          PREV_TAG=$(git tag --sort=-v:refname | grep '^v' | sed -n '2p')
-
-          if [ -n "$PREV_TAG" ]; then
-            CHANGELOG=$(git log "${PREV_TAG}..${TAG}" --pretty=format:"• %s" --no-merges | head -15)
-          else
-            CHANGELOG=$(git log --pretty=format:"• %s" --no-merges -10)
+          # Same source as the GitHub release and docs/changelog.html. Needs no npm install.
+          if ! node scripts/site-gen.mjs notes "${TAG#v}" --telegram > telegram.html; then
+            PREV_TAG=$(git tag --sort=-v:refname | grep '^v' | sed -n '2p')
+            {
+              echo "🔮 <b>Rune ${TAG}</b>"
+              echo ""
+              git log "${PREV_TAG}..${TAG}" --pretty=format:"• %s" --no-merges | head -15 | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g'
+              echo ""
+              echo ""
+              echo "📦 <a href=\"https://github.com/rune-kit/rune/releases/tag/${TAG}\">GitHub Release</a>"
+            } > telegram.html
           fi
-
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          {
-            echo "changelog<<CHANGELOG_EOF"
-            echo "$CHANGELOG"
-            echo "CHANGELOG_EOF"
-          } >> "$GITHUB_OUTPUT"
 
       - name: Send Telegram notification
         env:
-          TAG: ${{ steps.release.outputs.tag }}
-          CHANGELOG: ${{ steps.release.outputs.changelog }}
           BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         shell: bash
@@ -43,15 +42,8 @@ jobs:
           python3 << 'PYEOF'
           import json, urllib.request, os
 
-          tag = os.environ['TAG']
-          changelog = os.environ['CHANGELOG']
-
-          text = f"""🔮 <b>Rune {tag}</b>
-
-          {changelog}
-
-          📦 <a href="https://github.com/rune-kit/rune/releases/tag/{tag}">GitHub Release</a>
-          ⬆️ <code>npm i @rune-kit/rune@latest</code>"""
+          with open('telegram.html', encoding='utf-8') as f:
+              text = f.read().strip()[:4000]
 
           data = json.dumps({
               'chat_id': os.environ['CHAT_ID'],
@@ -66,5 +58,5 @@ jobs:
               headers={'Content-Type': 'application/json'}
           )
           urllib.request.urlopen(req)
-          print(f'Notification sent for {tag}')
+          print('Notification sent')
           PYEOF
