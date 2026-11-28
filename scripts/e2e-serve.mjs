@@ -139,7 +139,14 @@ const modeBits = (f) => statSync(f).mode & 0o777;
 // ─── MCP / HTTP helpers ───
 
 async function http(method, url, { headers = {}, body } = {}) {
-  const res = await fetch(url, { method, headers, body, signal: AbortSignal.timeout(20_000) });
+  let res;
+  try {
+    res = await fetch(url, { method, headers, body, signal: AbortSignal.timeout(20_000) });
+  } catch (err) {
+    throw new Error(
+      `${method} ${url.replace(/\?.*/, '')}: ${err.message}${err.cause ? ` (${err.cause.code || err.cause.message})` : ''}`,
+    );
+  }
   const text = await res.text();
   return { status: res.status, text, headers: res.headers };
 }
@@ -262,6 +269,35 @@ async function authSuite(k, url, label) {
     const r = await http('POST', url, { headers: mcpHeaders(k), body: 'x'.repeat(2_000_000) });
     assert([400, 413].includes(r.status), `HTTP ${r.status}`);
   });
+}
+
+async function diagnose(url) {
+  const host = new URL(url).hostname;
+  const lines = [`diagnostics for ${host}:`];
+  try {
+    const dns = await import('node:dns/promises');
+    lines.push(`  node dns.resolve4: ${(await dns.resolve4(host)).join(', ')}`);
+  } catch (e) {
+    lines.push(`  node dns.resolve4: ${e.code || e.message}`);
+  }
+  try {
+    const dns = await import('node:dns/promises');
+    lines.push(`  node dns.lookup:   ${JSON.stringify(await dns.lookup(host, { all: true }))}`);
+  } catch (e) {
+    lines.push(`  node dns.lookup:   ${e.code || e.message}`);
+  }
+  const c = sh('curl', [
+    '-sS',
+    '-m',
+    '15',
+    '-o',
+    '/dev/null',
+    '-w',
+    'curl http=%{http_code} ip=%{remote_ip}',
+    `${url}/health`,
+  ]);
+  lines.push(`  ${(c.stdout || '').trim()} ${(c.stderr || '').trim()}`);
+  return lines.join('\n');
 }
 
 // ─── cli helpers ───
@@ -554,10 +590,13 @@ async function main() {
         ),
       { timeoutMs: 20_000, what: 'port to close' },
     );
-    if (EXPOSE === 'tunnel' && !IS_WIN) {
+    if (EXPOSE === 'tunnel') {
       await sleep(1500);
-      const p = sh('pgrep', ['-af', `cloudflared.*127.0.0.1:${PORT}`]);
-      assert(!(p.stdout || '').trim(), `cloudflared still running:\n${p.stdout}`);
+      const p = IS_WIN
+        ? sh('tasklist', ['/FI', 'IMAGENAME eq cloudflared.exe', '/FO', 'CSV', '/NH'])
+        : sh('pgrep', ['-af', `cloudflared.*127.0.0.1:${PORT}`]);
+      const out = (p.stdout || '').trim();
+      assert(IS_WIN ? !/cloudflared/i.test(out) : !out, `cloudflared still running:\n${out}`);
     }
   });
 }
