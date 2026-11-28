@@ -3,6 +3,7 @@ import { describe, test } from 'node:test';
 import {
   centerOn,
   clampZoom,
+  edgeState,
   fitCamera,
   LABEL_ZOOM,
   labelMode,
@@ -12,6 +13,7 @@ import {
   panBy,
   panelFor,
   rankSearch,
+  resolveTap,
   transformAttr,
   zoomAt,
 } from '../lib/mesh-view.mjs';
@@ -125,5 +127,41 @@ describe('label mode', () => {
     assert.strictEqual(labelMode({ k: LABEL_ZOOM }), 'all');
     assert.strictEqual(labelMode({ k: 2 }, 'cook'), 'related');
     assert.strictEqual(labelMode({ k: LABEL_ZOOM + 1 }, 'cook'), 'all');
+  });
+});
+
+describe('edge visibility', () => {
+  const e = ['cook', 'plan'];
+  test('edges are quiet by default: nothing selected, nothing hovered', () => {
+    assert.strictEqual(edgeState(e, null, null), 'base');
+  });
+  test('hover lights the hovered skill edges only', () => {
+    assert.strictEqual(edgeState(e, null, 'cook'), 'hover');
+    assert.strictEqual(edgeState(e, null, 'plan'), 'hover');
+    assert.strictEqual(edgeState(e, null, 'scout'), 'base');
+  });
+  test('selection lights its edges and dims everything else', () => {
+    assert.strictEqual(edgeState(e, 'cook', null), 'on');
+    assert.strictEqual(edgeState(e, 'scout', null), 'dim');
+  });
+  test('hovering another skill while one is selected previews it without losing the selection', () => {
+    assert.strictEqual(edgeState(e, 'scout', 'cook'), 'hover');
+    assert.strictEqual(edgeState(e, 'cook', 'cook'), 'on');
+  });
+});
+
+describe('tap resolution (pointer capture retargets pointerup, so the node is read at pointerdown)', () => {
+  test('a still press that started on a node selects it, whatever pointerup landed on', () => {
+    assert.deepStrictEqual(resolveTap({ downNode: 'cook', moved: false }), { type: 'select', name: 'cook' });
+  });
+  test('a still press on empty canvas clears the selection', () => {
+    assert.deepStrictEqual(resolveTap({ downNode: null, moved: false }), { type: 'clear' });
+  });
+  test('a drag never selects or clears', () => {
+    assert.deepStrictEqual(resolveTap({ downNode: 'cook', moved: true }), { type: 'none' });
+    assert.deepStrictEqual(resolveTap({ downNode: null, moved: true }), { type: 'none' });
+  });
+  test('a press that began on the panel or toolbar is ignored', () => {
+    assert.deepStrictEqual(resolveTap({ downNode: null, moved: false, onChrome: true }), { type: 'none' });
   });
 });

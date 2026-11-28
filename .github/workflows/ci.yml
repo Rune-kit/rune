@@ -29,6 +29,8 @@ jobs:
 
       - name: Test with coverage
         run: npm run test:coverage
+        env:
+          RUNE_REQUIRE_BROWSER: '1'
 
       - name: Doctor (validate packs)
         run: npm run doctor
