@@ -25,6 +25,7 @@ import {
   runSetup,
   serveArgsFromProfile,
   serveStatus,
+  waitForDns,
 } from '../serve/setup.js';
 
 const RUNE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -516,5 +517,33 @@ describe('serve CLI: help, non-TTY safety, Windows hints', () => {
     assert.doesNotMatch(nix, /\$env:/);
     assert.match(keyEnvHint('win32'), /PowerShell/);
     assert.match(keyEnvHint('darwin'), /export/);
+  });
+});
+
+describe('waitForDns (a new tunnel name must exist in DNS before the OS is asked)', () => {
+  test('IPs and localhost need no lookup', async () => {
+    const never = async () => {
+      throw new Error('should not resolve');
+    };
+    assert.strictEqual(await waitForDns('127.0.0.1', { resolver: never }), true);
+    assert.strictEqual(await waitForDns('localhost', { resolver: never }), true);
+  });
+
+  test('polls the resolver until the name appears', async () => {
+    let calls = 0;
+    const resolver = async () => {
+      calls++;
+      if (calls < 3) throw Object.assign(new Error('nx'), { code: 'ENOTFOUND' });
+      return ['104.16.0.1'];
+    };
+    assert.strictEqual(await waitForDns('fresh-name.trycloudflare.com', { resolver, timeoutMs: 10_000 }), true);
+    assert.strictEqual(calls, 3);
+  });
+
+  test('gives up (false, no throw) when it never resolves', async () => {
+    const resolver = async () => {
+      throw new Error('nx');
+    };
+    assert.strictEqual(await waitForDns('never.trycloudflare.com', { resolver, timeoutMs: 50 }), false);
   });
 });
