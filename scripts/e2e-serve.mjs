@@ -297,6 +297,14 @@ async function diagnose(url) {
     `${url}/health`,
   ]);
   lines.push(`  ${(c.stdout || '').trim()} ${(c.stderr || '').trim()}`);
+  for (const server of ['1.1.1.1', '8.8.8.8']) {
+    const d = sh('dig', [`@${server}`, '+short', '+time=5', host]);
+    lines.push(`  dig @${server}: ${(d.stdout || d.stderr || d.error?.message || '').trim().replace(/\n/g, ' ')}`);
+  }
+  const d0 = sh('dig', ['+short', '+time=5', host]);
+  lines.push(
+    `  dig (system resolver): ${(d0.stdout || d0.stderr || d0.error?.message || '').trim().replace(/\n/g, ' ')}`,
+  );
   return lines.join('\n');
 }
 
@@ -444,7 +452,12 @@ async function main() {
       until(async () => (await http('GET', `${baseUrl}/health`)).status === 200, {
         timeoutMs: 90_000,
         what: 'tunnel /health',
-      }),
+      }).then(
+        () => 'reachable',
+        async (err) => {
+          throw new Error(`${err.message}\n${await diagnose(baseUrl)}`);
+        },
+      ),
     );
   }
 
