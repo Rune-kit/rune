@@ -3,7 +3,7 @@
 All notable changes to Rune are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [2.35.0] - 2026-11-28
 
 "Proof" — Catch junk tests, read what's new after every upgrade, and zoom the skill mesh until the names are readable. `rune serve` is tested end-to-end through a real public tunnel (including a macOS DNS fix), with no VPS required.
 
@@ -24,6 +24,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Mesh diagram is zoomable and searchable.** Scroll, trackpad pinch, touch pinch, double-click/tap, on-screen +/−/Fit, or the keyboard (`+`, `-`, `0`) to zoom and pan. Click or search a skill to keep it selected: its edges stay lit, a side panel (bottom sheet on a phone) lists the layer, a short description, clickable *calls* / *called by* chips and any signals, and labels are kept for the selection until you zoom in far enough to show every name. Layer toggles hide a ring; the diagram follows the site’s light/dark theme. The Guide iframe has an “Open the mesh fullscreen” link.
 
 ### Fixed
+- `npm run release` failed after the site-gen check landed in #25: `bump-version` ran `version-sync-check` before regenerating the changelog page and what's-new files, so those artifacts were always stale. It now runs `site-gen.mjs` first.
 - `rune serve setup --expose tunnel` on macOS could report the new public URL as unreachable for minutes: its health check looked the hostname up before Cloudflare DNS had it, and macOS caches that miss. It now waits for the name via the resolver (`waitForDns`) first. `setup --json` also reports `service.linger`.
 - Mesh diagram: clicking a skill did nothing (only zoom worked). The stage captured the pointer on press, which retargeted `pointerup` to the stage, so the click never reached the node and was read as a click on empty canvas. The node is now read at press time and the pointer is no longer captured. Edges are also quiet by default (they were all drawn at once, a hairball): a skill's links light up on hover, and stay lit when it is selected. Covered by a real-mouse regression test on both the standalone page and the Guide iframe (`scripts/__tests__/mesh-pointer.e2e.test.js`; needs Chrome, skipped without it, required in CI).
 - Guide code blocks kept their line breaks only in the source: multi-line commands rendered as one wrapped line. They are `white-space: pre` again, copy buttons show on touch screens, and the Guide no longer scrolls sideways at 375px (platform tabs and tables scroll inside their own box).

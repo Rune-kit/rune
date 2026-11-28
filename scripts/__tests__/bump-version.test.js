@@ -47,7 +47,8 @@ function seedFixture(version, { withRoadmapTitle = true, withMarketplace = true 
 
   // Mirror the script (we test by copying — the production script lives elsewhere)
   copyFileSync(SCRIPT, join(root, 'scripts', 'bump-version.js'));
-  // version-sync-check is required by the post-bump invocation — stub it as a no-op
+  // site-gen + version-sync-check are required by the post-bump invocation — stub both as no-ops
+  writeFileSync(join(root, 'scripts', 'site-gen.mjs'), `process.exit(0);\n`);
   writeFileSync(join(root, 'scripts', 'version-sync-check.js'), `process.exit(0);\n`);
   return root;
 }
@@ -92,7 +93,9 @@ describe('bump-version', () => {
 
   test('write mode bumps all files', () => {
     root = seedFixture('2.16.0');
-    runBump(root, ['2.17.0', '--title', 'New Wave']);
+    const out = runBump(root, ['2.17.0', '--title', 'New Wave']);
+    assert.match(out, /Running site-gen\.mjs/);
+    assert.match(out, /Running version-sync-check\.js/);
 
     const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
     assert.strictEqual(pkg.version, '2.17.0');
