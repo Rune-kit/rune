@@ -89,6 +89,26 @@ export function panelFor(name, catalog, edges) {
   };
 }
 
+/**
+ * How an edge is drawn. Edges are quiet ('base') until a skill is hovered or selected:
+ * 200 lines at full strength is a hairball, not a map.
+ */
+export function edgeState(edge, selected, hover) {
+  const [f, t] = edge;
+  if (selected && (f === selected || t === selected)) return 'on';
+  if (hover && (f === hover || t === hover)) return 'hover';
+  return selected ? 'dim' : 'base';
+}
+
+/**
+ * What a finished press means. The node is read at pointerdown: with pointer capture the
+ * pointerup target is retargeted to the capturing element, so it cannot tell us what was clicked.
+ */
+export function resolveTap({ downNode, moved, onChrome = false }) {
+  if (moved || onChrome) return { type: 'none' };
+  return downNode ? { type: 'select', name: downNode } : { type: 'clear' };
+}
+
 /** 'hubs' = L0/L1 only; 'related' = selection + neighbours; 'all' = every visible node. */
 export function labelMode(cam, selected) {
   if (cam.k >= LABEL_ZOOM) return 'all';
@@ -127,6 +147,7 @@ export function boot(doc, data) {
   let cam = fitCamera();
   let selected = null;
   const hiddenLayers = new Set();
+  let hover = null;
   let dragging = null;
   let moved = false;
 
@@ -147,8 +168,9 @@ export function boot(doc, data) {
   };
 
   const paint = () => {
-    const mode = labelMode(cam, selected);
-    const near = selected ? neighbors(selected, edges).near : null;
+    const focusName = selected || hover;
+    const mode = labelMode(cam, focusName);
+    const near = focusName ? neighbors(focusName, edges).near : null;
     for (const el of svg.querySelectorAll('.node')) {
       const n = el.dataset.n;
       const node = catalog[n];
@@ -156,16 +178,17 @@ export function boot(doc, data) {
       el.toggleAttribute('hidden', hidden);
       el.classList.toggle('is-selected', n === selected);
       el.classList.toggle('is-near', Boolean(!hidden && near?.has(n)));
-      el.classList.toggle('is-dim', Boolean(selected && !hidden && !near?.has(n)));
+      el.classList.toggle('is-dim', Boolean(focusName && !hidden && !near?.has(n)));
       const label = el.querySelector('.lbl');
       if (label) label.toggleAttribute('hidden', hidden || !shouldShowLabel(mode, node?.layer, n, near));
     }
     for (const el of svg.querySelectorAll('.edge')) {
       const hidden = hiddenLayers.has(catalog[el.dataset.f]?.layer) || hiddenLayers.has(catalog[el.dataset.t]?.layer);
-      const on = selected && (el.dataset.f === selected || el.dataset.t === selected);
+      const state = edgeState([el.dataset.f, el.dataset.t], selected, hover);
       el.toggleAttribute('hidden', hidden);
-      el.classList.toggle('is-on', Boolean(on && !hidden));
-      el.classList.toggle('is-dim', Boolean(selected && !on && !hidden));
+      el.classList.toggle('is-on', !hidden && state === 'on');
+      el.classList.toggle('is-hover', !hidden && state === 'hover');
+      el.classList.toggle('is-dim', !hidden && state === 'dim');
     }
     svg.classList.toggle('is-focused', Boolean(selected));
   };
@@ -262,19 +285,27 @@ export function boot(doc, data) {
     { passive: false },
   );
 
+  // No setPointerCapture: it retargets pointerup/click to the stage, which swallowed every node click.
+  // The pointermove/up listeners live on the document, so a drag that leaves the SVG still works.
   const onPointerDown = (ev) => {
     if (ev.pointerType === 'mouse' && ev.button !== 0) return;
-    if (ev.target.closest('button, input, a, .mesh-chrome, #mesh-panel')) return;
-    dragging = { id: ev.pointerId, x: ev.clientX, y: ev.clientY };
+    const onChrome = Boolean(ev.target.closest('button, input, a, .mesh-chrome, #mesh-panel'));
+    dragging = {
+      id: ev.pointerId,
+      x: ev.clientX,
+      y: ev.clientY,
+      node: onChrome ? null : ev.target.closest('.node')?.dataset.n || null,
+      onChrome,
+    };
     moved = false;
-    stage?.setPointerCapture?.(ev.pointerId);
   };
   const onPointerMove = (ev) => {
-    if (!dragging || ev.pointerId !== dragging.id) return;
+    if (!dragging || ev.pointerId !== dragging.id || dragging.onChrome) return;
     const dx = ev.clientX - dragging.x;
     const dy = ev.clientY - dragging.y;
     if (!moved && dx * dx + dy * dy < 25) return;
     moved = true;
+    hover = null;
     const a = clientToSvg(dragging.x, dragging.y);
     const b = clientToSvg(ev.clientX, ev.clientY);
     cam = panBy(cam, b.x - a.x, b.y - a.y);
@@ -284,17 +315,32 @@ export function boot(doc, data) {
   };
   const onPointerUp = (ev) => {
     if (!dragging || ev.pointerId !== dragging.id) return;
-    const wasDrag = moved;
+    const tap = resolveTap({ downNode: dragging.node, moved, onChrome: dragging.onChrome });
     dragging = null;
-    if (wasDrag) return;
-    const node = ev.target.closest?.('.node');
-    if (node) select(node.dataset.n);
-    else if (!ev.target.closest?.('#mesh-panel, .mesh-chrome')) select(null);
+    if (ev.type === 'pointercancel') return;
+    if (tap.type === 'select') select(tap.name);
+    else if (tap.type === 'clear') select(null);
   };
   (stage || svg).addEventListener('pointerdown', onPointerDown);
   doc.addEventListener('pointermove', onPointerMove);
   doc.addEventListener('pointerup', onPointerUp);
   doc.addEventListener('pointercancel', onPointerUp);
+
+  // Hover preview (mouse only): lights a skill's edges without touching the selection or the panel.
+  svg.addEventListener('pointerover', (ev) => {
+    if (ev.pointerType !== 'mouse' || dragging) return;
+    const n = ev.target.closest?.('.node')?.dataset.n || null;
+    if (n !== hover) {
+      hover = n;
+      paint();
+    }
+  });
+  svg.addEventListener('pointerleave', () => {
+    if (hover) {
+      hover = null;
+      paint();
+    }
+  });
 
   // Pinch (two pointers)
   const pins = new Map();

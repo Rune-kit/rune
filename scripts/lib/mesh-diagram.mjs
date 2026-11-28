@@ -183,8 +183,9 @@ export function renderMeshDiagram(index, stats, packs, packDesc = {}) {
   #mesh { flex: 1; width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; }
   #mesh:active { cursor: grabbing; }
   .ring { fill: none; stroke: color-mix(in oklch, var(--ink) 14%, transparent); stroke-dasharray: 3 5; }
-  .edge { fill: none; stroke-width: 1.2; opacity: .28; }
-  .edge.is-dim { opacity: .04; }
+  .edge { fill: none; stroke-width: 1; opacity: .045; pointer-events: none; transition: opacity .12s; }
+  .edge.is-dim { opacity: .015; }
+  .edge.is-hover { opacity: .6; stroke-width: 1.6; }
   .edge.is-on { opacity: .95; stroke-width: 2; }
   .lbl {
     font: 500 13px var(--mono); fill: var(--ink); pointer-events: none;
@@ -249,7 +250,7 @@ export function renderMeshDiagram(index, stats, packs, packDesc = {}) {
   <div class="mesh-chrome">
     <div class="brand">
       <b>Rune Skill Mesh</b>
-      <span>Scroll or pinch to zoom · click a skill, or search</span>
+      <span>Hover or click a skill to see its links · scroll or pinch to zoom</span>
     </div>
     <div class="stats">
       <div><b>${counts.skills}</b><span>skills</span></div>
