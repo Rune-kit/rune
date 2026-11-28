@@ -1,0 +1,76 @@
+name: e2e — rune serve
+
+# Runs `rune serve` the way a user does, on throw-away machines (no VPS needed):
+#   local-linux       background process on 127.0.0.1
+#   tunnel-systemd    systemd --user service + Cloudflare quick tunnel; every MCP check goes
+#                     through the PUBLIC trycloudflare.com URL; kill -9 → systemd restarts it
+#   tunnel-windows    Windows background-process mode + quick tunnel
+#   tunnel-macos      macOS background-process mode + quick tunnel
+# Rerun by hand:  gh workflow run e2e-serve.yml     (or locally: npm run e2e:serve)
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'compiler/serve/**'
+      - 'scripts/e2e-serve.mjs'
+      - '.github/workflows/e2e-serve.yml'
+  release:
+    types: [published]
+  schedule:
+    - cron: '17 3 * * 1' # Mondays 03:17 UTC — catches Cloudflare / runner drift
+
+permissions:
+  contents: read
+
+jobs:
+  local-linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/e2e-serve.mjs --expose local
+
+  tunnel-systemd:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: systemd user session (what a VPS login gives you)
+        run: |
+          sudo loginctl enable-linger "$USER"
+          sudo systemctl start "user@$(id -u).service"
+          echo "XDG_RUNTIME_DIR=/run/user/$(id -u)" >> "$GITHUB_ENV"
+          echo "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus" >> "$GITHUB_ENV"
+          sleep 2
+          XDG_RUNTIME_DIR=/run/user/$(id -u) systemctl --user show-environment | head -3
+      - name: rune serve — systemd + quick tunnel
+        run: node scripts/e2e-serve.mjs --expose tunnel --service
+
+  tunnel-windows:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: rune serve — Windows background process + quick tunnel
+        run: node scripts/e2e-serve.mjs --expose tunnel
+
+  tunnel-macos:
+    runs-on: macos-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: rune serve — macOS background process + quick tunnel
+        run: node scripts/e2e-serve.mjs --expose tunnel

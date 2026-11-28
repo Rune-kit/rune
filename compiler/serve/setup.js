@@ -17,7 +17,9 @@
  */
 
 import { spawn, spawnSync } from 'node:child_process';
+import dns from 'node:dns/promises';
 import { chmodSync, existsSync, mkdirSync, openSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { isIP } from 'node:net';
 import os from 'node:os';
 import path from 'node:path';
 import { createInterface } from 'node:readline/promises';
@@ -275,6 +277,26 @@ async function rpc(fetchImpl, url, key, method, params, id, timeoutMs) {
 }
 
 /**
+ * Wait until a public hostname exists in DNS — asking the resolver directly (dns.resolve4),
+ * NOT the OS cache. A brand-new trycloudflare.com name does not resolve for a few seconds, and on
+ * macOS (mDNSResponder) one early lookup of a missing name is cached as "not found" for minutes, so
+ * probing it with fetch() too soon makes the URL look dead on that Mac. Best effort: never throws.
+ */
+export async function waitForDns(host, { timeoutMs = 30_000, resolver = dns.resolve4 } = {}) {
+  if (!host || isIP(host) || host === 'localhost') return true;
+  const until = Date.now() + timeoutMs;
+  for (;;) {
+    try {
+      if ((await resolver(host)).length) return true;
+    } catch {
+      /* not there yet */
+    }
+    if (Date.now() >= until) return false;
+    await sleep(1000);
+  }
+}
+
+/**
  * Probe an endpoint: /health (public), auth is enforced (401 without key), and —
  * when a key is available — a real MCP initialize + tools/list handshake.
  */
@@ -284,6 +306,7 @@ export async function checkEndpoint(
 ) {
   const out = { url, reachable: false, health: null, authEnforced: null, handshake: null, error: null };
   const base = url.replace(/\/mcp\/?(\?.*)?$/, '');
+  if (retries > 0 && fetchImpl === globalThis.fetch) await waitForDns(safe(() => new URL(url).hostname, ''));
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       const res = await fetchWithTimeout(fetchImpl, `${base}/health`, {}, timeoutMs);
@@ -676,7 +699,13 @@ export async function runSetup({
     const starter = profile.service ? deps.startSystemd || startSystemd : deps.startBackground || startBackground;
     log(profile.service ? 'Starting systemd user service rune-serve…' : 'Starting rune serve in the background…');
     const started = await starter({ runeBin, serveArgs, configPath });
-    report.service = { mode: started.mode, pid: started.pid, unitPath: started.unitPath, log: started.log };
+    report.service = {
+      mode: started.mode,
+      pid: started.pid,
+      unitPath: started.unitPath,
+      log: started.log,
+      linger: started.linger,
+    };
     if (started.mode === 'systemd-user' && !started.linger)
       report.next.push(`sudo loginctl enable-linger ${os.userInfo().username}   # keep it running after you log out`);
     if (started.state?.publicUrl) exposure.publicUrl = started.state.publicUrl;
