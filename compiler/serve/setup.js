@@ -676,7 +676,13 @@ export async function runSetup({
     const starter = profile.service ? deps.startSystemd || startSystemd : deps.startBackground || startBackground;
     log(profile.service ? 'Starting systemd user service rune-serve…' : 'Starting rune serve in the background…');
     const started = await starter({ runeBin, serveArgs, configPath });
-    report.service = { mode: started.mode, pid: started.pid, unitPath: started.unitPath, log: started.log };
+    report.service = {
+      mode: started.mode,
+      pid: started.pid,
+      unitPath: started.unitPath,
+      log: started.log,
+      linger: started.linger,
+    };
     if (started.mode === 'systemd-user' && !started.linger)
       report.next.push(`sudo loginctl enable-linger ${os.userInfo().username}   # keep it running after you log out`);
     if (started.state?.publicUrl) exposure.publicUrl = started.state.publicUrl;
