@@ -49,29 +49,30 @@ jobs:
       - name: Build OpenClaw format
         run: node compiler/bin/rune.js build --platform openclaw --output .
 
-      - name: Generate changelog
+      - name: Release notes from CHANGELOG.md
         id: changelog
         run: |
           TAG="${GITHUB_REF#refs/tags/}"
           PREV_TAG=$(git tag --sort=-v:refname | grep '^v' | sed -n '2p')
-          if [ -n "$PREV_TAG" ]; then
-            NOTES=$(git log "${PREV_TAG}..${TAG}" --pretty=format:"- %s" --no-merges | grep -v "^- chore" | head -15)
-          else
-            NOTES="- Initial release"
+          # The CHANGELOG section is the release note (same text as docs/changelog.html).
+          # Only a tag without a CHANGELOG section falls back to the commit list.
+          if ! node scripts/site-gen.mjs notes "${TAG#v}" > release-notes.md; then
+            {
+              echo "## What's New"
+              echo ""
+              if [ -n "$PREV_TAG" ]; then
+                git log "${PREV_TAG}..${TAG}" --pretty=format:"- %s" --no-merges | grep -v "^- chore" | head -15
+              else
+                echo "- Initial release"
+              fi
+              echo ""
+              echo ""
+              echo "**Full Changelog**: https://github.com/rune-kit/rune/compare/${PREV_TAG}...${TAG}"
+            } > release-notes.md
           fi
-          # Extract codename from CHANGELOG.md if present
-          CODENAME=$(grep -oP "## \[${TAG#v}\].*" CHANGELOG.md | head -1 || echo "")
-          # Write to a workspace file (persists across steps in this job). Passing
-          # the multi-line notes as a step OUTPUT and inlining it as an expression
-          # into a later run block is what broke the release step — a notes FILE
-          # avoids all expression interpolation.
-          {
-            echo "## What's New"
-            echo ""
-            echo "$NOTES"
-            echo ""
-            echo "**Full Changelog**: https://github.com/rune-kit/rune/compare/${PREV_TAG}...${TAG}"
-          } > release-notes.md
+          # ClawHub gets a short plain-text list from the same section.
+          node scripts/site-gen.mjs notes "${TAG#v}" --plain > clawhub-notes.txt 2>/dev/null \
+            || git log "${PREV_TAG}..${TAG}" --pretty=format:"• %s" --no-merges | head -10 > clawhub-notes.txt
 
       - name: Create GitHub Release
         env:
@@ -97,7 +98,7 @@ jobs:
           clawhub login --token "$CLAWHUB_TOKEN" --no-browser
           TAG="${GITHUB_REF#refs/tags/}"
           VERSION="${TAG#v}"
-          CHANGELOG=$(git log "$(git tag --sort=-v:refname | grep '^v' | sed -n '2p')..${TAG}" --pretty=format:"• %s" --no-merges | head -10)
+          CHANGELOG=$(head -c 2000 clawhub-notes.txt)
           # CLI v0.23+ refuses `clawhub publish` on folders containing plugin markers
           # (openclaw.plugin.json / src/) — "This looks like a plugin. Use clawhub package
           # publish". Rune's ClawHub listing is Family: Skill, so stage a skills-only copy

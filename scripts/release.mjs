@@ -16,6 +16,7 @@
  *     3. (not with --dry-run) npm publish --access public --auth-type=web  (2FA in the browser)
  *     4. waits until the registry serves the version
  *     5. git tag v<version> + push, gh release create with the CHANGELOG section as notes
+ *   prepare also runs scripts/site-gen.mjs (docs/changelog.html, What's-new chips, CLI notice data)
  */
 
 import { execFileSync, spawnSync } from 'node:child_process';
@@ -139,6 +140,8 @@ export function prepare(argv) {
     console.log(`  ✓ CLAUDE.md: current release v${version}`);
   }
   run(process.execPath, [join(ROOT, 'scripts', 'bump-version.js'), version, '--title', title]);
+  // Changelog page, What's-new chips, CLI notice data, mesh counts — all from CHANGELOG.md + skill-index.
+  run(process.execPath, [join(ROOT, 'scripts', 'site-gen.mjs')]);
   if (!argv.includes('--no-ci')) run(npm, ['run', 'ci']);
   sh('git', ['add', '-A']);
   sh('git', ['commit', '-m', `chore(release): ${version}`]);

@@ -32,6 +32,7 @@ import { generateDashboardHTML } from '../dashboard.js';
 import { checkMeshIntegrity, formatDoctorResults, formatMeshResults, runDoctor } from '../doctor.js';
 import { buildAll } from '../emitter.js';
 import { assembleGovernance } from '../governance-collector.js';
+import { maybeShowWhatsNew, printWhatsNew } from '../lib/whats-new.js';
 import { collectStats, renderStatus, renderStatusJson } from '../status.js';
 import { collectGraphData, generateMeshHTML } from '../visualizer.js';
 
@@ -914,6 +915,12 @@ async function main() {
       if (code) process.exit(code);
       break;
     }
+    case 'whats-new':
+    case 'changelog': {
+      const code = printWhatsNew({ args, log });
+      if (code) process.exit(code);
+      break;
+    }
     case 'version':
     case '--version':
     case '-v': {
@@ -972,6 +979,7 @@ async function main() {
       log('               --base <ref>       compare the worktree and index to <ref>');
       log('               --json             machine-readable fingerprints');
       log('               docs/VERIFY.md');
+      log('    whats-new  Highlights of this release + link to the full changelog  [--json]');
       log('');
       log('  Options:');
       log(
@@ -988,7 +996,16 @@ async function main() {
       log(`  ✗ Unknown command: ${command}. Run \`rune help\` for usage.`);
       process.exit(1);
   }
+
+  // Once per version, after a successful interactive command: what's new + changelog link.
+  if (NOTICE_COMMANDS.has(command)) {
+    const pkg = JSON.parse(await readFile(path.join(RUNE_ROOT, 'package.json'), 'utf-8'));
+    await maybeShowWhatsNew({ command: command ?? 'help', args, version: pkg.version, log });
+  }
 }
+
+/** Commands after which the once-per-version "what's new" notice may print (TTY only, never --json/CI). */
+const NOTICE_COMMANDS = new Set(['setup', 'update', 'init', 'build', 'doctor', 'status', 'hooks', 'help', undefined]);
 
 main().catch((err) => {
   console.error('  ✗ Fatal:', err.message);
